@@ -59,7 +59,7 @@ func (d *Deployment) Get(namespace, service, name string) (*types.Deployment, er
 
 	dp := new(types.Deployment)
 
-	err := d.storage.Get(d.context, d.storage.Collection().Deployment(), d.storage.Key().Deployment(namespace, service, name), &dp, nil)
+	err := d.storage.Get(d.context, d.storage.Collection().Deployment(), types.NewDeploymentSelfLink(namespace, service, name).String(), &dp, nil)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logDeploymentPrefix, name)
@@ -82,7 +82,6 @@ func (d *Deployment) Create(service *types.Service, version int) (*types.Deploym
 
 	deployment.Meta.Namespace = service.Meta.Namespace
 	deployment.Meta.Service = service.Meta.Name
-	deployment.Meta.Status = types.StateCreated
 	deployment.Meta.Name = fmt.Sprintf("v%d", version)
 	deployment.Meta.Created = time.Now()
 	deployment.Meta.Updated = time.Now()
@@ -98,7 +97,7 @@ func (d *Deployment) Create(service *types.Service, version int) (*types.Deploym
 	deployment.Status.SetCreated()
 
 	if err := d.storage.Put(d.context, d.storage.Collection().Deployment(),
-		d.storage.Key().Deployment(deployment.Meta.Namespace, deployment.Meta.Service, deployment.Meta.Name), deployment, nil); err != nil {
+		deployment.SelfLink().String(), deployment, nil); err != nil {
 		log.Errorf("%s:create:> distribution create in service: %s err: %v", logDeploymentPrefix, service.Meta.Name, err)
 		return nil, err
 	}
@@ -146,7 +145,7 @@ func (d *Deployment) Update(dt *types.Deployment) error {
 	log.V(logLevel).Debugf("%s:update:> update deployment %s", logDeploymentPrefix, dt.Meta.Name)
 
 	if err := d.storage.Set(d.context, d.storage.Collection().Deployment(),
-		d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name), dt, nil); err != nil {
+		dt.SelfLink().String(), dt, nil); err != nil {
 		log.Errorf("%s:update:> update for deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
 		return err
 	}
@@ -165,7 +164,7 @@ func (d *Deployment) Cancel(dt *types.Deployment) error {
 	dt.Status.SetCancel()
 
 	if err := d.storage.Set(d.context, d.storage.Collection().Deployment(),
-		d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name), dt, nil); err != nil {
+		dt.SelfLink().String(), dt, nil); err != nil {
 		log.V(logLevel).Debugf("%s:destroy: destroy deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
 		return err
 	}
@@ -184,7 +183,7 @@ func (d *Deployment) Destroy(dt *types.Deployment) error {
 	dt.Status.SetDestroy()
 
 	if err := d.storage.Set(d.context, d.storage.Collection().Deployment(),
-		d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name), dt, nil); err != nil {
+		dt.SelfLink().String(), dt, nil); err != nil {
 		log.V(logLevel).Debugf("%s:destroy:> destroy deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
 		return err
 	}
@@ -197,7 +196,7 @@ func (d *Deployment) Remove(dt *types.Deployment) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove deployment %s", logDeploymentPrefix, dt.Meta.Name)
 	if err := d.storage.Del(d.context, d.storage.Collection().Deployment(),
-		d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name)); err != nil {
+		dt.SelfLink().String()); err != nil {
 		log.V(logLevel).Debugf("%s:remove:> remove deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
 		return err
 	}

@@ -45,10 +45,9 @@ func (d *Deployment) SetMeta(obj types.DeploymentMeta) {
 	meta.Name = obj.Name
 	meta.Description = obj.Description
 	meta.Version = obj.Version
-	meta.SelfLink = obj.SelfLink
+	meta.SelfLink = obj.SelfLink.String()
 	meta.Namespace = obj.Namespace
 	meta.Service = obj.Service
-	meta.Status = obj.Status
 	meta.Endpoint = obj.Endpoint
 	meta.Updated = obj.Updated
 	meta.Created = obj.Created
@@ -82,15 +81,16 @@ func (d *Deployment) JoinPods(obj *types.PodList) map[string]Pod {
 			continue
 		}
 
-		if p.Meta.Parent.Kind != types.KindDeployment {
+		k, sl := p.SelfLink().Parent()
+		if k != types.KindDeployment {
 			continue
 		}
 
-		if p.Meta.Parent.SelfLink != d.Meta.SelfLink {
+		if sl.String() != d.Meta.SelfLink {
 			continue
 		}
 
-		d.Pods[p.Meta.SelfLink] = new(PodView).New(p)
+		d.Pods[p.Meta.SelfLink.String()] = new(PodView).New(p)
 	}
 	return pods
 }

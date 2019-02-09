@@ -60,7 +60,7 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 		// check selectors first
 
 		if nl.Request.Selector.Node != types.EmptyString {
-			if n.SelfLink() != nl.Request.Selector.Node {
+			if n.SelfLink().Hostname() != nl.Request.Selector.Node {
 				continue
 			}
 		}
@@ -148,7 +148,5 @@ func handleNodeRelease(cs *ClusterState, nl *NodeLease) error {
 	}
 
 	nm := distribution.NewNodeModel(context.Background(), envs.Get().GetStorage())
-	nm.Set(n)
-
-	return nil
+	return nm.Set(n)
 }

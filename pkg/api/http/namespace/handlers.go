@@ -430,7 +430,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			e.Http(w)
 			return
 		}
-		status.Configs[c.SelfLink()] = true
+		status.Configs[c.SelfLink().String()] = true
 	}
 
 	for _, m := range opts.Secrets {
@@ -439,7 +439,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			e.Http(w)
 			return
 		}
-		status.Secrets[s.SelfLink()] = true
+		status.Secrets[s.SelfLink().String()] = true
 	}
 
 	for _, m := range opts.Volumes {
@@ -448,7 +448,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			e.Http(w)
 			return
 		}
-		status.Volumes[v.SelfLink()] = true
+		status.Volumes[v.SelfLink().String()] = true
 	}
 
 	for _, m := range opts.Services {
@@ -457,7 +457,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			e.Http(w)
 			return
 		}
-		status.Services[s.SelfLink()] = true
+		status.Services[s.SelfLink().String()] = true
 	}
 
 	for _, m := range opts.Routes {
@@ -466,7 +466,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			e.Http(w)
 			return
 		}
-		status.Routes[r.SelfLink()] = true
+		status.Routes[r.SelfLink().String()] = true
 	}
 
 	response, err := v1.View().Namespace().NewApplyStatus(status).ToJson()

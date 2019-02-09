@@ -56,8 +56,9 @@ func (s *Service) Get(namespace, name string) (*types.Service, error) {
 	log.V(logLevel).Debugf("%s:get:> get in namespace %s by name %s", logServicePrefix, namespace, name)
 
 	svc := new(types.Service)
+	sl := types.NewServiceSelfLink(namespace, name).String()
 
-	err := s.storage.Get(s.context, s.storage.Collection().Service(), s.storage.Key().Service(namespace, name), svc, nil)
+	err := s.storage.Get(s.context, s.storage.Collection().Service(), sl, svc, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -97,7 +98,7 @@ func (s *Service) Create(namespace *types.Namespace, svc *types.Service) (*types
 	log.V(logLevel).Debugf("%s:create:> create new service %#v", logServicePrefix, svc.Meta)
 
 	svc.Meta.Namespace = namespace.Meta.Name
-	svc.SelfLink()
+	svc.Meta.SelfLink = *types.NewServiceSelfLink(svc.Meta.Namespace, svc.Meta.Name)
 
 	svc.Meta.Created = time.Now()
 	svc.Meta.Updated = time.Now()
@@ -108,7 +109,7 @@ func (s *Service) Create(namespace *types.Namespace, svc *types.Service) (*types
 	svc.Spec.Template.Updated = time.Now()
 
 	if err := s.storage.Put(s.context, s.storage.Collection().Service(),
-		s.storage.Key().Service(svc.Meta.Namespace, svc.Meta.Name), svc, nil); err != nil {
+		svc.SelfLink().String(), svc, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert service err: %v", logServicePrefix, err)
 		return nil, err
 	}
@@ -122,7 +123,7 @@ func (s *Service) Update(service *types.Service) (*types.Service, error) {
 	log.V(logLevel).Debugf("%s:update:> %#v -> %#v", logServicePrefix, service)
 
 	if err := s.storage.Set(s.context, s.storage.Collection().Service(),
-		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
+		service.SelfLink().String(), service, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update service spec err: %v", logServicePrefix, err)
 		return nil, err
 	}
@@ -139,7 +140,7 @@ func (s *Service) Destroy(service *types.Service) (*types.Service, error) {
 	service.Spec.State.Destroy = true
 
 	if err := s.storage.Set(s.context, s.storage.Collection().Service(),
-		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
+		service.SelfLink().String(), service, nil); err != nil {
 		log.V(logLevel).Errorf("%s:destroy:> destroy service err: %v", logServicePrefix, err)
 		return nil, err
 	}
@@ -152,7 +153,7 @@ func (s *Service) Remove(service *types.Service) error {
 	log.V(logLevel).Debugf("%s:remove:> remove service %#v", logServicePrefix, service)
 
 	err := s.storage.Del(s.context, s.storage.Collection().Service(),
-		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name))
+		service.SelfLink().String())
 	if err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove service err: %v", logServicePrefix, err)
 		return err
@@ -170,8 +171,7 @@ func (s *Service) Set(service *types.Service) error {
 
 	log.V(logLevel).Debugf("%s:setstatus:> set state for service %s", logServicePrefix, service.Meta.Name)
 
-	key := s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name)
-	if err := s.storage.Set(s.context, s.storage.Collection().Service(), key, service, nil); err != nil {
+	if err := s.storage.Set(s.context, s.storage.Collection().Service(), service.SelfLink().String(), service, nil); err != nil {
 		log.Errorf("%s:setstatus:> set state for service %s err: %v", logServicePrefix, service.Meta.Name, err)
 		return err
 	}

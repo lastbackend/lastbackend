@@ -21,7 +21,6 @@ package distribution
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/log"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
@@ -93,7 +92,7 @@ func (j *Job) ListByNamespace(namespace string) (*types.JobList, error) {
 func (j *Job) Create(job *types.Job) (*types.Job, error) {
 
 	if err := j.storage.Put(j.context, j.storage.Collection().Job(),
-		job.SelfLink(), job, nil); err != nil {
+		job.SelfLink().String(), job, nil); err != nil {
 		log.Errorf("%s:create:> job %s create err: %v", logJobPrefix, job.Meta.SelfLink, err)
 		return nil, err
 	}
@@ -102,12 +101,12 @@ func (j *Job) Create(job *types.Job) (*types.Job, error) {
 }
 
 // Update job
-func (j *Job) Update(job *types.Job) error {
+func (j *Job) Set(job *types.Job) error {
 
 	log.V(logLevel).Debugf("%s:update:> update job %s", logJobPrefix, job.Meta.Name)
 
 	if err := j.storage.Set(j.context, j.storage.Collection().Job(),
-		job.SelfLink(), job, nil); err != nil {
+		job.SelfLink().String(), job, nil); err != nil {
 		log.Errorf("%s:update:> update for job %s err: %v", logJobPrefix, job.Meta.Name, err)
 		return err
 	}
@@ -126,7 +125,7 @@ func (j *Job) Pause(job *types.Job) error {
 	job.Status.SetPaused()
 
 	if err := j.storage.Set(j.context, j.storage.Collection().Job(),
-		job.SelfLink(), job, nil); err != nil {
+		job.SelfLink().String(), job, nil); err != nil {
 		log.V(logLevel).Debugf("%s:pause: pause job %s err: %v", logJobPrefix, job.Meta.Name, err)
 		return err
 	}
@@ -145,7 +144,7 @@ func (j *Job) Start(job *types.Job) error {
 	job.Status.SetRunning()
 
 	if err := j.storage.Set(j.context, j.storage.Collection().Job(),
-		job.SelfLink(), job, nil); err != nil {
+		job.SelfLink().String(), job, nil); err != nil {
 		log.V(logLevel).Debugf("%s:destroy:> destroy job %s err: %v", logJobPrefix, job.Meta.Name, err)
 		return err
 	}
@@ -156,13 +155,13 @@ func (j *Job) Start(job *types.Job) error {
 // Destroy job
 func (j *Job) Destroy(job *types.Job) (*types.Job, error) {
 
-	log.V(logLevel).Debugf("%s:destroy:> destroy job %s", logServicePrefix, job.SelfLink())
+	log.V(logLevel).Debugf("%s:destroy:> destroy job %s", logServicePrefix, job.SelfLink().String())
 
 	job.Status.State = types.StateDestroy
 	job.Spec.State.Destroy = true
 
 	if err := j.storage.Set(j.context, j.storage.Collection().Job(),
-		job.SelfLink(), job, nil); err != nil {
+		job.SelfLink().String(), job, nil); err != nil {
 		log.V(logLevel).Errorf("%s:destroy:> destroy job err: %v", logServicePrefix, err)
 		return nil, err
 	}
@@ -174,7 +173,7 @@ func (j *Job) Remove(job *types.Job) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove job %s", logJobPrefix, job.Meta.Name)
 	if err := j.storage.Del(j.context, j.storage.Collection().Job(),
-		job.SelfLink()); err != nil {
+		job.SelfLink().String()); err != nil {
 		log.V(logLevel).Debugf("%s:remove:> remove job %s err: %v", logJobPrefix, job.Meta.Name, err)
 		return err
 	}
@@ -183,7 +182,7 @@ func (j *Job) Remove(job *types.Job) error {
 }
 
 // Watch job changes
-func (j *Job) Watch(dt chan types.JobRunnerEvent, rev *int64) error {
+func (j *Job) Watch(dt chan types.JobEvent, rev *int64) error {
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()
@@ -201,7 +200,7 @@ func (j *Job) Watch(dt chan types.JobRunnerEvent, rev *int64) error {
 					continue
 				}
 
-				res := types.JobRunnerEvent{}
+				res := types.JobEvent{}
 				res.Action = e.Action
 				res.Name = e.Name
 
@@ -230,8 +229,4 @@ func (j *Job) Watch(dt chan types.JobRunnerEvent, rev *int64) error {
 
 func NewJobModel(ctx context.Context, stg storage.Storage) *Job {
 	return &Job{ctx, stg}
-}
-
-func JobSelfLink(namespace, name string) string {
-	return fmt.Sprintf("%s:%s", namespace, name)
 }

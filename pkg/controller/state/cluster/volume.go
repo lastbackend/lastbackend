@@ -35,10 +35,9 @@ const (
 	logPrefixVolume = "observer:cluster:volume"
 )
 
-
 func volumeObserve(ss *ClusterState, d *types.Volume) error {
 
-	log.V(logLevel).Debugf("%s:> observe start: %s > %s", logPrefixVolume, d.SelfLink(), d.Status.State)
+	log.V(logLevel).Debugf("%s:> observe start: %s > %s", logPrefixVolume, d.SelfLink().String(), d.Status.State)
 
 	switch d.Status.State {
 	case types.StateCreated:
@@ -80,25 +79,24 @@ func volumeObserve(ss *ClusterState, d *types.Volume) error {
 	}
 
 	if d.Status.State == types.StateDestroyed {
-		delete(ss.volume.list, d.SelfLink())
+		delete(ss.volume.list, d.SelfLink().String())
 	} else {
-		ss.volume.list[d.SelfLink()] = d
+		ss.volume.list[d.SelfLink().String()] = d
 	}
 
-	log.V(logLevel).Debugf("%s:> observe state: %s > %s", logPrefixVolume, d.SelfLink(), d.Status.State)
+	log.V(logLevel).Debugf("%s:> observe state: %s > %s", logPrefixVolume, d.SelfLink().String(), d.Status.State)
 
 	if err := clusterStatusState(ss); err != nil {
 		return err
 	}
 
-	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logPrefixVolume, d.SelfLink(), d.Status.State)
+	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logPrefixVolume, d.SelfLink().String(), d.Status.State)
 
 	return nil
 }
 
-
-func handleVolumeStateCreated (cs *ClusterState, v *types.Volume) error {
-	log.V(logLevel).Debugf("%s:> handleVolumeStateCreated: %s > %s", logPrefixVolume, v.SelfLink(), v.Status.State)
+func handleVolumeStateCreated(cs *ClusterState, v *types.Volume) error {
+	log.V(logLevel).Debugf("%s:> handleVolumeStateCreated: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 
 	if err := volumeProvision(cs, v); err != nil {
 		return err
@@ -106,8 +104,8 @@ func handleVolumeStateCreated (cs *ClusterState, v *types.Volume) error {
 	return nil
 }
 
-func handleVolumeStateProvision (cs *ClusterState, v *types.Volume)  error {
-	log.V(logLevel).Debugf("%s:> handleVolumeStateProvision: %s > %s", logPrefixVolume, v.SelfLink(), v.Status.State)
+func handleVolumeStateProvision(cs *ClusterState, v *types.Volume) error {
+	log.V(logLevel).Debugf("%s:> handleVolumeStateProvision: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 
 	if err := volumeProvision(cs, v); err != nil {
 		return err
@@ -115,18 +113,18 @@ func handleVolumeStateProvision (cs *ClusterState, v *types.Volume)  error {
 	return nil
 }
 
-func handleVolumeStateReady (cs *ClusterState, v *types.Volume)  error {
-	log.V(logLevel).Debugf("%s:> handleVolumeStateReady: %s > %s", logPrefixVolume, v.SelfLink(), v.Status.State)
+func handleVolumeStateReady(cs *ClusterState, v *types.Volume) error {
+	log.V(logLevel).Debugf("%s:> handleVolumeStateReady: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 	return nil
 }
 
-func handleVolumeStateError (cs *ClusterState, v *types.Volume)  error {
-	log.V(logLevel).Debugf("%s:> handleVolumeStateError: %s > %s", logPrefixVolume, v.SelfLink(), v.Status.State)
+func handleVolumeStateError(cs *ClusterState, v *types.Volume) error {
+	log.V(logLevel).Debugf("%s:> handleVolumeStateError: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 	return nil
 }
 
-func handleVolumeStateDestroy (cs *ClusterState, v *types.Volume)  error {
-	log.V(logLevel).Debugf("%s:> handleVolumeStateDestroy: %s > %s", logPrefixVolume, v.SelfLink(), v.Status.State)
+func handleVolumeStateDestroy(cs *ClusterState, v *types.Volume) error {
+	log.V(logLevel).Debugf("%s:> handleVolumeStateDestroy: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 
 	if err := volumeDestroy(cs, v); err != nil {
 		log.Errorf("%s", err.Error())
@@ -136,8 +134,8 @@ func handleVolumeStateDestroy (cs *ClusterState, v *types.Volume)  error {
 	return nil
 }
 
-func handleVolumeStateDestroyed (cs *ClusterState, v *types.Volume)  error {
-	log.V(logLevel).Debugf("%s:> handleVolumeStateDestroyed: %s > %s", logPrefixVolume, v.SelfLink(), v.Status.State)
+func handleVolumeStateDestroyed(cs *ClusterState, v *types.Volume) error {
+	log.V(logLevel).Debugf("%s:> handleVolumeStateDestroyed: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 
 	if err := volumeRemove(cs, v); err != nil {
 		log.Errorf("%s", err.Error())
@@ -146,7 +144,6 @@ func handleVolumeStateDestroyed (cs *ClusterState, v *types.Volume)  error {
 
 	return nil
 }
-
 
 func volumeUpdate(v *types.Volume, timestamp time.Time) error {
 
@@ -171,10 +168,10 @@ func volumeProvision(cs *ClusterState, volume *types.Volume) (err error) {
 		}
 	}()
 
-	if volume.Meta.Node != types.EmptyString  {
+	if volume.Meta.Node != types.EmptyString {
 		log.Debugf("%s:> volume manifest create: %s", logPrefixVolume, volume.SelfLink())
 		vm := distribution.NewVolumeModel(context.Background(), envs.Get().GetStorage())
-		mf, err := vm.ManifestGet(volume.Meta.Node, volume.SelfLink())
+		mf, err := vm.ManifestGet(volume.Meta.Node, volume.SelfLink().String())
 		if err != nil {
 			log.Errorf("%s:> volume manifest create err: %s", logPrefixVolume, err.Error())
 			return err
@@ -204,7 +201,7 @@ func volumeProvision(cs *ClusterState, volume *types.Volume) (err error) {
 
 	if volume.Meta.Node == types.EmptyString {
 
-		log.Debugf("%s:> volume provision > find node: %s", logPrefixVolume, volume.SelfLink())
+		log.Debugf("%s:> volume provision > find node: %s", logPrefixVolume, volume.SelfLink().String())
 
 		node, err := cs.VolumeLease(volume)
 		if err != nil {
@@ -212,19 +209,17 @@ func volumeProvision(cs *ClusterState, volume *types.Volume) (err error) {
 			return err
 		}
 
-
-
 		if node == nil {
-			log.Debugf("%s:> volume provision > node not found: %s", logPrefixVolume, volume.SelfLink())
+			log.Debugf("%s:> volume provision > node not found: %s", logPrefixVolume, volume.SelfLink().String())
 			volume.Status.State = types.StateError
 			volume.Status.Message = errors.NodeNotFound
 			volume.Meta.Updated = time.Now()
 			return nil
 		}
 
-		log.Debugf("%s:> volume provision > node: %s found: %s", logPrefixVolume, node.SelfLink(), volume.SelfLink())
+		log.Debugf("%s:> volume provision > node: %s found: %s", logPrefixVolume, node.SelfLink().String(), volume.SelfLink().String())
 
-		volume.Meta.Node = node.SelfLink()
+		volume.Meta.Node = node.SelfLink().String()
 		volume.Meta.Updated = time.Now()
 	}
 
@@ -268,8 +263,6 @@ func volumeDestroy(cs *ClusterState, volume *types.Volume) (err error) {
 		volume.Meta.Updated = time.Now()
 	}
 
-
-
 	if err = volumeManifestSet(volume); err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			if volume.Meta.Node != types.EmptyString {
@@ -290,19 +283,15 @@ func volumeDestroy(cs *ClusterState, volume *types.Volume) (err error) {
 		return err
 	}
 
-
-
-
 	if volume.Meta.Node == types.EmptyString {
 		volume.Status.State = types.StateDestroyed
 		volume.Meta.Updated = time.Now()
 	}
 
-
 	return nil
 }
 
-func volumeRemove( cs *ClusterState, volume *types.Volume) (err error) {
+func volumeRemove(cs *ClusterState, volume *types.Volume) (err error) {
 
 	vm := distribution.NewVolumeModel(context.Background(), envs.Get().GetStorage())
 	if _, err = cs.VolumeRelease(volume); err != nil {
@@ -321,16 +310,15 @@ func volumeRemove( cs *ClusterState, volume *types.Volume) (err error) {
 		return err
 	}
 
-	delete(cs.volume.list, volume.SelfLink())
+	delete(cs.volume.list, volume.SelfLink().String())
 	return nil
 }
 
-
 func volumeManifestAdd(vol *types.Volume) error {
 
-	log.V(logLevel).Debugf("%s: create volume manifest for node: %s", logPrefixVolume, vol.SelfLink())
+	log.V(logLevel).Debugf("%s: create volume manifest for node: %s", logPrefixVolume, vol.SelfLink().String())
 
-	var vm  = new(types.VolumeManifest)
+	var vm = new(types.VolumeManifest)
 
 	vm.State.Destroy = false
 	vm.Type = vol.Spec.Type
@@ -339,7 +327,7 @@ func volumeManifestAdd(vol *types.Volume) error {
 	vm.Capacity.Storage = vol.Spec.Capacity.Storage
 
 	im := distribution.NewVolumeModel(context.Background(), envs.Get().GetStorage())
-	if err := im.ManifestAdd(vol.Meta.Node, vol.SelfLink(), vm); err != nil {
+	if err := im.ManifestAdd(vol.Meta.Node, vol.SelfLink().String(), vm); err != nil {
 		log.Errorf("%s:> volume manifest create err: %s", logPrefixVolume, err.Error())
 		return err
 	}
@@ -350,28 +338,27 @@ func volumeManifestAdd(vol *types.Volume) error {
 func volumeManifestSet(vol *types.Volume) error {
 
 	var (
-		 m *types.VolumeManifest
-		 err error
+		m   *types.VolumeManifest
+		err error
 	)
-
 
 	im := distribution.NewVolumeModel(context.Background(), envs.Get().GetStorage())
 
-	m, err = im.ManifestGet(vol.Meta.Node, vol.Meta.SelfLink)
+	m, err = im.ManifestGet(vol.Meta.Node, vol.Meta.SelfLink.String())
 	if err != nil {
 		return err
 	}
 
 	// Update manifest
 	if m == nil {
-		log.V(logLevel).Debugf("%s: create volume for node: %s", logPrefixVolume, vol.SelfLink())
+		log.V(logLevel).Debugf("%s: create volume for node: %s", logPrefixVolume, vol.SelfLink().String())
 		ms := types.VolumeManifest(vol.Spec)
 		m = &ms
 	} else {
 		*m = types.VolumeManifest(vol.Spec)
 	}
 
-	if err := im.ManifestSet(vol.Meta.Node, vol.SelfLink(), m); err != nil {
+	if err := im.ManifestSet(vol.Meta.Node, vol.SelfLink().String(), m); err != nil {
 		log.Errorf("can not update volume manifest: %s", err.Error())
 	}
 
@@ -386,7 +373,7 @@ func volumeManifestDel(vol *types.Volume) error {
 
 	// Remove manifest
 	vm := distribution.NewVolumeModel(context.Background(), envs.Get().GetStorage())
-	err := vm.ManifestDel(vol.Meta.Node, vol.SelfLink())
+	err := vm.ManifestDel(vol.Meta.Node, vol.SelfLink().String())
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
 			return err
@@ -396,8 +383,7 @@ func volumeManifestDel(vol *types.Volume) error {
 	return nil
 }
 
-
-func volumeManifestCheckEqual (mf *types.VolumeManifest, vol *types.Volume) bool {
+func volumeManifestCheckEqual(mf *types.VolumeManifest, vol *types.Volume) bool {
 
 	if mf.Capacity.Storage != vol.Spec.Capacity.Storage {
 		return false
@@ -410,7 +396,6 @@ func volumeManifestCheckEqual (mf *types.VolumeManifest, vol *types.Volume) bool
 	if mf.AccessMode != vol.Spec.AccessMode {
 		return false
 	}
-
 
 	if mf.Type != vol.Spec.Type {
 		return false

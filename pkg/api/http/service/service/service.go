@@ -99,6 +99,7 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifes
 
 	svc := new(types.Service)
 	mf.SetServiceMeta(svc)
+	svc.Meta.SelfLink = *types.NewServiceSelfLink(ns.Meta.Name, *mf.Meta.Name)
 	svc.Meta.Namespace = ns.Meta.Name
 	svc.Meta.Endpoint = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
 

@@ -64,6 +64,7 @@ type NamespaceClientV1 interface {
 	Secret(args ...string) SecretClientV1
 	Config(args ...string) ConfigClientV1
 	Service(args ...string) ServiceClientV1
+	Job(args ...string) JobClientV1
 	Route(args ...string) RouteClientV1
 	Volume(args ...string) VolumeClientV1
 	Create(ctx context.Context, opts *rv1.NamespaceManifest) (*vv1.Namespace, error)
@@ -82,6 +83,24 @@ type ServiceClientV1 interface {
 	Update(ctx context.Context, opts *rv1.ServiceManifest) (*vv1.Service, error)
 	Remove(ctx context.Context, opts *rv1.ServiceRemoveOptions) error
 	Logs(ctx context.Context, opts *rv1.ServiceLogsOptions) (io.ReadCloser, error)
+}
+
+type JobClientV1 interface {
+	Tasks(args ...string) TaskClientV1
+	Create(ctx context.Context, opts *rv1.JobManifest) (*vv1.Job, error)
+	List(ctx context.Context) (*vv1.JobList, error)
+	Get(ctx context.Context) (*vv1.Job, error)
+	Update(ctx context.Context, opts *rv1.JobManifest) (*vv1.Job, error)
+	Remove(ctx context.Context, opts *rv1.JobRemoveOptions) error
+	Logs(ctx context.Context, opts *rv1.JobLogsOptions) (io.ReadCloser, error)
+}
+
+type TaskClientV1 interface {
+	Pod(args ...string) PodClientV1
+
+	List(ctx context.Context) (*vv1.TaskList, error)
+	Get(ctx context.Context) (*vv1.Task, error)
+	Cancel(ctx context.Context, opts *rv1.TaskCancelOptions) (*vv1.Task, error)
 }
 
 type DeploymentClientV1 interface {

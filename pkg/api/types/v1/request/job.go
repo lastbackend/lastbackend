@@ -38,7 +38,8 @@ type JobManifestSpec struct {
 	Enabled     bool                        `json:"enabled" yaml:"enabled"`
 	Schedule    string                      `json:"schedule" yaml:"schedule"`
 	Concurrency JobManifestSpecConcurrency  `json:"concurrency" yaml:"concurrency"`
-	Remote      JobManifestSpecRemote       `json:"remote" yaml:"remote"`
+	Provider    JobManifestSpecProvider     `json:"provider" yaml:"provider"`
+	Hook        JobManifestSpecHook         `json:"hook" yaml:"hook"`
 	Resources   *JobResourcesOptions        `json:"resources" yaml:"resources"`
 	Task        JobManifestSpecTaskTemplate `json:"task" yaml:"task"`
 }
@@ -52,6 +53,17 @@ type JobManifestSpecTaskTemplate struct {
 type JobManifestSpecConcurrency struct {
 	Limit    int    `json:"limit" yaml:"limit"`
 	Strategy string `json:"strategy" yaml:"limit"`
+}
+
+type JobManifestSpecProvider struct {
+	Timeout int                    `json:"timeout" yaml:"timeout"`
+	Kind    string                 `json:"kind" yaml:"kind"`
+	Config  map[string]interface{} `json:"config" yaml:"config"`
+}
+
+type JobManifestSpecHook struct {
+	Kind   string                 `json:"kind" yaml:"kind"`
+	Config map[string]interface{} `json:"config" yaml:"config"`
 }
 
 type JobManifestSpecRemote struct {
@@ -100,22 +112,16 @@ func (j *JobManifest) SetJobMeta(job *types.Job) {
 func (j *JobManifest) SetJobSpec(job *types.Job) (err error) {
 
 	job.Spec.Enabled = j.Spec.Enabled
-	job.Spec.Schedule = j.Spec.Schedule
 
 	job.Spec.Concurrency.Limit = j.Spec.Concurrency.Limit
 	job.Spec.Concurrency.Strategy = j.Spec.Concurrency.Strategy
 
-	job.Spec.Remote.Timeout = j.Spec.Remote.Timeout
-	job.Spec.Remote.Request = types.JobSpecRemoteRequest{
-		Endpoint: j.Spec.Remote.Request.Endpoint,
-		Headers:  j.Spec.Remote.Request.Headers,
-		Method:   j.Spec.Remote.Request.Method,
-	}
-	job.Spec.Remote.Response = types.JobSpecRemoteRequest{
-		Endpoint: j.Spec.Remote.Response.Endpoint,
-		Headers:  j.Spec.Remote.Response.Headers,
-		Method:   j.Spec.Remote.Response.Method,
-	}
+	job.Spec.Provider.Kind = j.Spec.Provider.Kind
+	job.Spec.Provider.Timeout = j.Spec.Provider.Timeout
+	job.Spec.Provider.Config = j.Spec.Provider.Config
+
+	job.Spec.Hook.Kind = j.Spec.Hook.Kind
+	job.Spec.Hook.Config = j.Spec.Hook.Config
 
 	if j.Spec.Resources != nil {
 
@@ -200,4 +206,11 @@ type JobResourceOptions struct {
 
 type JobRemoveOptions struct {
 	Force bool `json:"force"`
+}
+
+type JobLogsOptions struct {
+	Task      string `json:"task"`
+	Pod       string `json:"pod"`
+	Container string `json:"container"`
+	Follow    bool   `json:"follow"`
 }

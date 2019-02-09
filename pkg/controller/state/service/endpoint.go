@@ -76,7 +76,7 @@ func endpointRestore(ss *ServiceState) error {
 		}
 	}
 
-	ss.endpoint.manifest, err = em.ManifestGet(em.ManifestGetName(ss.service.Meta.Namespace, ss.service.Meta.Name))
+	ss.endpoint.manifest, err = em.ManifestGet(em.ManifestGetSelfLink(ss.service.Meta.Namespace, ss.service.Meta.Name))
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
 			log.Errorf("%s:restore:> get endpoint error: %v", logPrefix, err)
@@ -300,8 +300,8 @@ func endpointManifestProvision(ss *ServiceState) error {
 		var pl = make(map[string]*types.Pod)
 
 		if ss.deployment.active != nil {
-			if _, ok := ss.pod.list[ss.deployment.active.SelfLink()]; ok {
-				pl = ss.pod.list[ss.deployment.active.SelfLink()]
+			if _, ok := ss.pod.list[ss.deployment.active.SelfLink().String()]; ok {
+				pl = ss.pod.list[ss.deployment.active.SelfLink().String()]
 			}
 		}
 
@@ -336,12 +336,12 @@ func endpointManifestAdd(ss *ServiceState) error {
 	}
 
 	if ss.deployment.active != nil {
-		if _, ok := ss.pod.list[ss.deployment.active.SelfLink()]; ok {
-			pl = ss.pod.list[ss.deployment.active.SelfLink()]
+		if _, ok := ss.pod.list[ss.deployment.active.SelfLink().String()]; ok {
+			pl = ss.pod.list[ss.deployment.active.SelfLink().String()]
 		}
 	}
 
-	epm, err := em.ManifestGet(ss.endpoint.endpoint.SelfLink())
+	epm, err := em.ManifestGet(ss.endpoint.endpoint.SelfLink().String())
 	if err != nil {
 		return err
 	}
@@ -351,7 +351,7 @@ func endpointManifestAdd(ss *ServiceState) error {
 		ss.endpoint.manifest.EndpointSpec = ss.endpoint.endpoint.Spec
 		ss.endpoint.manifest.Upstreams = endpointManifestGetUpstreams(pl)
 
-		if err = em.ManifestAdd(ss.endpoint.endpoint.SelfLink(), ss.endpoint.manifest); err != nil {
+		if err = em.ManifestAdd(ss.endpoint.endpoint.SelfLink().String(), ss.endpoint.manifest); err != nil {
 			log.Errorf("%s> add endpoint manifest error: %s", logPrefix, err.Error())
 			return err
 		}
@@ -366,7 +366,7 @@ func endpointManifestAdd(ss *ServiceState) error {
 	epm.EndpointSpec = ss.endpoint.endpoint.Spec
 	epm.Upstreams = endpointManifestGetUpstreams(pl)
 
-	if err = em.ManifestSet(ss.endpoint.endpoint.SelfLink(), epm); err != nil {
+	if err = em.ManifestSet(ss.endpoint.endpoint.SelfLink().String(), epm); err != nil {
 		log.Errorf("%s> update endpoint manifest error: %s", logPrefix, err.Error())
 		return err
 	}
@@ -389,15 +389,15 @@ func endpointManifestSet(ss *ServiceState) error {
 	}
 
 	if ss.deployment.active != nil {
-		if _, ok := ss.pod.list[ss.deployment.active.SelfLink()]; ok {
-			pl = ss.pod.list[ss.deployment.active.SelfLink()]
+		if _, ok := ss.pod.list[ss.deployment.active.SelfLink().String()]; ok {
+			pl = ss.pod.list[ss.deployment.active.SelfLink().String()]
 		}
 	}
 
 	ss.endpoint.manifest.EndpointSpec = ss.endpoint.endpoint.Spec
 	ss.endpoint.manifest.Upstreams = endpointManifestGetUpstreams(pl)
 
-	if err = em.ManifestSet(ss.endpoint.endpoint.SelfLink(), ss.endpoint.manifest); err != nil {
+	if err = em.ManifestSet(ss.endpoint.endpoint.SelfLink().String(), ss.endpoint.manifest); err != nil {
 		log.Errorf("%s> update endpoint manifest error: %s", logPrefix, err.Error())
 		return err
 	}
@@ -410,7 +410,7 @@ func endpointManifestDel(ss *ServiceState) error {
 	em := distribution.NewEndpointModel(context.Background(), envs.Get().GetStorage())
 
 	if ss.endpoint.manifest != nil {
-		if err := em.ManifestDel(em.ManifestGetName(ss.service.Meta.Namespace, ss.service.Meta.Name)); err != nil {
+		if err := em.ManifestDel(em.ManifestGetSelfLink(ss.service.Meta.Namespace, ss.service.Meta.Name)); err != nil {
 			log.Errorf("%s> del endpoint manifest error: %s", logEndpointPrefix, err.Error())
 			return err
 		}

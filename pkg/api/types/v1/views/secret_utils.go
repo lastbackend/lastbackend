@@ -40,7 +40,7 @@ func (s *Secret) ToJson() ([]byte, error) {
 func (s *Secret) ToMeta(obj types.SecretMeta) SecretMeta {
 	meta := SecretMeta{}
 	meta.Name = obj.Name
-	meta.SelfLink = obj.SelfLink
+	meta.SelfLink = obj.SelfLink.String()
 	meta.Namespace = obj.Namespace
 	meta.Updated = obj.Updated
 	meta.Created = obj.Created
@@ -52,7 +52,7 @@ func (s *Secret) ToSpec(obj types.SecretSpec) SecretSpec {
 	spec.Type = obj.Type
 	spec.Data = make(map[string]string, 0)
 	for key, value := range obj.Data {
-		spec.Data[key]= string(value)
+		spec.Data[key] = string(value)
 	}
 	return spec
 }

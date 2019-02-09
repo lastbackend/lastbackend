@@ -44,7 +44,7 @@ func (t *Task) ToMeta(obj types.TaskMeta) {
 	tm.Job = obj.Job
 	tm.Name = obj.Name
 
-	tm.SelfLink = obj.SelfLink
+	tm.SelfLink = obj.SelfLink.String()
 	tm.Description = obj.Description
 
 	tm.Labels = obj.Labels
@@ -80,15 +80,16 @@ func (t *Task) JoinPods(pods *types.PodList) {
 			continue
 		}
 
-		if p.Meta.Parent.Kind != types.KindTask {
+		k, sl := p.SelfLink().Parent()
+		if k != types.KindTask {
 			continue
 		}
 
-		if p.Meta.Parent.SelfLink != t.Meta.SelfLink {
+		if sl.String() != t.Meta.SelfLink {
 			continue
 		}
 
-		t.Pods[p.Meta.SelfLink] = new(PodView).New(p)
+		t.Pods[p.Meta.SelfLink.String()] = new(PodView).New(p)
 	}
 }
 

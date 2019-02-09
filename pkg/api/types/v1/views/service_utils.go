@@ -57,7 +57,7 @@ func (sv *Service) ToMeta(obj types.ServiceMeta) ServiceMeta {
 	sm := ServiceMeta{
 		Name:        obj.Name,
 		Description: obj.Description,
-		SelfLink:    obj.SelfLink,
+		SelfLink:    obj.SelfLink.String(),
 		Endpoint:    obj.Endpoint,
 		Namespace:   obj.Namespace,
 		Labels:      obj.Labels,

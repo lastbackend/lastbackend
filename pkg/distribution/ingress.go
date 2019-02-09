@@ -52,7 +52,7 @@ func (n *Ingress) Put(ingress *types.Ingress) error {
 	log.V(logLevel).Debugf("%s:create:> create ingress in cluster", logIngressPrefix)
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Ingress().Info(),
-		n.storage.Key().Ingress(ingress.SelfLink()), ingress, nil); err != nil {
+		ingress.SelfLink().String(), ingress, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert ingress err: %v", logIngressPrefix, err)
 		return err
 	}
@@ -65,7 +65,7 @@ func (n *Ingress) Set(ingress *types.Ingress) error {
 	log.V(logLevel).Debugf("%s:create:> create ingress in cluster", logIngressPrefix)
 
 	if err := n.storage.Set(n.context, n.storage.Collection().Ingress().Info(),
-		n.storage.Key().Ingress(ingress.SelfLink()), ingress, nil); err != nil {
+		ingress.SelfLink().String(), ingress, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert ingress err: %v", logIngressPrefix, err)
 		return err
 	}
@@ -73,20 +73,20 @@ func (n *Ingress) Set(ingress *types.Ingress) error {
 	return nil
 }
 
-func (n *Ingress) Get(name string) (*types.Ingress, error) {
+func (n *Ingress) Get(selflink string) (*types.Ingress, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get by name %s", logIngressPrefix, name)
+	log.V(logLevel).Debugf("%s:get:> get by selflink %s", logIngressPrefix, selflink)
 
 	ingress := new(types.Ingress)
-	err := n.storage.Get(n.context, n.storage.Collection().Ingress().Info(), n.storage.Key().Ingress(name), ingress, nil)
+	err := n.storage.Get(n.context, n.storage.Collection().Ingress().Info(), selflink, ingress, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> get: ingress %s not found", logIngressPrefix, name)
+			log.V(logLevel).Warnf("%s:get:> get: ingress %s not found", logIngressPrefix, selflink)
 			return nil, nil
 		}
 
-		log.V(logLevel).Debugf("%s:get:> get ingress `%s` err: %v", logIngressPrefix, name, err)
+		log.V(logLevel).Debugf("%s:get:> get ingress `%s` err: %v", logIngressPrefix, selflink, err)
 		return nil, err
 	}
 
@@ -97,14 +97,13 @@ func (n *Ingress) Remove(ingress *types.Ingress) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove ingress %s", logIngressPrefix, ingress.Meta.Name)
 
-	if err := n.storage.Del(n.context, n.storage.Collection().Ingress().Info(), n.storage.Key().Ingress(ingress.SelfLink())); err != nil {
+	if err := n.storage.Del(n.context, n.storage.Collection().Ingress().Info(), ingress.SelfLink().String()); err != nil {
 		log.V(logLevel).Debugf("%s:remove:> remove ingress err: %v", logIngressPrefix, err)
 		return err
 	}
 
 	return nil
 }
-
 
 func (n *Ingress) Watch(ch chan types.IngressEvent, rev *int64) error {
 

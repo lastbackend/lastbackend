@@ -118,10 +118,10 @@ func TestRouteInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Route(), stg.Key().Route(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Route(), r1.SelfLink().String(), r1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -181,8 +181,8 @@ func TestRouteList(t *testing.T) {
 	r2 := getRouteAsset(ns1.Meta.Name, "test")
 
 	rl := types.NewRouteMap()
-	rl.Items[r1.SelfLink()] = r1
-	rl.Items[r2.SelfLink()] = r2
+	rl.Items[r1.SelfLink().String()] = r1
+	rl.Items[r2.SelfLink().String()] = r2
 
 	type fields struct {
 		stg storage.Storage
@@ -239,13 +239,13 @@ func TestRouteList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Route(), stg.Key().Route(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Route(), r1.SelfLink().String(), r1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Route(), stg.Key().Route(r2.Meta.Namespace, r2.Meta.Name), r2, nil)
+			err = stg.Put(context.Background(), stg.Collection().Route(), r2.SelfLink().String(), r2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -466,13 +466,13 @@ func TestRouteCreate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), stg.Key().Service(sv1.Meta.Namespace, sv1.Meta.Name), sv1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), sv1.SelfLink().String(), sv1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Route(), stg.Key().Service(r0.Meta.Namespace, r0.Meta.Name), r0, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Route(), r0.SelfLink().String(), r0, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -514,7 +514,7 @@ func TestRouteCreate(t *testing.T) {
 				t.Log("route self-link:", tc.want.Meta.Namespace, tc.want.Meta.Name)
 
 				got := new(types.Route)
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Route(), stg.Key().Route(tc.want.Meta.Namespace, tc.want.Meta.Name), got, nil)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Route(), tc.want.Meta.SelfLink, got, nil)
 				if !assert.NoError(t, err) {
 					return
 				}
@@ -713,19 +713,19 @@ func TestRouteUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), stg.Key().Service(sv1.Meta.Namespace, sv1.Meta.Name), sv1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), sv1.SelfLink().String(), sv1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), stg.Key().Service(sv2.Meta.Namespace, sv2.Meta.Name), sv2, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), sv2.SelfLink().String(), sv2, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Route(), stg.Key().Route(r0.Meta.Namespace, r0.Meta.Name), r0, nil)
+			err = stg.Put(context.Background(), stg.Collection().Route(), r0.SelfLink().String(), r0, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Route(), stg.Key().Route(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Route(), r1.SelfLink().String(), r1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -764,7 +764,7 @@ func TestRouteUpdate(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect code message")
 			} else {
 				got := new(types.Route)
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Route(), stg.Key().Route(tc.args.namespace.Meta.Name, tc.want.Meta.Name), got, nil)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Route(), tc.want.Meta.SelfLink, got, nil)
 				assert.NoError(t, err)
 				if assert.NotEmpty(t, got, "route is empty") {
 					assert.Equal(t, tc.want.Meta.Name, got.Meta.Name, "names mismatch")
@@ -855,10 +855,10 @@ func TestRouteRemove(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Route(), stg.Key().Route(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Route(), r1.SelfLink().String(), r1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -897,7 +897,7 @@ func TestRouteRemove(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 				var got = new(types.Route)
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Route(), stg.Key().Route(tc.args.namespace.Meta.Name, tc.args.route.Meta.Name), got, nil)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Route(), tc.args.route.SelfLink().String(), got, nil)
 				if err != nil {
 					assert.NoError(t, err)
 				}
@@ -919,6 +919,7 @@ func getNamespaceAsset(name, desc string) *types.Namespace {
 	n.Meta.Name = name
 	n.Meta.Description = desc
 	n.Meta.Endpoint = fmt.Sprintf("%s", name)
+	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
 	return &n
 }
 
@@ -929,6 +930,7 @@ func getServiceAsset(namespace, name, desc string) *types.Service {
 	s.Meta.Name = name
 	s.Meta.Description = desc
 	s.Meta.Endpoint = fmt.Sprintf("%s.%s", namespace, name)
+	s.Meta.SelfLink = *types.NewServiceSelfLink(namespace, name)
 	return &s
 }
 
@@ -939,6 +941,7 @@ func getRouteAsset(namespace, name string) *types.Route {
 	r.Meta.Name = name
 	r.Spec.Endpoint = fmt.Sprintf("%s.test-domain.com", name)
 	r.Spec.Rules = make([]types.RouteRule, 0)
+	r.Meta.SelfLink = *types.NewRouteSelfLink(namespace, name)
 	return &r
 }
 

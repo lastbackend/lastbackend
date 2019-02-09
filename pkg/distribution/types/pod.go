@@ -19,8 +19,6 @@
 package types
 
 import (
-	"fmt"
-	"strings"
 	"time"
 )
 
@@ -52,9 +50,7 @@ type PodMap struct {
 type PodMeta struct {
 	Meta `yaml:",inline"`
 	// Pod SelfLink
-	SelfLink string `json:"self_link" yaml:"self_link"`
-	// Pod parent
-	Parent PodMetaParent `json:"parent" yaml:"self_link"`
+	SelfLink PodSelfLink `json:"self_link" yaml:"self_link"`
 	// Pod service id
 	Namespace string `json:"namespace" yaml:"namespace"`
 	// Pod node hostname
@@ -402,38 +398,8 @@ func (s *PodStatusTask) AddTaskCommandContainer(c *PodContainer) {
 	s.Commands = append(s.Commands, c)
 }
 
-func (p *Pod) SelfLink() string {
-	if p.Meta.SelfLink == "" {
-		p.Meta.SelfLink = p.CreateSelfLink(p.Meta.Parent.Kind, p.Meta.Parent.SelfLink, p.Meta.Name)
-	}
-	return p.Meta.SelfLink
-}
-
-func (p *Pod) ServiceLink() string {
-
-	if p.Meta.Parent.Kind != KindDeployment {
-		return EmptyString
-	}
-
-	parents := strings.Split(p.Meta.Parent.SelfLink, ":")
-	if len(parents) != 3 {
-		return EmptyString
-	}
-
-	return new(Service).CreateSelfLink(parents[0], parents[1])
-}
-
-func (p *Pod) DeploymentLink() string {
-
-	if p.Meta.Parent.Kind != KindDeployment {
-		return EmptyString
-	}
-
-	return p.Meta.Parent.SelfLink
-}
-
-func (p *Pod) CreateSelfLink(kind, selflink, name string) string {
-	return fmt.Sprintf("%s:%s:%s", kind, selflink, name)
+func (p *Pod) SelfLink() *PodSelfLink {
+	return &p.Meta.SelfLink
 }
 
 func (c *PodContainer) GetManifest() *ContainerManifest {

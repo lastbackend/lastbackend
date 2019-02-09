@@ -60,6 +60,8 @@ func (n *Node) Put(opts *types.NodeCreateOptions) (*types.Node, error) {
 
 	ni.Meta.Name = opts.Meta.Name
 	ni.Meta.NodeInfo = opts.Info
+	ni.Meta.SelfLink = *types.NewNodeSelfLink(ni.Meta.Hostname)
+
 	ni.Status = opts.Status
 	ni.Status.Online = true
 
@@ -72,9 +74,7 @@ func (n *Node) Put(opts *types.NodeCreateOptions) (*types.Node, error) {
 		ni.Spec.Security.SSL.Key = opts.Security.SSL.Key
 	}
 
-	ni.SelfLink()
-
-	if err := n.storage.Put(n.context, n.storage.Collection().Node().Info(), n.storage.Key().Node(ni.Meta.Name), ni, nil); err != nil {
+	if err := n.storage.Put(n.context, n.storage.Collection().Node().Info(), ni.SelfLink().String(), ni, nil); err != nil {
 		log.V(logLevel).Debugf("%s:create:> insert node err: %v", logNodePrefix, err)
 		return nil, err
 	}
@@ -88,7 +88,9 @@ func (n *Node) Get(hostname string) (*types.Node, error) {
 
 	node := new(types.Node)
 
-	err := n.storage.Get(n.context, n.storage.Collection().Node().Info(), n.storage.Key().Node(hostname), &node, nil)
+	sl := types.NewNodeSelfLink(hostname).String()
+
+	err := n.storage.Get(n.context, n.storage.Collection().Node().Info(), sl, &node, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -106,7 +108,7 @@ func (n *Node) Get(hostname string) (*types.Node, error) {
 func (n *Node) Set(node *types.Node) error {
 
 	log.V(logLevel).Debugf("%s:setmeta:> update Node %#v", logNodePrefix, node)
-	if err := n.storage.Set(n.context, n.storage.Collection().Node().Info(), n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
+	if err := n.storage.Set(n.context, n.storage.Collection().Node().Info(), node.SelfLink().String(), node, nil); err != nil {
 		log.V(logLevel).Errorf("%s:setmeta:> update Node meta err: %v", logNodePrefix, err)
 		return err
 	}
@@ -118,7 +120,7 @@ func (n *Node) Remove(node *types.Node) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove node %s", logNodePrefix, node.Meta.Name)
 
-	if err := n.storage.Del(n.context, n.storage.Collection().Node().Info(), n.storage.Key().Node(node.Meta.Name)); err != nil {
+	if err := n.storage.Del(n.context, n.storage.Collection().Node().Info(), node.SelfLink().String()); err != nil {
 		log.V(logLevel).Debugf("%s:remove:> remove node err: %v", logNodePrefix, err)
 		return err
 	}

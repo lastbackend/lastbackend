@@ -81,6 +81,21 @@ func (nc *NamespaceClient) Service(args ...string) types.ServiceClientV1 {
 	return newServiceClient(nc.client, nc.name, name)
 }
 
+func (nc *NamespaceClient) Job(args ...string) types.JobClientV1 {
+	name := ""
+	// Get any parameters passed to us out of the args variable into "real"
+	// variables we created for them.
+	for i := range args {
+		switch i {
+		case 0: // hostname
+			name = args[0]
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
+	}
+	return newJobClient(nc.client, nc.name, name)
+}
+
 func (nc *NamespaceClient) Route(args ...string) types.RouteClientV1 {
 	name := ""
 	// Get any parameters passed to us out of the args variable into "real"

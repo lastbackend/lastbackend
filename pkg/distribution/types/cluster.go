@@ -29,9 +29,14 @@ type ClusterMap struct {
 
 type Cluster struct {
 	System
-	Meta   Meta          `json:"meta"`
+	Meta   ClusterMeta   `json:"meta"`
 	Status ClusterStatus `json:"status"`
 	Spec   ClusterSpec   `json:"spec"`
+}
+
+type ClusterMeta struct {
+	Meta
+	SelfLink ClusterSelfLink `json:"self_link"`
 }
 
 type ClusterStatus struct {

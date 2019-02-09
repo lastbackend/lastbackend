@@ -96,7 +96,7 @@ func (c *CacheIngressManifest) SetEndpointManifest(addr string, s *types.Endpoin
 func (c *CacheIngressManifest) SetIngress(ingress *types.Ingress) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	c.ingress[ingress.SelfLink()] = ingress
+	c.ingress[ingress.SelfLink().String()] = ingress
 }
 
 func (c *CacheIngressManifest) DelIngress(selflink string) {
@@ -110,10 +110,10 @@ func (c *CacheIngressManifest) SetDiscovery(discovery *types.Discovery) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	dvc, ok := c.discovery[discovery.SelfLink()]
+	dvc, ok := c.discovery[discovery.SelfLink().String()]
 
 	if !ok {
-		c.discovery[discovery.SelfLink()] = discovery
+		c.discovery[discovery.SelfLink().String()] = discovery
 		c.SetResolvers()
 		return
 	}
@@ -131,7 +131,7 @@ func (c *CacheIngressManifest) SetDiscovery(discovery *types.Discovery) {
 		break
 	}
 	if update {
-		c.discovery[discovery.SelfLink()] = discovery
+		c.discovery[discovery.SelfLink().String()] = discovery
 		c.SetResolvers()
 	}
 	return

@@ -30,7 +30,7 @@ import (
 
 const (
 	logDiscoveryPrefix = "distribution:discovery"
-	ttlDiscovery = uint64(5*time.Second)
+	ttlDiscovery       = uint64(5 * time.Second)
 )
 
 type Discovery struct {
@@ -54,7 +54,7 @@ func (n *Discovery) Put(discovery *types.Discovery) error {
 	log.V(logLevel).Debugf("%s:create:> create discovery in cluster", logDiscoveryPrefix)
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Discovery().Info(),
-		n.storage.Key().Discovery(discovery.SelfLink()), discovery, nil); err != nil {
+		discovery.SelfLink().String(), discovery, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert discovery err: %v", logDiscoveryPrefix, err)
 		return err
 	}
@@ -63,7 +63,7 @@ func (n *Discovery) Put(discovery *types.Discovery) error {
 	opts.Ttl = ttlDiscovery
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Discovery().Status(),
-		n.storage.Key().Discovery(discovery.SelfLink()), discovery.Status, opts); err != nil {
+		discovery.SelfLink().String(), discovery.Status, opts); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert discovery status err: %v", logDiscoveryPrefix, err)
 		return err
 	}
@@ -76,7 +76,7 @@ func (n *Discovery) Get(name string) (*types.Discovery, error) {
 	log.V(logLevel).Debugf("%s:get:> get by name %s", logDiscoveryPrefix, name)
 
 	discovery := new(types.Discovery)
-	err := n.storage.Get(n.context, n.storage.Collection().Discovery().Info(), n.storage.Key().Discovery(name), discovery, nil)
+	err := n.storage.Get(n.context, n.storage.Collection().Discovery().Info(), discovery.SelfLink().String(), discovery, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -99,14 +99,14 @@ func (n *Discovery) Set(discovery *types.Discovery) error {
 	opts.Force = true
 
 	err := n.storage.Set(n.context, n.storage.Collection().Discovery().Info(),
-		n.storage.Key().Discovery(discovery.Meta.Name), discovery, nil)
+		discovery.SelfLink().String(), discovery, nil)
 	if err != nil {
 		log.V(logLevel).Debugf("%s:get:> set discovery `%s` err: %v", logDiscoveryPrefix, discovery.Meta.Name, err)
 		return err
 	}
 
 	if err := n.storage.Set(n.context, n.storage.Collection().Discovery().Status(),
-		n.storage.Key().Discovery(discovery.Meta.Name), discovery.Status, nil); err != nil {
+		discovery.SelfLink().String(), discovery.Status, nil); err != nil {
 		log.V(logLevel).Debugf("%s:get:> set discovery status `%s` err: %v", logDiscoveryPrefix, discovery.Meta.Name, err)
 		return err
 	}
@@ -122,7 +122,7 @@ func (n *Discovery) SetOnline(discovery *types.Discovery) error {
 	opts.Force = true
 
 	err := n.storage.Set(n.context, n.storage.Collection().Discovery().Status(),
-		n.storage.Key().Discovery(discovery.Meta.Name), discovery.Status, nil)
+		discovery.SelfLink().String(), discovery.Status, nil)
 	if err != nil {
 		log.V(logLevel).Debugf("%s:get:> set discovery `%s` err: %v", logDiscoveryPrefix, discovery.Meta.Name, err)
 		return err
@@ -135,14 +135,13 @@ func (n *Discovery) Remove(discovery *types.Discovery) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove discovery %s", logDiscoveryPrefix, discovery.Meta.Name)
 
-	if err := n.storage.Del(n.context, n.storage.Collection().Discovery().Info(), n.storage.Key().Discovery(discovery.SelfLink())); err != nil {
+	if err := n.storage.Del(n.context, n.storage.Collection().Discovery().Info(), discovery.SelfLink().String()); err != nil {
 		log.V(logLevel).Debugf("%s:remove:> remove discovery err: %v", logDiscoveryPrefix, err)
 		return err
 	}
 
 	return nil
 }
-
 
 func (n *Discovery) Watch(ch chan types.DiscoveryEvent, rev *int64) error {
 
@@ -235,4 +234,3 @@ func (n *Discovery) WatchOnline(ch chan types.DiscoveryStatusEvent) error {
 func NewDiscoveryModel(ctx context.Context, stg storage.Storage) *Discovery {
 	return &Discovery{ctx, stg}
 }
-

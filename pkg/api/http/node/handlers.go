@@ -379,7 +379,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if snet == nil {
-			if _, err := sn.SubnetPut(node.SelfLink(), opts.Network.SubnetSpec); err != nil {
+			if _, err := sn.SubnetPut(node.SelfLink().String(), opts.Network.SubnetSpec); err != nil {
 				log.V(logLevel).Errorf("%s:connect:> snet put error: %s", logPrefix, err.Error())
 				errors.HTTP.InternalServerError(w)
 			}
@@ -413,7 +413,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if snet == nil {
-		if _, err := sn.SubnetPut(node.SelfLink(), opts.Network.SubnetSpec); err != nil {
+		if _, err := sn.SubnetPut(node.SelfLink().String(), opts.Network.SubnetSpec); err != nil {
 			log.V(logLevel).Errorf("%s:connect:> snet put error: %s", logPrefix, err.Error())
 			errors.HTTP.InternalServerError(w)
 		}
@@ -518,7 +518,12 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		pod, err := pm.Get(keys[0], keys[1], keys[2], keys[3])
+		sl := types.PodSelfLink{}
+		if err := sl.Parse(p); err != nil {
+			continue
+		}
+
+		pod, err := pm.Get(sl.String())
 		if err != nil {
 			log.V(logLevel).Errorf("%s:setpodstatus:> pod not found selflink err: %s", logPrefix, p)
 			errors.HTTP.InternalServerError(w)

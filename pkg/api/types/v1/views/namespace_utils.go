@@ -77,11 +77,13 @@ func (r *Namespace) ToMeta(obj types.NamespaceMeta) NamespaceMeta {
 	meta := NamespaceMeta{}
 	meta.Name = obj.Name
 	meta.Description = obj.Description
-	meta.SelfLink = obj.SelfLink
+	meta.SelfLink = obj.SelfLink.String()
 	meta.Endpoint = obj.Endpoint
 	meta.Created = obj.Created
 	meta.Updated = obj.Updated
 	meta.Labels = make(map[string]string, 0)
+
+	fmt.Println(meta.SelfLink)
 
 	if obj.Labels != nil {
 		meta.Labels = obj.Meta.Labels

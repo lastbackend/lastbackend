@@ -32,9 +32,9 @@ import (
 )
 
 const (
-	logNamespacePrefix     = "distribution:namespace"
-	defaultNamespaceRam    = "2GB"
-	defaultNamespaceCPU    = "200m"
+	logNamespacePrefix  = "distribution:namespace"
+	defaultNamespaceRam = "2GB"
+	defaultNamespaceCPU = "200m"
 )
 
 type Namespace struct {
@@ -79,8 +79,9 @@ func (n *Namespace) Get(name string) (*types.Namespace, error) {
 	}
 
 	namespace := new(types.Namespace)
+	key := types.NewNamespaceSelfLink(name).String()
 
-	err := n.storage.Get(n.context, n.storage.Collection().Namespace(), n.storage.Key().Namespace(name), &namespace, nil)
+	err := n.storage.Get(n.context, n.storage.Collection().Namespace(), key, &namespace, nil)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> namespace by name `%s` not found", logNamespacePrefix, name)
@@ -102,7 +103,7 @@ func (n *Namespace) Create(ns *types.Namespace) (*types.Namespace, error) {
 	ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", ns.Meta.Name, viper.GetString("domain.internal")))
 	ns.SelfLink()
 
-	if err := n.storage.Put(n.context, n.storage.Collection().Namespace(), n.storage.Key().Namespace(ns.Meta.Name), ns, nil); err != nil {
+	if err := n.storage.Put(n.context, n.storage.Collection().Namespace(), ns.SelfLink().String(), ns, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert namespace err: %v", logNamespacePrefix, err)
 		return nil, err
 	}
@@ -115,7 +116,7 @@ func (n *Namespace) Update(namespace *types.Namespace) error {
 	log.V(logLevel).Debugf("%s:update:> update Namespace %#v", logNamespacePrefix, namespace)
 
 	if err := n.storage.Set(n.context, n.storage.Collection().Namespace(),
-		n.storage.Key().Namespace(namespace.Meta.Name), namespace, nil); err != nil {
+		namespace.SelfLink().String(), namespace, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> namespace update err: %v", logNamespacePrefix, err)
 		return err
 	}
@@ -123,11 +124,11 @@ func (n *Namespace) Update(namespace *types.Namespace) error {
 	return nil
 }
 
-func (n *Namespace) Remove(namespace *types.Namespace) error {
+func (n *Namespace) Remove(ns *types.Namespace) error {
 
-	log.V(logLevel).Debugf("%s:remove:> remove namespace %s", logNamespacePrefix, namespace.Meta.Name)
+	log.V(logLevel).Debugf("%s:remove:> remove namespace %s", logNamespacePrefix, ns.Meta.Name)
 
-	if err := n.storage.Del(n.context, n.storage.Collection().Namespace(), n.storage.Key().Namespace(namespace.Meta.Name)); err != nil {
+	if err := n.storage.Del(n.context, n.storage.Collection().Namespace(), ns.SelfLink().String()); err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove namespace err: %v", logNamespacePrefix, err)
 		return err
 	}

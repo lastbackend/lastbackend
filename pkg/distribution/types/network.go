@@ -67,7 +67,8 @@ type SubnetStatus struct {
 
 type SubnetMeta struct {
 	Meta
-	Node string `json:"node"`
+	SelfLink SubnetSelfLink `json:"self_link"`
+	Node     string         `json:"node"`
 }
 
 // swagger:model subnet_spec
@@ -111,9 +112,6 @@ func SubnetSpecEqual(n *SubnetSpec, nt *SubnetSpec) bool {
 	return true
 }
 
-func (s Subnet) SelfLink() string {
-	if s.Meta.SelfLink == EmptyString {
-		s.Meta.SelfLink = s.Meta.Name
-	}
-	return s.Meta.SelfLink
+func (s Subnet) SelfLink() *SubnetSelfLink {
+	return &s.Meta.SelfLink
 }

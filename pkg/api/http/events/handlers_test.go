@@ -536,80 +536,80 @@ func TestEventsSubscribe(t *testing.T) {
 
 			switch tc.args.kind {
 			case types.KindNamespace:
-				err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns0.Meta.Name), ns0, nil)
+				err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns0.SelfLink().String(), ns0, nil)
 				if !assert.NoError(t, err, "initial namespace insert error") {
 					return
 				}
 			case types.KindService:
-				err := tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(sc0.Meta.Namespace, sc0.Meta.Name), sc0, nil)
+				err := tc.fields.stg.Put(context.Background(), stg.Collection().Service(), sc0.SelfLink().String(), sc0, nil)
 				if !assert.NoError(t, err, "initial service insert error") {
 					return
 				}
 			case types.KindDeployment:
-				err := tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), tc.fields.stg.Key().Deployment(dp0.Meta.Namespace, dp0.Meta.Service, dp0.Meta.Name), dp0, nil)
+				err := tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), dp0.SelfLink().String(), dp0, nil)
 				if !assert.NoError(t, err, "initial service insert error") {
 					return
 				}
 
 			case types.KindPod:
-				err := tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), pd0.SelfLink(), pd0, nil)
+				err := tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), pd0.SelfLink().String(), pd0, nil)
 				if !assert.NoError(t, err, "initial service insert error") {
 					return
 				}
 
 			case types.KindRoute:
-				err := tc.fields.stg.Put(context.Background(), stg.Collection().Route(), tc.fields.stg.Key().Route(rt0.Meta.Namespace, rt0.Meta.Name), rt0, nil)
+				err := tc.fields.stg.Put(context.Background(), stg.Collection().Route(), rt0.SelfLink().String(), rt0, nil)
 				if !assert.NoError(t, err, "initial service insert error") {
 					return
 				}
 
 			case types.KindSecret:
-				err := tc.fields.stg.Put(context.Background(), stg.Collection().Secret(), tc.fields.stg.Key().Secret(sk0.Meta.Namespace, sk0.Meta.Name), sk0, nil)
+				err := tc.fields.stg.Put(context.Background(), stg.Collection().Secret(), sk0.SelfLink().String(), sk0, nil)
 				if !assert.NoError(t, err, "initial service insert error") {
 					return
 				}
 
 			case types.KindConfig:
-				err := tc.fields.stg.Put(context.Background(), stg.Collection().Config(), tc.fields.stg.Key().Config(cf0.Meta.Namespace, cf0.Meta.Name), cf0, nil)
+				err := tc.fields.stg.Put(context.Background(), stg.Collection().Config(), cf0.SelfLink().String(), cf0, nil)
 				if !assert.NoError(t, err, "initial service insert error") {
 					return
 				}
 
 			case types.KindVolume:
-				err := tc.fields.stg.Put(context.Background(), stg.Collection().Volume(), tc.fields.stg.Key().Volume(vl0.Meta.Namespace, vl0.Meta.Name), vl0, nil)
+				err := tc.fields.stg.Put(context.Background(), stg.Collection().Volume(), vl0.SelfLink().String(), vl0, nil)
 				if !assert.NoError(t, err, "initial service insert error") {
 					return
 				}
 
 			case types.KindNode:
-				err := tc.fields.stg.Put(context.Background(), stg.Collection().Node().Status(), tc.fields.stg.Key().Node(nd0.Meta.SelfLink), nd0, nil)
+				err := tc.fields.stg.Put(context.Background(), stg.Collection().Node().Status(), nd0.SelfLink().String(), nd0, nil)
 				if !assert.NoError(t, err, "initial node status insert error") {
 					return
 				}
 
-				err = tc.fields.stg.Put(context.Background(), stg.Collection().Node().Info(), tc.fields.stg.Key().Node(nd0.Meta.SelfLink), nd0, nil)
+				err = tc.fields.stg.Put(context.Background(), stg.Collection().Node().Info(), nd0.SelfLink().String(), nd0, nil)
 				if !assert.NoError(t, err, "initial node info insert error") {
 					return
 				}
 
 			case types.KindDiscovery:
-				err := tc.fields.stg.Put(context.Background(), stg.Collection().Discovery().Status(), tc.fields.stg.Key().Discovery(dc0.Meta.SelfLink), dc0, nil)
+				err := tc.fields.stg.Put(context.Background(), stg.Collection().Discovery().Status(), dc0.SelfLink().String(), dc0, nil)
 				if !assert.NoError(t, err, "initial node status insert error") {
 					return
 				}
 
-				err = tc.fields.stg.Put(context.Background(), stg.Collection().Discovery().Info(), tc.fields.stg.Key().Discovery(dc0.Meta.SelfLink), dc0, nil)
+				err = tc.fields.stg.Put(context.Background(), stg.Collection().Discovery().Info(), dc0.SelfLink().String(), dc0, nil)
 				if !assert.NoError(t, err, "initial node info insert error") {
 					return
 				}
 
 			case types.KindIngress:
-				err := tc.fields.stg.Put(context.Background(), stg.Collection().Ingress().Status(), tc.fields.stg.Key().Ingress(ig0.Meta.SelfLink), ig0, nil)
+				err := tc.fields.stg.Put(context.Background(), stg.Collection().Ingress().Status(), ig0.SelfLink().String(), ig0, nil)
 				if !assert.NoError(t, err, "initial node status insert error") {
 					return
 				}
 
-				err = tc.fields.stg.Put(context.Background(), stg.Collection().Ingress().Info(), tc.fields.stg.Key().Ingress(ig0.Meta.SelfLink), ig0, nil)
+				err = tc.fields.stg.Put(context.Background(), stg.Collection().Ingress().Info(), ig0.SelfLink().String(), ig0, nil)
 				if !assert.NoError(t, err, "initial node info insert error") {
 					return
 				}
@@ -684,139 +684,139 @@ func TestEventsSubscribe(t *testing.T) {
 				item := tc.args.obj.(*types.Namespace)
 				switch tc.args.action {
 				case types.EventActionCreate:
-					err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(item.Meta.Name), item, nil)
+					err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), item.SelfLink().String(), item, nil)
 				case types.EventActionUpdate:
-					err = tc.fields.stg.Set(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(item.Meta.Name), item, nil)
+					err = tc.fields.stg.Set(context.Background(), stg.Collection().Namespace(), item.SelfLink().String(), item, nil)
 				case types.EventActionDelete:
-					err = tc.fields.stg.Del(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(item.Meta.Name))
+					err = tc.fields.stg.Del(context.Background(), stg.Collection().Namespace(), item.SelfLink().String())
 				}
 
 			case types.KindService:
 				item := tc.args.obj.(*types.Service)
 				switch tc.args.action {
 				case types.EventActionCreate:
-					err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(item.Meta.Namespace, item.Meta.Name), item, nil)
+					err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), item.SelfLink().String(), item, nil)
 				case types.EventActionUpdate:
-					err = tc.fields.stg.Set(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(item.Meta.Namespace, item.Meta.Name), item, nil)
+					err = tc.fields.stg.Set(context.Background(), stg.Collection().Service(), item.SelfLink().String(), item, nil)
 				case types.EventActionDelete:
-					err = tc.fields.stg.Del(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(item.Meta.Namespace, item.Meta.Name))
+					err = tc.fields.stg.Del(context.Background(), stg.Collection().Service(), item.SelfLink().String())
 				}
 
 			case types.KindDeployment:
 				item := tc.args.obj.(*types.Deployment)
 				switch tc.args.action {
 				case types.EventActionCreate:
-					err = tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), tc.fields.stg.Key().Deployment(item.Meta.Namespace, item.Meta.Service, item.Meta.Name), item, nil)
+					err = tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), item.SelfLink().String(), item, nil)
 				case types.EventActionUpdate:
-					err = tc.fields.stg.Set(context.Background(), stg.Collection().Deployment(), tc.fields.stg.Key().Deployment(item.Meta.Namespace, item.Meta.Service, item.Meta.Name), item, nil)
+					err = tc.fields.stg.Set(context.Background(), stg.Collection().Deployment(), item.SelfLink().String(), item, nil)
 				case types.EventActionDelete:
-					err = tc.fields.stg.Del(context.Background(), stg.Collection().Deployment(), tc.fields.stg.Key().Deployment(item.Meta.Namespace, item.Meta.Service, item.Meta.Name))
+					err = tc.fields.stg.Del(context.Background(), stg.Collection().Deployment(), item.SelfLink().String())
 				}
 
 			case types.KindPod:
 				item := tc.args.obj.(*types.Pod)
 				switch tc.args.action {
 				case types.EventActionCreate:
-					err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), item.SelfLink(), item, nil)
+					err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), item.SelfLink().String(), item, nil)
 				case types.EventActionUpdate:
-					err = tc.fields.stg.Set(context.Background(), stg.Collection().Pod(), item.SelfLink(), item, nil)
+					err = tc.fields.stg.Set(context.Background(), stg.Collection().Pod(), item.SelfLink().String(), item, nil)
 				case types.EventActionDelete:
-					err = tc.fields.stg.Del(context.Background(), stg.Collection().Pod(), item.SelfLink())
+					err = tc.fields.stg.Del(context.Background(), stg.Collection().Pod(), item.SelfLink().String())
 				}
 
 			case types.KindVolume:
 				item := tc.args.obj.(*types.Volume)
 				switch tc.args.action {
 				case types.EventActionCreate:
-					err = tc.fields.stg.Put(context.Background(), stg.Collection().Volume(), tc.fields.stg.Key().Volume(item.Meta.Namespace, item.Meta.Name), item, nil)
+					err = tc.fields.stg.Put(context.Background(), stg.Collection().Volume(), item.SelfLink().String(), item, nil)
 				case types.EventActionUpdate:
-					err = tc.fields.stg.Set(context.Background(), stg.Collection().Volume(), tc.fields.stg.Key().Volume(item.Meta.Namespace, item.Meta.Name), item, nil)
+					err = tc.fields.stg.Set(context.Background(), stg.Collection().Volume(), item.SelfLink().String(), item, nil)
 				case types.EventActionDelete:
-					err = tc.fields.stg.Del(context.Background(), stg.Collection().Volume(), tc.fields.stg.Key().Volume(item.Meta.Namespace, item.Meta.Name))
+					err = tc.fields.stg.Del(context.Background(), stg.Collection().Volume(), item.SelfLink().String())
 				}
 
 			case types.KindSecret:
 				item := tc.args.obj.(*types.Secret)
 				switch tc.args.action {
 				case types.EventActionCreate:
-					err = tc.fields.stg.Put(context.Background(), stg.Collection().Secret(), tc.fields.stg.Key().Secret(item.Meta.Namespace, item.Meta.Name), item, nil)
+					err = tc.fields.stg.Put(context.Background(), stg.Collection().Secret(), item.SelfLink().String(), item, nil)
 				case types.EventActionUpdate:
-					err = tc.fields.stg.Set(context.Background(), stg.Collection().Secret(), tc.fields.stg.Key().Secret(item.Meta.Namespace, item.Meta.Name), item, nil)
+					err = tc.fields.stg.Set(context.Background(), stg.Collection().Secret(), item.SelfLink().String(), item, nil)
 				case types.EventActionDelete:
-					err = tc.fields.stg.Del(context.Background(), stg.Collection().Secret(), tc.fields.stg.Key().Secret(item.Meta.Namespace, item.Meta.Name))
+					err = tc.fields.stg.Del(context.Background(), stg.Collection().Secret(), item.SelfLink().String())
 				}
 
 			case types.KindConfig:
 				item := tc.args.obj.(*types.Config)
 				switch tc.args.action {
 				case types.EventActionCreate:
-					err = tc.fields.stg.Put(context.Background(), stg.Collection().Config(), tc.fields.stg.Key().Config(item.Meta.Namespace, item.Meta.Name), item, nil)
+					err = tc.fields.stg.Put(context.Background(), stg.Collection().Config(), item.SelfLink().String(), item, nil)
 				case types.EventActionUpdate:
-					err = tc.fields.stg.Set(context.Background(), stg.Collection().Config(), tc.fields.stg.Key().Config(item.Meta.Namespace, item.Meta.Name), item, nil)
+					err = tc.fields.stg.Set(context.Background(), stg.Collection().Config(), item.SelfLink().String(), item, nil)
 				case types.EventActionDelete:
-					err = tc.fields.stg.Del(context.Background(), stg.Collection().Config(), tc.fields.stg.Key().Config(item.Meta.Namespace, item.Meta.Name))
+					err = tc.fields.stg.Del(context.Background(), stg.Collection().Config(), item.SelfLink().String())
 				}
 
 			case types.KindRoute:
 				item := tc.args.obj.(*types.Route)
 				switch tc.args.action {
 				case types.EventActionCreate:
-					err = tc.fields.stg.Put(context.Background(), stg.Collection().Route(), tc.fields.stg.Key().Route(item.Meta.Namespace, item.Meta.Name), item, nil)
+					err = tc.fields.stg.Put(context.Background(), stg.Collection().Route(), item.SelfLink().String(), item, nil)
 				case types.EventActionUpdate:
-					err = tc.fields.stg.Set(context.Background(), stg.Collection().Route(), tc.fields.stg.Key().Route(item.Meta.Namespace, item.Meta.Name), item, nil)
+					err = tc.fields.stg.Set(context.Background(), stg.Collection().Route(), item.SelfLink().String(), item, nil)
 				case types.EventActionDelete:
-					err = tc.fields.stg.Del(context.Background(), stg.Collection().Route(), tc.fields.stg.Key().Route(item.Meta.Namespace, item.Meta.Name))
+					err = tc.fields.stg.Del(context.Background(), stg.Collection().Route(), item.SelfLink().String())
 				}
 
 			case types.KindNode:
 				item := tc.args.obj.(*types.Node)
 				switch tc.args.action {
 				case types.EventActionCreate:
-					err = tc.fields.stg.Put(context.Background(), stg.Collection().Node().Status(), tc.fields.stg.Key().Node(item.Meta.SelfLink), item.Status, nil)
+					err = tc.fields.stg.Put(context.Background(), stg.Collection().Node().Status(), item.SelfLink().String(), item.Status, nil)
 					<-time.NewTimer(10 * time.Millisecond).C
-					err = tc.fields.stg.Put(context.Background(), stg.Collection().Node().Info(), tc.fields.stg.Key().Node(item.Meta.SelfLink), item, nil)
+					err = tc.fields.stg.Put(context.Background(), stg.Collection().Node().Info(), item.SelfLink().String(), item, nil)
 				case types.EventActionUpdate:
-					err = tc.fields.stg.Set(context.Background(), stg.Collection().Node().Status(), tc.fields.stg.Key().Node(item.Meta.SelfLink), item.Status, nil)
+					err = tc.fields.stg.Set(context.Background(), stg.Collection().Node().Status(), item.SelfLink().String(), item.Status, nil)
 					<-time.NewTimer(10 * time.Millisecond).C
-					err = tc.fields.stg.Set(context.Background(), stg.Collection().Node().Info(), tc.fields.stg.Key().Node(item.Meta.SelfLink), item, nil)
+					err = tc.fields.stg.Set(context.Background(), stg.Collection().Node().Info(), item.SelfLink().String(), item, nil)
 				case types.EventActionDelete:
-					err = tc.fields.stg.Del(context.Background(), stg.Collection().Node().Status(), tc.fields.stg.Key().Node(item.Meta.SelfLink))
+					err = tc.fields.stg.Del(context.Background(), stg.Collection().Node().Status(), item.SelfLink().String())
 					<-time.NewTimer(10 * time.Millisecond).C
-					err = tc.fields.stg.Del(context.Background(), stg.Collection().Node().Info(), tc.fields.stg.Key().Node(item.Meta.SelfLink))
+					err = tc.fields.stg.Del(context.Background(), stg.Collection().Node().Info(), item.SelfLink().String())
 				}
 
 			case types.KindDiscovery:
 				item := tc.args.obj.(*types.Discovery)
 				switch tc.args.action {
 				case types.EventActionCreate:
-					err = tc.fields.stg.Put(context.Background(), stg.Collection().Discovery().Status(), tc.fields.stg.Key().Discovery(item.Meta.SelfLink), item.Status, nil)
+					err = tc.fields.stg.Put(context.Background(), stg.Collection().Discovery().Status(), item.SelfLink().String(), item.Status, nil)
 					<-time.NewTimer(10 * time.Millisecond).C
-					err = tc.fields.stg.Put(context.Background(), stg.Collection().Discovery().Info(), tc.fields.stg.Key().Discovery(item.Meta.SelfLink), item, nil)
+					err = tc.fields.stg.Put(context.Background(), stg.Collection().Discovery().Info(), item.SelfLink().String(), item, nil)
 				case types.EventActionUpdate:
-					err = tc.fields.stg.Set(context.Background(), stg.Collection().Discovery().Status(), tc.fields.stg.Key().Discovery(item.Meta.SelfLink), item.Status, nil)
+					err = tc.fields.stg.Set(context.Background(), stg.Collection().Discovery().Status(), item.SelfLink().String(), item.Status, nil)
 					<-time.NewTimer(10 * time.Millisecond).C
-					err = tc.fields.stg.Set(context.Background(), stg.Collection().Discovery().Info(), tc.fields.stg.Key().Discovery(item.Meta.SelfLink), item, nil)
+					err = tc.fields.stg.Set(context.Background(), stg.Collection().Discovery().Info(), item.SelfLink().String(), item, nil)
 				case types.EventActionDelete:
-					err = tc.fields.stg.Del(context.Background(), stg.Collection().Discovery().Status(), tc.fields.stg.Key().Discovery(item.Meta.SelfLink))
+					err = tc.fields.stg.Del(context.Background(), stg.Collection().Discovery().Status(), item.SelfLink().String())
 					<-time.NewTimer(10 * time.Millisecond).C
-					err = tc.fields.stg.Del(context.Background(), stg.Collection().Discovery().Info(), tc.fields.stg.Key().Discovery(item.Meta.SelfLink))
+					err = tc.fields.stg.Del(context.Background(), stg.Collection().Discovery().Info(), item.SelfLink().String())
 				}
 
 			case types.KindIngress:
 				item := tc.args.obj.(*types.Ingress)
 				switch tc.args.action {
 				case types.EventActionCreate:
-					err = tc.fields.stg.Put(context.Background(), stg.Collection().Ingress().Status(), tc.fields.stg.Key().Ingress(item.Meta.SelfLink), item.Status, nil)
+					err = tc.fields.stg.Put(context.Background(), stg.Collection().Ingress().Status(), item.SelfLink().String(), item.Status, nil)
 					<-time.NewTimer(10 * time.Millisecond).C
-					err = tc.fields.stg.Put(context.Background(), stg.Collection().Ingress().Info(), tc.fields.stg.Key().Ingress(item.Meta.SelfLink), item, nil)
+					err = tc.fields.stg.Put(context.Background(), stg.Collection().Ingress().Info(), item.SelfLink().String(), item, nil)
 				case types.EventActionUpdate:
-					err = tc.fields.stg.Set(context.Background(), stg.Collection().Ingress().Status(), tc.fields.stg.Key().Ingress(item.Meta.SelfLink), item.Status, nil)
+					err = tc.fields.stg.Set(context.Background(), stg.Collection().Ingress().Status(), item.SelfLink().String(), item.Status, nil)
 					<-time.NewTimer(10 * time.Millisecond).C
-					err = tc.fields.stg.Set(context.Background(), stg.Collection().Ingress().Info(), tc.fields.stg.Key().Ingress(item.Meta.SelfLink), item, nil)
+					err = tc.fields.stg.Set(context.Background(), stg.Collection().Ingress().Info(), item.SelfLink().String(), item, nil)
 				case types.EventActionDelete:
-					err = tc.fields.stg.Del(context.Background(), stg.Collection().Ingress().Status(), tc.fields.stg.Key().Ingress(item.Meta.SelfLink))
+					err = tc.fields.stg.Del(context.Background(), stg.Collection().Ingress().Status(), item.SelfLink().String())
 					<-time.NewTimer(10 * time.Millisecond).C
-					err = tc.fields.stg.Del(context.Background(), stg.Collection().Ingress().Info(), tc.fields.stg.Key().Ingress(item.Meta.SelfLink))
+					err = tc.fields.stg.Del(context.Background(), stg.Collection().Ingress().Info(), item.SelfLink().String())
 				}
 
 			}
@@ -835,7 +835,7 @@ func getNamespaceAsset(name, desc string) *types.Namespace {
 
 	n.Meta.Name = name
 	n.Meta.Description = desc
-
+	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
 	return &n
 }
 
@@ -850,6 +850,7 @@ func getServiceAsset(namespace, name, desc string) *types.Service {
 	s.Spec.Template.Containers = append(s.Spec.Template.Containers, &types.SpecTemplateContainer{
 		Name: "demo",
 	})
+	s.Meta.SelfLink = *types.NewServiceSelfLink(namespace, name)
 	return &s
 }
 
@@ -859,6 +860,7 @@ func getDeploymentAsset(namespace, service, name string) *types.Deployment {
 	d.Meta.Namespace = namespace
 	d.Meta.Service = service
 	d.Meta.Name = name
+	d.Meta.SelfLink = *types.NewDeploymentSelfLink(namespace, service, name)
 	return &d
 }
 
@@ -868,9 +870,8 @@ func getPodAsset(namespace, service, deployment, name, desc string) *types.Pod {
 	p.Meta.Name = name
 	p.Meta.Description = desc
 	p.Meta.Namespace = namespace
-	p.Meta.Parent.Kind = types.KindDeployment
-	p.Meta.Parent.SelfLink = fmt.Sprintf("%s:%s:%s", namespace, service, deployment)
-	p.SelfLink()
+	psl, _ := types.NewPodSelfLink(types.KindDeployment, types.NewDeploymentSelfLink(namespace, service, deployment).String(), name)
+	p.Meta.SelfLink = *psl
 
 	return &p
 }
@@ -884,6 +885,7 @@ func getSecretAsset(namespace, name string) *types.Secret {
 
 	s.Spec.Type = types.KindSecretOpaque
 	s.Spec.Data = make(map[string][]byte, 0)
+	s.Meta.SelfLink = *types.NewSecretSelfLink(namespace, name)
 	return &s
 }
 
@@ -894,6 +896,7 @@ func getConfigAsset(namespace, name string) *types.Config {
 	c.Meta.Namespace = namespace
 	c.Spec.Type = types.KindConfigText
 	c.Spec.Data = make(map[string]string, 0)
+	c.Meta.SelfLink = *types.NewConfigSelfLink(namespace, name)
 	return &c
 }
 
@@ -905,6 +908,7 @@ func getVolumeAsset(namespace, name string) *types.Volume {
 	r.Spec.Selector.Node = ""
 	r.Spec.HostPath = "/"
 	r.Spec.Capacity.Storage, _ = resource.DecodeMemoryResource("128MB")
+	r.Meta.SelfLink = *types.NewVolumeSelfLink(namespace, name)
 	return &r
 }
 
@@ -915,6 +919,7 @@ func getRouteAsset(namespace, name string) *types.Route {
 	r.Meta.Name = name
 	r.Spec.Endpoint = fmt.Sprintf("%s.test-domain.com", name)
 	r.Spec.Rules = make([]types.RouteRule, 0)
+	r.Meta.SelfLink = *types.NewRouteSelfLink(namespace, name)
 	return &r
 }
 
@@ -945,7 +950,7 @@ func getNodeAsset(name, desc string, online bool) *types.Node {
 	n.Meta.Description = desc
 	n.Meta.Hostname = name
 	n.Meta.SetDefault()
-	n.SelfLink()
+	n.Meta.SelfLink = *types.NewNodeSelfLink(n.Meta.Hostname)
 
 	return &n
 }
@@ -962,7 +967,7 @@ func getDiscoveryAsset(name, desc string, online bool) *types.Discovery {
 	n.Meta.Name = name
 	n.Meta.Description = desc
 	n.Meta.SetDefault()
-	n.SelfLink()
+	n.Meta.SelfLink = *types.NewDiscoverySelfLink(n.Meta.Name)
 
 	return &n
 }
@@ -979,7 +984,7 @@ func getIngressAsset(name, desc string, online bool) *types.Ingress {
 	n.Meta.Name = name
 	n.Meta.Description = desc
 	n.Meta.SetDefault()
-	n.SelfLink()
+	n.Meta.SelfLink = *types.NewIngressSelfLink(n.Meta.Name)
 
 	return &n
 }

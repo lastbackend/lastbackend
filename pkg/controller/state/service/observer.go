@@ -89,12 +89,13 @@ func (ss *ServiceState) Restore() error {
 		log.Infof("%s: restore: restore pod: %s", logPrefix, p.SelfLink())
 
 		// Check if deployment map for pod exists
-		if _, ok := ss.pod.list[p.DeploymentLink()]; !ok {
-			ss.pod.list[p.DeploymentLink()] = make(map[string]*types.Pod)
+		_, sl := p.SelfLink().Parent()
+		if _, ok := ss.pod.list[sl.String()]; !ok {
+			ss.pod.list[sl.String()] = make(map[string]*types.Pod)
 		}
 
 		// put pod into map by deployment name and pod name
-		ss.pod.list[p.DeploymentLink()][p.SelfLink()] = p
+		ss.pod.list[sl.String()][p.SelfLink().String()] = p
 	}
 
 	// Get all deployments
@@ -110,7 +111,7 @@ func (ss *ServiceState) Restore() error {
 
 		var index int
 
-		index, err := strconv.Atoi(strings.Replace(d.Meta.Name,"v","", -1))
+		index, err := strconv.Atoi(strings.Replace(d.Meta.Name, "v", "", -1))
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -121,7 +122,7 @@ func (ss *ServiceState) Restore() error {
 
 		log.Infof("index:> %d", ss.deployment.index)
 
-		ss.deployment.list[d.SelfLink()] = d
+		ss.deployment.list[d.SelfLink().String()] = d
 	}
 
 	// Set service current spec and provision spec
@@ -228,16 +229,16 @@ func (ss *ServiceState) SetDeployment(d *types.Deployment) {
 
 func (ss *ServiceState) DelDeployment(d *types.Deployment) {
 
-	if _, ok := ss.pod.list[d.SelfLink()]; !ok {
+	if _, ok := ss.pod.list[d.SelfLink().String()]; !ok {
 		return
 	}
-	delete(ss.pod.list, d.SelfLink())
+	delete(ss.pod.list, d.SelfLink().String())
 
-	if _, ok := ss.deployment.list[d.SelfLink()]; !ok {
+	if _, ok := ss.deployment.list[d.SelfLink().String()]; !ok {
 		return
 	}
 
-	delete(ss.deployment.list, d.SelfLink())
+	delete(ss.deployment.list, d.SelfLink().String())
 
 	if ss.deployment.active != nil {
 		if ss.deployment.active.SelfLink() == d.SelfLink() {
@@ -258,19 +259,25 @@ func (ss *ServiceState) SetPod(p *types.Pod) {
 }
 
 func (ss *ServiceState) DelPod(p *types.Pod) {
-	if _, ok := ss.pod.list[p.DeploymentLink()]; !ok {
+	_, sl := p.SelfLink().Parent()
+
+	if sl == nil {
 		return
 	}
 
-	delete(ss.pod.list[p.DeploymentLink()], p.SelfLink())
+	if _, ok := ss.pod.list[sl.String()]; !ok {
+		return
+	}
+
+	delete(ss.pod.list[sl.String()], p.SelfLink().String())
 }
 
-func (ss *ServiceState) CheckDeps(dep types.DeploymentStatusDependency) {
+func (ss *ServiceState) CheckDeps(dep types.StatusDependency) {
 
-	log.Debugf("%s:> check dependency: %s",logPrefix, dep.Name)
+	log.Debugf("%s:> check dependency: %s", logPrefix, dep.Name)
 
 	if ss.deployment.provision == nil {
-		log.Debugf("%s:> check dependency: %s: provision deployment not found",logPrefix, dep.Name)
+		log.Debugf("%s:> check dependency: %s: provision deployment not found", logPrefix, dep.Name)
 		return
 	}
 

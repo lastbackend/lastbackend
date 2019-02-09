@@ -38,7 +38,7 @@ const (
 func Fetch(ctx context.Context, namespace, job, name string) (*types.Task, *errors.Err) {
 
 	tm := distribution.NewTaskModel(ctx, envs.Get().GetStorage())
-	task, err := tm.Get(distribution.TaskSelfLink(namespace, job, name))
+	task, err := tm.Get(types.NewTaskSelfLink(namespace, job, name).String())
 
 	if err != nil {
 		log.V(logLevel).Errorf("%s:fetch:> err: %s", logPrefix, err.Error())
@@ -61,7 +61,7 @@ func Create(ctx context.Context, ns *types.Namespace, job *types.Job, mf *reques
 
 	if mf.Meta.Name != nil {
 
-		task, err := tm.Get(distribution.TaskSelfLink(ns.Meta.Name, job.Meta.Name, *mf.Meta.Name))
+		task, err := tm.Get(types.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, *mf.Meta.Name).String())
 		if err != nil {
 			log.V(logLevel).Errorf("%s:create:> get task by name `%s` in namespace `%s` err: %s", logPrefix, mf.Meta.Name, ns.Meta.Name, err.Error())
 			return nil, errors.New("task").InternalServerError()
@@ -77,6 +77,8 @@ func Create(ctx context.Context, ns *types.Namespace, job *types.Job, mf *reques
 
 	task := new(types.Task)
 	task.Meta.SetDefault()
+
+	task.Meta.SelfLink = *types.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, *mf.Meta.Name)
 	task.Meta.Namespace = ns.Meta.Name
 	task.Meta.Job = job.Meta.Name
 
@@ -110,7 +112,7 @@ func Create(ctx context.Context, ns *types.Namespace, job *types.Job, mf *reques
 		log.V(logLevel).Errorf("%s:create:> %s", logPrefix, err.Error())
 		return nil, errors.New("job").BadRequest(err.Error())
 	} else {
-		if err := jm.Update(job); err != nil {
+		if err := jm.Set(job); err != nil {
 			log.V(logLevel).Errorf("%s:update:> update namespace err: %s", logPrefix, err.Error())
 			return nil, errors.New("job").InternalServerError()
 		}

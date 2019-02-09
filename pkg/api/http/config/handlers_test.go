@@ -57,8 +57,8 @@ func TestConfigList(t *testing.T) {
 	c2.Spec.Data["test.txt"] = "test2"
 
 	cl := types.NewConfigMap()
-	cl.Items[c1.SelfLink()] = c1
-	cl.Items[c2.SelfLink()] = c2
+	cl.Items[c1.SelfLink().String()] = c1
+	cl.Items[c2.SelfLink().String()] = c2
 
 	type fields struct {
 		stg storage.Storage
@@ -105,13 +105,13 @@ func TestConfigList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Config(), stg.Key().Config(c1.Meta.Namespace, c1.Meta.Name), &c1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Config(), c1.SelfLink().String(), &c1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Config(), stg.Key().Config(c2.Meta.Namespace, c2.Meta.Name), &c2, nil)
+			err = stg.Put(context.Background(), stg.Collection().Config(), c2.SelfLink().String(), &c2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -236,7 +236,7 @@ func TestConfigCreate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -275,7 +275,7 @@ func TestConfigCreate(t *testing.T) {
 			} else {
 
 				got := new(types.Config)
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Config(), tc.fields.stg.Key().Config(tc.want.Meta.Namespace, tc.want.Meta.Name), got, nil)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Config(), tc.want.Meta.SelfLink, got, nil)
 				assert.NoError(t, err)
 
 				if !assert.Equal(t, c1.Spec.Type, got.Spec.Type, "config kind different") {
@@ -359,11 +359,11 @@ func TestConfigUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
 			err = stg.Put(context.Background(), stg.Collection().Config(),
-				stg.Key().Config(tc.args.config.Meta.Namespace, tc.args.config.Meta.Name), &tc.args.config, nil)
+				tc.args.config.SelfLink().String(), &tc.args.config, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -487,11 +487,11 @@ func TestConfigRemove(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
 			err = stg.Put(context.Background(), stg.Collection().Config(),
-				stg.Key().Config(c1.Meta.Namespace, c1.Meta.Name), c1, nil)
+				c1.SelfLink().String(), c1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -533,7 +533,7 @@ func TestConfigRemove(t *testing.T) {
 
 				got := new(types.Config)
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Config(),
-					tc.fields.stg.Key().Config(tc.args.config.Meta.Namespace, tc.args.config.Meta.Name), got, nil)
+					tc.args.config.SelfLink().String(), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}
@@ -567,6 +567,7 @@ func getNamespaceAsset(name, desc string) *types.Namespace {
 	n.Meta.SetDefault()
 	n.Meta.Name = name
 	n.Meta.Description = desc
+	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
 	return &n
 }
 
@@ -575,6 +576,7 @@ func getConfigAsset(namespace *types.Namespace, name string) *types.Config {
 	c.Meta.SetDefault()
 	c.Meta.Name = name
 	c.Meta.Namespace = namespace.Meta.Name
+	c.Meta.SelfLink = *types.NewConfigSelfLink(namespace.Meta.Name, name)
 	c.Spec.Type = types.KindConfigText
 	c.Spec.Data = make(map[string]string, 0)
 	return &c

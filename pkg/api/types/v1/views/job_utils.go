@@ -47,7 +47,7 @@ func (j *Job) SetMeta(obj types.JobMeta) {
 	jm.Namespace = obj.Namespace
 	jm.Name = obj.Name
 
-	jm.SelfLink = obj.SelfLink
+	jm.SelfLink = obj.SelfLink.String()
 	jm.Description = obj.Description
 
 	jm.Labels = obj.Labels
@@ -84,23 +84,19 @@ func (j *Job) SetStatus(obj types.JobStatus) {
 func (j *Job) SetSpec(obj types.JobSpec) {
 	mv := new(ManifestView)
 	js := JobSpec{
-		Enabled:  obj.Enabled,
-		Schedule: obj.Schedule,
+		Enabled: obj.Enabled,
 		Concurrency: JobSpecConcurrency{
 			Limit:    obj.Concurrency.Limit,
 			Strategy: obj.Concurrency.Strategy,
 		},
-		Remote: JobSpecRemote{
-			Request: JobSpecRemoteRequest{
-				Endpoint: obj.Remote.Request.Endpoint,
-				Method:   obj.Remote.Request.Method,
-				Headers:  obj.Remote.Request.Headers,
-			},
-			Response: JobSpecRemoteRequest{
-				Endpoint: obj.Remote.Response.Endpoint,
-				Method:   obj.Remote.Response.Method,
-				Headers:  obj.Remote.Response.Headers,
-			},
+		Provider: JobSpecProvider{
+			Kind:    obj.Provider.Kind,
+			Timeout: obj.Provider.Timeout,
+			Config:  obj.Provider.Config,
+		},
+		Hook: JobSpecHook{
+			Kind:   obj.Hook.Kind,
+			Config: obj.Hook.Config,
 		},
 		Resources: JobResources{
 			Request: JobResource{

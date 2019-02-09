@@ -36,8 +36,8 @@ func deploymentObserve(ss *ServiceState, d *types.Deployment) error {
 
 	log.V(logLevel).Debugf("%s:> observe start: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
-	if _, ok := ss.pod.list[d.SelfLink()]; !ok {
-		ss.pod.list[d.SelfLink()] = make(map[string]*types.Pod)
+	if _, ok := ss.pod.list[d.SelfLink().String()]; !ok {
+		ss.pod.list[d.SelfLink().String()] = make(map[string]*types.Pod)
 	}
 
 	switch d.Status.State {
@@ -86,9 +86,9 @@ func deploymentObserve(ss *ServiceState, d *types.Deployment) error {
 	}
 
 	if d.Status.State == types.StateDestroyed {
-		delete(ss.deployment.list, d.SelfLink())
+		delete(ss.deployment.list, d.SelfLink().String())
 	} else {
-		ss.deployment.list[d.SelfLink()] = d
+		ss.deployment.list[d.SelfLink().String()] = d
 	}
 
 	log.V(logLevel).Debugf("%s:> observe state: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
@@ -267,7 +267,7 @@ func handleDeploymentStateDestroyed(ss *ServiceState, d *types.Deployment) error
 		}
 	}
 
-	link := d.SelfLink()
+	link := d.SelfLink().String()
 
 	if _, ok := ss.pod.list[link]; ok && len(ss.pod.list[link]) > 0 {
 
@@ -303,10 +303,10 @@ func deploymentCheckDependencies(ss *ServiceState, d *types.Deployment) (bool, e
 		vm   = distribution.NewVolumeModel(ctx, stg)
 		sm   = distribution.NewSecretModel(ctx, stg)
 		cm   = distribution.NewConfigModel(ctx, stg)
-		deps = types.DeploymentStatusDependencies{
-			Volumes: make(map[string]types.DeploymentStatusDependency, 0),
-			Secrets: make(map[string]types.DeploymentStatusDependency, 0),
-			Configs: make(map[string]types.DeploymentStatusDependency, 0),
+		deps = types.StatusDependencies{
+			Volumes: make(map[string]types.StatusDependency, 0),
+			Secrets: make(map[string]types.StatusDependency, 0),
+			Configs: make(map[string]types.StatusDependency, 0),
 		}
 	)
 
@@ -351,7 +351,7 @@ func deploymentCheckDependencies(ss *ServiceState, d *types.Deployment) (bool, e
 			for _, v := range vl.Items {
 				if vr == v.Meta.Name {
 					f = true
-					deps.Volumes[vr] = types.DeploymentStatusDependency{
+					deps.Volumes[vr] = types.StatusDependency{
 						Name:   vr,
 						Type:   types.KindVolume,
 						Status: v.Status.State,
@@ -360,7 +360,7 @@ func deploymentCheckDependencies(ss *ServiceState, d *types.Deployment) (bool, e
 			}
 
 			if !f {
-				deps.Volumes[vr] = types.DeploymentStatusDependency{
+				deps.Volumes[vr] = types.StatusDependency{
 					Name:   vr,
 					Type:   types.KindVolume,
 					Status: types.StateNotReady,
@@ -383,7 +383,7 @@ func deploymentCheckDependencies(ss *ServiceState, d *types.Deployment) (bool, e
 			for _, s := range sl.Items {
 				if sr == s.Meta.Name {
 					f = true
-					deps.Secrets[sr] = types.DeploymentStatusDependency{
+					deps.Secrets[sr] = types.StatusDependency{
 						Name:   sr,
 						Type:   types.KindSecret,
 						Status: types.StateReady,
@@ -392,7 +392,7 @@ func deploymentCheckDependencies(ss *ServiceState, d *types.Deployment) (bool, e
 			}
 
 			if !f {
-				deps.Secrets[sr] = types.DeploymentStatusDependency{
+				deps.Secrets[sr] = types.StatusDependency{
 					Name:   sr,
 					Type:   types.KindSecret,
 					Status: types.StateNotReady,
@@ -415,7 +415,7 @@ func deploymentCheckDependencies(ss *ServiceState, d *types.Deployment) (bool, e
 			for _, c := range cl.Items {
 				if cr == c.Meta.Name {
 					f = true
-					deps.Configs[cr] = types.DeploymentStatusDependency{
+					deps.Configs[cr] = types.StatusDependency{
 						Name:   cr,
 						Type:   types.KindConfig,
 						Status: types.StateReady,
@@ -424,7 +424,7 @@ func deploymentCheckDependencies(ss *ServiceState, d *types.Deployment) (bool, e
 			}
 
 			if !f {
-				deps.Configs[cr] = types.DeploymentStatusDependency{
+				deps.Configs[cr] = types.StatusDependency{
 					Name:   cr,
 					Type:   types.KindConfig,
 					Status: types.StateNotReady,
@@ -550,7 +550,7 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 		pm = distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
 	)
 
-	pods, ok := ss.pod.list[d.SelfLink()]
+	pods, ok := ss.pod.list[d.SelfLink().String()]
 	if !ok {
 		pods = make(map[string]*types.Pod, 0)
 	}
@@ -568,7 +568,7 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 
 				if p.Meta.Node != types.EmptyString {
 
-					m, e := pm.ManifestGet(p.Meta.Node, p.SelfLink())
+					m, e := pm.ManifestGet(p.Meta.Node, p.SelfLink().String())
 					if err != nil {
 						err = e
 						return e
@@ -603,7 +603,7 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 				log.Errorf("%s", err.Error())
 				return err
 			}
-			pods[p.SelfLink()] = p
+			pods[p.SelfLink().String()] = p
 			provision = true
 			continue
 		}
@@ -678,7 +678,7 @@ func deploymentDestroy(ss *ServiceState, d *types.Deployment) (err error) {
 		d.Meta.Updated = time.Now()
 	}
 
-	pl, ok := ss.pod.list[d.SelfLink()]
+	pl, ok := ss.pod.list[d.SelfLink().String()]
 	if !ok {
 		d.Status.State = types.StateDestroyed
 		d.Meta.Updated = time.Now()

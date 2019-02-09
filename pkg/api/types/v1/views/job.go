@@ -72,9 +72,21 @@ type JobSpec struct {
 	Enabled     bool               `json:"enabled"`
 	Schedule    string             `json:"schedule"`
 	Concurrency JobSpecConcurrency `json:"concurrency"`
-	Remote      JobSpecRemote      `json:"remote"`
+	Provider    JobSpecProvider    `json:"provider"`
+	Hook        JobSpecHook        `json:"hook"`
 	Resources   JobResources       `json:"resources"`
 	Task        JobSpecTask        `json:"task"`
+}
+
+type JobSpecProvider struct {
+	Timeout int                    `json:"timeout"`
+	Kind    string                 `json:"kind"`
+	Config  map[string]interface{} `json:"config"`
+}
+
+type JobSpecHook struct {
+	Kind   string                 `json:"kind"`
+	Config map[string]interface{} `json:"config"`
 }
 
 type JobSpecTask struct {

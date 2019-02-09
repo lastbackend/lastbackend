@@ -364,7 +364,7 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 			}
 		}
 
-		ss.deployment.list[d.SelfLink()] = d
+		ss.deployment.list[d.SelfLink().String()] = d
 		ss.deployment.provision = d
 	}
 

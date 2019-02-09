@@ -160,25 +160,25 @@ func testDeploymentObserver(t *testing.T, name, werr string, wst *ServiceState, 
 
 		for _, d := range wst.deployment.list {
 
-			if _, ok := state.deployment.list[d.SelfLink()]; ok {
+			if _, ok := state.deployment.list[d.SelfLink().String()]; ok {
 
 				if !assert.Equal(t,
 					d.Spec.Replicas,
-					state.deployment.list[d.SelfLink()].Spec.Replicas,
+					state.deployment.list[d.SelfLink().String()].Spec.Replicas,
 					"deployment replicas not match") {
 					return
 				}
 
 				if !assert.Equal(t,
 					d.Status.State,
-					state.deployment.list[d.SelfLink()].Status.State,
+					state.deployment.list[d.SelfLink().String()].Status.State,
 					"deployment status state not match") {
 					return
 				}
 
 				if !assert.Equal(t,
 					d.Status.Message,
-					state.deployment.list[d.SelfLink()].Status.Message,
+					state.deployment.list[d.SelfLink().String()].Status.Message,
 					"deployment status message not match") {
 					return
 				}
@@ -195,22 +195,22 @@ func testDeploymentObserver(t *testing.T, name, werr string, wst *ServiceState, 
 		}
 
 		if d.Status.State != types.StateDestroyed {
-			if _, ok := state.pod.list[d.SelfLink()]; !ok {
+			if _, ok := state.pod.list[d.SelfLink().String()]; !ok {
 				t.Errorf("pod deployment group not exitst: %s", d.SelfLink())
 				return
 			}
 		}
 
 		if d.Status.State == types.StateDestroyed {
-			if _, ok := state.pod.list[d.SelfLink()]; ok {
+			if _, ok := state.pod.list[d.SelfLink().String()]; ok {
 				t.Errorf("pod deployment group should not exitst: %s", d.SelfLink())
 				return
 			}
 		}
 
 		if !assert.Equal(t,
-			len(wst.pod.list[d.SelfLink()]),
-			len(state.pod.list[d.SelfLink()]),
+			len(wst.pod.list[d.SelfLink().String()]),
+			len(state.pod.list[d.SelfLink().String()]),
 			"state pods count not match") {
 			return
 		}
@@ -218,7 +218,7 @@ func testDeploymentObserver(t *testing.T, name, werr string, wst *ServiceState, 
 		if d.Status.State != types.StateDestroy && d.Status.State != types.StateDestroyed && d.Status.State != types.StateWaiting {
 
 			var count = 0
-			for _, p := range state.pod.list[d.SelfLink()] {
+			for _, p := range state.pod.list[d.SelfLink().String()] {
 				if p.Status.State == types.StateDestroyed || p.Status.State == types.StateDestroy {
 					continue
 				}
@@ -243,7 +243,7 @@ func testDeploymentObserver(t *testing.T, name, werr string, wst *ServiceState, 
 		if d.Status.State == types.StateDestroyed {
 			if !assert.Equal(t,
 				0,
-				len(state.pod.list[d.SelfLink()]),
+				len(state.pod.list[d.SelfLink().String()]),
 				"pods count not match with replicas") {
 				return
 			}
@@ -280,14 +280,14 @@ func TestHandleDeploymentStateCreated(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
 		s.args.d = dp
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.deployment.provision.Status.State = types.StateProvision
-		s.want.state.pod.list[pod.DeploymentLink()] = make(map[string]*types.Pod)
-		s.want.state.pod.list[pod.DeploymentLink()][pod.SelfLink()] = pod
+		s.want.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.want.state.pod.list[dp.SelfLink().String()][pod.SelfLink().String()] = pod
 
 		return s
 	}())
@@ -305,18 +305,18 @@ func TestHandleDeploymentStateCreated(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
-		s.args.state.pod.list[p1.DeploymentLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
+		s.args.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
 
 		s.args.d = dp
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.deployment.provision.Status.State = types.StateProvision
-		s.want.state.pod.list[p1.DeploymentLink()] = make(map[string]*types.Pod)
-		s.want.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
-		s.want.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
+		s.want.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.want.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.want.state.pod.list[dp.SelfLink().String()][p2.SelfLink().String()] = p2
 
 		return s
 	}())
@@ -334,10 +334,10 @@ func TestHandleDeploymentStateCreated(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
-		s.args.state.pod.list[dp.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
-		s.args.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
+		s.args.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.args.state.pod.list[dp.SelfLink().String()][p2.SelfLink().String()] = p2
 		dp.Spec.Replicas = 1
 		s.args.d = dp
 
@@ -348,9 +348,9 @@ func TestHandleDeploymentStateCreated(t *testing.T) {
 		s.want.state.deployment.provision.Status.State = types.StateProvision
 		s.want.state.deployment.provision.Spec.Replicas = 1
 
-		s.want.state.pod.list[p1.DeploymentLink()] = make(map[string]*types.Pod)
-		s.want.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
-		s.want.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
+		s.want.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.want.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.want.state.pod.list[dp.SelfLink().String()][p2.SelfLink().String()] = p2
 
 		return s
 	}())
@@ -367,9 +367,9 @@ func TestHandleDeploymentStateCreated(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
-		s.args.state.pod.list[p1.DeploymentLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
+		s.args.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
 
 		s.args.d = dp
 
@@ -377,9 +377,9 @@ func TestHandleDeploymentStateCreated(t *testing.T) {
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.service.Status.State = types.StateProvision
 		s.want.state.deployment.provision.Status.State = types.StateProvision
-		s.want.state.pod.list[p1.DeploymentLink()] = make(map[string]*types.Pod)
-		s.want.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
-		s.want.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
+		s.want.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.want.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.want.state.pod.list[dp.SelfLink().String()][p2.SelfLink().String()] = p2
 
 		return s
 	}())
@@ -399,20 +399,20 @@ func TestHandleDeploymentStateCreated(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
 		s.args.d = dp
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.service.Status.State = types.StateWaiting
 		s.want.state.deployment.provision.Status.State = types.StateWaiting
-		s.want.state.deployment.provision.Status.Dependencies.Volumes["test"] = types.DeploymentStatusDependency{
-			Name: "test",
-			Type: types.KindVolume,
+		s.want.state.deployment.provision.Status.Dependencies.Volumes["test"] = types.StatusDependency{
+			Name:   "test",
+			Type:   types.KindVolume,
 			Status: types.StateNotReady,
 		}
 
-		s.want.state.pod.list[dp.SelfLink()] = make(map[string]*types.Pod)
+		s.want.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
 
 		return s
 	}())
@@ -448,14 +448,14 @@ func TestHandleDeploymentStateProvision(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
 		s.args.d = dp
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.deployment.provision.Status.State = types.StateProvision
-		s.want.state.pod.list[pod.DeploymentLink()] = make(map[string]*types.Pod)
-		s.want.state.pod.list[pod.DeploymentLink()][pod.SelfLink()] = pod
+		s.want.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.want.state.pod.list[dp.SelfLink().String()][pod.SelfLink().String()] = pod
 
 		return s
 	}())
@@ -473,17 +473,17 @@ func TestHandleDeploymentStateProvision(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
-		s.args.state.pod.list[p1.DeploymentLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
+		s.args.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
 		s.args.d = dp
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.deployment.provision.Status.State = types.StateProvision
-		s.want.state.pod.list[p1.DeploymentLink()] = make(map[string]*types.Pod)
-		s.want.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
-		s.want.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
+		s.want.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.want.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.want.state.pod.list[dp.SelfLink().String()][p2.SelfLink().String()] = p2
 
 		return s
 	}())
@@ -501,10 +501,10 @@ func TestHandleDeploymentStateProvision(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
-		s.args.state.pod.list[p1.DeploymentLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
-		s.args.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
+		s.args.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.args.state.pod.list[dp.SelfLink().String()][p2.SelfLink().String()] = p2
 		dp.Spec.Replicas = 1
 		s.args.d = dp
 
@@ -514,9 +514,9 @@ func TestHandleDeploymentStateProvision(t *testing.T) {
 		s.want.state.deployment.provision.Spec.Replicas = 1
 		s.want.state.deployment.provision.Status.State = types.StateProvision
 
-		s.want.state.pod.list[p1.DeploymentLink()] = make(map[string]*types.Pod)
-		s.want.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
-		s.want.state.pod.list[p1.DeploymentLink()][p2.SelfLink()] = p2
+		s.want.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.want.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.want.state.pod.list[dp.SelfLink().String()][p2.SelfLink().String()] = p2
 
 		return s
 	}())
@@ -533,9 +533,9 @@ func TestHandleDeploymentStateProvision(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
-		s.args.state.pod.list[p1.DeploymentLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
+		s.args.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
 
 		s.args.d = dp
 
@@ -543,9 +543,9 @@ func TestHandleDeploymentStateProvision(t *testing.T) {
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.service.Status.State = types.StateProvision
 		s.want.state.deployment.provision.Status.State = types.StateProvision
-		s.want.state.pod.list[p1.DeploymentLink()] = make(map[string]*types.Pod)
-		s.want.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
-		s.want.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
+		s.want.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.want.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.want.state.pod.list[dp.SelfLink().String()][p2.SelfLink().String()] = p2
 
 		return s
 	}())
@@ -581,9 +581,9 @@ func TestHandleDeploymentStateReady(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
-		s.args.state.pod.list[dp.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
+		s.args.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
 		s.args.d = dp
 
 		s.want.err = types.EmptyString
@@ -608,11 +608,11 @@ func TestHandleDeploymentStateReady(t *testing.T) {
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
-		s.args.state.pod.list[dp1.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[dp2.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[dp2.SelfLink()][p1.SelfLink()] = p1
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
+		s.args.state.pod.list[dp1.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp2.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp2.SelfLink().String()][p1.SelfLink().String()] = p1
 		s.args.d = dp2
 
 		s.want.err = types.EmptyString
@@ -621,7 +621,7 @@ func TestHandleDeploymentStateReady(t *testing.T) {
 		s.want.state.deployment.provision = nil
 		s.want.state.deployment.active = dp2
 
-		s.want.state.deployment.list[dp1.SelfLink()].Status.State = types.StateDestroyed
+		s.want.state.deployment.list[dp1.SelfLink().String()].Status.State = types.StateDestroyed
 		s.want.state.service.Status.State = types.StateReady
 
 		return s
@@ -642,12 +642,12 @@ func TestHandleDeploymentStateReady(t *testing.T) {
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
-		s.args.state.pod.list[dp1.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[dp2.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[dp1.SelfLink()][p1.SelfLink()] = p1
-		s.args.state.pod.list[dp2.SelfLink()][p2.SelfLink()] = p2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
+		s.args.state.pod.list[dp1.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp2.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp1.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.args.state.pod.list[dp2.SelfLink().String()][p2.SelfLink().String()] = p2
 
 		s.args.d = dp2
 
@@ -657,7 +657,7 @@ func TestHandleDeploymentStateReady(t *testing.T) {
 		s.want.state.deployment.provision = nil
 		s.want.state.deployment.active = dp2
 
-		s.want.state.deployment.list[dp1.SelfLink()].Status.State = types.StateDestroy
+		s.want.state.deployment.list[dp1.SelfLink().String()].Status.State = types.StateDestroy
 		s.want.state.service.Status.State = types.StateReady
 
 		return s
@@ -694,9 +694,9 @@ func TestHandleDeploymentStateError(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
-		s.args.state.pod.list[dp.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[dp.SelfLink()][p1.SelfLink()] = p1
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
+		s.args.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
 		s.args.d = dp
 
 		s.want.err = types.EmptyString
@@ -728,19 +728,19 @@ func TestHandleDeploymentStateError(t *testing.T) {
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
-		s.args.state.pod.list[p1.DeploymentLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[p2.DeploymentLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
-		s.args.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
+		s.args.state.pod.list[dp1.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp2.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp1.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.args.state.pod.list[dp2.SelfLink().String()][p2.SelfLink().String()] = p2
 		s.args.d = dp2
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.deployment.provision = nil
 		s.want.state.service.Status.State = types.StateReady
-		s.want.state.deployment.list[dp2.SelfLink()].Status.State = types.StateError
+		s.want.state.deployment.list[dp2.SelfLink().String()].Status.State = types.StateError
 
 		return s
 	}())
@@ -776,9 +776,9 @@ func TestHandleDeploymentStateDegradation(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.pod.list[dp1.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[dp1.SelfLink()][p1.SelfLink()] = p1
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.pod.list[dp1.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp1.SelfLink().String()][p1.SelfLink().String()] = p1
 
 		s.args.d = dp1
 
@@ -805,19 +805,19 @@ func TestHandleDeploymentStateDegradation(t *testing.T) {
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
-		s.args.state.pod.list[dp1.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[dp2.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[dp1.SelfLink()][p1.SelfLink()] = p1
-		s.args.state.pod.list[dp2.SelfLink()][p2.SelfLink()] = p2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
+		s.args.state.pod.list[dp1.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp2.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp1.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.args.state.pod.list[dp2.SelfLink().String()][p2.SelfLink().String()] = p2
 		s.args.d = dp2
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.service.Status.State = types.StateReady
 		s.want.state.deployment.provision = nil
-		s.want.state.deployment.list[dp2.SelfLink()].Status.State = types.StateDegradation
+		s.want.state.deployment.list[dp2.SelfLink().String()].Status.State = types.StateDegradation
 
 		return s
 	}())
@@ -859,10 +859,10 @@ func TestHandleDeploymentStateDestroy(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
-		s.args.state.pod.list[dp.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
-		s.args.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
+		s.args.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.args.state.pod.list[dp.SelfLink().String()][p2.SelfLink().String()] = p2
 
 		s.args.d = dp
 
@@ -886,10 +886,10 @@ func TestHandleDeploymentStateDestroy(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
-		s.args.state.pod.list[dp.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
-		s.args.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
+		s.args.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.args.state.pod.list[dp.SelfLink().String()][p2.SelfLink().String()] = p2
 
 		s.args.d = dp
 
@@ -917,17 +917,17 @@ func TestHandleDeploymentStateDestroy(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
-		s.args.state.pod.list[dp.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
-		s.args.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
+		s.args.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.args.state.pod.list[dp.SelfLink().String()][p2.SelfLink().String()] = p2
 
 		s.args.d = dp
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.deployment.active.Status.State = types.StateDestroy
-		delete(s.want.state.pod.list[p2.DeploymentLink()], p2.SelfLink())
+		delete(s.want.state.pod.list[dp.SelfLink().String()], p2.SelfLink().String())
 
 		return s
 	}())
@@ -943,8 +943,8 @@ func TestHandleDeploymentStateDestroy(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
-		s.args.state.pod.list[dp.SelfLink()] = make(map[string]*types.Pod)
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
+		s.args.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
 
 		s.args.d = dp
 
@@ -953,7 +953,7 @@ func TestHandleDeploymentStateDestroy(t *testing.T) {
 		s.want.state.deployment.list = make(map[string]*types.Deployment)
 		s.want.state.deployment.provision = nil
 		s.want.state.service.Status.State = types.StateDestroyed
-		delete(s.want.state.pod.list, dp.SelfLink())
+		delete(s.want.state.pod.list, dp.SelfLink().String())
 
 		return s
 	}())
@@ -995,10 +995,10 @@ func TestHandleDeploymentStateDestroyed(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
-		s.args.state.pod.list[dp.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
-		s.args.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
+		s.args.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.args.state.pod.list[dp.SelfLink().String()][p2.SelfLink().String()] = p2
 
 		s.args.d = dp
 
@@ -1006,11 +1006,11 @@ func TestHandleDeploymentStateDestroyed(t *testing.T) {
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.service.Status.State = types.StateDestroy
 		s.want.state.deployment.provision = nil
-		s.want.state.deployment.list[dp.SelfLink()].Status.State = types.StateDestroy
+		s.want.state.deployment.list[dp.SelfLink().String()].Status.State = types.StateDestroy
 
-		s.want.state.pod.list[dp.SelfLink()] = make(map[string]*types.Pod)
-		s.want.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
-		s.want.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
+		s.want.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
+		s.want.state.pod.list[dp.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.want.state.pod.list[dp.SelfLink().String()][p2.SelfLink().String()] = p2
 
 		return s
 	}())
@@ -1024,8 +1024,8 @@ func TestHandleDeploymentStateDestroyed(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp
-		s.args.state.deployment.list[dp.SelfLink()] = dp
-		s.args.state.pod.list[dp.SelfLink()] = make(map[string]*types.Pod)
+		s.args.state.deployment.list[dp.SelfLink().String()] = dp
+		s.args.state.pod.list[dp.SelfLink().String()] = make(map[string]*types.Pod)
 
 		s.args.d = dp
 
@@ -1034,8 +1034,8 @@ func TestHandleDeploymentStateDestroyed(t *testing.T) {
 		s.want.state.deployment.active = nil
 		s.want.state.deployment.list = make(map[string]*types.Deployment)
 		s.want.state.service.Status.State = types.StateDestroyed
-		delete(s.want.state.deployment.list, dp.SelfLink())
-		delete(s.want.state.pod.list, dp.SelfLink())
+		delete(s.want.state.deployment.list, dp.SelfLink().String())
+		delete(s.want.state.pod.list, dp.SelfLink().String())
 		return s
 	}())
 
@@ -1052,16 +1052,16 @@ func TestHandleDeploymentStateDestroyed(t *testing.T) {
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 		p1 := getPodAsset(dp1, types.StateCreated, types.EmptyString)
 		p2 := getPodAsset(dp1, types.StateCreated, types.EmptyString)
 		p1.Meta.Node = "node"
 		p2.Meta.Node = "node"
 
-		s.args.state.pod.list[dp1.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
-		s.args.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
+		s.args.state.pod.list[dp1.SelfLink().String()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[dp1.SelfLink().String()][p1.SelfLink().String()] = p1
+		s.args.state.pod.list[dp1.SelfLink().String()][p2.SelfLink().String()] = p2
 
 		s.args.d = dp2
 
@@ -1069,7 +1069,7 @@ func TestHandleDeploymentStateDestroyed(t *testing.T) {
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.deployment.provision = nil
 		s.want.state.deployment.list = make(map[string]*types.Deployment)
-		s.want.state.deployment.list[dp1.SelfLink()] = dp1
+		s.want.state.deployment.list[dp1.SelfLink().String()] = dp1
 
 		return s
 	}())

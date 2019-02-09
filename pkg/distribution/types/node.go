@@ -20,7 +20,6 @@ package types
 
 import (
 	"context"
-	"fmt"
 )
 
 // swagger:ignore
@@ -51,8 +50,9 @@ type Node struct {
 type NodeMeta struct {
 	Meta
 	NodeInfo
-	Subnet  string `json:"subnet"`
-	Cluster string `json:"cluster"`
+	SelfLink NodeSelfLink `json:"self_link"`
+	Subnet   string       `json:"subnet"`
+	Cluster  string       `json:"cluster"`
 }
 
 func (m *NodeMeta) Set(meta *NodeUpdateMetaOptions) {
@@ -225,11 +225,8 @@ type NodeCreateOptions struct {
 	Security NodeSecurity          `json:"security", yaml:"security"`
 }
 
-func (n *Node) SelfLink() string {
-	if n.Meta.SelfLink == "" {
-		n.Meta.SelfLink = fmt.Sprintf("%s", n.Meta.Name)
-	}
-	return n.Meta.SelfLink
+func (n *Node) SelfLink() *NodeSelfLink {
+	return &n.Meta.SelfLink
 }
 
 func NewNodeList() *NodeList {

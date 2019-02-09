@@ -45,7 +45,7 @@ func (e *Endpoint) Get(namespace, service string) (*types.Endpoint, error) {
 
 	item := new(types.Endpoint)
 
-	err := e.storage.Get(e.context, e.storage.Collection().Endpoint(), e.storage.Key().Endpoint(namespace, service), &item, nil)
+	err := e.storage.Get(e.context, e.storage.Collection().Endpoint(), types.NewEndpointSelfLink(namespace, service).String(), &item, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -95,7 +95,7 @@ func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateO
 	endpoint.Spec.IP = opts.IP
 	endpoint.Spec.Domain = opts.Domain
 
-	key := e.storage.Key().Endpoint(namespace, service)
+	key := types.NewEndpointSelfLink(namespace, service).String()
 	if err := e.storage.Put(e.context, e.storage.Collection().Endpoint(), key, endpoint, nil); err != nil {
 		log.Errorf("%s:create:> distribution create endpoint: %s err: %v", logEndpointPrefix, endpoint.SelfLink(), err)
 		return nil, err
@@ -123,7 +123,7 @@ func (e *Endpoint) Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOp
 	endpoint.Spec.Strategy.Bind = opts.BindStrategy
 
 	if err := e.storage.Set(e.context, e.storage.Collection().Endpoint(),
-		e.storage.Key().Endpoint(endpoint.Meta.Namespace, endpoint.Meta.Name), endpoint, nil); err != nil {
+		endpoint.SelfLink().String(), endpoint, nil); err != nil {
 		log.Errorf("%s:create:> distribution update endpoint: %s err: %v", logEndpointPrefix, endpoint.SelfLink(), err)
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func (e *Endpoint) Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOp
 func (e *Endpoint) SetSpec(endpoint *types.Endpoint, spec *types.EndpointSpec) (*types.Endpoint, error) {
 	endpoint.Spec = *spec
 	if err := e.storage.Set(e.context, e.storage.Collection().Endpoint(),
-		e.storage.Key().Endpoint(endpoint.Meta.Namespace, endpoint.Meta.Name), endpoint, nil); err != nil {
+		endpoint.SelfLink().String(), endpoint, nil); err != nil {
 		log.Errorf("%s:create:> distribution update endpoint spec: %s err: %v", logEndpointPrefix, endpoint.SelfLink(), err)
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (e *Endpoint) SetSpec(endpoint *types.Endpoint, spec *types.EndpointSpec) (
 func (e *Endpoint) Remove(endpoint *types.Endpoint) error {
 	log.V(logLevel).Debugf("%s:remove:> remove endpoint %s", logEndpointPrefix, endpoint.Meta.Name)
 	if err := e.storage.Del(e.context, e.storage.Collection().Endpoint(),
-		e.storage.Key().Endpoint(endpoint.Meta.Namespace, endpoint.Meta.Name)); err != nil {
+		endpoint.SelfLink().String()); err != nil {
 		log.V(logLevel).Debugf("%s:remove:> remove endpoint %s err: %v", logEndpointPrefix, endpoint.Meta.Name, err)
 		return err
 	}
@@ -214,14 +214,14 @@ func (e *Endpoint) ManifestMap() (*types.EndpointManifestMap, error) {
 }
 
 // Get particular network manifest
-func (e *Endpoint) ManifestGet(name string) (*types.EndpointManifest, error) {
+func (e *Endpoint) ManifestGet(selflink string) (*types.EndpointManifest, error) {
 	log.V(logLevel).Debugf("%s:EndpointManifestGet:> ", logEndpointPrefix)
 
 	var (
 		mf = new(types.EndpointManifest)
 	)
 
-	if err := e.storage.Get(e.context, e.storage.Collection().Manifest().Endpoint(), e.storage.Key().Manifest(name), &mf, nil); err != nil {
+	if err := e.storage.Get(e.context, e.storage.Collection().Manifest().Endpoint(), selflink, &mf, nil); err != nil {
 		log.Errorf("%s:EndpointManifestGet:> err :%s", logEndpointPrefix, err.Error())
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -235,13 +235,13 @@ func (e *Endpoint) ManifestGet(name string) (*types.EndpointManifest, error) {
 }
 
 // Add particular network manifest
-func (e *Endpoint) ManifestAdd(name string, manifest *types.EndpointManifest) error {
+func (e *Endpoint) ManifestAdd(selflink string, manifest *types.EndpointManifest) error {
 
 	log.V(logLevel).Debugf("%s:EndpointManifestAdd:> ", logEndpointPrefix)
 
 	if err := e.storage.Put(e.context,
 		e.storage.Collection().Manifest().Endpoint(),
-		e.storage.Key().Manifest(name),
+		selflink,
 		&manifest, nil); err != nil {
 		log.Errorf("%s:EndpointManifestAdd:> err :%s", logEndpointPrefix, err.Error())
 		return err
@@ -251,10 +251,10 @@ func (e *Endpoint) ManifestAdd(name string, manifest *types.EndpointManifest) er
 }
 
 // Set particular network manifest
-func (e *Endpoint) ManifestSet(name string, manifest *types.EndpointManifest) error {
+func (e *Endpoint) ManifestSet(selflink string, manifest *types.EndpointManifest) error {
 	log.V(logLevel).Debugf("%s:EndpointManifestSet:> ", logEndpointPrefix)
 
-	if err := e.storage.Set(e.context, e.storage.Collection().Manifest().Endpoint(), e.storage.Key().Manifest(name), manifest, nil); err != nil {
+	if err := e.storage.Set(e.context, e.storage.Collection().Manifest().Endpoint(), selflink, manifest, nil); err != nil {
 		log.Errorf("%s:EndpointManifestSet:> err :%s", logEndpointPrefix, err.Error())
 		return err
 	}
@@ -263,10 +263,10 @@ func (e *Endpoint) ManifestSet(name string, manifest *types.EndpointManifest) er
 }
 
 // Del particular network manifest
-func (e *Endpoint) ManifestDel(name string) error {
+func (e *Endpoint) ManifestDel(selflink string) error {
 	log.V(logLevel).Debugf("%s:EndpointManifestDel:> ", logEndpointPrefix)
 
-	if err := e.storage.Del(e.context, e.storage.Collection().Manifest().Endpoint(), e.storage.Key().Manifest(name)); err != nil {
+	if err := e.storage.Del(e.context, e.storage.Collection().Manifest().Endpoint(), selflink); err != nil {
 		log.Errorf("%s:EndpointManifestDel:> err :%s", logEndpointPrefix, err.Error())
 		return err
 	}
@@ -326,8 +326,8 @@ func (e *Endpoint) ManifestWatch(ch chan types.EndpointManifestEvent, rev *int64
 	return nil
 }
 
-func (e *Endpoint) ManifestGetName(namespace, service string) string {
-	return new(types.Endpoint).CreateSelfLink(namespace, service)
+func (e *Endpoint) ManifestGetSelfLink(namespace, service string) string {
+	return types.NewEndpointSelfLink(namespace, service).String()
 }
 
 func NewEndpointModel(ctx context.Context, stg storage.Storage) *Endpoint {

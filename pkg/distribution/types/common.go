@@ -32,8 +32,6 @@ type Meta struct {
 	Name string `json:"name,omitempty",yaml:"name,omitempty"`
 	// Meta description
 	Description string `json:"description",yaml:"description"`
-	// Meta self link
-	SelfLink string `json:"self_link",yaml:"self_link"`
 	// Meta labels
 	Labels map[string]string `json:"labels",yaml:"labels"`
 	// Meta created time

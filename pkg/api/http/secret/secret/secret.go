@@ -92,6 +92,7 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.SecretManifest
 
 	sct := new(types.Secret)
 	sct.Meta.SetDefault()
+	sct.Meta.SelfLink = *types.NewSecretSelfLink(ns.Meta.Name, *mf.Meta.Name)
 	sct.Meta.Namespace = ns.Meta.Name
 
 	mf.SetSecretMeta(sct)

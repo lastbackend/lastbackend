@@ -39,10 +39,7 @@ func (p *Pod) SetMeta(pod types.PodMeta) {
 	meta.Name = pod.Name
 
 	meta.Description = pod.Description
-	meta.SelfLink = pod.SelfLink
-
-	meta.Parent.Kind = pod.Parent.Kind
-	meta.Parent.SelfLink = pod.Parent.SelfLink
+	meta.SelfLink = pod.SelfLink.String()
 
 	meta.Node = pod.Node
 	meta.Status = pod.Status

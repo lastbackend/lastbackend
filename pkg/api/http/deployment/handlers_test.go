@@ -137,19 +137,19 @@ func TestDeploymentInfo(t *testing.T) {
 			defer clear()
 
 			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(),
-				tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+				ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), s1.SelfLink().String(), s1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), tc.fields.stg.Key().Deployment(d1.Meta.Namespace, d1.Meta.Service, d1.Meta.Name), d1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), d1.SelfLink().String(), d1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), p1.SelfLink(), p1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), p1.SelfLink().String(), p1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), p2.SelfLink(), p2, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), p2.SelfLink().String(), p2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -215,8 +215,8 @@ func TestDeploymentListHList(t *testing.T) {
 	d2 := getDeploymentAsset(ns1.Meta.Name, s2.Meta.Name, "test")
 
 	dl := types.NewDeploymentMap()
-	dl.Items[d1.SelfLink()] = d1
-	dl.Items[d2.SelfLink()] = d2
+	dl.Items[d1.SelfLink().String()] = d1
+	dl.Items[d2.SelfLink().String()] = d2
 
 	type fields struct {
 		stg storage.Storage
@@ -286,16 +286,16 @@ func TestDeploymentListHList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), s1.SelfLink().String(), s1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), tc.fields.stg.Key().Deployment(d1.Meta.Namespace, d1.Meta.Service, d1.Meta.Name), d1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), d1.SelfLink().String(), d1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), tc.fields.stg.Key().Deployment(d2.Meta.Namespace, d2.Meta.Service, d1.Meta.Name), d2, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), d2.SelfLink().String(), d2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -353,6 +353,8 @@ func getNamespaceAsset(name, desc string) *types.Namespace {
 	n.Meta.SetDefault()
 	n.Meta.Name = name
 	n.Meta.Description = desc
+	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
+
 	return &n
 }
 
@@ -363,6 +365,7 @@ func getServiceAsset(namespace, name, desc string) *types.Service {
 	n.Meta.Namespace = namespace
 	n.Meta.Name = name
 	n.Meta.Description = desc
+	n.Meta.SelfLink = *types.NewServiceSelfLink(namespace, name)
 	return &n
 }
 
@@ -372,6 +375,7 @@ func getDeploymentAsset(namespace, service, name string) *types.Deployment {
 	d.Meta.Namespace = namespace
 	d.Meta.Service = service
 	d.Meta.Name = name
+	d.Meta.SelfLink = *types.NewDeploymentSelfLink(namespace, service, name)
 	return &d
 }
 
@@ -381,9 +385,8 @@ func getPodAsset(namespace, service, deployment, name, desc string) types.Pod {
 	p.Meta.Name = name
 	p.Meta.Description = desc
 	p.Meta.Namespace = namespace
-	p.Meta.Parent.Kind = types.KindDeployment
-	p.Meta.Parent.SelfLink = fmt.Sprintf("%s:%s:%s", namespace, service, deployment)
-	p.SelfLink()
+	psl, _ := types.NewPodSelfLink(types.KindDeployment, types.NewDeploymentSelfLink(namespace, service, deployment).String(), name)
+	p.Meta.SelfLink = *psl
 
 	return p
 }

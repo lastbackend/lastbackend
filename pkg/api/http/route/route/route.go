@@ -105,6 +105,7 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.RouteManifest)
 
 	route := new(types.Route)
 	route.Meta.SetDefault()
+	route.Meta.SelfLink = *types.NewRouteSelfLink(ns.Meta.Name, *mf.Meta.Name)
 	route.Meta.Namespace = ns.Meta.Name
 
 	mf.SetRouteMeta(route)

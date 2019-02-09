@@ -214,7 +214,7 @@ func DiscoveryConnectH(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if snet == nil {
-			if _, err := sn.SubnetPut(discovery.SelfLink(), opts.Network.SubnetSpec); err != nil {
+			if _, err := sn.SubnetPut(discovery.SelfLink().String(), opts.Network.SubnetSpec); err != nil {
 				log.V(logLevel).Errorf("%s:connect:> snet put error: %s", logPrefix, err.Error())
 				errors.HTTP.InternalServerError(w)
 				return
@@ -241,7 +241,7 @@ func DiscoveryConnectH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if snet == nil {
-		if _, err := sn.SubnetPut(dvc.SelfLink(), opts.Network.SubnetSpec); err != nil {
+		if _, err := sn.SubnetPut(dvc.SelfLink().String(), opts.Network.SubnetSpec); err != nil {
 			log.V(logLevel).Errorf("%s:connect:> snet put error: %s", logPrefix, err.Error())
 			errors.HTTP.InternalServerError(w)
 		}
@@ -256,7 +256,7 @@ func DiscoveryConnectH(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	cache.Clear(dvc.SelfLink())
+	cache.Clear(dvc.SelfLink().String())
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte{}); err != nil {
@@ -413,7 +413,7 @@ func getDiscoveryManifest(ctx context.Context, dns *types.Discovery) (*types.Dis
 
 	var (
 		cache = envs.Get().GetCache().Discovery()
-		spec  = cache.Get(dns.SelfLink())
+		spec  = cache.Get(dns.SelfLink().String())
 		stg   = envs.Get().GetStorage()
 		ns    = distribution.NewNetworkModel(ctx, stg)
 	)
@@ -430,7 +430,7 @@ func getDiscoveryManifest(ctx context.Context, dns *types.Discovery) (*types.Dis
 		spec.Network = subnets.Items
 	}
 
-	cache.Flush(dns.SelfLink())
+	cache.Flush(dns.SelfLink().String())
 	return spec, nil
 
 }

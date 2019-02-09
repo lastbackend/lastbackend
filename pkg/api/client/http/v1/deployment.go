@@ -49,7 +49,7 @@ func (dc *DeploymentClient) Pod(args ...string) types.PodClientV1 {
 			panic("Wrong parameter count: (is allowed from 0 to 1)")
 		}
 	}
-	return newPodClient(dc.client, dc.namespace, dc.service, dc.name, name)
+	return newPodClient(dc.client, dc.namespace, name)
 }
 
 func (dc *DeploymentClient) List(ctx context.Context) (*vv1.DeploymentList, error) {

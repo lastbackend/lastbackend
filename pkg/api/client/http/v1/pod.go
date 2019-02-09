@@ -33,10 +33,16 @@ import (
 type PodClient struct {
 	client *request.RESTClient
 
+	parent struct {
+		kind     string
+		selflink string
+	}
+
 	namespace  string
 	service    string
 	deployment string
-	name       string
+
+	name string
 }
 
 func (pc *PodClient) List(ctx context.Context) (*vv1.PodList, error) {
@@ -99,6 +105,6 @@ func (pc *PodClient) Logs(ctx context.Context, opts *rv1.PodLogsOptions) (io.Rea
 	return res.Stream()
 }
 
-func newPodClient(client *request.RESTClient, namespace, service, deployment, name string) *PodClient {
-	return &PodClient{client: client, namespace: namespace, service: service, deployment: deployment, name: name}
+func newPodClient(client *request.RESTClient, namespace, name string) *PodClient {
+	return &PodClient{client: client, namespace: namespace, name: name}
 }

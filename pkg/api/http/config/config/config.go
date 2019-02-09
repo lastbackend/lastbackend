@@ -93,6 +93,7 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.ConfigManifest
 	cfg := new(types.Config)
 	cfg.Meta.SetDefault()
 	cfg.Meta.Namespace = ns.Meta.Name
+	cfg.Meta.SelfLink = *types.NewConfigSelfLink(ns.Meta.Name, *mf.Meta.Name)
 
 	mf.SetConfigMeta(cfg)
 	mf.SetConfigSpec(cfg)

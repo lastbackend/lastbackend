@@ -53,7 +53,7 @@ func (n *Config) Get(namespace, name string) (*types.Config, error) {
 
 	item := new(types.Config)
 
-	err := n.storage.Get(n.context, n.storage.Collection().Config(), n.storage.Key().Config(namespace, name), &item, nil)
+	err := n.storage.Get(n.context, n.storage.Collection().Config(), types.NewConfigSelfLink(namespace, name).String(), &item, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -99,7 +99,7 @@ func (n *Config) Create(namespace *types.Namespace, config *types.Config) (*type
 	config.SelfLink()
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Config(),
-		n.storage.Key().Config(config.Meta.Namespace, config.Meta.Name), config, nil); err != nil {
+		config.SelfLink().String(), config, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert config err: %v", logConfigPrefix, err)
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (n *Config) Update(config *types.Config) (*types.Config, error) {
 	log.V(logLevel).Debugf("%s:update:> update config %s", logConfigPrefix, config.Meta.Name)
 
 	if err := n.storage.Set(n.context, n.storage.Collection().Config(),
-		n.storage.Key().Config(config.Meta.Namespace, config.Meta.Name), config, nil); err != nil {
+		config.SelfLink().String(), config, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update config err: %s", logConfigPrefix, err)
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func (n *Config) Remove(config *types.Config) error {
 	log.V(logLevel).Debugf("%s:remove:> remove config %#v", logConfigPrefix, config)
 
 	if err := n.storage.Del(n.context, n.storage.Collection().Config(),
-		n.storage.Key().Config(config.Meta.Namespace, config.Meta.Name)); err != nil {
+		config.SelfLink().String()); err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove config  err: %s", logConfigPrefix, err)
 		return err
 	}
