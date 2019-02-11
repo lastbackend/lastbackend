@@ -27,7 +27,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"github.com/lastbackend/lastbackend/pkg/util/resource"
+	"strings"
 )
 
 const (
@@ -77,22 +79,27 @@ func Create(ctx context.Context, ns *types.Namespace, job *types.Job, mf *reques
 
 	task := new(types.Task)
 	task.Meta.SetDefault()
-
-	task.Meta.SelfLink = *types.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, *mf.Meta.Name)
 	task.Meta.Namespace = ns.Meta.Name
 	task.Meta.Job = job.Meta.Name
 
-	mf.SetTaskMeta(task)
+	if mf.Meta.Name != nil {
+		task.Meta.SelfLink = *types.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, *mf.Meta.Name)
+		mf.SetTaskMeta(task)
+	} else {
+		name := strings.Split(generator.GetUUIDV4(), "-")[4][5:]
+		task.Meta.Name = name
+		task.Meta.SelfLink = *types.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, name)
+	}
+
+	task.Status.State = types.StateCreated
 
 	task.Spec.Runtime = job.Spec.Task.Runtime
 	task.Spec.Selector = job.Spec.Task.Selector
 	task.Spec.Template = job.Spec.Task.Template
 
-	if mf != nil {
-		if err := mf.SetTaskSpec(task); err != nil {
-			log.V(logLevel).Errorf("%s:create:> set task spec err: %s", logPrefix, err.Error())
-			return nil, errors.New("task").BadParameter("spec")
-		}
+	if err := mf.SetTaskSpec(task); err != nil {
+		log.V(logLevel).Errorf("%s:create:> set task spec err: %s", logPrefix, err.Error())
+		return nil, errors.New("task").BadParameter("spec")
 	}
 
 	if job.Spec.Resources.Limits.RAM != 0 || job.Spec.Resources.Limits.CPU != 0 {

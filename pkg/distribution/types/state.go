@@ -35,6 +35,7 @@ const StateUpdated = "updated"
 const StateCancel = "cancel"
 
 const StateCreated = "created"
+const StateQueued = "queued"
 const StatusStarting = "starting"
 const StateStarted = "started"
 const StatusStopped = "stopped"

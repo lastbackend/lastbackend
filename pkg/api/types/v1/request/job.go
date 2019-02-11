@@ -52,7 +52,7 @@ type JobManifestSpecTaskTemplate struct {
 
 type JobManifestSpecConcurrency struct {
 	Limit    int    `json:"limit" yaml:"limit"`
-	Strategy string `json:"strategy" yaml:"limit"`
+	Strategy string `json:"strategy" yaml:"strategy"`
 }
 
 type JobManifestSpecProvider struct {

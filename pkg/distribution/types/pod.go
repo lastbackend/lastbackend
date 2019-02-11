@@ -365,6 +365,7 @@ func NewPodStatus() *PodStatus {
 }
 
 func (s *PodStatus) AddTask(name string) *PodStatusTask {
+
 	pst := PodStatusTask{
 		Status:   StateCreated,
 		Error:    false,

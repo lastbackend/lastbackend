@@ -21,6 +21,7 @@ package views
 import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/resource"
+	"sort"
 )
 
 type JobView struct{}
@@ -35,6 +36,7 @@ func (jw *JobView) New(obj *types.Job, tasks *types.TaskList, pods *types.PodLis
 	if tasks != nil {
 		j.Tasks = make(TaskList, 0)
 		j.JoinTasks(tasks, pods)
+		sort.Sort(j.Tasks)
 	}
 
 	return &j

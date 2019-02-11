@@ -47,9 +47,10 @@ type JobState struct {
 	job     *types.Job
 
 	task struct {
-		active map[string]*types.Task
-		queue  map[string]*types.Task
-		list   map[string]*types.Task
+		active   map[string]*types.Task
+		queue    map[string]*types.Task
+		list     map[string]*types.Task
+		finished []*types.Task
 	}
 
 	pod struct {
@@ -102,6 +103,18 @@ func (js *JobState) Restore() error {
 
 	// Get all tasks
 
+	tm := distribution.NewTaskModel(context.Background(), stg)
+	tl, err := tm.ListByJob(js.job.Meta.Namespace, js.job.Meta.Name)
+	if err != nil {
+		log.Errorf("%s:restore:> get task map error: %v", logPrefix, err)
+		return err
+	}
+
+	for _, t := range tl.Items {
+		log.Infof("%s: restore task: %s", logPrefix, t.SelfLink())
+		js.task.list[t.SelfLink().String()] = t
+	}
+
 	// Range over pods to sync pod status
 	for _, pl := range js.pod.list {
 		for _, p := range pl {
@@ -119,6 +132,11 @@ func (js *JobState) Restore() error {
 
 	if js.provider != nil {
 		go js.Provider()
+	}
+
+	if err := jobTaskProvision(js); err != nil {
+		log.Errorf("%s:> job task provision err: %s", logPrefix, err.Error())
+		return err
 	}
 
 	return nil
@@ -322,6 +340,10 @@ func NewJobState(cs *cluster.ClusterState, job *types.Job) *JobState {
 	js.observers.pod = make(chan *types.Pod)
 
 	js.task.list = make(map[string]*types.Task)
+	js.task.queue = make(map[string]*types.Task)
+	js.task.active = make(map[string]*types.Task)
+	js.task.finished = make([]*types.Task, 0)
+
 	js.pod.list = make(map[string]map[string]*types.Pod)
 
 	if job.Spec.Provider.Kind != types.EmptyString {

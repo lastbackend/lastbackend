@@ -77,8 +77,6 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 	// Check containers pod status =============================================
 	//==========================================================================
 
-	log.Infof("tasks: %d", len(manifest.Runtime.Tasks))
-
 	// Get pod list from current state
 	p := envs.Get().GetState().Pods().GetPod(key)
 	if p != nil {
@@ -260,6 +258,17 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 		envs.Get().GetState().Pods().SetPod(key, status)
 	}
 
+	if len(manifest.Runtime.Tasks) > 0 {
+		for _, t := range manifest.Runtime.Tasks {
+			pst := new(types.PodStatusTask)
+			pst.Status = types.StateProvision
+			pst.Error = false
+			status.Tasks[t.Name] = pst
+		}
+
+		envs.Get().GetState().Pods().SetPod(key, status)
+	}
+
 	log.V(logLevel).Debugf("%s have %d images", logPodPrefix, len(manifest.Template.Containers))
 	for _, c := range manifest.Template.Containers {
 		log.V(logLevel).Debugf("%s pull images for pod if needed", logPodPrefix)
@@ -355,54 +364,56 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 	envs.Get().GetState().Pods().SetPod(key, status)
 
 	// run tasks
-	for _, t := range manifest.Runtime.Tasks {
-		for _, s := range manifest.Template.Containers {
+	go func() {
+		for _, t := range manifest.Runtime.Tasks {
+			for _, s := range manifest.Template.Containers {
 
-			if s.Name != t.Container {
-				continue
-			}
+				if s.Name != t.Container {
+					continue
+				}
 
-			spec := *s
+				spec := *s
 
-			if len(t.EnvVars) > 0 {
-				for _, te := range t.EnvVars {
-					var f = false
-					for _, se := range spec.EnvVars {
-						if te.Name == se.Name {
-							se.Value = te.Value
-							se.Secret = te.Secret
-							se.Config = te.Config
-							f = true
+				if len(t.EnvVars) > 0 {
+					for _, te := range t.EnvVars {
+						var f = false
+						for _, se := range spec.EnvVars {
+							if te.Name == se.Name {
+								se.Value = te.Value
+								se.Secret = te.Secret
+								se.Config = te.Config
+								f = true
+							}
+						}
+						if !f {
+							spec.EnvVars = append(spec.EnvVars, te)
 						}
 					}
-					if !f {
-						spec.EnvVars = append(spec.EnvVars, te)
-					}
 				}
-			}
 
-			m, err := containerManifestCreate(ctx, key, &spec)
-			if primary != types.EmptyString {
-				m.Network.Mode = fmt.Sprintf("container:%s", primary)
-			}
+				m, err := containerManifestCreate(ctx, key, &spec)
+				if primary != types.EmptyString {
+					m.Network.Mode = fmt.Sprintf("container:%s", primary)
+				}
 
-			if err != nil {
-				log.Errorf("%s can not create container manifest from spec: %s", logPodPrefix, err.Error())
-				return setError(err)
-			}
+				if err != nil {
+					log.Errorf("%s can not create container manifest from spec: %s", logPodPrefix, err.Error())
+					setError(err)
+				}
 
-			m.Name = ""
-			if err := taskExecute(ctx, key, t, *m, status); err != nil {
-				log.Errorf("%s can not execute task: %s", logPodPrefix, err.Error())
-				return setError(err)
-			}
+				m.Name = ""
+				if err := taskExecute(ctx, key, t, *m, status); err != nil {
+					log.Errorf("%s can not execute task: %s", logPodPrefix, err.Error())
+					setError(err)
+				}
 
+			}
 		}
-	}
 
-	if len(manifest.Runtime.Tasks) > 0 {
-		PodExit(ctx, key, status, true)
-	}
+		if len(manifest.Runtime.Tasks) > 0 {
+			PodExit(ctx, key, status, true)
+		}
+	}()
 
 	return status, nil
 }
@@ -418,10 +429,10 @@ func PodClean(ctx context.Context, status *types.PodStatus) {
 
 	for _, c := range status.Containers {
 		log.V(logLevel).Debugf("%s try to clean image: %s", logPodPrefix, c.Image.Name)
-		if err := ImageRemove(ctx, c.Image.Name); err != nil {
-			log.Errorf("%s can not remove image: %s", logPodPrefix, err.Error())
-			continue
-		}
+		//if err := ImageRemove(ctx, c.Image.Name); err != nil {
+		//	log.Errorf("%s can not remove image: %s", logPodPrefix, err.Error())
+		//	continue
+		//}
 	}
 
 }

@@ -224,9 +224,69 @@ func handleJobStateDestroyed(js *JobState, job *types.Job) (err error) {
 }
 
 // jobTaskProvision function handles all cases when task needs to be created or updated
-func jobTaskProvision(js *JobState, job *types.Job) error {
+func jobTaskProvision(js *JobState) error {
 
 	// run task if no one task are currently running and there is at least one in queue
+
+	var (
+		limit = 1
+		jm    = distribution.NewJobModel(context.Background(), envs.Get().GetStorage())
+	)
+
+	if js.job.Spec.Concurrency.Limit > 0 {
+		limit = js.job.Spec.Concurrency.Limit
+	}
+
+	if len(js.task.active) >= limit {
+		log.Debugf("%s:> limit exceeded: %d >= %d", logJobPrefix, len(js.task.active), limit)
+		return nil
+	}
+
+	if len(js.task.queue) <= 0 {
+
+		log.Debugf("%s:> there are no jobs in queue: %d", logJobPrefix, len(js.task.queue))
+		if js.job.Status.State != types.StateWaiting {
+			js.job.Status.State = types.StateWaiting
+			if err := jm.Set(js.job); err != nil {
+				log.Errorf("%s:> set job to waiting state err: %s", err.Error())
+			}
+		}
+		return nil
+	}
+
+	var t *types.Task
+
+	for _, task := range js.task.queue {
+		if t == nil {
+			t = task
+			continue
+		}
+
+		if task.Meta.Created.Before(t.Meta.Created) {
+			t = task
+		}
+	}
+
+	if t == nil {
+		return nil
+	}
+
+	t.Status.State = types.StateProvision
+	tm := distribution.NewTaskModel(context.Background(), envs.Get().GetStorage())
+	if err := tm.Set(t); err != nil {
+		log.Errorf("%s", err.Error())
+		return err
+	}
+
+	js.task.active[t.SelfLink().String()] = t
+	delete(js.task.queue, t.SelfLink().String())
+
+	if js.job.Status.State != types.StateRunning {
+		js.job.Status.State = types.StateRunning
+		if err := jm.Set(js.job); err != nil {
+			log.Errorf("%s:> set job to waiting state err: %s", err.Error())
+		}
+	}
 
 	return nil
 }

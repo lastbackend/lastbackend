@@ -18,9 +18,24 @@
 
 package views
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"sort"
+)
 
 type TaskList []*Task
+
+func (p TaskList) Len() int {
+	return len(p)
+}
+
+func (p TaskList) Less(i, j int) bool {
+	return p[j].Meta.Created.Before(p[i].Meta.Created)
+}
+
+func (p TaskList) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
 
 type Task struct {
 	Meta   TaskMeta   `json:"meta"`
@@ -51,5 +66,6 @@ func (t *Task) ToJson() ([]byte, error) {
 }
 
 func (tl *TaskList) ToJson() ([]byte, error) {
+	sort.Sort(tl)
 	return json.Marshal(tl)
 }

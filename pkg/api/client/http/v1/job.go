@@ -77,6 +77,31 @@ func (sc *JobClient) Create(ctx context.Context, opts *rv1.JobManifest) (*vv1.Jo
 	return s, nil
 }
 
+func (sc *JobClient) Run(ctx context.Context, opts *rv1.TaskManifest) (*vv1.Task, error) {
+
+	body, err := opts.ToJson()
+	if err != nil {
+		return nil, err
+	}
+
+	var s *vv1.Task
+	var e *errors.Http
+
+	err = sc.client.Post(fmt.Sprintf("/namespace/%s/job/%s/task", sc.namespace, sc.name)).
+		AddHeader("Content-Type", "application/json").
+		Body(body).
+		JSON(&s, &e)
+
+	if err != nil {
+		return nil, err
+	}
+	if e != nil {
+		return nil, errors.New(e.Message)
+	}
+
+	return s, nil
+}
+
 func (sc *JobClient) List(ctx context.Context) (*vv1.JobList, error) {
 
 	var s *vv1.JobList

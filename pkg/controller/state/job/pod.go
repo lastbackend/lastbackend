@@ -178,9 +178,11 @@ func podCreate(d *types.Task) (*types.Pod, error) {
 	pod.Meta.SetDefault()
 	pod.Meta.Name = strings.Split(generator.GetUUIDV4(), "-")[4][5:]
 	pod.Meta.Namespace = d.Meta.Namespace
-
+	sl, _ := types.NewPodSelfLink(types.KindTask, d.SelfLink().String(), pod.Meta.Name)
+	pod.Meta.SelfLink = *sl
 	pod.Status.SetCreated()
 
+	pod.Spec.SetSpecRuntime(d.Spec.Runtime)
 	pod.Spec.SetSpecTemplate(pod.SelfLink().String(), d.Spec.Template)
 	pod.Spec.Selector = d.Spec.Selector
 
@@ -359,7 +361,10 @@ func podManifestSet(p *types.Pod) error {
 	mm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
 	m, err = mm.ManifestGet(p.Meta.Node, p.Meta.SelfLink.String())
 	if err != nil {
-		return err
+		if !errors.Storage().IsErrEntityNotFound(err) {
+			log.Errorf("%s", err.Error())
+			return err
+		}
 	}
 
 	// Update manifest

@@ -41,6 +41,7 @@ func (nv *NamespaceView) NewApplyStatus(status struct {
 	Secrets  map[string]bool
 	Volumes  map[string]bool
 	Services map[string]bool
+	Jobs     map[string]bool
 	Routes   map[string]bool
 }) *NamespaceApplyStatus {
 	n := NamespaceApplyStatus{}
@@ -49,6 +50,7 @@ func (nv *NamespaceView) NewApplyStatus(status struct {
 	n.Volumes = make(map[string]bool, 0)
 	n.Services = make(map[string]bool, 0)
 	n.Routes = make(map[string]bool, 0)
+	n.Jobs = make(map[string]bool, 0)
 
 	for name, status := range status.Secrets {
 		n.Secrets[name] = status
@@ -68,6 +70,10 @@ func (nv *NamespaceView) NewApplyStatus(status struct {
 
 	for name, status := range status.Routes {
 		n.Routes[name] = status
+	}
+
+	for name, status := range status.Jobs {
+		n.Jobs[name] = status
 	}
 
 	return &n

@@ -143,6 +143,7 @@ type NamespaceApplyManifest struct {
 	Secrets  map[string]*SecretManifest  `json:"secrets"`
 	Routes   map[string]*RouteManifest   `json:"routes"`
 	Volumes  map[string]*VolumeManifest  `json:"volumes"`
+	Jobs     map[string]*JobManifest     `json:"jobs"`
 }
 
 // swagger:model request_namespace_remove

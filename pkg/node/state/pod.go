@@ -224,6 +224,15 @@ func state(s *types.PodStatus) {
 
 	for _, cn := range s.Containers {
 
+		// skip command containers for pod status changing
+		for _, task := range s.Tasks {
+			for _, cmd := range task.Commands {
+				if cmd.ID == cn.ID {
+					return
+				}
+			}
+		}
+
 		switch true {
 		case cn.State.Error.Error:
 			sts[types.StateError] += 1

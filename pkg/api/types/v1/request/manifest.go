@@ -484,14 +484,14 @@ func (m ManifestSpecRuntime) SetSpecRuntime(sr *types.SpecRuntime) {
 	// apply new task manifest if not equal
 	if !te {
 
-		sr.Tasks = make([]types.SpecRuntimeTask, len(m.Tasks))
+		sr.Tasks = make([]types.SpecRuntimeTask, 0)
 
 		for _, t := range m.Tasks {
 			task := types.SpecRuntimeTask{
 				Name:      t.Name,
 				Container: t.Container,
-				EnvVars:   make(types.SpecTemplateContainerEnvs, len(t.Env)),
-				Commands:  make([]types.SpecTemplateContainerExec, len(t.Commands)),
+				EnvVars:   make(types.SpecTemplateContainerEnvs, 0),
+				Commands:  make([]types.SpecTemplateContainerExec, 0),
 			}
 
 			for _, e := range t.Env {
@@ -615,6 +615,11 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 			st.Updated = time.Now()
 		}
 
+		if spec.Security.Privileged != c.Security.Privileged {
+			spec.Security.Privileged = c.Security.Privileged
+			st.Updated = time.Now()
+		}
+
 		// Environments check
 		for _, ce := range c.Env {
 			var f = false
@@ -702,7 +707,6 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 				return handleErr("limit.ram", err)
 			}
 		}
-
 		if c.Resources.Limits.CPU != types.EmptyString {
 			resourcesLimitsCPU, err = resource.DecodeCpuResource(c.Resources.Limits.CPU)
 			if err != nil {

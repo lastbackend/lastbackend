@@ -23,8 +23,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
-	"io"
-	"os"
 	"time"
 )
 
@@ -110,13 +108,13 @@ func taskExecute(ctx context.Context, pod string, task types.SpecRuntimeTask, m 
 		// wait container =========================================================
 		//==========================================================================
 
-		req, err := envs.Get().GetCRI().Logs(ctx, c.ID, true, true, true)
-		if err != nil {
-			log.Errorf("%s error get logs stream %s", logPodPrefix, err)
-			return err
-		}
-
-		io.Copy(os.Stdout, req)
+		//req, err := envs.Get().GetCRI().Logs(ctx, c.ID, true, true, true)
+		//if err != nil {
+		//	log.Errorf("%s error get logs stream %s", logPodPrefix, err)
+		//	return err
+		//}
+		//
+		//io.Copy(os.Stdout, req)
 
 		log.V(logLevel).Debugf("%s container wait: %s", logTaskPrefix, c.ID)
 		if err := envs.Get().GetCRI().Wait(ctx, c.ID); err != nil {
