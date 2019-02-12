@@ -53,7 +53,7 @@ type JobState struct {
 	}
 
 	pod struct {
-		list map[string]map[string]*types.Pod
+		list map[string]*types.Pod
 	}
 
 	observers struct {
@@ -92,12 +92,8 @@ func (js *JobState) Restore() error {
 
 		// Check if task map for pod exists
 		_, sl := p.SelfLink().Parent()
-		if _, ok := js.pod.list[sl.String()]; !ok {
-			js.pod.list[sl.String()] = make(map[string]*types.Pod)
-		}
-
 		// put pod into map by task name and pod name
-		js.pod.list[sl.String()][p.SelfLink().String()] = p
+		js.pod.list[sl.String()] = p
 	}
 
 	// Get all tasks
@@ -115,10 +111,8 @@ func (js *JobState) Restore() error {
 	}
 
 	// Range over pods to sync pod status
-	for _, pl := range js.pod.list {
-		for _, p := range pl {
-			js.observers.pod <- p
-		}
+	for _, p := range js.pod.list {
+		js.observers.pod <- p
 	}
 
 	// Range over tasks to sync tasks status
@@ -161,7 +155,7 @@ func (js *JobState) Observe() {
 				log.Errorf("%s:observe:task err:> %s", logPrefix, err.Error())
 			}
 
-			if err := js.Hook(task, js.pod.list[task.SelfLink().String()]); err != nil {
+			if err := js.Hook(task); err != nil {
 				log.Errorf("%s:observe:task send state err:> %s", logPrefix, err.Error())
 			}
 			break
@@ -220,7 +214,7 @@ func (js *JobState) DelPod(p *types.Pod) {
 		return
 	}
 
-	delete(js.pod.list[sl.String()], p.SelfLink().String())
+	delete(js.pod.list, sl.String())
 }
 
 func (js *JobState) CheckJobDeps(dep types.StatusDependency) {
@@ -333,15 +327,10 @@ func (js *JobState) Provider() {
 
 }
 
-func (js *JobState) Hook(task *types.Task, pm map[string]*types.Pod) error {
-
-	pl := make([]*types.Pod, 0)
-	for _, p := range pm {
-		pl = append(pl, p)
-	}
+func (js *JobState) Hook(task *types.Task) error {
 
 	if js.hook != nil {
-		if err := js.hook.Execute(task, pl); err != nil {
+		if err := js.hook.Execute(task); err != nil {
 			log.Errorf("%s:>hook>execute err: %s", logPrefix, err.Error())
 			return err
 		}
@@ -366,7 +355,7 @@ func NewJobState(cs *cluster.ClusterState, job *types.Job) *JobState {
 	js.task.active = make(map[string]*types.Task)
 	js.task.finished = make([]*types.Task, 0)
 
-	js.pod.list = make(map[string]map[string]*types.Pod)
+	js.pod.list = make(map[string]*types.Pod)
 	js.provider, _ = jp.New(job.Spec.Provider)
 	js.hook, _ = jh.New(job.Spec.Hook)
 

@@ -1015,12 +1015,6 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *SpecTemplate) error {
 	return nil
 }
 
-func NewPodManifestList() *PodManifestList {
-	dm := new(PodManifestList)
-	dm.Items = make([]*PodManifest, 0)
-	return dm
-}
-
 func NewPodManifestMap() *PodManifestMap {
 	dm := new(PodManifestMap)
 	dm.Items = make(map[string]*PodManifest)

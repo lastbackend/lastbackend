@@ -75,9 +75,7 @@ type NodePodStatusOptions struct {
 	// Pod network
 	Network types.PodNetwork `json:"network" yaml:"network"`
 	// Pod containers
-	Tasks map[string]*types.PodStatusTask `json:"tasks" yaml:"tasks"`
-	// Pod containers
-	Containers map[string]*types.PodContainer `json:"containers" yaml:"containers"`
+	Runtime types.PodStatusRuntime `json:"runtime" yaml:"runtime"`
 }
 
 // swagger:model request_node_volume_status

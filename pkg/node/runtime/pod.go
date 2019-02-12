@@ -172,7 +172,7 @@ func PodRestart(ctx context.Context, key string) error {
 
 	cri := envs.Get().GetCRI()
 
-	for _, c := range pod.Containers {
+	for _, c := range pod.Runtime.Services {
 		if err := cri.Restart(ctx, c.ID, nil); err != nil {
 			return err
 		}
@@ -260,10 +260,10 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 
 	if len(manifest.Runtime.Tasks) > 0 {
 		for _, t := range manifest.Runtime.Tasks {
-			pst := new(types.PodStatusTask)
+			pst := new(types.PodStatusPipelineStep)
 			pst.Status = types.StateProvision
 			pst.Error = false
-			status.Tasks[t.Name] = pst
+			status.Runtime.Pipeline[t.Name] = pst
 		}
 
 		envs.Get().GetState().Pods().SetPod(key, status)
@@ -420,14 +420,14 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 
 func PodClean(ctx context.Context, status *types.PodStatus) {
 
-	for _, c := range status.Containers {
+	for _, c := range status.Runtime.Services {
 		log.V(logLevel).Debugf("%s remove unnecessary container: %s", logPodPrefix, c.ID)
 		if err := envs.Get().GetCRI().Remove(ctx, c.ID, true, true); err != nil {
 			log.Warnf("%s can-not remove unnecessary container %s: %s", logPodPrefix, c.ID, err)
 		}
 	}
 
-	for _, c := range status.Containers {
+	for _, c := range status.Runtime.Services {
 		log.V(logLevel).Debugf("%s try to clean image: %s", logPodPrefix, c.Image.Name)
 		//if err := ImageRemove(ctx, c.Image.Name); err != nil {
 		//	log.Errorf("%s can not remove image: %s", logPodPrefix, err.Error())
@@ -441,7 +441,7 @@ func PodExit(ctx context.Context, pod string, status *types.PodStatus, clean boo
 	log.V(logLevel).Debugf("%s exit pod: %s", logPodPrefix, pod)
 
 	timeout := time.Duration(3 * time.Second)
-	for _, c := range status.Containers {
+	for _, c := range status.Runtime.Services {
 
 		var attempts = 5
 		for i := 1; i <= attempts; i++ {
@@ -578,7 +578,7 @@ func PodRestore(ctx context.Context) error {
 		}
 
 		cs.Ready = true
-		status.Containers[cs.ID] = cs
+		status.Runtime.Services[cs.ID] = cs
 		status.Network.PodIP = c.Network.IPAddress
 
 		log.V(logLevel).Debugf("%s container restored %s", logPodPrefix, c.ID)
@@ -680,7 +680,7 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 		specc[mf.Name] = mf
 	}
 
-	for _, c := range state.Containers {
+	for _, c := range state.Runtime.Services {
 		statec[c.Name] = c.GetManifest()
 	}
 

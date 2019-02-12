@@ -38,16 +38,13 @@ type JobHttpHook struct {
 	config  *types.JobSpecHookHTTP
 }
 
-func (h *JobHttpHook) Execute(task *types.Task, pl []*types.Pod) error {
+func (h *JobHttpHook) Execute(task *types.Task) error {
 
 	var (
 		err error
 	)
 
-	pods := new(types.PodList)
-	pods.Items = pl
-
-	response, err := v1.View().Task().New(task, pods).ToJson()
+	response, err := v1.View().Task().New(task).ToJson()
 
 	client := http.Client{}
 	req, err := http.NewRequest(strings.ToUpper(h.config.Method), h.config.Endpoint, bytes.NewBuffer(response))

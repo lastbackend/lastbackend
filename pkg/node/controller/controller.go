@@ -222,8 +222,7 @@ func getPodOptions(p *types.PodStatus) *request.NodePodStatusOptions {
 	opts.Status = p.Status
 	opts.Running = p.Running
 	opts.Message = p.Message
-	opts.Containers = p.Containers
-	opts.Tasks = p.Tasks
+	opts.Runtime = p.Runtime
 	opts.Network = p.Network
 	opts.Steps = p.Steps
 	return opts

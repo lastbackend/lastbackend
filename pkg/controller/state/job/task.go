@@ -38,10 +38,6 @@ func taskObserve(js *JobState, task *types.Task) error {
 
 	log.V(logLevel).Debugf("%s:> observe start: %s > %s", logTaskPrefix, task.SelfLink(), task.Status.State)
 
-	if _, ok := js.pod.list[task.SelfLink().String()]; !ok {
-		js.pod.list[task.SelfLink().String()] = make(map[string]*types.Pod)
-	}
-
 	switch task.Status.State {
 	case types.StateCreated:
 		if err := handleTaskStateCreated(js, task); err != nil {
@@ -229,7 +225,7 @@ func handleTaskStateDestroyed(js *JobState, task *types.Task) error {
 
 	link := task.SelfLink().String()
 
-	if _, ok := js.pod.list[link]; ok && len(js.pod.list[link]) > 0 {
+	if _, ok := js.pod.list[link]; ok {
 
 		if err := taskDestroy(js, task); err != nil {
 			log.Errorf("%s", err.Error())
@@ -555,18 +551,8 @@ func taskProvision(js *JobState, task *types.Task) (err error) {
 		pm = distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
 	)
 
-	pods, ok := js.pod.list[task.SelfLink().String()]
-	if !ok {
-		pods = make(map[string]*types.Pod, 0)
-	}
-
-	var (
-		total int
-		state = make(map[string][]*types.Pod)
-	)
-
-	for _, p := range pods {
-
+	p, ok := js.pod.list[task.SelfLink().String()]
+	if ok {
 		if p.Status.State != types.StateDestroy && p.Status.State != types.StateDestroyed {
 
 			if p.Meta.Node != types.EmptyString {
@@ -585,23 +571,13 @@ func taskProvision(js *JobState, task *types.Task) (err error) {
 
 			}
 
-			total++
 		}
-
-		if _, ok := state[p.Status.State]; !ok {
-			state[p.Status.State] = make([]*types.Pod, 0)
-		}
-
-		state[p.Status.State] = append(state[p.Status.State], p)
-	}
-
-	if total < 1 {
-		p, err := podCreate(task)
+	} else {
+		_, err := podCreate(task)
 		if err != nil {
 			log.Errorf("%s", err.Error())
 			return err
 		}
-		pods[p.SelfLink().String()] = p
 		provision = true
 	}
 
@@ -632,15 +608,12 @@ func taskDestroy(js *JobState, task *types.Task) (err error) {
 		task.Meta.Updated = time.Now()
 	}
 
-	pl, ok := js.pod.list[task.SelfLink().String()]
+	p, ok := js.pod.list[task.SelfLink().String()]
 	if !ok {
 		task.Status.State = types.StateDestroyed
 		task.Meta.Updated = time.Now()
 		return nil
-	}
-
-	for _, p := range pl {
-
+	} else {
 		if p.Status.State != types.StateDestroy {
 			if err := podDestroy(js, p); err != nil {
 				return err
@@ -652,12 +625,6 @@ func taskDestroy(js *JobState, task *types.Task) (err error) {
 				return err
 			}
 		}
-	}
-
-	if len(pl) == 0 {
-		task.Status.State = types.StateDestroyed
-		task.Meta.Updated = time.Now()
-		return nil
 	}
 
 	return nil
@@ -699,14 +666,8 @@ func taskFinish(js *JobState, task *types.Task) (err error) {
 		task.Meta.Updated = time.Now()
 	}
 
-	pl, ok := js.pod.list[task.SelfLink().String()]
-	if !ok {
-		task.Status.State = types.StateDestroyed
-		task.Meta.Updated = time.Now()
-		return nil
-	}
-
-	for _, p := range pl {
+	p, ok := js.pod.list[task.SelfLink().String()]
+	if ok {
 		if p.Status.State != types.StateDestroy {
 			if err := podDestroy(js, p); err != nil {
 				return err
@@ -740,7 +701,7 @@ func taskFinish(js *JobState, task *types.Task) (err error) {
 	return nil
 }
 
-func taskStatusState(d *types.Task, pl map[string]*types.Pod) (err error) {
+func taskStatusState(d *types.Task, p *types.Pod) (err error) {
 
 	log.V(logLevel).Infof("%s:> taskStatusState: start: %s > %s", logTaskPrefix, d.SelfLink(), d.Status.State)
 
@@ -752,45 +713,32 @@ func taskStatusState(d *types.Task, pl map[string]*types.Pod) (err error) {
 		}
 	}()
 
-	var (
-		state   = make(map[string]int)
-		message string
-		total   int
-	)
-
-	for _, p := range pl {
-		total++
-
-		if p.Status.Status == types.StateError {
-			message = p.Status.Message
-		}
-
-		state[p.Status.Status]++
+	d.Status.Pod = types.TaskStatusPod{
+		SelfLink: p.SelfLink().String(),
+		State:    p.Status.State,
+		Status:   p.Status.Status,
+		Runtime:  p.Status.Runtime,
 	}
 
-	if state[types.StateRunning] > 0 {
+	d.Meta.Updated = time.Now()
+
+	switch p.Status.Status {
+	case types.StateError:
+		if d.Status.State != types.StateExited {
+			d.Status.State = types.StateExited
+			d.Status.Message = p.Status.Message
+		}
+		return nil
+	case types.StateRunning:
 		if d.Status.State != types.StateRunning {
 			d.Status.State = types.StateRunning
 			d.Status.Message = types.EmptyString
-			d.Meta.Updated = time.Now()
 		}
 		return nil
-	}
-
-	if state[types.StateError] > 0 {
-		if d.Status.State != types.StateExited {
-			d.Status.State = types.StateExited
-			d.Status.Message = message
-			d.Meta.Updated = time.Now()
-		}
-		return nil
-	}
-
-	if state[types.StateExited] > 0 && state[types.StateExited] == total {
+	case types.StateExited:
 		if d.Status.State != types.StateExited {
 			d.Status.State = types.StateExited
 			d.Status.Message = types.EmptyString
-			d.Meta.Updated = time.Now()
 		}
 		return nil
 	}

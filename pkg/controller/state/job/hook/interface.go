@@ -21,5 +21,5 @@ package hook
 import "github.com/lastbackend/lastbackend/pkg/distribution/types"
 
 type Hook interface {
-	Execute(task *types.Task, pl []*types.Pod) error
+	Execute(task *types.Task) error
 }

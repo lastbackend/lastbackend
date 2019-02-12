@@ -51,14 +51,22 @@ type TaskMeta struct {
 }
 
 type TaskStatus struct {
-	State   string `json:"state"`
-	Message string `json:"message"`
+	State   string        `json:"state"`
+	Message string        `json:"message"`
+	Pod     TaskStatusPod `json:"pod"`
 }
 
 type TaskSpec struct {
 	Runtime  ManifestSpecRuntime  `json:"runtime"`
 	Selector ManifestSpecSelector `json:"selector"`
 	Template ManifestSpecTemplate `json:"template"`
+}
+
+type TaskStatusPod struct {
+	SelfLink string           `json:"self_link"`
+	Status   string           `json:"status"`
+	State    string           `json:"state"`
+	Runtime  PodStatusRuntime `json:"runtime"`
 }
 
 func (t *Task) ToJson() ([]byte, error) {

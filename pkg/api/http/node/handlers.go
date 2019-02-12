@@ -544,8 +544,7 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 		pod.Status.Status = s.Status
 		pod.Status.Running = s.Running
 		pod.Status.Message = s.Message
-		pod.Status.Containers = s.Containers
-		pod.Status.Tasks = s.Tasks
+		pod.Status.Runtime = s.Runtime
 		pod.Status.Network = s.Network
 		pod.Status.Steps = s.Steps
 

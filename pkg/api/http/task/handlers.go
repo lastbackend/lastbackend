@@ -68,8 +68,6 @@ func TaskListH(w http.ResponseWriter, r *http.Request) {
 	nid := utils.Vars(r)["namespace"]
 	jsl := utils.Vars(r)["job"]
 
-	pflag := utils.QueryBool(r, "pods")
-
 	log.V(logLevel).Debugf("%s:list:> list tasks in %s", logPrefix, nid)
 
 	var (
@@ -96,18 +94,7 @@ func TaskListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var pods *types.PodList
-	if pflag {
-
-		if pods, err = distribution.NewPodModel(r.Context(), stg).ListByJob(ns.Meta.Name, jb.Meta.Name); err != nil {
-			log.V(logLevel).Errorf("%s:list:> get pod list by job id `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
-			errors.HTTP.InternalServerError(w)
-			return
-		}
-
-	}
-
-	response, err := v1.View().Task().NewList(tasks, pods).ToJson()
+	response, err := v1.View().Task().NewList(tasks).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:list:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -155,8 +142,6 @@ func TaskInfoH(w http.ResponseWriter, r *http.Request) {
 	nid := utils.Vars(r)["namespace"]
 	tsl := utils.Vars(r)["task"]
 
-	pflag := utils.QueryBool(r, "pods")
-
 	log.V(logLevel).Debugf("%s:info:> get task `%s` in namespace `%s`", logPrefix, jib, nid)
 
 	var (
@@ -181,18 +166,7 @@ func TaskInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var pods *types.PodList
-	if pflag {
-
-		if pods, err = distribution.NewPodModel(r.Context(), envs.Get().GetStorage()).ListByTask(ns.Meta.Name, jb.Meta.Name, tk.Meta.Name); err != nil {
-			log.V(logLevel).Errorf("%s:list:> get pod list by job id `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
-			errors.HTTP.InternalServerError(w)
-			return
-		}
-
-	}
-
-	response, err := v1.View().Task().New(tk, pods).ToJson()
+	response, err := v1.View().Task().New(tk).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:info:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -272,7 +246,7 @@ func TaskCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v1.View().Task().New(tk, nil).ToJson()
+	response, err := v1.View().Task().New(tk).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -349,7 +323,7 @@ func TaskCancelH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v1.View().Task().New(tk, nil).ToJson()
+	response, err := v1.View().Task().New(tk).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:info:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)

@@ -145,7 +145,7 @@ func (j *Job) JoinTasks(tasks *types.TaskList, pods *types.PodList) {
 			continue
 		}
 
-		j.Tasks = append(j.Tasks, new(TaskView).New(t, pods))
+		j.Tasks = append(j.Tasks, new(TaskView).New(t))
 	}
 }
 

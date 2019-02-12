@@ -94,15 +94,18 @@ type PodStatus struct {
 	Steps PodSteps `json:"steps" yaml:"steps"`
 	// Pod network
 	Network PodNetwork `json:"network" yaml:"network"`
-	// Pod containers
-	Containers map[string]*PodContainer `json:"containers" yaml:"containers"`
-	// Pod containers
-	Tasks map[string]*PodStatusTask `json:"tasks" yaml:"tasks"`
+	// Pod runtime
+	Runtime PodStatusRuntime `json:"runtime" yaml:"runtime"`
 	// Pod volumes
 	Volumes map[string]*VolumeClaim `json:"volumes" yaml:"volumes"`
 }
 
-type PodStatusTask struct {
+type PodStatusRuntime struct {
+	Services map[string]*PodContainer          `json:"containers" yaml:"containers"`
+	Pipeline map[string]*PodStatusPipelineStep `json:"pipeline" yaml:"pipeline"`
+}
+
+type PodStatusPipelineStep struct {
 	Status   string          `json:"status" yaml:"status"`
 	Error    bool            `json:"error" yaml:"error"`
 	Message  string          `json:"message" yaml:"message"`
@@ -356,46 +359,48 @@ func NewPodMap() *PodMap {
 
 func NewPodStatus() *PodStatus {
 	status := PodStatus{
-		Steps:      make(PodSteps, 0),
-		Containers: make(map[string]*PodContainer, 0),
-		Tasks:      make(map[string]*PodStatusTask, 0),
-		Volumes:    make(map[string]*VolumeClaim, 0),
+		Steps: make(PodSteps, 0),
+		Runtime: PodStatusRuntime{
+			Services: make(map[string]*PodContainer, 0),
+			Pipeline: make(map[string]*PodStatusPipelineStep, 0),
+		},
+		Volumes: make(map[string]*VolumeClaim, 0),
 	}
 	return &status
 }
 
-func (s *PodStatus) AddTask(name string) *PodStatusTask {
+func (s *PodStatus) AddTask(name string) *PodStatusPipelineStep {
 
-	pst := PodStatusTask{
+	pst := PodStatusPipelineStep{
 		Status:   StateCreated,
 		Error:    false,
 		Message:  EmptyString,
 		Commands: make([]*PodContainer, 0),
 	}
 
-	s.Tasks[name] = &pst
+	s.Runtime.Pipeline[name] = &pst
 	return &pst
 }
 
-func (s *PodStatusTask) SetCreated() {
+func (s *PodStatusPipelineStep) SetCreated() {
 	s.Status = StateCreated
 	s.Error = false
 	s.Message = EmptyString
 }
 
-func (s *PodStatusTask) SetStarted() {
+func (s *PodStatusPipelineStep) SetStarted() {
 	s.Status = StateStarted
 	s.Error = false
 	s.Message = EmptyString
 }
 
-func (s *PodStatusTask) SetExited(error bool, message string) {
+func (s *PodStatusPipelineStep) SetExited(error bool, message string) {
 	s.Status = StateExited
 	s.Error = error
 	s.Message = message
 }
 
-func (s *PodStatusTask) AddTaskCommandContainer(c *PodContainer) {
+func (s *PodStatusPipelineStep) AddTaskCommandContainer(c *PodContainer) {
 	s.Commands = append(s.Commands, c)
 }
 

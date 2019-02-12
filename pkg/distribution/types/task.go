@@ -46,6 +46,14 @@ type TaskStatus struct {
 	State        string             `json:"state"`
 	Message      string             `json:"message"`
 	Dependencies StatusDependencies `json:"dependencies"`
+	Pod          TaskStatusPod      `json:"pod"`
+}
+
+type TaskStatusPod struct {
+	SelfLink string           `json:"self_link"`
+	Status   string           `json:"status"`
+	State    string           `json:"state"`
+	Runtime  PodStatusRuntime `json:"runtime"`
 }
 
 type TaskSpec struct {

@@ -84,9 +84,8 @@ func PodObserve(js *JobState, p *types.Pod) error {
 	log.V(logLevel).Debugf("%s:> observe state finish: %s", logPodPrefix, p.SelfLink())
 
 	_, sl := p.SelfLink().Parent()
-	pl, ok := js.pod.list[sl.String()]
-	if ok && p.Status.State != types.StateDestroyed {
-		pl[p.SelfLink().String()] = p
+	if p.Status.State != types.StateDestroyed {
+		js.pod.list[sl.String()] = p
 	}
 
 	d, ok := js.task.list[sl.String()]
@@ -96,8 +95,7 @@ func PodObserve(js *JobState, p *types.Pod) error {
 	}
 
 	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
-
-	if err := taskStatusState(d, pl); err != nil {
+	if err := taskStatusState(d, p); err != nil {
 		return err
 	}
 
