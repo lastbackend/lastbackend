@@ -56,26 +56,32 @@ type JobManifestSpecConcurrency struct {
 }
 
 type JobManifestSpecProvider struct {
-	Timeout int                    `json:"timeout" yaml:"timeout"`
-	Kind    string                 `json:"kind" yaml:"kind"`
-	Config  map[string]interface{} `json:"config" yaml:"config"`
+	Timeout  string                           `json:"timeout" yaml:"timeout"`
+	Http     *JobManifestSpecProviderHTTP     `json:"http" yaml:"http"`
+	Cron     *JobManifestSpecProviderCron     `json:"cron" yaml:"cron"`
+	RabbitMQ *JobManifestSpecProviderRabbitMQ `json:"rabbitmq" yaml:"rabbitmq"`
+}
+
+type JobManifestSpecProviderHTTP struct {
+	Endpoint string            `json:"endpoint" yaml:"endpoint"`
+	Method   string            `json:"method" yaml:"method"`
+	Headers  map[string]string `json:"headers" yaml:"headers"`
+}
+
+type JobManifestSpecProviderCron struct {
+}
+
+type JobManifestSpecProviderRabbitMQ struct {
 }
 
 type JobManifestSpecHook struct {
-	Kind   string                 `json:"kind" yaml:"kind"`
-	Config map[string]interface{} `json:"config" yaml:"config"`
+	Http *JobManifestSpecProviderHTTP `json:"http" yaml:"http"`
 }
 
-type JobManifestSpecRemote struct {
-	Timeout  int                          `json:"timeout" yaml:"timeout"`
-	Request  JobManifestSpecRemoteRequest `json:"request" yaml:"request"`
-	Response JobManifestSpecRemoteRequest `json:"response" yaml:"response"`
-}
-
-type JobManifestSpecRemoteRequest struct {
+type JobManifestSpecHookHTTP struct {
 	Endpoint string            `json:"endpoint" yaml:"endpoint"`
-	Headers  map[string]string `json:"headers" yaml:"headers"`
 	Method   string            `json:"method" yaml:"method"`
+	Headers  map[string]string `json:"headers" yaml:"headers"`
 }
 
 func (j *JobManifest) FromJson(data []byte) error {
@@ -107,6 +113,7 @@ func (j *JobManifest) SetJobMeta(job *types.Job) {
 	if j.Meta.Labels != nil {
 		job.Meta.Labels = j.Meta.Labels
 	}
+
 }
 
 func (j *JobManifest) SetJobSpec(job *types.Job) (err error) {
@@ -116,12 +123,29 @@ func (j *JobManifest) SetJobSpec(job *types.Job) (err error) {
 	job.Spec.Concurrency.Limit = j.Spec.Concurrency.Limit
 	job.Spec.Concurrency.Strategy = j.Spec.Concurrency.Strategy
 
-	job.Spec.Provider.Kind = j.Spec.Provider.Kind
 	job.Spec.Provider.Timeout = j.Spec.Provider.Timeout
-	job.Spec.Provider.Config = j.Spec.Provider.Config
 
-	job.Spec.Hook.Kind = j.Spec.Hook.Kind
-	job.Spec.Hook.Config = j.Spec.Hook.Config
+	if j.Spec.Provider.Http != nil {
+		job.Spec.Provider.Http = new(types.JobSpecProviderHTTP)
+		job.Spec.Provider.Http.Endpoint = j.Spec.Provider.Http.Endpoint
+		job.Spec.Provider.Http.Method = j.Spec.Provider.Http.Method
+		job.Spec.Provider.Http.Headers = j.Spec.Provider.Http.Headers
+	}
+
+	if j.Spec.Provider.Cron != nil {
+
+	}
+
+	if j.Spec.Provider.RabbitMQ != nil {
+
+	}
+
+	if j.Spec.Hook.Http != nil {
+		job.Spec.Hook.Http = new(types.JobSpecHookHTTP)
+		job.Spec.Hook.Http.Endpoint = j.Spec.Hook.Http.Endpoint
+		job.Spec.Hook.Http.Method = j.Spec.Hook.Http.Method
+		job.Spec.Hook.Http.Headers = j.Spec.Hook.Http.Headers
+	}
 
 	if j.Spec.Resources != nil {
 

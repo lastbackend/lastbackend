@@ -55,6 +55,52 @@ type TaskSpec struct {
 	Template SpecTemplate `json:"template" yaml:"template"`
 }
 
+type TaskManifest struct {
+	Meta TaskManifestMeta
+	Spec TaskManifestSpec
+}
+
+type TaskManifestMeta struct {
+	Name        *string
+	Description *string
+	Labels      map[string]string
+}
+
+type TaskManifestSpec struct {
+	Runtime  *ManifestSpecRuntime
+	Selector *ManifestSpecSelector
+	Template *ManifestSpecTemplate
+}
+
+func (t *TaskManifest) SetTaskMeta(task *Task) {
+	if task.Meta.Name == EmptyString {
+		task.Meta.Name = *t.Meta.Name
+	}
+
+	if t.Meta.Labels != nil {
+		task.Meta.Labels = t.Meta.Labels
+	}
+}
+
+func (t *TaskManifest) SetTaskSpec(task *Task) error {
+
+	if t.Spec.Runtime != nil {
+		t.Spec.Runtime.SetSpecRuntime(&task.Spec.Runtime)
+	}
+
+	if t.Spec.Selector != nil {
+		t.Spec.Selector.SetSpecSelector(&task.Spec.Selector)
+	}
+
+	if t.Spec.Template != nil {
+		if err := t.Spec.Template.SetSpecTemplate(&task.Spec.Template); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (ts *TaskStatus) CheckDeps() bool {
 
 	for _, d := range ts.Dependencies.Volumes {

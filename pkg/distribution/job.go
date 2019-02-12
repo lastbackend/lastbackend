@@ -22,6 +22,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
@@ -91,6 +92,7 @@ func (j *Job) ListByNamespace(namespace string) (*types.JobList, error) {
 // Create job
 func (j *Job) Create(job *types.Job) (*types.Job, error) {
 
+	job.Meta.Created = time.Now()
 	if err := j.storage.Put(j.context, j.storage.Collection().Job(),
 		job.SelfLink().String(), job, nil); err != nil {
 		log.Errorf("%s:create:> job %s create err: %v", logJobPrefix, job.Meta.SelfLink, err)
@@ -103,6 +105,7 @@ func (j *Job) Create(job *types.Job) (*types.Job, error) {
 // Update job
 func (j *Job) Set(job *types.Job) error {
 
+	job.Meta.Updated = time.Now()
 	log.V(logLevel).Debugf("%s:update:> update job %s", logJobPrefix, job.Meta.Name)
 
 	if err := j.storage.Set(j.context, j.storage.Collection().Job(),

@@ -19,9 +19,11 @@
 package http
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -31,26 +33,63 @@ const (
 
 type JobHttpProvider struct {
 	timeout time.Time
-	config  JobHttpProviderConfig
+	config  *types.JobSpecProviderHTTP
 	client  http.Client
 }
 
-type config map[string]interface{}
+func (h *JobHttpProvider) Fetch() (*types.TaskManifest, error) {
 
-type JobHttpProviderConfig struct {
+	var (
+		err      error
+		manifest = new(request.TaskManifest)
+	)
+
+	client := http.Client{}
+
+	req, err := http.NewRequest(strings.ToUpper(h.config.Method), h.config.Endpoint, nil)
+	if err != nil {
+		log.Error(err.Error())
+		return nil, err
+	}
+
+	if len(h.config.Headers) > 0 {
+		for k, v := range h.config.Headers {
+			req.Header.Add(k, v)
+		}
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Error(err.Error())
+		return nil, err
+	}
+
+	if err := manifest.DecodeAndValidate(resp.Body); err != nil {
+		log.Error(err.Err().Error())
+		return nil, err.Err()
+	}
+
+	defer resp.Body.Close()
+
+	mf := new(types.TaskManifest)
+	manifest.SetTaskManifestMeta(mf)
+	if err := manifest.SetTaskManifestSpec(mf); err != nil {
+		return nil, err
+	}
+
+	return mf, nil
 }
 
-func (hw *JobHttpProvider) Fetch() (*types.Task, error) {
-	return nil, nil
-}
-
-func New(cfg config) (*JobHttpProvider, error) {
+func New(cfg *types.JobSpecProviderHTTP) (*JobHttpProvider, error) {
 
 	log.V(logLevel).Debug("Use http task watcher")
 
 	var (
 		provider *JobHttpProvider
 	)
+
+	provider = new(JobHttpProvider)
+	provider.config = cfg
 
 	return provider, nil
 }

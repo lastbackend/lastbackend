@@ -19,22 +19,16 @@
 package provider
 
 import (
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/job/provider"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/job/provider/http"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
-const (
-	httpDriver     = "http"
-	cronDriver     = "cron"
-	rabbitmqDriver = "rabbitmq"
-)
+func New(specProvider types.JobSpecProvider) (provider.JobProvider, error) {
 
-func New(driver string, cfg map[string]interface{}) (provider.JobProvider, error) {
-	switch driver {
-	case httpDriver:
-		return http.New(cfg)
-	default:
-		return nil, fmt.Errorf("image runtime <%s> interface not supported", driver)
+	if specProvider.Http != nil {
+		return http.New(specProvider.Http)
 	}
+
+	return nil, nil
 }

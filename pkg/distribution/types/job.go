@@ -94,13 +94,32 @@ type JobSpecConcurrency struct {
 }
 
 type JobSpecProvider struct {
-	Kind    string                 `json:"kind"`
-	Timeout int                    `json:"timeout"`
-	Config  map[string]interface{} `json:"config"`
+	Timeout  string                   `json:"timeout"`
+	Http     *JobSpecProviderHTTP     `json:"http"`
+	Cron     *JobSpecProviderCron     `json:"cron"`
+	RabbitMQ *JobSpecProviderRabbitMQ `json:"rabbit_mq"`
 }
+
+type JobSpecProviderHTTP struct {
+	Endpoint string            `json:"endpoint"`
+	Method   string            `json:"method"`
+	Headers  map[string]string `json:"headers"`
+}
+
+type JobSpecProviderCron struct {
+}
+
+type JobSpecProviderRabbitMQ struct {
+}
+
 type JobSpecHook struct {
-	Kind   string                 `json:"kind"`
-	Config map[string]interface{} `json:"config"`
+	Http *JobSpecHookHTTP `json:"http"`
+}
+
+type JobSpecHookHTTP struct {
+	Endpoint string            `json:"endpoint"`
+	Method   string            `json:"method"`
+	Headers  map[string]string `json:"headers"`
 }
 
 type JobSpecKindHttpConfig struct {

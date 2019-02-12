@@ -481,22 +481,35 @@ func taskCheckSelectors(ss *JobState, d *types.Task) (err error) {
 
 // taskCreate - create a new task from current job
 // usually used by cron or other time repeatable jobs
-func taskCreate(job *types.Job) (*types.Task, error) {
+func taskCreate(job *types.Job, mf *types.TaskManifest) (*types.Task, error) {
 
 	tm := distribution.NewTaskModel(context.Background(), envs.Get().GetStorage())
 
 	task := new(types.Task)
-
+	task.Meta.SetDefault()
 	task.Meta.Namespace = job.Meta.Namespace
 	task.Meta.Job = job.SelfLink().String()
 
-	name := strings.Split(generator.GetUUIDV4(), "-")[4][5:]
-	task.Meta.Name = name
-	task.Meta.SelfLink = *types.NewTaskSelfLink(job.Meta.Name, job.Meta.Name, name)
+	if mf != nil {
+		mf.SetTaskMeta(task)
+	}
+
+	if task.Meta.Name == types.EmptyString {
+		name := strings.Split(generator.GetUUIDV4(), "-")[4][5:]
+		task.Meta.Name = name
+	}
+
+	task.Meta.SelfLink = *types.NewTaskSelfLink(job.Meta.Name, job.Meta.Name, task.Meta.Name)
 
 	task.Spec.Runtime = job.Spec.Task.Runtime
 	task.Spec.Selector = job.Spec.Task.Selector
 	task.Spec.Template = job.Spec.Task.Template
+
+	if mf != nil {
+		if err := mf.SetTaskSpec(task); err != nil {
+			return nil, err
+		}
+	}
 
 	d, err := tm.Create(task)
 	if err != nil {

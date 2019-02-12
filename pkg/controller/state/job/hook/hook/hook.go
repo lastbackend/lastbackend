@@ -19,20 +19,17 @@
 package hook
 
 import (
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/job/hook"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/job/hook/http"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
-const (
-	httpDriver = "http"
-)
+func New(hook types.JobSpecHook) (hook.Hook, error) {
 
-func New(driver string, cfg map[string]interface{}) (hook.Hook, error) {
-	switch driver {
-	case httpDriver:
-		return http.New(cfg)
-	default:
-		return nil, fmt.Errorf("image runtime <%s> interface not supported", driver)
+	if hook.Http != nil {
+		return http.New(hook.Http)
 	}
+
+	return nil, nil
+
 }

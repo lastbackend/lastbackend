@@ -21,5 +21,5 @@ package provider
 import "github.com/lastbackend/lastbackend/pkg/distribution/types"
 
 type JobProvider interface {
-	Fetch() (*types.Task, error)
+	Fetch() (*types.TaskManifest, error)
 }

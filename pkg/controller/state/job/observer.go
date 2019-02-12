@@ -24,9 +24,8 @@ import (
 	jh "github.com/lastbackend/lastbackend/pkg/controller/state/job/hook/hook"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/job/provider"
 	jp "github.com/lastbackend/lastbackend/pkg/controller/state/job/provider/provider"
-	"time"
-
 	"sync"
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/cluster"
@@ -162,16 +161,23 @@ func (js *JobState) Observe() {
 				log.Errorf("%s:observe:task err:> %s", logPrefix, err.Error())
 			}
 
-			if err := js.Hook(task); err != nil {
+			if err := js.Hook(task, js.pod.list[task.SelfLink().String()]); err != nil {
 				log.Errorf("%s:observe:task send state err:> %s", logPrefix, err.Error())
 			}
 			break
 
 		case s := <-js.observers.job:
 			log.V(logLevel).Debugf("%s:observe:job:> %s", logPrefix, s.SelfLink())
+
+			js.job = s
+
 			if err := jobObserve(js, s); err != nil {
 				log.Errorf("%s:observe:job err:> %s", logPrefix, err.Error())
 			}
+
+			js.provider, _ = jp.New(s.Spec.Provider)
+			js.hook, _ = jh.New(s.Spec.Hook)
+
 			break
 		}
 
@@ -278,7 +284,7 @@ func (js *JobState) Provider() {
 	}
 
 	var (
-		fetch chan bool
+		fetch = make(chan bool)
 		limit = js.job.Spec.Concurrency.Limit
 	)
 
@@ -291,35 +297,51 @@ func (js *JobState) Provider() {
 			select {
 			case _ = <-fetch:
 
-				task, err := js.provider.Fetch()
+				manifest, err := js.provider.Fetch()
 
 				if err != nil {
 					log.Errorf("%s:>provider fetch err: %s", logPrefix, err.Error())
 				}
 
-				if task != nil {
-					js.observers.task <- task
+				if manifest == nil {
 					continue
 				}
 
-				<-time.NewTimer(time.Second).C
-				log.Debugf("%s:> provider timeout", logPrefix)
+				if _, err := taskCreate(js.job, manifest); err != nil {
+					log.Error(err.Error())
+				}
+
 			}
 		}
 	}()
 
 	for {
+
 		if len(js.task.active) < limit {
 			fetch <- true
 		}
+
+		t, _ := time.ParseDuration(js.job.Spec.Provider.Timeout)
+
+		if t < 1000 {
+			t = 1000
+		}
+
+		<-time.NewTimer(t).C
+		log.Debugf("%s:> provider timeout", logPrefix)
 	}
 
 }
 
-func (js *JobState) Hook(task *types.Task) error {
+func (js *JobState) Hook(task *types.Task, pm map[string]*types.Pod) error {
+
+	pl := make([]*types.Pod, 0)
+	for _, p := range pm {
+		pl = append(pl, p)
+	}
 
 	if js.hook != nil {
-		if err := js.hook.Execute(task); err != nil {
+		if err := js.hook.Execute(task, pl); err != nil {
 			log.Errorf("%s:>hook>execute err: %s", logPrefix, err.Error())
 			return err
 		}
@@ -345,14 +367,8 @@ func NewJobState(cs *cluster.ClusterState, job *types.Job) *JobState {
 	js.task.finished = make([]*types.Task, 0)
 
 	js.pod.list = make(map[string]map[string]*types.Pod)
-
-	if job.Spec.Provider.Kind != types.EmptyString {
-		js.provider, _ = jp.New(job.Spec.Provider.Kind, job.Spec.Provider.Config)
-	}
-
-	if job.Spec.Hook.Kind != types.EmptyString {
-		js.hook, _ = jh.New(job.Spec.Hook.Kind, job.Spec.Hook.Config)
-	}
+	js.provider, _ = jp.New(job.Spec.Provider)
+	js.hook, _ = jh.New(job.Spec.Hook)
 
 	go js.Observe()
 

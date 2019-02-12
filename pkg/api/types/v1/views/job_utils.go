@@ -92,14 +92,9 @@ func (j *Job) SetSpec(obj types.JobSpec) {
 			Strategy: obj.Concurrency.Strategy,
 		},
 		Provider: JobSpecProvider{
-			Kind:    obj.Provider.Kind,
 			Timeout: obj.Provider.Timeout,
-			Config:  obj.Provider.Config,
 		},
-		Hook: JobSpecHook{
-			Kind:   obj.Hook.Kind,
-			Config: obj.Hook.Config,
-		},
+		Hook: JobSpecHook{},
 		Resources: JobResources{
 			Request: JobResource{
 				RAM:     resource.EncodeMemoryResource(obj.Resources.Request.RAM),
@@ -118,6 +113,23 @@ func (j *Job) SetSpec(obj types.JobSpec) {
 			Template: mv.NewManifestSpecTemplate(obj.Task.Template),
 		},
 	}
+
+	if obj.Provider.Http != nil {
+		js.Provider.Http = &JobSpecProviderHTTP{
+			Endpoint: obj.Provider.Http.Endpoint,
+			Method:   obj.Provider.Http.Method,
+			Headers:  obj.Provider.Http.Headers,
+		}
+	}
+
+	if obj.Hook.Http != nil {
+		js.Hook.Http = &JobSpecHookHTTP{
+			Endpoint: obj.Hook.Http.Endpoint,
+			Method:   obj.Hook.Http.Method,
+			Headers:  obj.Hook.Http.Headers,
+		}
+	}
+
 	j.Spec = js
 }
 

@@ -19,8 +19,13 @@
 package http
 
 import (
+	"bytes"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"net/http"
+	"strings"
 	"time"
 )
 
@@ -30,25 +35,56 @@ const (
 
 type JobHttpHook struct {
 	timeout time.Time
-	config  JobHttpHookConfig
+	config  *types.JobSpecHookHTTP
 }
 
-type config map[string]interface{}
+func (h *JobHttpHook) Execute(task *types.Task, pl []*types.Pod) error {
 
-type JobHttpHookConfig struct {
-}
+	var (
+		err error
+	)
 
-func (hw *JobHttpHook) Execute(task *types.Task) error {
+	pods := new(types.PodList)
+	pods.Items = pl
+
+	response, err := v1.View().Task().New(task, pods).ToJson()
+
+	client := http.Client{}
+	req, err := http.NewRequest(strings.ToUpper(h.config.Method), h.config.Endpoint, bytes.NewBuffer(response))
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+
+	if len(h.config.Headers) > 0 {
+		for k, v := range h.config.Headers {
+			req.Header.Add(k, v)
+		}
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+
+	fmt.Println("response Status:", resp.Status)
+
 	return nil
 }
 
-func New(cfg config) (*JobHttpHook, error) {
+func New(cfg *types.JobSpecHookHTTP) (*JobHttpHook, error) {
 
-	log.V(logLevel).Debug("Use http task watcher")
+	log.V(logLevel).Debug("Use http hook")
 
 	var (
-		provider *JobHttpHook
+		hook *JobHttpHook
 	)
 
-	return provider, nil
+	hook = new(JobHttpHook)
+	hook.config = cfg
+
+	return hook, nil
 }
