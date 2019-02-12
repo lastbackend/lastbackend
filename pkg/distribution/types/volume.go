@@ -19,7 +19,6 @@
 package types
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -57,8 +56,9 @@ type VolumeList struct {
 // swagger:model types_volume_meta
 type VolumeMeta struct {
 	Meta
-	Node      string `json:"node"`
-	Namespace string `json:"namespace"`
+	SelfLink  VolumeSelfLink `json:"self_link"`
+	Node      string         `json:"node"`
+	Namespace string         `json:"namespace"`
 }
 
 // swagger:model types_volume_spec
@@ -125,15 +125,8 @@ func (vs *VolumeStatus) SetError(err error) {
 	vs.Message = err.Error()
 }
 
-func (v *Volume) SelfLink() string {
-	if v.Meta.SelfLink == "" {
-		v.Meta.SelfLink = v.CreateSelfLink(v.Meta.Namespace, v.Meta.Name)
-	}
-	return v.Meta.SelfLink
-}
-
-func (v *Volume) CreateSelfLink(namespace, name string) string {
-	return fmt.Sprintf("%s:%s", namespace, name)
+func (v *Volume) SelfLink() *VolumeSelfLink {
+	return &v.Meta.SelfLink
 }
 
 func NewVolumeList() *VolumeList {

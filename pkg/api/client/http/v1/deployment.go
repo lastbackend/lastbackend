@@ -26,15 +26,16 @@ import (
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	t "github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/http/request"
 )
 
 type DeploymentClient struct {
 	client *request.RESTClient
 
-	namespace string
-	service   string
-	name      string
+	namespace t.NamespaceSelfLink
+	service   t.ServiceSelfLink
+	selflink  t.DeploymentSelfLink
 }
 
 func (dc *DeploymentClient) Pod(args ...string) types.PodClientV1 {
@@ -49,7 +50,7 @@ func (dc *DeploymentClient) Pod(args ...string) types.PodClientV1 {
 			panic("Wrong parameter count: (is allowed from 0 to 1)")
 		}
 	}
-	return newPodClient(dc.client, dc.namespace, dc.service, dc.name, name)
+	return newPodClient(dc.client, dc.namespace.String(), t.KindDeployment, dc.selflink.String(), name)
 }
 
 func (dc *DeploymentClient) List(ctx context.Context) (*vv1.DeploymentList, error) {
@@ -57,7 +58,7 @@ func (dc *DeploymentClient) List(ctx context.Context) (*vv1.DeploymentList, erro
 	var s *vv1.DeploymentList
 	var e *errors.Http
 
-	err := dc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet", dc.namespace, dc.service)).
+	err := dc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet", dc.namespace.String(), dc.service.String())).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
@@ -81,7 +82,7 @@ func (dc *DeploymentClient) Get(ctx context.Context) (*vv1.Deployment, error) {
 	var s *vv1.Deployment
 	var e *errors.Http
 
-	err := dc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s", dc.namespace, dc.service, dc.name)).
+	err := dc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s", dc.namespace.String(), dc.service.String(), dc.selflink.Name())).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
@@ -105,7 +106,7 @@ func (dc *DeploymentClient) Update(ctx context.Context, opts *rv1.DeploymentUpda
 	var s *vv1.Deployment
 	var e *errors.Http
 
-	err = dc.client.Put(fmt.Sprintf("/namespace/%s/service/%s/deployment/%s", dc.namespace, dc.service, dc.name)).
+	err = dc.client.Put(fmt.Sprintf("/namespace/%s/service/%s/deployment/%s", dc.namespace.String(), dc.service.String(), dc.selflink.Name())).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		JSON(&s, &e)
@@ -121,5 +122,10 @@ func (dc *DeploymentClient) Update(ctx context.Context, opts *rv1.DeploymentUpda
 }
 
 func newDeploymentClient(client *request.RESTClient, namespace, service, name string) *DeploymentClient {
-	return &DeploymentClient{client: client, namespace: namespace, service: service, name: name}
+	return &DeploymentClient{
+		client:    client,
+		namespace: *t.NewNamespaceSelfLink(namespace),
+		service:   *t.NewServiceSelfLink(namespace, service),
+		selflink:  *t.NewDeploymentSelfLink(namespace, service, name),
+	}
 }

@@ -118,10 +118,10 @@ func TestJobInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j1.SelfLink(), j1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j1.SelfLink().String(), j1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -185,8 +185,8 @@ func TestJobList(t *testing.T) {
 	j2 := getJobAsset(ns1.Meta.Name, "test", "")
 
 	jl := types.NewJobMap()
-	jl.Items[j1.SelfLink()] = j1
-	jl.Items[j2.SelfLink()] = j2
+	jl.Items[j1.SelfLink().String()] = j1
+	jl.Items[j2.SelfLink().String()] = j2
 
 	type fields struct {
 		stg storage.Storage
@@ -244,13 +244,13 @@ func TestJobList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j1.SelfLink(), j1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j1.SelfLink().String(), j1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j2.SelfLink(), j2, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j2.SelfLink().String(), j2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -492,13 +492,13 @@ func TestJobCreate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns3.Meta.Name), ns3, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns3.SelfLink().String(), ns3, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), s1.SelfLink(), s1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), s1.SelfLink().String(), s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -540,7 +540,7 @@ func TestJobCreate(t *testing.T) {
 			} else {
 
 				got := new(types.Job)
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Job(), tc.args.job.SelfLink(), got, nil)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Job(), tc.args.job.SelfLink().String(), got, nil)
 				if !assert.NoError(t, err) {
 					return
 				}
@@ -765,16 +765,16 @@ func TestJobUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns3.Meta.Name), ns3, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns3.SelfLink().String(), ns3, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), s1.SelfLink(), s1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), s1.SelfLink().String(), s1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), s4.SelfLink(), s4, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), s4.SelfLink().String(), s4, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -1012,10 +1012,10 @@ func TestJobRemove(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), s1.SelfLink(), s1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), s1.SelfLink().String(), s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -1055,7 +1055,7 @@ func TestJobRemove(t *testing.T) {
 			} else {
 
 				got := new(types.Job)
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Job(), tc.args.job.SelfLink(), got, nil)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Job(), tc.args.job.SelfLink().String(), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}
@@ -1077,6 +1077,7 @@ func getNamespaceAsset(name, desc string) *types.Namespace {
 	n.Meta.SetDefault()
 	n.Meta.Name = name
 	n.Meta.Description = desc
+	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
 	return &n
 }
 
@@ -1091,6 +1092,7 @@ func getJobAsset(namespace, name, desc string) *types.Job {
 	s.Spec.Task.Template.Containers = append(s.Spec.Task.Template.Containers, &types.SpecTemplateContainer{
 		Name: "demo",
 	})
+	s.Meta.SelfLink = *types.NewJobSelfLink(namespace, name)
 
 	return &s
 }

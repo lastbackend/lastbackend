@@ -21,6 +21,7 @@ package views
 import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/resource"
+	"sort"
 )
 
 type JobView struct{}
@@ -35,6 +36,7 @@ func (jw *JobView) New(obj *types.Job, tasks *types.TaskList, pods *types.PodLis
 	if tasks != nil {
 		j.Tasks = make(TaskList, 0)
 		j.JoinTasks(tasks, pods)
+		sort.Sort(j.Tasks)
 	}
 
 	return &j
@@ -47,7 +49,7 @@ func (j *Job) SetMeta(obj types.JobMeta) {
 	jm.Namespace = obj.Namespace
 	jm.Name = obj.Name
 
-	jm.SelfLink = obj.SelfLink
+	jm.SelfLink = obj.SelfLink.String()
 	jm.Description = obj.Description
 
 	jm.Labels = obj.Labels
@@ -84,24 +86,15 @@ func (j *Job) SetStatus(obj types.JobStatus) {
 func (j *Job) SetSpec(obj types.JobSpec) {
 	mv := new(ManifestView)
 	js := JobSpec{
-		Enabled:  obj.Enabled,
-		Schedule: obj.Schedule,
+		Enabled: obj.Enabled,
 		Concurrency: JobSpecConcurrency{
 			Limit:    obj.Concurrency.Limit,
 			Strategy: obj.Concurrency.Strategy,
 		},
-		Remote: JobSpecRemote{
-			Request: JobSpecRemoteRequest{
-				Endpoint: obj.Remote.Request.Endpoint,
-				Method:   obj.Remote.Request.Method,
-				Headers:  obj.Remote.Request.Headers,
-			},
-			Response: JobSpecRemoteRequest{
-				Endpoint: obj.Remote.Response.Endpoint,
-				Method:   obj.Remote.Response.Method,
-				Headers:  obj.Remote.Response.Headers,
-			},
+		Provider: JobSpecProvider{
+			Timeout: obj.Provider.Timeout,
 		},
+		Hook: JobSpecHook{},
 		Resources: JobResources{
 			Request: JobResource{
 				RAM:     resource.EncodeMemoryResource(obj.Resources.Request.RAM),
@@ -120,6 +113,23 @@ func (j *Job) SetSpec(obj types.JobSpec) {
 			Template: mv.NewManifestSpecTemplate(obj.Task.Template),
 		},
 	}
+
+	if obj.Provider.Http != nil {
+		js.Provider.Http = &JobSpecProviderHTTP{
+			Endpoint: obj.Provider.Http.Endpoint,
+			Method:   obj.Provider.Http.Method,
+			Headers:  obj.Provider.Http.Headers,
+		}
+	}
+
+	if obj.Hook.Http != nil {
+		js.Hook.Http = &JobSpecHookHTTP{
+			Endpoint: obj.Hook.Http.Endpoint,
+			Method:   obj.Hook.Http.Method,
+			Headers:  obj.Hook.Http.Headers,
+		}
+	}
+
 	j.Spec = js
 }
 
@@ -135,7 +145,7 @@ func (j *Job) JoinTasks(tasks *types.TaskList, pods *types.PodList) {
 			continue
 		}
 
-		j.Tasks = append(j.Tasks, new(TaskView).New(t, pods))
+		j.Tasks = append(j.Tasks, new(TaskView).New(t))
 	}
 }
 

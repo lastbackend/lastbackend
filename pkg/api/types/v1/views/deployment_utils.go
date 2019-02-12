@@ -20,7 +20,6 @@ package views
 
 import (
 	"encoding/json"
-
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
@@ -34,7 +33,7 @@ func (dv *DeploymentView) New(obj *types.Deployment, pl *types.PodList) *Deploym
 
 	d.Pods = make(map[string]Pod, 0)
 	if pl != nil {
-		d.Pods = d.JoinPods(pl)
+		d.JoinPods(pl)
 	}
 
 	return &d
@@ -45,10 +44,9 @@ func (d *Deployment) SetMeta(obj types.DeploymentMeta) {
 	meta.Name = obj.Name
 	meta.Description = obj.Description
 	meta.Version = obj.Version
-	meta.SelfLink = obj.SelfLink
+	meta.SelfLink = obj.SelfLink.String()
 	meta.Namespace = obj.Namespace
 	meta.Service = obj.Service
-	meta.Status = obj.Status
 	meta.Endpoint = obj.Endpoint
 	meta.Updated = obj.Updated
 	meta.Created = obj.Created
@@ -74,25 +72,23 @@ func (d *Deployment) SetSpec(obj types.DeploymentSpec) {
 	d.Spec = spec
 }
 
-func (d *Deployment) JoinPods(obj *types.PodList) map[string]Pod {
-	pods := make(map[string]Pod, 0)
+func (d *Deployment) JoinPods(obj *types.PodList) {
 	for _, p := range obj.Items {
 
 		if p.Meta.Namespace != d.Meta.Namespace {
 			continue
 		}
 
-		if p.Meta.Parent.Kind != types.KindDeployment {
+		k, sl := p.SelfLink().Parent()
+		if k != types.KindDeployment {
 			continue
 		}
 
-		if p.Meta.Parent.SelfLink != d.Meta.SelfLink {
+		if sl.String() != d.Meta.SelfLink {
 			continue
 		}
-
-		d.Pods[p.Meta.SelfLink] = new(PodView).New(p)
+		d.Pods[p.SelfLink().String()] = new(PodView).New(p)
 	}
-	return pods
 }
 
 func (d *Deployment) ToJson() ([]byte, error) {

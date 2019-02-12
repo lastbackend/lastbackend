@@ -160,12 +160,12 @@ type NodeStatusEvent struct {
 	Data *NodeStatus
 }
 
-type JobEvent struct {
+type TaskEvent struct {
 	event
 	Data *Task
 }
 
-type JobRunnerEvent struct {
+type JobEvent struct {
 	event
 	Data *Job
 }

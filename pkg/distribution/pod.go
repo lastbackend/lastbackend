@@ -52,21 +52,21 @@ func (p *Pod) Runtime() (*types.System, error) {
 }
 
 // Get pod info from storage
-func (p *Pod) Get(namespace, service, deployment, name string) (*types.Pod, error) {
-	log.V(logLevel).Debugf("%s:get:> get by name %s", logPodPrefix, name)
+func (p *Pod) Get(selflink string) (*types.Pod, error) {
+	log.V(logLevel).Debugf("%s:get:> get by name %s", logPodPrefix, selflink)
 
 	pod := new(types.Pod)
 
 	err := p.storage.Get(p.context, p.storage.Collection().Pod(),
-		p.storage.Key().Pod(namespace, service, deployment, name), pod, nil)
+		selflink, pod, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> `%s` not found", logPodPrefix, name)
+			log.V(logLevel).Warnf("%s:get:> `%s` not found", logPodPrefix, selflink)
 			return nil, nil
 		}
 
-		log.V(logLevel).Debugf("%s:get:> get Pod `%s` err: %v", logPodPrefix, name, err)
+		log.V(logLevel).Debugf("%s:get:> get Pod `%s` err: %v", logPodPrefix, selflink, err)
 		return nil, err
 	}
 
@@ -77,7 +77,7 @@ func (p *Pod) Get(namespace, service, deployment, name string) (*types.Pod, erro
 func (p *Pod) Put(pod *types.Pod) (*types.Pod, error) {
 
 	if err := p.storage.Put(p.context, p.storage.Collection().Pod(),
-		pod.SelfLink(), pod, nil); err != nil {
+		pod.SelfLink().String(), pod, nil); err != nil {
 		log.Errorf("%s:create:> insert pod err %v", logPodPrefix, err)
 		return nil, err
 	}
@@ -175,7 +175,7 @@ func (p *Pod) SetNode(pod *types.Pod, node *types.Node) error {
 	pod.Meta.Node = node.Meta.Name
 
 	if err := p.storage.Set(p.context, p.storage.Collection().Pod(),
-		pod.SelfLink(), pod, nil); err != nil {
+		pod.SelfLink().String(), pod, nil); err != nil {
 		log.Errorf("%s:setnode:> pod set node err: %v", logPodPrefix, err)
 		return err
 	}
@@ -189,7 +189,7 @@ func (p *Pod) Update(pod *types.Pod) error {
 	log.V(logLevel).Debugf("%s:update:> update pod: %s", logPodPrefix, pod.Meta.Name)
 
 	if err := p.storage.Set(p.context, p.storage.Collection().Pod(),
-		pod.SelfLink(),
+		pod.SelfLink().String(),
 		pod, nil); err != nil {
 		log.Errorf("%s:update:> pod update err: %v", logPodPrefix, err)
 		return err
@@ -204,7 +204,7 @@ func (p *Pod) Destroy(pod *types.Pod) error {
 	pod.Spec.State.Destroy = true
 
 	if err := p.storage.Set(p.context, p.storage.Collection().Pod(),
-		pod.SelfLink(), pod, nil); err != nil {
+		pod.SelfLink().String(), pod, nil); err != nil {
 		log.Errorf("%s:destroy:> mark pod for destroy error: %v", logPodPrefix, err)
 		return err
 	}
@@ -214,7 +214,7 @@ func (p *Pod) Destroy(pod *types.Pod) error {
 // Remove pod from storage
 func (p *Pod) Remove(pod *types.Pod) error {
 	if err := p.storage.Del(p.context, p.storage.Collection().Pod(),
-		pod.SelfLink()); err != nil {
+		pod.SelfLink().String()); err != nil {
 		log.Errorf("%s:remove:> mark pod for destroy error: %v", logPodPrefix, err)
 		return err
 	}

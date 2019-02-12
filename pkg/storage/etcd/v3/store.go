@@ -168,7 +168,7 @@ func (s *dbstore) List(ctx context.Context, key, keyRegexFilter string, listOutP
 
 	log.V(logLevel).Debugf("%s:list:> key: %s with filter: %s", logPrefix, key, keyRegexFilter)
 
-	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
+	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix(), clientv3.WithSort(clientv3.SortByCreateRevision, clientv3.SortDescend))
 	if err != nil {
 		log.V(logLevel).Errorf("%s:list:> request err: %v", logPrefix, err)
 		return err
@@ -208,7 +208,7 @@ func (s *dbstore) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr
 
 	log.V(logLevel).Debugf("%s:map:> key: %s with filter: %s", logPrefix, key, keyRegexFilter)
 
-	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
+	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix(), clientv3.WithSort(clientv3.SortByCreateRevision, clientv3.SortDescend))
 	if err != nil {
 		log.V(logLevel).Errorf("%s:map:> request err: %v", logPrefix, err)
 		return err

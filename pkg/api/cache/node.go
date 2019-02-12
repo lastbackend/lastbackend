@@ -159,7 +159,7 @@ func (c *CacheNodeManifest) SetEndpointManifest(addr string, s *types.EndpointMa
 func (c *CacheNodeManifest) SetIngress(ingress *types.Ingress) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	c.ingress[ingress.SelfLink()] = ingress
+	c.ingress[ingress.SelfLink().String()] = ingress
 }
 
 func (c *CacheNodeManifest) DelIngress(selflink string) {
@@ -172,10 +172,10 @@ func (c *CacheNodeManifest) SetDiscovery(discovery *types.Discovery) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	dvc, ok := c.discovery[discovery.SelfLink()]
+	dvc, ok := c.discovery[discovery.SelfLink().String()]
 
 	if !ok {
-		c.discovery[discovery.SelfLink()] = discovery
+		c.discovery[discovery.SelfLink().String()] = discovery
 		c.SetResolvers()
 		return
 	}
@@ -193,7 +193,7 @@ func (c *CacheNodeManifest) SetDiscovery(discovery *types.Discovery) {
 		break
 	}
 	if update {
-		c.discovery[discovery.SelfLink()] = discovery
+		c.discovery[discovery.SelfLink().String()] = discovery
 		c.SetResolvers()
 	}
 	return
@@ -260,14 +260,14 @@ func (c *CacheNodeManifest) GetConfigs() map[string]*types.ConfigManifest {
 func (c *CacheNodeManifest) SetNode(node *types.Node) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	c.nodes[node.SelfLink()] = node
+	c.nodes[node.SelfLink().String()] = node
 }
 
 func (c *CacheNodeManifest) DelNode(node *types.Node) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	delete(c.nodes, node.SelfLink())
-	delete(c.manifests, node.SelfLink())
+	delete(c.nodes, node.SelfLink().String())
+	delete(c.manifests, node.SelfLink().String())
 }
 
 func (c *CacheNodeManifest) Get(node string) *types.NodeManifest {

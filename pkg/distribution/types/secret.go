@@ -58,7 +58,8 @@ type SecretMap struct {
 // swagger:model types_secret_meta
 type SecretMeta struct {
 	Meta      `yaml:",inline"`
-	Namespace string `json:"namespace" yaml:"namespace"`
+	SelfLink  SecretSelfLink `json:"self_link"`
+	Namespace string         `json:"namespace" yaml:"namespace"`
 }
 
 type SecretSpec struct {
@@ -163,15 +164,8 @@ func (s *Secret) GetHash() string {
 	return base64.URLEncoding.EncodeToString(h.Sum(nil))
 }
 
-func (s *Secret) SelfLink() string {
-	if s.Meta.SelfLink == "" {
-		s.Meta.SelfLink = s.CreateSelfLink(s.Meta.Namespace, s.Meta.Name)
-	}
-	return s.Meta.SelfLink
-}
-
-func (s *Secret) CreateSelfLink(namespace, name string) string {
-	return fmt.Sprintf("%s:%s", namespace, name)
+func (s *Secret) SelfLink() *SecretSelfLink {
+	return &s.Meta.SelfLink
 }
 
 func (s *Secret) DecodeRegistry() {

@@ -61,7 +61,7 @@ func (r *Runtime) Run() {
 		m := new(types.ConfigManifest)
 		m.Set(i)
 		m.State = types.StateReady
-		c.Node().SetConfigManifest(i.SelfLink(), m)
+		c.Node().SetConfigManifest(i.SelfLink().String(), m)
 	}
 
 	dm := distribution.NewDiscoveryModel(ctx, envs.Get().GetStorage())

@@ -19,7 +19,6 @@
 package types
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -49,8 +48,9 @@ type RouteList struct {
 // swagger:model types_route_meta
 type RouteMeta struct {
 	Meta      `yaml:",inline"`
-	Namespace string `json:"namespace" yaml:"namespace"`
-	Ingress   string `json:"ingress" yaml:"ingress"`
+	SelfLink  RouteSelfLink `json:"self_link"`
+	Namespace string        `json:"namespace" yaml:"namespace"`
+	Ingress   string        `json:"ingress" yaml:"ingress"`
 }
 
 // swagger:model types_route_spec
@@ -84,15 +84,8 @@ type RouteRule struct {
 	Port     int    `json:"port" yaml:"port"`
 }
 
-func (r *Route) SelfLink() string {
-	if r.Meta.SelfLink == "" {
-		r.Meta.SelfLink = r.CreateSelfLink(r.Meta.Namespace, r.Meta.Name)
-	}
-	return r.Meta.SelfLink
-}
-
-func (r *Route) CreateSelfLink(namespace, name string) string {
-	return fmt.Sprintf("%s:%s", namespace, name)
+func (r *Route) SelfLink() *RouteSelfLink {
+	return &r.Meta.SelfLink
 }
 
 type RouteManifest struct {

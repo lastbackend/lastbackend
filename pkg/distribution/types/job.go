@@ -19,7 +19,6 @@
 package types
 
 import (
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"time"
 )
@@ -48,8 +47,8 @@ type JobList struct {
 
 type JobMeta struct {
 	Meta
-	Namespace string `json:"namespace"`
-	SelfLink  string `json:"self_link"`
+	Namespace string      `json:"namespace"`
+	SelfLink  JobSelfLink `json:"self_link"`
 }
 
 type JobStatus struct {
@@ -76,9 +75,9 @@ type JobStatusResources struct {
 type JobSpec struct {
 	State       SpecState          `json:"state"`
 	Enabled     bool               `json:"enabled"`
-	Schedule    string             `json:"schedule"`
+	Provider    JobSpecProvider    `json:"provider"`
+	Hook        JobSpecHook        `json:"hook"`
 	Concurrency JobSpecConcurrency `json:"concurrency"`
-	Remote      JobSpecRemote      `json:"remote"`
 	Resources   ResourceRequest    `json:"resources"`
 	Task        JobSpecTask        `json:"task"`
 }
@@ -94,7 +93,36 @@ type JobSpecConcurrency struct {
 	Strategy string `json:"strategy"`
 }
 
-type JobSpecRemote struct {
+type JobSpecProvider struct {
+	Timeout  string                   `json:"timeout"`
+	Http     *JobSpecProviderHTTP     `json:"http"`
+	Cron     *JobSpecProviderCron     `json:"cron"`
+	RabbitMQ *JobSpecProviderRabbitMQ `json:"rabbit_mq"`
+}
+
+type JobSpecProviderHTTP struct {
+	Endpoint string            `json:"endpoint"`
+	Method   string            `json:"method"`
+	Headers  map[string]string `json:"headers"`
+}
+
+type JobSpecProviderCron struct {
+}
+
+type JobSpecProviderRabbitMQ struct {
+}
+
+type JobSpecHook struct {
+	Http *JobSpecHookHTTP `json:"http"`
+}
+
+type JobSpecHookHTTP struct {
+	Endpoint string            `json:"endpoint"`
+	Method   string            `json:"method"`
+	Headers  map[string]string `json:"headers"`
+}
+
+type JobSpecKindHttpConfig struct {
 	Timeout  int                  `json:"timeout"`
 	Request  JobSpecRemoteRequest `json:"request"`
 	Response JobSpecRemoteRequest `json:"response"`
@@ -200,15 +228,8 @@ func (js *JobSpec) GetResourceRequest() ResourceRequest {
 	return rr
 }
 
-func (j *Job) SelfLink() string {
-	if j.Meta.SelfLink == EmptyString {
-		j.Meta.SelfLink = j.CreateSelfLink(j.Meta.Namespace, j.Meta.Name)
-	}
-	return j.Meta.SelfLink
-}
-
-func (j *Job) CreateSelfLink(namespace, name string) string {
-	return fmt.Sprintf("%s:%s", namespace, name)
+func (j *Job) SelfLink() *JobSelfLink {
+	return &j.Meta.SelfLink
 }
 
 func (j *Job) AllocateResources(resources ResourceRequest) error {

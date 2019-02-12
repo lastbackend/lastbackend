@@ -20,7 +20,6 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
@@ -60,8 +59,9 @@ type NamespaceEnv struct {
 // swagger:model types_namespace_meta
 type NamespaceMeta struct {
 	Meta     `yaml:",inline"`
-	Endpoint string `json:"endpoint"`
-	Type     string `json:"type"`
+	SelfLink NamespaceSelfLink `json:"self_link"`
+	Endpoint string            `json:"endpoint"`
+	Type     string            `json:"type"`
 }
 
 // swagger:ignore
@@ -126,11 +126,8 @@ type ResourceItem struct {
 	Storage int64 `json:"storage"`
 }
 
-func (n *Namespace) SelfLink() string {
-	if n.Meta.SelfLink == "" {
-		n.Meta.SelfLink = fmt.Sprintf("%s", n.Meta.Name)
-	}
-	return n.Meta.SelfLink
+func (n *Namespace) SelfLink() *NamespaceSelfLink {
+	return &n.Meta.SelfLink
 }
 
 func (n *Namespace) ToJson() ([]byte, error) {

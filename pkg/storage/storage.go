@@ -58,7 +58,6 @@ type Storage interface {
 	Set(ctx context.Context, collection, name string, obj interface{}, opts *types.Opts) error
 	Del(ctx context.Context, collection, name string) error
 	Watch(ctx context.Context, collection string, event chan *types.WatcherEvent, opts *types.Opts) error
-	Key() types.Key
 	Collection() types.Collection
 	Filter() types.Filter
 }

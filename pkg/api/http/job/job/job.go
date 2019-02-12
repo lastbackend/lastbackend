@@ -37,7 +37,7 @@ const (
 
 func Fetch(ctx context.Context, namespace, name string) (*types.Job, *errors.Err) {
 	jm := distribution.NewJobModel(ctx, envs.Get().GetStorage())
-	job, err := jm.Get(distribution.JobSelfLink(namespace, name))
+	job, err := jm.Get(types.NewJobSelfLink(namespace, name).String())
 
 	if err != nil {
 		log.V(logLevel).Errorf("%s:fetch:> err: %s", logPrefix, err.Error())
@@ -80,7 +80,7 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.JobManifest) (
 
 	if mf.Meta.Name != nil {
 
-		job, err := jm.Get(new(types.Job).CreateSelfLink(ns.Meta.Name, *mf.Meta.Name))
+		job, err := jm.Get(types.NewJobSelfLink(ns.Meta.Name, *mf.Meta.Name).String())
 		if err != nil {
 			log.V(logLevel).Errorf("%s:create:> get job by name `%s` in namespace `%s` err: %s", logPrefix, mf.Meta.Name, ns.Meta.Name, err.Error())
 			return nil, errors.New("job").InternalServerError()
@@ -96,6 +96,7 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.JobManifest) (
 
 	job := new(types.Job)
 	mf.SetJobMeta(job)
+	job.Meta.SelfLink = *types.NewJobSelfLink(ns.Meta.Name, *mf.Meta.Name)
 	job.Meta.Namespace = ns.Meta.Name
 
 	if err := mf.SetJobSpec(job); err != nil {
@@ -163,7 +164,7 @@ func Update(ctx context.Context, ns *types.Namespace, job *types.Job, mf *reques
 		}
 	}
 
-	if err := jm.Update(job); err != nil {
+	if err := jm.Set(job); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update job err: %s", logPrefix, err.Error())
 		return nil, errors.New("job").InternalServerError()
 	}

@@ -20,7 +20,6 @@ package distribution
 
 import (
 	"context"
-
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
@@ -46,8 +45,7 @@ func (c *Cluster) Get() (*types.Cluster, error) {
 	log.V(logLevel).Debugf("%s:get:> get info", logClusterPrefix)
 
 	cluster := new(types.Cluster)
-
-	err := c.storage.Get(c.context, c.storage.Collection().Cluster(), "", cluster, nil)
+	err := c.storage.Get(c.context, c.storage.Collection().Cluster(), types.EmptyString, cluster, nil)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> cluster not found", logClusterPrefix)

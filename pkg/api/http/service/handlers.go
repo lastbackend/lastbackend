@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
@@ -548,7 +549,14 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pod, err := pm.Get(ns.Meta.Name, svc.Meta.Name, deployment.Meta.Name, pid)
+	sl, err := types.NewPodSelfLink(types.KindDeployment, deployment.SelfLink().String(), pid)
+	if err != nil {
+		log.V(logLevel).Errorf("%s:logs:> pod selflink create err: %s", logPrefix, err.Error())
+		errors.HTTP.BadRequest(w, "params")
+		return
+	}
+
+	pod, err := pm.Get(sl.String())
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> get pod by name` err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -572,7 +580,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/pod/%s/%s/logs", node.Meta.ExternalIP, 2969, pod.Meta.SelfLink, cid), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/pod/%s/%s/logs", node.Meta.ExternalIP, 2969, pod.Meta.SelfLink.String(), cid), nil)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> create http client err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)

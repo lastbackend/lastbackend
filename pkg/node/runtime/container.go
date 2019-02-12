@@ -122,7 +122,7 @@ func containerSubscribe(ctx context.Context) error {
 
 		pod := state.GetPod(c.Pod)
 		if pod != nil {
-			pod.Containers[c.ID] = container
+			pod.Runtime.Services[c.ID] = container
 			state.SetPod(c.Pod, pod)
 		}
 	}

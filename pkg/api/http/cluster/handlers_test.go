@@ -141,6 +141,7 @@ func TestClusterInfo(t *testing.T) {
 
 func getClusterAsset(memory int64) *types.Cluster {
 	var c = types.Cluster{}
+	c.Meta.SelfLink = *types.NewClusterSelfLink(types.EmptyString)
 	c.Status.Capacity.RAM = memory
 	return &c
 }

@@ -19,8 +19,6 @@
 package types
 
 import (
-	"fmt"
-	"strings"
 	"time"
 )
 
@@ -52,9 +50,7 @@ type PodMap struct {
 type PodMeta struct {
 	Meta `yaml:",inline"`
 	// Pod SelfLink
-	SelfLink string `json:"self_link" yaml:"self_link"`
-	// Pod parent
-	Parent PodMetaParent `json:"parent" yaml:"self_link"`
+	SelfLink PodSelfLink `json:"self_link" yaml:"self_link"`
 	// Pod service id
 	Namespace string `json:"namespace" yaml:"namespace"`
 	// Pod node hostname
@@ -98,15 +94,18 @@ type PodStatus struct {
 	Steps PodSteps `json:"steps" yaml:"steps"`
 	// Pod network
 	Network PodNetwork `json:"network" yaml:"network"`
-	// Pod containers
-	Containers map[string]*PodContainer `json:"containers" yaml:"containers"`
-	// Pod containers
-	Tasks map[string]*PodStatusTask `json:"tasks" yaml:"tasks"`
+	// Pod runtime
+	Runtime PodStatusRuntime `json:"runtime" yaml:"runtime"`
 	// Pod volumes
 	Volumes map[string]*VolumeClaim `json:"volumes" yaml:"volumes"`
 }
 
-type PodStatusTask struct {
+type PodStatusRuntime struct {
+	Services map[string]*PodContainer          `json:"containers" yaml:"containers"`
+	Pipeline map[string]*PodStatusPipelineStep `json:"pipeline" yaml:"pipeline"`
+}
+
+type PodStatusPipelineStep struct {
 	Status   string          `json:"status" yaml:"status"`
 	Error    bool            `json:"error" yaml:"error"`
 	Message  string          `json:"message" yaml:"message"`
@@ -360,80 +359,53 @@ func NewPodMap() *PodMap {
 
 func NewPodStatus() *PodStatus {
 	status := PodStatus{
-		Steps:      make(PodSteps, 0),
-		Containers: make(map[string]*PodContainer, 0),
-		Tasks:      make(map[string]*PodStatusTask, 0),
-		Volumes:    make(map[string]*VolumeClaim, 0),
+		Steps: make(PodSteps, 0),
+		Runtime: PodStatusRuntime{
+			Services: make(map[string]*PodContainer, 0),
+			Pipeline: make(map[string]*PodStatusPipelineStep, 0),
+		},
+		Volumes: make(map[string]*VolumeClaim, 0),
 	}
 	return &status
 }
 
-func (s *PodStatus) AddTask(name string) *PodStatusTask {
-	pst := PodStatusTask{
+func (s *PodStatus) AddTask(name string) *PodStatusPipelineStep {
+
+	pst := PodStatusPipelineStep{
 		Status:   StateCreated,
 		Error:    false,
 		Message:  EmptyString,
 		Commands: make([]*PodContainer, 0),
 	}
 
-	s.Tasks[name] = &pst
+	s.Runtime.Pipeline[name] = &pst
 	return &pst
 }
 
-func (s *PodStatusTask) SetCreated() {
+func (s *PodStatusPipelineStep) SetCreated() {
 	s.Status = StateCreated
 	s.Error = false
 	s.Message = EmptyString
 }
 
-func (s *PodStatusTask) SetStarted() {
+func (s *PodStatusPipelineStep) SetStarted() {
 	s.Status = StateStarted
 	s.Error = false
 	s.Message = EmptyString
 }
 
-func (s *PodStatusTask) SetExited(error bool, message string) {
+func (s *PodStatusPipelineStep) SetExited(error bool, message string) {
 	s.Status = StateExited
 	s.Error = error
 	s.Message = message
 }
 
-func (s *PodStatusTask) AddTaskCommandContainer(c *PodContainer) {
+func (s *PodStatusPipelineStep) AddTaskCommandContainer(c *PodContainer) {
 	s.Commands = append(s.Commands, c)
 }
 
-func (p *Pod) SelfLink() string {
-	if p.Meta.SelfLink == "" {
-		p.Meta.SelfLink = p.CreateSelfLink(p.Meta.Parent.Kind, p.Meta.Parent.SelfLink, p.Meta.Name)
-	}
-	return p.Meta.SelfLink
-}
-
-func (p *Pod) ServiceLink() string {
-
-	if p.Meta.Parent.Kind != KindDeployment {
-		return EmptyString
-	}
-
-	parents := strings.Split(p.Meta.Parent.SelfLink, ":")
-	if len(parents) != 3 {
-		return EmptyString
-	}
-
-	return new(Service).CreateSelfLink(parents[0], parents[1])
-}
-
-func (p *Pod) DeploymentLink() string {
-
-	if p.Meta.Parent.Kind != KindDeployment {
-		return EmptyString
-	}
-
-	return p.Meta.Parent.SelfLink
-}
-
-func (p *Pod) CreateSelfLink(kind, selflink, name string) string {
-	return fmt.Sprintf("%s:%s:%s", kind, selflink, name)
+func (p *Pod) SelfLink() *PodSelfLink {
+	return &p.Meta.SelfLink
 }
 
 func (c *PodContainer) GetManifest() *ContainerManifest {

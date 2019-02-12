@@ -78,24 +78,24 @@ func (cs *ClusterState) Observe() {
 			break
 		case n := <-cs.node.observer:
 			log.V(7).Debugf("node: %s", n.Meta.Name)
-			cs.node.list[n.SelfLink()] = n
+			cs.node.list[n.SelfLink().String()] = n
 			_ = clusterStatusState(cs)
 			break
 		case v := <-cs.volume.observer:
-			log.V(7).Debugf("volume: %s", v.SelfLink())
+			log.V(7).Debugf("volume: %s", v.SelfLink().String())
 			if err := volumeObserve(cs, v); err != nil {
 				log.Errorf("%s", err.Error())
 			}
 			break
 		case r := <-cs.route.observer:
-			log.V(7).Debugf("route: %s", r.SelfLink())
+			log.V(7).Debugf("route: %s", r.SelfLink().String())
 			if err := routeObserve(cs, r); err != nil {
 				log.Errorf("%s", err.Error())
 			}
 			break
 		case i := <-cs.ingress.observer:
-			log.V(7).Debugf("ingress: %s", i.SelfLink())
-			cs.ingress.list[i.Meta.SelfLink] = i
+			log.V(7).Debugf("ingress: %s", i.SelfLink().String())
+			cs.ingress.list[i.SelfLink().String()] = i
 			break
 		}
 	}
@@ -318,7 +318,7 @@ func (cs *ClusterState) SetNode(n *types.Node) {
 }
 
 func (cs *ClusterState) DelNode(n *types.Node) {
-	delete(cs.node.list, n.Meta.SelfLink)
+	delete(cs.node.list, n.SelfLink().String())
 }
 
 func (cs *ClusterState) SetIngress(i *types.Ingress) {
@@ -326,7 +326,7 @@ func (cs *ClusterState) SetIngress(i *types.Ingress) {
 }
 
 func (cs *ClusterState) DelIngress(i *types.Ingress) {
-	delete(cs.ingress.list, i.Meta.SelfLink)
+	delete(cs.ingress.list, i.SelfLink().String())
 }
 
 func (cs *ClusterState) SetDiscovery(d *types.Discovery) {
@@ -334,7 +334,7 @@ func (cs *ClusterState) SetDiscovery(d *types.Discovery) {
 }
 
 func (cs *ClusterState) DelDiscovery(d *types.Discovery) {
-	delete(cs.discovery.list, d.Meta.SelfLink)
+	delete(cs.discovery.list, d.SelfLink().String())
 }
 
 func (cs *ClusterState) SetVolume(v *types.Volume) {
@@ -342,7 +342,7 @@ func (cs *ClusterState) SetVolume(v *types.Volume) {
 }
 
 func (cs *ClusterState) DelVolume(v *types.Volume) {
-	delete(cs.volume.list, v.Meta.SelfLink)
+	delete(cs.volume.list, v.SelfLink().String())
 }
 
 func (cs *ClusterState) SetRoute(r *types.Route) {
@@ -350,7 +350,7 @@ func (cs *ClusterState) SetRoute(r *types.Route) {
 }
 
 func (cs *ClusterState) DelRoute(r *types.Route) {
-	delete(cs.route.list, r.Meta.SelfLink)
+	delete(cs.route.list, r.SelfLink().String())
 }
 
 func (cs *ClusterState) PodLease(p *types.Pod) (*types.Node, error) {

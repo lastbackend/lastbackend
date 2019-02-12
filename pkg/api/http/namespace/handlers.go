@@ -20,6 +20,7 @@ package namespace
 
 import (
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/api/http/job/job"
 	"net/http"
 
 	"github.com/lastbackend/lastbackend/pkg/api/http/config/config"
@@ -340,6 +341,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 		Secrets  map[string]bool
 		Volumes  map[string]bool
 		Services map[string]bool
+		Jobs     map[string]bool
 		Routes   map[string]bool
 	}{
 		Secrets:  make(map[string]bool, 0),
@@ -347,6 +349,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 		Volumes:  make(map[string]bool, 0),
 		Services: make(map[string]bool, 0),
 		Routes:   make(map[string]bool, 0),
+		Jobs:     make(map[string]bool, 0),
 	}
 
 	ns, e := namespace.FetchFromRequest(r.Context(), nid)
@@ -411,6 +414,19 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 		status.Services[fmt.Sprintf("%s:%s", ns.SelfLink(), *m.Meta.Name)] = false
 	}
 
+	for _, m := range opts.Jobs {
+		if m == nil {
+			errors.New("service").BadParameter("manifest").Http(w)
+			return
+		}
+
+		if m.Meta.Name == nil {
+			errors.New("job").BadParameter("meta.name").Http(w)
+			return
+		}
+		status.Jobs[fmt.Sprintf("%s:%s", ns.SelfLink(), *m.Meta.Name)] = false
+	}
+
 	for _, m := range opts.Routes {
 		if m == nil {
 			errors.New("route").BadParameter("manifest").Http(w)
@@ -430,7 +446,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			e.Http(w)
 			return
 		}
-		status.Configs[c.SelfLink()] = true
+		status.Configs[c.SelfLink().String()] = true
 	}
 
 	for _, m := range opts.Secrets {
@@ -439,7 +455,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			e.Http(w)
 			return
 		}
-		status.Secrets[s.SelfLink()] = true
+		status.Secrets[s.SelfLink().String()] = true
 	}
 
 	for _, m := range opts.Volumes {
@@ -448,7 +464,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			e.Http(w)
 			return
 		}
-		status.Volumes[v.SelfLink()] = true
+		status.Volumes[v.SelfLink().String()] = true
 	}
 
 	for _, m := range opts.Services {
@@ -457,7 +473,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			e.Http(w)
 			return
 		}
-		status.Services[s.SelfLink()] = true
+		status.Services[s.SelfLink().String()] = true
 	}
 
 	for _, m := range opts.Routes {
@@ -466,7 +482,16 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			e.Http(w)
 			return
 		}
-		status.Routes[r.SelfLink()] = true
+		status.Routes[r.SelfLink().String()] = true
+	}
+
+	for _, m := range opts.Jobs {
+		j, e := job.Apply(r.Context(), ns, m)
+		if e != nil {
+			e.Http(w)
+			return
+		}
+		status.Jobs[j.SelfLink().String()] = true
 	}
 
 	response, err := v1.View().Namespace().NewApplyStatus(status).ToJson()

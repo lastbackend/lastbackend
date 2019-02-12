@@ -18,10 +18,6 @@
 
 package types
 
-import (
-	"fmt"
-)
-
 const (
 	DEFAULT_SERVICE_MEMORY   int64 = 128
 	DEFAULT_SERVICE_REPLICAS int   = 1
@@ -46,10 +42,10 @@ type ServiceList struct {
 
 type ServiceMeta struct {
 	Meta
-	Namespace string `json:"namespace"`
-	SelfLink  string `json:"self_link"`
-	Endpoint  string `json:"endpoint"`
-	IP        string `json:"ip"`
+	Namespace string          `json:"namespace"`
+	SelfLink  ServiceSelfLink `json:"self_link"`
+	Endpoint  string          `json:"endpoint"`
+	IP        string          `json:"ip"`
 }
 
 type ServiceEndpoint struct {
@@ -108,15 +104,8 @@ func (s *ServiceSpec) SetDefault() {
 	s.Template.Containers = make(SpecTemplateContainers, 0)
 }
 
-func (s *Service) SelfLink() string {
-	if s.Meta.SelfLink == "" {
-		s.Meta.SelfLink = s.CreateSelfLink(s.Meta.Namespace, s.Meta.Name)
-	}
-	return s.Meta.SelfLink
-}
-
-func (s *Service) CreateSelfLink(namespace, name string) string {
-	return fmt.Sprintf("%s:%s", namespace, name)
+func (s *Service) SelfLink() *ServiceSelfLink {
+	return &s.Meta.SelfLink
 }
 
 type ServiceManifest struct {

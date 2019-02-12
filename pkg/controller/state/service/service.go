@@ -351,7 +351,7 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 		for _, od := range ss.deployment.list {
 
 			if ss.deployment.active != nil {
-				if ss.deployment.active.SelfLink() == od.SelfLink() && od.Status.State == types.StateReady {
+				if ss.deployment.active.SelfLink().String() == od.SelfLink().String() && od.Status.State == types.StateReady {
 					continue
 				}
 			}
@@ -364,7 +364,7 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 			}
 		}
 
-		ss.deployment.list[d.SelfLink()] = d
+		ss.deployment.list[d.SelfLink().String()] = d
 		ss.deployment.provision = d
 	}
 

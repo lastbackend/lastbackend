@@ -52,9 +52,10 @@ type ConfigMap struct {
 // swagger:ignore
 // swagger:model types_config_meta
 type ConfigMeta struct {
-	Kind      string `json:"kind"`
-	Namespace string `json:"namespace"`
 	Meta      `yaml:",inline"`
+	Kind      string         `json:"kind"`
+	Namespace string         `json:"namespace"`
+	SelfLink  ConfigSelfLink `json:"self_link"`
 }
 
 type ConfigSpec struct {
@@ -90,15 +91,8 @@ func (s *Config) GetHash() string {
 	return base64.URLEncoding.EncodeToString(h.Sum(nil))
 }
 
-func (s *Config) SelfLink() string {
-	if s.Meta.SelfLink == "" {
-		s.Meta.SelfLink = s.CreateSelfLink(s.Meta.Namespace, s.Meta.Name)
-	}
-	return s.Meta.SelfLink
-}
-
-func (s *Config) CreateSelfLink(namespace, name string) string {
-	return fmt.Sprintf("%s:%s", namespace, name)
+func (s *Config) SelfLink() *ConfigSelfLink {
+	return &s.Meta.SelfLink
 }
 
 // swagger:ignore

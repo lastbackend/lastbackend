@@ -21,7 +21,6 @@ package distribution
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/log"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
@@ -104,15 +103,15 @@ func (t *Task) ListByJob(namespace, job string) (*types.TaskList, error) {
 func (t *Task) Create(task *types.Task) (*types.Task, error) {
 
 	if err := t.storage.Put(t.context, t.storage.Collection().Task(),
-		task.SelfLink(), task, nil); err != nil {
-		log.Errorf("%s:create:> task %s create err: %v", logTaskPrefix, task.Meta.SelfLink, err)
+		task.SelfLink().String(), task, nil); err != nil {
+		log.Errorf("%s:create:> task %s create err: %v", logTaskPrefix, task.Meta.SelfLink.String(), err)
 		return nil, err
 	}
 
 	return task, nil
 }
 
-// Update task
+// Cancel task
 func (t *Task) Cancel(task *types.Task) error {
 
 	log.V(logLevel).Debugf("%s:cancel:> cancel task %s", logTaskPrefix, task.Meta.Name)
@@ -123,8 +122,22 @@ func (t *Task) Cancel(task *types.Task) error {
 	task.Status.SetCancel()
 
 	if err := t.storage.Set(t.context, t.storage.Collection().Task(),
-		task.SelfLink(), task, nil); err != nil {
+		task.SelfLink().String(), task, nil); err != nil {
 		log.V(logLevel).Debugf("%s:destroy: destroy task %s err: %v", logTaskPrefix, task.Meta.Name, err)
+		return err
+	}
+
+	return nil
+}
+
+// Update task
+func (t *Task) Set(task *types.Task) error {
+
+	log.V(logLevel).Debugf("%s:set:> set task %s", logTaskPrefix, task.Meta.Name)
+
+	if err := t.storage.Set(t.context, t.storage.Collection().Task(),
+		task.SelfLink().String(), task, nil); err != nil {
+		log.V(logLevel).Debugf("%s:set: set task %s err: %v", logTaskPrefix, task.Meta.Name, err)
 		return err
 	}
 
@@ -142,7 +155,7 @@ func (t *Task) Destroy(task *types.Task) error {
 	task.Status.SetDestroy()
 
 	if err := t.storage.Set(t.context, t.storage.Collection().Task(),
-		task.SelfLink(), task, nil); err != nil {
+		task.SelfLink().String(), task, nil); err != nil {
 		log.V(logLevel).Debugf("%s:destroy:> destroy task %s err: %v", logTaskPrefix, task.Meta.Name, err)
 		return err
 	}
@@ -155,7 +168,7 @@ func (t *Task) Remove(task *types.Task) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove task %s", logTaskPrefix, task.Meta.Name)
 	if err := t.storage.Del(t.context, t.storage.Collection().Task(),
-		task.SelfLink()); err != nil {
+		task.SelfLink().String()); err != nil {
 		log.V(logLevel).Debugf("%s:remove:> remove task %s err: %v", logTaskPrefix, task.Meta.Name, err)
 		return err
 	}
@@ -164,7 +177,7 @@ func (t *Task) Remove(task *types.Task) error {
 }
 
 // Watch task changes
-func (t *Task) Watch(dt chan types.JobEvent, rev *int64) error {
+func (t *Task) Watch(dt chan types.TaskEvent, rev *int64) error {
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()
@@ -182,7 +195,7 @@ func (t *Task) Watch(dt chan types.JobEvent, rev *int64) error {
 					continue
 				}
 
-				res := types.JobEvent{}
+				res := types.TaskEvent{}
 				res.Action = e.Action
 				res.Name = e.Name
 
@@ -211,8 +224,4 @@ func (t *Task) Watch(dt chan types.JobEvent, rev *int64) error {
 
 func NewTaskModel(ctx context.Context, stg storage.Storage) *Task {
 	return &Task{ctx, stg}
-}
-
-func TaskSelfLink(namespace, job, name string) string {
-	return fmt.Sprintf("%s:%s:%s", namespace, job, name)
 }

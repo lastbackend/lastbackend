@@ -437,7 +437,7 @@ func getIngressManifest(ctx context.Context, ing *types.Ingress) (*types.Ingress
 
 	var (
 		cache = envs.Get().GetCache().Ingress()
-		spec  = cache.Get(ing.SelfLink())
+		spec  = cache.Get(ing.SelfLink().String())
 		stg   = envs.Get().GetStorage()
 		ns    = distribution.NewNetworkModel(ctx, stg)
 		em    = distribution.NewEndpointModel(ctx, stg)
@@ -448,7 +448,7 @@ func getIngressManifest(ctx context.Context, ing *types.Ingress) (*types.Ingress
 		spec.Meta.Initial = true
 
 		spec.Resolvers = cache.GetResolvers()
-		spec.Routes = cache.GetRoutes(ing.SelfLink())
+		spec.Routes = cache.GetRoutes(ing.SelfLink().String())
 
 		endpoints, err := em.ManifestMap()
 		if err != nil {
@@ -465,7 +465,7 @@ func getIngressManifest(ctx context.Context, ing *types.Ingress) (*types.Ingress
 		spec.Network = subnets.Items
 	}
 
-	cache.Flush(ing.SelfLink())
+	cache.Flush(ing.SelfLink().String())
 	return spec, nil
 
 }

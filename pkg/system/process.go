@@ -71,7 +71,10 @@ func (c *Process) Register(ctx context.Context, kind string, stg storage.Storage
 	opts := storage.GetOpts()
 	opts.Ttl = systemLeadTTL
 	opts.Force = true
-	if err := c.storage.Set(ctx, c.storage.Collection().System(), c.storage.Key().Process(kind, c.process.Meta.Hostname, c.process.Meta.PID, false), c.process, opts); err != nil {
+
+	sl := types.NewProcessSelfLink(kind, c.process.Meta.Hostname, c.process.Meta.PID).String()
+
+	if err := c.storage.Set(ctx, c.storage.Collection().System(), sl, c.process, opts); err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
 			log.Errorf("System: Process: Register: %s", err.Error())
 			return item, err
@@ -101,12 +104,14 @@ func (c *Process) HeartBeat(ctx context.Context, lead chan bool) {
 		opts.Ttl = systemLeadTTL
 		var process types.Process
 
-		err := c.storage.Get(ctx, c.storage.Collection().System(), c.storage.Key().Process(c.process.Meta.Kind, c.process.Meta.Hostname, c.process.Meta.PID, true), &process, nil)
+		leadKey := fmt.Sprintf("%s/lead", c.process.Meta.Kind)
+
+		err := c.storage.Get(ctx, c.storage.Collection().System(), leadKey, &process, nil)
 		if err != nil {
 
 			if errors.Storage().IsErrEntityNotFound(err) {
 
-				err = c.storage.Put(ctx, c.storage.Collection().System(), c.storage.Key().Process(c.process.Meta.Kind, c.process.Meta.Hostname, c.process.Meta.PID, true), c.process, opts)
+				err = c.storage.Put(ctx, c.storage.Collection().System(), leadKey, c.process, opts)
 				if err != nil && !errors.Storage().IsErrEntityExists(err) {
 					log.V(logLevel).Errorf("System: Process: create process ttl err: %s", err.Error())
 					return
@@ -131,7 +136,8 @@ func (c *Process) HeartBeat(ctx context.Context, lead chan bool) {
 			c.process.Meta.Slave = true
 		}
 
-		if err := c.storage.Set(ctx, c.storage.Collection().System(), c.storage.Key().Process(c.process.Meta.Kind, c.process.Meta.Hostname, c.process.Meta.PID, false), c.process, opts); err != nil {
+		sl := types.NewProcessSelfLink(c.process.Meta.Kind, c.process.Meta.Hostname, c.process.Meta.PID).String()
+		if err := c.storage.Set(ctx, c.storage.Collection().System(), sl, c.process, opts); err != nil {
 			log.Errorf("System: Process: Register: %s", err.Error())
 			return
 		}
@@ -140,7 +146,7 @@ func (c *Process) HeartBeat(ctx context.Context, lead chan bool) {
 		if c.process.Meta.Lead {
 			log.V(logLevel).Debug("System: Process: Beat: Lead TTL update")
 
-			if err := c.storage.Set(ctx, c.storage.Collection().System(), c.storage.Key().Process(c.process.Meta.Kind, c.process.Meta.Hostname, c.process.Meta.PID, true), c.process, opts); err != nil {
+			if err := c.storage.Set(ctx, c.storage.Collection().System(), fmt.Sprintf("%s/lead", c.process.Meta.Kind), c.process, opts); err != nil {
 				log.Errorf("System: Process: update process: %s", err.Error())
 				return
 			}

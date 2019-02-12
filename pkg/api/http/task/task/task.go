@@ -27,7 +27,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"github.com/lastbackend/lastbackend/pkg/util/resource"
+	"strings"
 )
 
 const (
@@ -38,7 +40,7 @@ const (
 func Fetch(ctx context.Context, namespace, job, name string) (*types.Task, *errors.Err) {
 
 	tm := distribution.NewTaskModel(ctx, envs.Get().GetStorage())
-	task, err := tm.Get(distribution.TaskSelfLink(namespace, job, name))
+	task, err := tm.Get(types.NewTaskSelfLink(namespace, job, name).String())
 
 	if err != nil {
 		log.V(logLevel).Errorf("%s:fetch:> err: %s", logPrefix, err.Error())
@@ -61,7 +63,7 @@ func Create(ctx context.Context, ns *types.Namespace, job *types.Job, mf *reques
 
 	if mf.Meta.Name != nil {
 
-		task, err := tm.Get(distribution.TaskSelfLink(ns.Meta.Name, job.Meta.Name, *mf.Meta.Name))
+		task, err := tm.Get(types.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, *mf.Meta.Name).String())
 		if err != nil {
 			log.V(logLevel).Errorf("%s:create:> get task by name `%s` in namespace `%s` err: %s", logPrefix, mf.Meta.Name, ns.Meta.Name, err.Error())
 			return nil, errors.New("task").InternalServerError()
@@ -80,17 +82,24 @@ func Create(ctx context.Context, ns *types.Namespace, job *types.Job, mf *reques
 	task.Meta.Namespace = ns.Meta.Name
 	task.Meta.Job = job.Meta.Name
 
-	mf.SetTaskMeta(task)
+	if mf.Meta.Name != nil {
+		task.Meta.SelfLink = *types.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, *mf.Meta.Name)
+		mf.SetTaskMeta(task)
+	} else {
+		name := strings.Split(generator.GetUUIDV4(), "-")[4][5:]
+		task.Meta.Name = name
+		task.Meta.SelfLink = *types.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, name)
+	}
+
+	task.Status.State = types.StateCreated
 
 	task.Spec.Runtime = job.Spec.Task.Runtime
 	task.Spec.Selector = job.Spec.Task.Selector
 	task.Spec.Template = job.Spec.Task.Template
 
-	if mf != nil {
-		if err := mf.SetTaskSpec(task); err != nil {
-			log.V(logLevel).Errorf("%s:create:> set task spec err: %s", logPrefix, err.Error())
-			return nil, errors.New("task").BadParameter("spec")
-		}
+	if err := mf.SetTaskSpec(task); err != nil {
+		log.V(logLevel).Errorf("%s:create:> set task spec err: %s", logPrefix, err.Error())
+		return nil, errors.New("task").BadParameter("spec")
 	}
 
 	if job.Spec.Resources.Limits.RAM != 0 || job.Spec.Resources.Limits.CPU != 0 {
@@ -110,7 +119,7 @@ func Create(ctx context.Context, ns *types.Namespace, job *types.Job, mf *reques
 		log.V(logLevel).Errorf("%s:create:> %s", logPrefix, err.Error())
 		return nil, errors.New("job").BadRequest(err.Error())
 	} else {
-		if err := jm.Update(job); err != nil {
+		if err := jm.Set(job); err != nil {
 			log.V(logLevel).Errorf("%s:update:> update namespace err: %s", logPrefix, err.Error())
 			return nil, errors.New("job").InternalServerError()
 		}

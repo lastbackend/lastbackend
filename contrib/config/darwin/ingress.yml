@@ -3,12 +3,9 @@
 verbose: 3
 token: lstbknd
 api:
-  uri: "api.lbdp.io:2967"
+  uri: "127.0.0.1:2967"
   tls:
     insecure: true
-    ca: "/opt/cert/lastbackend/ca.pem"
-    cert: "/opt/cert/lastbackend/client.pem"
-    key: "/opt/cert/lastbackend/client-key.pem"
 
 haproxy:
   stats:

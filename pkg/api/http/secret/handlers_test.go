@@ -58,8 +58,8 @@ func TestSecretList(t *testing.T) {
 	s2.Spec.Data["test"] = []byte("test")
 
 	rl := types.NewSecretMap()
-	rl.Items[s1.SelfLink()] = s1
-	rl.Items[s2.SelfLink()] = s2
+	rl.Items[s1.SelfLink().String()] = s1
+	rl.Items[s2.SelfLink().String()] = s2
 
 	type fields struct {
 		stg storage.Storage
@@ -106,13 +106,13 @@ func TestSecretList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(s1.Meta.Namespace, s1.Meta.Name), &s1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Secret(), s1.SelfLink().String(), &s1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(s2.Meta.Namespace, s2.Meta.Name), &s2, nil)
+			err = stg.Put(context.Background(), stg.Collection().Secret(), s2.SelfLink().String(), &s2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -236,7 +236,7 @@ func TestSecretCreate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -276,7 +276,7 @@ func TestSecretCreate(t *testing.T) {
 
 				got := new(types.Secret)
 
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Secret(), tc.fields.stg.Key().Secret(tc.want.Meta.Namespace, tc.want.Meta.Name), got, nil)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Secret(), tc.want.Meta.SelfLink, got, nil)
 				if !assert.NoError(t, err) {
 					return
 				}
@@ -367,10 +367,10 @@ func TestSecretUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(tc.args.secret.Meta.Namespace, tc.args.secret.Meta.Name), &tc.args.secret, nil)
+			err = stg.Put(context.Background(), stg.Collection().Secret(), tc.args.secret.SelfLink().String(), &tc.args.secret, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -491,10 +491,10 @@ func TestSecretRemove(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Secret(), s1.SelfLink().String(), s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -534,7 +534,7 @@ func TestSecretRemove(t *testing.T) {
 			} else {
 
 				got := new(types.Secret)
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Secret(), tc.fields.stg.Key().Secret(tc.args.secret.Meta.Namespace, tc.args.secret.Meta.Name), got, nil)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Secret(), tc.args.secret.SelfLink().String(), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}
@@ -569,6 +569,7 @@ func getNamespaceAsset(name, desc string) *types.Namespace {
 	n.Meta.SetDefault()
 	n.Meta.Name = name
 	n.Meta.Description = desc
+	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
 	return &n
 }
 
@@ -577,10 +578,11 @@ func getSecretAsset(namespace *types.Namespace, name string) *types.Secret {
 	s.Meta.SetDefault()
 	s.Meta.Name = name
 	s.Meta.Namespace = namespace.Meta.Name
-	s.SelfLink()
+	s.Meta.SelfLink = *types.NewSecretSelfLink(namespace.Meta.Name, name)
 
 	s.Spec.Type = types.KindSecretOpaque
 	s.Spec.Data = make(map[string][]byte, 0)
+
 	return &s
 }
 

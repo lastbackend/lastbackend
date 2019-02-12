@@ -37,7 +37,7 @@ func (nv *NodeView) New(obj *types.Node) *Node {
 func (nv *NodeView) ToNodeMeta(meta types.NodeMeta) NodeMeta {
 	nm := NodeMeta{}
 	nm.Name = meta.Name
-	nm.SelfLink = meta.SelfLink
+	nm.SelfLink = meta.SelfLink.String()
 	nm.Created = meta.Created
 	nm.Updated = meta.Updated
 	nm.Hostname = meta.Hostname

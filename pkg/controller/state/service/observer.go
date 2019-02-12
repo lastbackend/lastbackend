@@ -86,15 +86,16 @@ func (ss *ServiceState) Restore() error {
 	}
 
 	for _, p := range pl.Items {
-		log.Infof("%s: restore: restore pod: %s", logPrefix, p.SelfLink())
+		log.Infof("%s: restore: restore pod: %s", logPrefix, p.SelfLink().String())
 
 		// Check if deployment map for pod exists
-		if _, ok := ss.pod.list[p.DeploymentLink()]; !ok {
-			ss.pod.list[p.DeploymentLink()] = make(map[string]*types.Pod)
+		_, sl := p.SelfLink().Parent()
+		if _, ok := ss.pod.list[sl.String()]; !ok {
+			ss.pod.list[sl.String()] = make(map[string]*types.Pod)
 		}
 
 		// put pod into map by deployment name and pod name
-		ss.pod.list[p.DeploymentLink()][p.SelfLink()] = p
+		ss.pod.list[sl.String()][p.SelfLink().String()] = p
 	}
 
 	// Get all deployments
@@ -110,7 +111,7 @@ func (ss *ServiceState) Restore() error {
 
 		var index int
 
-		index, err := strconv.Atoi(strings.Replace(d.Meta.Name,"v","", -1))
+		index, err := strconv.Atoi(strings.Replace(d.Meta.Name, "v", "", -1))
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -121,7 +122,7 @@ func (ss *ServiceState) Restore() error {
 
 		log.Infof("index:> %d", ss.deployment.index)
 
-		ss.deployment.list[d.SelfLink()] = d
+		ss.deployment.list[d.SelfLink().String()] = d
 	}
 
 	// Set service current spec and provision spec
@@ -194,24 +195,27 @@ func (ss *ServiceState) Observe() {
 		select {
 
 		case p := <-ss.observers.pod:
-			log.V(logLevel).Debugf("%s:observe:pod:> %s", logPrefix, p.SelfLink())
+			log.V(logLevel).Debugf("%s:observe:pod:start> %s", logPrefix, p.SelfLink())
 			if err := PodObserve(ss, p); err != nil {
 				log.Errorf("%s:observe:pod err:> %s", logPrefix, err.Error())
 			}
+			log.V(logLevel).Debugf("%s:observe:pod:finish> %s", logPrefix, p.SelfLink())
 			break
 
 		case d := <-ss.observers.deployment:
-			log.V(logLevel).Debugf("%s:observe:deployment:> %s", logPrefix, d.SelfLink())
+			log.V(logLevel).Debugf("%s:observe:deployment:start> %s", logPrefix, d.SelfLink())
 			if err := deploymentObserve(ss, d); err != nil {
 				log.Errorf("%s:observe:deployment err:> %s", logPrefix, err.Error())
 			}
+			log.V(logLevel).Debugf("%s:observe:deployment:finish> %s", logPrefix, d.SelfLink())
 			break
 
 		case s := <-ss.observers.service:
-			log.V(logLevel).Debugf("%s:observe:service:> %s", logPrefix, s.SelfLink())
+			log.V(logLevel).Debugf("%s:observe:service:start> %s", logPrefix, s.SelfLink())
 			if err := serviceObserve(ss, s); err != nil {
 				log.Errorf("%s:observe:service err:> %s", logPrefix, err.Error())
 			}
+			log.V(logLevel).Debugf("%s:observe:service:finish> %s", logPrefix, s.SelfLink())
 			break
 		}
 
@@ -228,16 +232,16 @@ func (ss *ServiceState) SetDeployment(d *types.Deployment) {
 
 func (ss *ServiceState) DelDeployment(d *types.Deployment) {
 
-	if _, ok := ss.pod.list[d.SelfLink()]; !ok {
+	if _, ok := ss.pod.list[d.SelfLink().String()]; !ok {
 		return
 	}
-	delete(ss.pod.list, d.SelfLink())
+	delete(ss.pod.list, d.SelfLink().String())
 
-	if _, ok := ss.deployment.list[d.SelfLink()]; !ok {
+	if _, ok := ss.deployment.list[d.SelfLink().String()]; !ok {
 		return
 	}
 
-	delete(ss.deployment.list, d.SelfLink())
+	delete(ss.deployment.list, d.SelfLink().String())
 
 	if ss.deployment.active != nil {
 		if ss.deployment.active.SelfLink() == d.SelfLink() {
@@ -258,19 +262,25 @@ func (ss *ServiceState) SetPod(p *types.Pod) {
 }
 
 func (ss *ServiceState) DelPod(p *types.Pod) {
-	if _, ok := ss.pod.list[p.DeploymentLink()]; !ok {
+	_, sl := p.SelfLink().Parent()
+
+	if sl == nil {
 		return
 	}
 
-	delete(ss.pod.list[p.DeploymentLink()], p.SelfLink())
+	if _, ok := ss.pod.list[sl.String()]; !ok {
+		return
+	}
+
+	delete(ss.pod.list[sl.String()], p.SelfLink().String())
 }
 
-func (ss *ServiceState) CheckDeps(dep types.DeploymentStatusDependency) {
+func (ss *ServiceState) CheckDeps(dep types.StatusDependency) {
 
-	log.Debugf("%s:> check dependency: %s",logPrefix, dep.Name)
+	log.Debugf("%s:> check dependency: %s", logPrefix, dep.Name)
 
 	if ss.deployment.provision == nil {
-		log.Debugf("%s:> check dependency: %s: provision deployment not found",logPrefix, dep.Name)
+		log.Debugf("%s:> check dependency: %s: provision deployment not found", logPrefix, dep.Name)
 		return
 	}
 

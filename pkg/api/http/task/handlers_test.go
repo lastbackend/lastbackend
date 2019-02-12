@@ -111,7 +111,7 @@ func TestTaskInfo(t *testing.T) {
 			handler:      task.TaskInfoH,
 			args:         args{ctx, ns1, t1},
 			fields:       fields{stg},
-			want:         v1.View().Task().New(t1, nil),
+			want:         v1.View().Task().New(t1),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -135,13 +135,13 @@ func TestTaskInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j1.SelfLink(), j1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j1.SelfLink().String(), j1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Task(), t1.SelfLink(), t1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Task(), t1.SelfLink().String(), t1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -209,8 +209,8 @@ func TestTaskList(t *testing.T) {
 	t2 := getTaskAsset(ns1.Meta.Name, j1.Meta.Name, "task2")
 
 	tl := types.NewTaskMap()
-	tl.Items[t1.SelfLink()] = t1
-	tl.Items[t2.SelfLink()] = t2
+	tl.Items[t1.SelfLink().String()] = t1
+	tl.Items[t2.SelfLink().String()] = t2
 
 	type fields struct {
 		stg storage.Storage
@@ -280,16 +280,16 @@ func TestTaskList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j1.SelfLink(), j1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j1.SelfLink().String(), j1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Task(), t1.SelfLink(), t1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Task(), t1.SelfLink().String(), t1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Task(), t2.SelfLink(), t2, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Task(), t2.SelfLink().String(), t2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -477,7 +477,7 @@ func TestTaskCreate(t *testing.T) {
 			fields:       fields{stg},
 			handler:      task.TaskCreateH,
 			data:         tm6,
-			want:         v1.View().Task().New(t2, nil),
+			want:         v1.View().Task().New(t2),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -487,7 +487,7 @@ func TestTaskCreate(t *testing.T) {
 			fields:       fields{stg},
 			handler:      task.TaskCreateH,
 			data:         tm6,
-			want:         v1.View().Task().New(t3, nil),
+			want:         v1.View().Task().New(t3),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -510,16 +510,16 @@ func TestTaskCreate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns3.Meta.Name), ns3, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns3.SelfLink().String(), ns3, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j1.SelfLink(), j1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j1.SelfLink().String(), j1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j3.SelfLink(), j3, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j3.SelfLink().String(), j3, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -561,13 +561,13 @@ func TestTaskCreate(t *testing.T) {
 			} else {
 
 				job := new(types.Job)
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Job(), tc.args.job.SelfLink(), job, nil)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Job(), tc.args.job.SelfLink().String(), job, nil)
 				if !assert.NoError(t, err) {
 					return
 				}
 
 				got := new(types.Task)
-				err = tc.fields.stg.Get(tc.args.ctx, stg.Collection().Task(), tc.args.task.SelfLink(), got, nil)
+				err = tc.fields.stg.Get(tc.args.ctx, stg.Collection().Task(), tc.args.task.SelfLink().String(), got, nil)
 				if !assert.NoError(t, err) {
 					return
 				}
@@ -659,7 +659,7 @@ func TestTaskCancel(t *testing.T) {
 			args:         args{ctx, ns1, j1, t1},
 			fields:       fields{stg},
 			handler:      task.TaskCancelH,
-			want:         v1.View().Task().New(t1, nil),
+			want:         v1.View().Task().New(t1),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -682,13 +682,13 @@ func TestTaskCancel(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j1.SelfLink(), j1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j1.SelfLink().String(), j1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Task(), t1.SelfLink(), tc.args.task, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Task(), t1.SelfLink().String(), tc.args.task, nil)
 			assert.NoError(t, err)
 
 			req, err := http.NewRequest("DELETE", fmt.Sprintf("/namespace/%s/job/%s/task/%s", tc.args.namespace.Meta.Name, tc.args.job.Meta.Name, tc.args.task.Meta.Name), strings.NewReader(""))
@@ -740,6 +740,7 @@ func getNamespaceAsset(name, desc string) *types.Namespace {
 	n.Meta.SetDefault()
 	n.Meta.Name = name
 	n.Meta.Description = desc
+	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
 	return &n
 }
 
@@ -749,6 +750,7 @@ func getJobAsset(namespace, name, desc string) *types.Job {
 	s.Meta.Namespace = namespace
 	s.Meta.Name = name
 	s.Meta.Description = desc
+	s.Meta.SelfLink = *types.NewJobSelfLink(namespace, name)
 	s.Spec.Task.Template.Containers = make(types.SpecTemplateContainers, 0)
 	s.Spec.Task.Template.Containers = append(s.Spec.Task.Template.Containers, &types.SpecTemplateContainer{
 		Name: "demo",
@@ -762,6 +764,7 @@ func getTaskAsset(namespace, job, name string) *types.Task {
 	s.Meta.Namespace = namespace
 	s.Meta.Job = job
 	s.Meta.Name = name
+	s.Meta.SelfLink = *types.NewTaskSelfLink(namespace, job, name)
 	s.Spec.Template.Containers = make(types.SpecTemplateContainers, 0)
 	s.Spec.Template.Containers = append(s.Spec.Template.Containers, &types.SpecTemplateContainer{
 		Name: "demo",

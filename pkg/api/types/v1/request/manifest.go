@@ -484,14 +484,14 @@ func (m ManifestSpecRuntime) SetSpecRuntime(sr *types.SpecRuntime) {
 	// apply new task manifest if not equal
 	if !te {
 
-		sr.Tasks = make([]types.SpecRuntimeTask, len(m.Tasks))
+		sr.Tasks = make([]types.SpecRuntimeTask, 0)
 
 		for _, t := range m.Tasks {
 			task := types.SpecRuntimeTask{
 				Name:      t.Name,
 				Container: t.Container,
-				EnvVars:   make(types.SpecTemplateContainerEnvs, len(t.Env)),
-				Commands:  make([]types.SpecTemplateContainerExec, len(t.Commands)),
+				EnvVars:   make(types.SpecTemplateContainerEnvs, 0),
+				Commands:  make([]types.SpecTemplateContainerExec, 0),
 			}
 
 			for _, e := range t.Env {
@@ -615,6 +615,11 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 			st.Updated = time.Now()
 		}
 
+		if spec.Security.Privileged != c.Security.Privileged {
+			spec.Security.Privileged = c.Security.Privileged
+			st.Updated = time.Now()
+		}
+
 		// Environments check
 		for _, ce := range c.Env {
 			var f = false
@@ -702,7 +707,6 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 				return handleErr("limit.ram", err)
 			}
 		}
-
 		if c.Resources.Limits.CPU != types.EmptyString {
 			resourcesLimitsCPU, err = resource.DecodeCpuResource(c.Resources.Limits.CPU)
 			if err != nil {
@@ -911,6 +915,470 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 
 	if len(vlms) != len(st.Volumes) {
 		st.Updated = time.Now()
+	}
+
+	st.Volumes = vlms
+
+	return nil
+}
+
+func (m ManifestSpecRuntime) SetManifestSpecRuntime(sr *types.ManifestSpecRuntime) {
+
+	// check services in runtime spec
+	if !compare.SliceOfString(m.Services, sr.Services) {
+		sr.Services = m.Services
+	}
+
+	var te = true
+
+	if len(m.Tasks) != len(sr.Tasks) {
+		te = false
+	}
+
+	for _, mt := range m.Tasks {
+		var f = false
+
+		for _, st := range sr.Tasks {
+
+			// check task name
+			if mt.Name != st.Name {
+				continue
+			}
+
+			// check container name
+			if mt.Container != st.Container {
+				continue
+			}
+
+			// check envs commands
+			if len(mt.Env) != len(st.Env) {
+				continue
+			}
+
+			var ee = true
+			for _, ce := range mt.Env {
+
+				var f = false
+
+				for _, se := range st.Env {
+
+					if ce.Name != se.Name {
+						continue
+					}
+
+					if ce.Value != se.Value {
+						continue
+					}
+
+					if se.Secret.Name != ce.Secret.Name || se.Secret.Key != ce.Secret.Key {
+						continue
+					}
+
+					if se.Config.Name != ce.Config.Name || se.Secret.Key != ce.Config.Key {
+						continue
+					}
+
+					f = true
+				}
+
+				if !f {
+					ee = false
+					break
+				}
+			}
+
+			if !ee {
+				continue
+			}
+
+			// check container commands
+			if len(mt.Commands) != len(st.Commands) {
+				continue
+			}
+
+			var ce = true
+			for _, mc := range mt.Commands {
+				var f = false
+
+				for _, sc := range st.Commands {
+
+					if mc.Workdir != sc.Workdir {
+						continue
+					}
+
+					if mc.Command != sc.Command {
+						continue
+					}
+
+					if mc.Entrypoint != sc.Entrypoint {
+						continue
+					}
+
+					if !compare.SliceOfString(mc.Args, sc.Args) {
+						continue
+					}
+
+					f = true
+				}
+
+				if !f {
+					ce = false
+				}
+			}
+
+			if !ce {
+				continue
+			}
+
+			f = true
+		}
+
+		if !f {
+			te = false
+			break
+		}
+	}
+
+	// apply new task manifest if not equal
+	if !te {
+
+		sr.Tasks = make([]types.ManifestSpecRuntimeTask, 0)
+
+		for _, t := range m.Tasks {
+			task := types.ManifestSpecRuntimeTask{
+				Name:      t.Name,
+				Container: t.Container,
+				Env:       make([]types.ManifestSpecTemplateContainerEnv, 0),
+				Commands:  make([]types.ManifestSpecRuntimeTaskCommand, 0),
+			}
+
+			for _, e := range t.Env {
+				env := types.ManifestSpecTemplateContainerEnv{
+					Name:  e.Name,
+					Value: e.Value,
+					Config: types.ManifestSpecTemplateContainerEnvConfig{
+						Name: e.Config.Name,
+						Key:  e.Config.Key,
+					},
+					Secret: types.ManifestSpecTemplateContainerEnvSecret{
+						Name: e.Secret.Name,
+						Key:  e.Secret.Key,
+					},
+				}
+
+				task.Env = append(task.Env, env)
+			}
+
+			for _, c := range t.Commands {
+				cmd := types.ManifestSpecRuntimeTaskCommand{
+					Command:    c.Command,
+					Workdir:    c.Workdir,
+					Args:       c.Args,
+					Entrypoint: c.Entrypoint,
+				}
+				task.Commands = append(task.Commands, cmd)
+			}
+
+			sr.Tasks = append(sr.Tasks, task)
+		}
+
+	}
+
+}
+
+func (m ManifestSpecSelector) SetManifestSpecSelector(ss *types.ManifestSpecSelector) {
+
+	if ss.Node != m.Node {
+		ss.Node = m.Node
+	}
+
+	var eq = true
+	for k, v := range m.Labels {
+		if _, ok := ss.Labels[k]; !ok {
+			eq = false
+			break
+		}
+
+		if ss.Labels[k] != v {
+			eq = false
+			break
+		}
+	}
+
+	if !eq {
+		ss.Labels = m.Labels
+	}
+}
+
+func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemplate) error {
+
+	for _, c := range m.Containers {
+
+		var (
+			f    = false
+			spec *types.ManifestSpecTemplateContainer
+		)
+
+		for _, sc := range st.Containers {
+			if c.Name == sc.Name {
+				f = true
+				spec = &sc
+			}
+		}
+
+		if spec == nil {
+			spec = new(types.ManifestSpecTemplateContainer)
+		}
+
+		if spec.Name == types.EmptyString {
+			spec.Name = c.Name
+		}
+
+		if spec.Image.Name != c.Image.Name {
+			spec.Image.Name = c.Image.Name
+		}
+
+		if spec.Image.Secret != c.Image.Secret {
+			spec.Image.Secret = c.Image.Secret
+		}
+
+		if spec.Command != c.Command {
+			spec.Command = c.Command
+		}
+
+		if strings.Join(spec.Args, "") != strings.Join(c.Args, "") {
+			spec.Args = c.Args
+		}
+
+		if spec.Entrypoint != c.Entrypoint {
+			spec.Entrypoint = c.Entrypoint
+		}
+
+		if spec.Workdir != c.Workdir {
+			spec.Workdir = c.Workdir
+		}
+
+		if spec.Security.Privileged != c.Security.Privileged {
+			spec.Security.Privileged = c.Security.Privileged
+		}
+
+		// Environments check
+		for _, ce := range c.Env {
+			var f = false
+
+			for _, se := range spec.Env {
+				if ce.Name == se.Name {
+					f = true
+
+					if se.Value != ce.Value {
+						se.Value = ce.Value
+					}
+
+					if se.Secret.Name != ce.Secret.Name || se.Secret.Key != ce.Secret.Key {
+						se.Secret.Name = ce.Secret.Name
+						se.Secret.Key = ce.Secret.Key
+					}
+
+					if se.Config.Name != ce.Config.Name || se.Secret.Key != ce.Config.Key {
+						se.Config.Name = ce.Config.Name
+						se.Config.Key = ce.Config.Key
+					}
+				}
+			}
+
+			if !f {
+				spec.Env = append(spec.Env, types.ManifestSpecTemplateContainerEnv{
+					Name:  ce.Name,
+					Value: ce.Value,
+					Secret: types.ManifestSpecTemplateContainerEnvSecret{
+						Name: ce.Secret.Name,
+						Key:  ce.Secret.Key,
+					},
+					Config: types.ManifestSpecTemplateContainerEnvConfig{
+						Name: ce.Config.Name,
+						Key:  ce.Config.Key,
+					},
+				})
+			}
+		}
+
+		var envs = make([]types.ManifestSpecTemplateContainerEnv, 0)
+		for _, se := range spec.Env {
+			for _, ce := range c.Env {
+				if ce.Name == se.Name {
+					envs = append(envs, se)
+					break
+				}
+			}
+		}
+
+		spec.Env = envs
+		spec.Resources.Request.RAM = c.Resources.Request.RAM
+		spec.Resources.Request.CPU = c.Resources.Request.CPU
+		spec.Resources.Limits.RAM = c.Resources.Limits.RAM
+		spec.Resources.Limits.CPU = c.Resources.Limits.CPU
+
+		// Volumes check
+		for _, v := range c.Volumes {
+
+			var f = false
+			for _, sv := range spec.Volumes {
+
+				if v.Name == sv.Name {
+					f = true
+					if sv.Mode != v.Mode || sv.Path != v.Path {
+						sv.Mode = v.Mode
+						sv.Path = v.Path
+					}
+
+				}
+			}
+			if !f {
+				spec.Volumes = append(spec.Volumes, types.ManifestSpecTemplateContainerVolume{
+					Name: v.Name,
+					Mode: v.Mode,
+					Path: v.Path,
+				})
+			}
+		}
+
+		vlms := make([]types.ManifestSpecTemplateContainerVolume, 0)
+		for _, sv := range spec.Volumes {
+			for _, cv := range c.Volumes {
+				if sv.Name == cv.Name {
+					vlms = append(vlms, sv)
+					break
+				}
+			}
+		}
+
+		spec.Volumes = vlms
+		spec.Ports = c.Ports
+
+		if !f {
+			st.Containers = append(st.Containers, *spec)
+		}
+
+	}
+
+	var spcs = make([]types.ManifestSpecTemplateContainer, 0)
+	for _, ss := range st.Containers {
+		for _, cs := range m.Containers {
+			if ss.Name == cs.Name {
+				spcs = append(spcs, ss)
+			}
+		}
+	}
+
+	st.Containers = spcs
+
+	for _, v := range m.Volumes {
+
+		var (
+			f    = false
+			spec *types.ManifestSpecTemplateVolume
+		)
+
+		for _, sv := range st.Volumes {
+			if v.Name == sv.Name {
+				f = true
+				spec = &sv
+			}
+		}
+
+		if spec == nil {
+			spec = new(types.ManifestSpecTemplateVolume)
+		}
+
+		if spec.Name == types.EmptyString {
+			spec.Name = v.Name
+		}
+
+		if v.Type != spec.Type || v.Volume.Name != spec.Volume.Name || v.Volume.Subpath != spec.Volume.Subpath {
+			spec.Type = v.Type
+			spec.Volume.Name = v.Volume.Name
+			spec.Volume.Subpath = v.Volume.Subpath
+		}
+
+		if v.Type != spec.Type || v.Secret.Name != spec.Secret.Name {
+			spec.Type = v.Type
+			spec.Secret.Name = v.Secret.Name
+		}
+
+		var e = true
+		for _, vf := range v.Secret.Binds {
+
+			var f = false
+			for _, sf := range spec.Secret.Binds {
+				if vf.Key == sf.Key && vf.File == sf.File {
+					f = true
+					break
+				}
+			}
+
+			if !f {
+				e = false
+				break
+			}
+
+		}
+
+		if !e {
+			spec.Secret.Binds = make([]types.ManifestSpecTemplateSecretVolumeBind, 0)
+			for _, v := range v.Secret.Binds {
+				spec.Secret.Binds = append(spec.Secret.Binds, types.ManifestSpecTemplateSecretVolumeBind{
+					Key:  v.Key,
+					File: v.File,
+				})
+			}
+		}
+
+		if v.Type != spec.Type || v.Config.Name != spec.Config.Name {
+			spec.Type = v.Type
+			spec.Config.Name = v.Config.Name
+		}
+
+		var ce = true
+		for _, vf := range v.Config.Binds {
+
+			var f = false
+			for _, sf := range spec.Config.Binds {
+				if vf.Key == sf.Key && vf.File == sf.File {
+					f = true
+					break
+				}
+			}
+
+			if !f {
+				ce = false
+				break
+			}
+
+		}
+
+		if !ce {
+			spec.Config.Binds = make([]types.ManifestSpecTemplateConfigVolumeBind, 0)
+			for _, v := range v.Config.Binds {
+				spec.Config.Binds = append(spec.Config.Binds, types.ManifestSpecTemplateConfigVolumeBind{
+					Key:  v.Key,
+					File: v.File,
+				})
+			}
+		}
+
+		if !f {
+			st.Volumes = append(st.Volumes, *spec)
+		}
+
+	}
+
+	var vlms = make([]types.ManifestSpecTemplateVolume, 0)
+	for _, ss := range st.Volumes {
+		for _, cs := range m.Volumes {
+			if ss.Name == cs.Name {
+				vlms = append(vlms, ss)
+			}
+		}
 	}
 
 	st.Volumes = vlms

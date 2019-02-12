@@ -140,10 +140,6 @@ func (c *Controller) Sync(ctx context.Context) error {
 			}
 		}
 
-		for p := range opts.Pods {
-			delete(c.cache.pods, p)
-		}
-
 		var iv = 0
 		for v, status := range c.cache.volumes {
 			iv++
@@ -156,6 +152,10 @@ func (c *Controller) Sync(ctx context.Context) error {
 			} else {
 				delete(c.cache.volumes, v)
 			}
+		}
+
+		for p := range opts.Pods {
+			delete(c.cache.pods, p)
 		}
 
 		for v := range opts.Volumes {
@@ -222,7 +222,7 @@ func getPodOptions(p *types.PodStatus) *request.NodePodStatusOptions {
 	opts.Status = p.Status
 	opts.Running = p.Running
 	opts.Message = p.Message
-	opts.Containers = p.Containers
+	opts.Runtime = p.Runtime
 	opts.Network = p.Network
 	opts.Steps = p.Steps
 	return opts

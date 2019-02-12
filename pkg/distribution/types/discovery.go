@@ -18,8 +18,6 @@
 
 package types
 
-import "fmt"
-
 // swagger:ignore
 type Discovery struct {
 	System
@@ -41,7 +39,8 @@ type DiscoveryMap struct {
 // swagger:ignore
 type DiscoveryMeta struct {
 	Meta
-	Node string `json:"node"`
+	SelfLink DiscoverySelfLink `json:"self_link"`
+	Node     string            `json:"node"`
 }
 
 // swagger:model types_discovery_info
@@ -70,11 +69,8 @@ type DiscoveryStatus struct {
 type DiscoverySpec struct {
 }
 
-func (n *Discovery) SelfLink() string {
-	if n.Meta.SelfLink == "" {
-		n.Meta.SelfLink = fmt.Sprintf("%s", n.Meta.Name)
-	}
-	return n.Meta.SelfLink
+func (n *Discovery) SelfLink() *DiscoverySelfLink {
+	return &n.Meta.SelfLink
 }
 
 func NewDiscoveryList() *DiscoveryList {

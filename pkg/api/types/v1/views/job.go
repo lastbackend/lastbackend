@@ -72,9 +72,45 @@ type JobSpec struct {
 	Enabled     bool               `json:"enabled"`
 	Schedule    string             `json:"schedule"`
 	Concurrency JobSpecConcurrency `json:"concurrency"`
-	Remote      JobSpecRemote      `json:"remote"`
+	Provider    JobSpecProvider    `json:"provider"`
+	Hook        JobSpecHook        `json:"hook"`
 	Resources   JobResources       `json:"resources"`
 	Task        JobSpecTask        `json:"task"`
+}
+
+type JobSpecProvider struct {
+	Timeout  string                   `json:"timeout"`
+	Http     *JobSpecProviderHTTP     `json:"http"`
+	Cron     *JobSpecProviderCron     `json:"cron"`
+	RabbitMQ *JobSpecProviderRabbitMQ `json:"rabbit_mq"`
+}
+
+type JobSpecProviderHTTP struct {
+	Endpoint string            `json:"endpoint"`
+	Method   string            `json:"method"`
+	Headers  map[string]string `json:"headers"`
+}
+
+type JobSpecProviderCron struct {
+}
+
+type JobSpecProviderRabbitMQ struct {
+}
+
+type JobSpecHook struct {
+	Http *JobSpecHookHTTP `json:"http"`
+}
+
+type JobSpecHookHTTP struct {
+	Endpoint string            `json:"endpoint"`
+	Method   string            `json:"method"`
+	Headers  map[string]string `json:"headers"`
+}
+
+type JobSpecKindHttpConfig struct {
+	Timeout  int                  `json:"timeout"`
+	Request  JobSpecRemoteRequest `json:"request"`
+	Response JobSpecRemoteRequest `json:"response"`
 }
 
 type JobSpecTask struct {

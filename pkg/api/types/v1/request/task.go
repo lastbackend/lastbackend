@@ -39,6 +39,32 @@ type TaskManifestSpec struct {
 	Template *ManifestSpecTemplate `json:"template,omitempty" yaml:"template,omitempty"`
 }
 
+func (t *TaskManifest) SetTaskManifestMeta(task *types.TaskManifest) {
+
+	task.Meta.Name = t.Meta.Name
+	task.Meta.Labels = t.Meta.Labels
+	task.Meta.Description = t.Meta.Description
+}
+
+func (t *TaskManifest) SetTaskManifestSpec(task *types.TaskManifest) error {
+
+	if t.Spec.Runtime != nil {
+		t.Spec.Runtime.SetManifestSpecRuntime(task.Spec.Runtime)
+	}
+
+	if t.Spec.Selector != nil {
+		t.Spec.Selector.SetManifestSpecSelector(task.Spec.Selector)
+	}
+
+	if t.Spec.Template != nil {
+		if err := t.Spec.Template.SetManifestSpecTemplate(task.Spec.Template); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (t *TaskManifest) SetTaskMeta(task *types.Task) {
 	if task.Meta.Name == types.EmptyString {
 		task.Meta.Name = *t.Meta.Name
@@ -53,6 +79,10 @@ func (t *TaskManifest) SetTaskSpec(task *types.Task) error {
 
 	if t.Spec.Runtime != nil {
 		t.Spec.Runtime.SetSpecRuntime(&task.Spec.Runtime)
+	}
+
+	if t.Spec.Selector != nil {
+		t.Spec.Selector.SetSpecSelector(&task.Spec.Selector)
 	}
 
 	if t.Spec.Template != nil {
@@ -84,8 +114,16 @@ type TaskCancelOptions struct {
 	Force bool `json:"force"`
 }
 
+func (t *TaskCancelOptions) ToJson() ([]byte, error) {
+	return json.Marshal(t)
+}
+
 type TaskLogsOptions struct {
 	Pod       string `json:"pod"`
 	Container string `json:"container"`
 	Follow    bool   `json:"follow"`
+}
+
+func (t *TaskLogsOptions) ToJson() ([]byte, error) {
+	return json.Marshal(t)
 }

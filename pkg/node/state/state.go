@@ -22,7 +22,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
-const logLevel = 3
+const logLevel = 5
 
 type State struct {
 	node      *NodeState

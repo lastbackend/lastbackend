@@ -52,8 +52,9 @@ func (n *Secret) Get(namespace, name string) (*types.Secret, error) {
 	log.V(logLevel).Debugf("%s:get:> get secret by id %s/%s", logSecretPrefix, name)
 
 	item := new(types.Secret)
+	sl := types.NewSecretSelfLink(namespace, name).String()
 
-	err := n.storage.Get(n.context, n.storage.Collection().Secret(), n.storage.Key().Secret(namespace, name), &item, nil)
+	err := n.storage.Get(n.context, n.storage.Collection().Secret(), sl, &item, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -99,7 +100,7 @@ func (n *Secret) Create(namespace *types.Namespace, secret *types.Secret) (*type
 	secret.SelfLink()
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Secret(),
-		n.storage.Key().Secret(secret.Meta.Namespace, secret.Meta.Name), secret, nil); err != nil {
+		secret.SelfLink().String(), secret, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert secret err: %v", logSecretPrefix, err)
 		return nil, err
 	}
@@ -112,7 +113,7 @@ func (n *Secret) Update(secret *types.Secret) (*types.Secret, error) {
 	log.V(logLevel).Debugf("%s:update:> update secret %s", logSecretPrefix, secret.Meta.Name)
 
 	if err := n.storage.Set(n.context, n.storage.Collection().Secret(),
-		n.storage.Key().Secret(secret.Meta.Namespace, secret.Meta.Name), secret, nil); err != nil {
+		secret.SelfLink().String(), secret, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update secret err: %s", logSecretPrefix, err)
 		return nil, err
 	}
@@ -125,7 +126,7 @@ func (n *Secret) Remove(secret *types.Secret) error {
 	log.V(logLevel).Debugf("%s:remove:> remove secret %#v", logSecretPrefix, secret)
 
 	if err := n.storage.Del(n.context, n.storage.Collection().Secret(),
-		n.storage.Key().Secret(secret.Meta.Namespace, secret.Meta.Name)); err != nil {
+		secret.SelfLink().String()); err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove secret  err: %s", logSecretPrefix, err)
 		return err
 	}

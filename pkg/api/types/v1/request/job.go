@@ -38,7 +38,8 @@ type JobManifestSpec struct {
 	Enabled     bool                        `json:"enabled" yaml:"enabled"`
 	Schedule    string                      `json:"schedule" yaml:"schedule"`
 	Concurrency JobManifestSpecConcurrency  `json:"concurrency" yaml:"concurrency"`
-	Remote      JobManifestSpecRemote       `json:"remote" yaml:"remote"`
+	Provider    JobManifestSpecProvider     `json:"provider" yaml:"provider"`
+	Hook        JobManifestSpecHook         `json:"hook" yaml:"hook"`
 	Resources   *JobResourcesOptions        `json:"resources" yaml:"resources"`
 	Task        JobManifestSpecTaskTemplate `json:"task" yaml:"task"`
 }
@@ -51,19 +52,36 @@ type JobManifestSpecTaskTemplate struct {
 
 type JobManifestSpecConcurrency struct {
 	Limit    int    `json:"limit" yaml:"limit"`
-	Strategy string `json:"strategy" yaml:"limit"`
+	Strategy string `json:"strategy" yaml:"strategy"`
 }
 
-type JobManifestSpecRemote struct {
-	Timeout  int                          `json:"timeout" yaml:"timeout"`
-	Request  JobManifestSpecRemoteRequest `json:"request" yaml:"request"`
-	Response JobManifestSpecRemoteRequest `json:"response" yaml:"response"`
+type JobManifestSpecProvider struct {
+	Timeout  string                           `json:"timeout" yaml:"timeout"`
+	Http     *JobManifestSpecProviderHTTP     `json:"http" yaml:"http"`
+	Cron     *JobManifestSpecProviderCron     `json:"cron" yaml:"cron"`
+	RabbitMQ *JobManifestSpecProviderRabbitMQ `json:"rabbitmq" yaml:"rabbitmq"`
 }
 
-type JobManifestSpecRemoteRequest struct {
+type JobManifestSpecProviderHTTP struct {
 	Endpoint string            `json:"endpoint" yaml:"endpoint"`
-	Headers  map[string]string `json:"headers" yaml:"headers"`
 	Method   string            `json:"method" yaml:"method"`
+	Headers  map[string]string `json:"headers" yaml:"headers"`
+}
+
+type JobManifestSpecProviderCron struct {
+}
+
+type JobManifestSpecProviderRabbitMQ struct {
+}
+
+type JobManifestSpecHook struct {
+	Http *JobManifestSpecProviderHTTP `json:"http" yaml:"http"`
+}
+
+type JobManifestSpecHookHTTP struct {
+	Endpoint string            `json:"endpoint" yaml:"endpoint"`
+	Method   string            `json:"method" yaml:"method"`
+	Headers  map[string]string `json:"headers" yaml:"headers"`
 }
 
 func (j *JobManifest) FromJson(data []byte) error {
@@ -95,26 +113,38 @@ func (j *JobManifest) SetJobMeta(job *types.Job) {
 	if j.Meta.Labels != nil {
 		job.Meta.Labels = j.Meta.Labels
 	}
+
 }
 
 func (j *JobManifest) SetJobSpec(job *types.Job) (err error) {
 
 	job.Spec.Enabled = j.Spec.Enabled
-	job.Spec.Schedule = j.Spec.Schedule
 
 	job.Spec.Concurrency.Limit = j.Spec.Concurrency.Limit
 	job.Spec.Concurrency.Strategy = j.Spec.Concurrency.Strategy
 
-	job.Spec.Remote.Timeout = j.Spec.Remote.Timeout
-	job.Spec.Remote.Request = types.JobSpecRemoteRequest{
-		Endpoint: j.Spec.Remote.Request.Endpoint,
-		Headers:  j.Spec.Remote.Request.Headers,
-		Method:   j.Spec.Remote.Request.Method,
+	job.Spec.Provider.Timeout = j.Spec.Provider.Timeout
+
+	if j.Spec.Provider.Http != nil {
+		job.Spec.Provider.Http = new(types.JobSpecProviderHTTP)
+		job.Spec.Provider.Http.Endpoint = j.Spec.Provider.Http.Endpoint
+		job.Spec.Provider.Http.Method = j.Spec.Provider.Http.Method
+		job.Spec.Provider.Http.Headers = j.Spec.Provider.Http.Headers
 	}
-	job.Spec.Remote.Response = types.JobSpecRemoteRequest{
-		Endpoint: j.Spec.Remote.Response.Endpoint,
-		Headers:  j.Spec.Remote.Response.Headers,
-		Method:   j.Spec.Remote.Response.Method,
+
+	if j.Spec.Provider.Cron != nil {
+
+	}
+
+	if j.Spec.Provider.RabbitMQ != nil {
+
+	}
+
+	if j.Spec.Hook.Http != nil {
+		job.Spec.Hook.Http = new(types.JobSpecHookHTTP)
+		job.Spec.Hook.Http.Endpoint = j.Spec.Hook.Http.Endpoint
+		job.Spec.Hook.Http.Method = j.Spec.Hook.Http.Method
+		job.Spec.Hook.Http.Headers = j.Spec.Hook.Http.Headers
 	}
 
 	if j.Spec.Resources != nil {
@@ -200,4 +230,11 @@ type JobResourceOptions struct {
 
 type JobRemoveOptions struct {
 	Force bool `json:"force"`
+}
+
+type JobLogsOptions struct {
+	Task      string `json:"task"`
+	Pod       string `json:"pod"`
+	Container string `json:"container"`
+	Follow    bool   `json:"follow"`
 }

@@ -21,6 +21,7 @@ package v1
 import (
 	"context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"io"
 	"strconv"
 
@@ -33,10 +34,13 @@ import (
 type PodClient struct {
 	client *request.RESTClient
 
-	namespace  string
-	service    string
-	deployment string
-	name       string
+	parent struct {
+		kind     string
+		selflink string
+	}
+
+	namespace string
+	name      string
 }
 
 func (pc *PodClient) List(ctx context.Context) (*vv1.PodList, error) {
@@ -44,7 +48,26 @@ func (pc *PodClient) List(ctx context.Context) (*vv1.PodList, error) {
 	var s *vv1.PodList
 	var e *errors.Http
 
-	err := pc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod", pc.namespace, pc.service, pc.deployment)).
+	var url string
+
+	switch pc.parent.kind {
+	case types.KindDeployment:
+		dsl := types.DeploymentSelfLink{}
+		if err := dsl.Parse(pc.parent.selflink); err != nil {
+			return nil, err
+		}
+		_, svc := dsl.Parent()
+		url = fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod", pc.namespace, svc.Name(), dsl.Name())
+	case types.KindTask:
+		tsl := types.TaskSelfLink{}
+		if err := tsl.Parse(pc.parent.selflink); err != nil {
+			return nil, err
+		}
+		_, job := tsl.Parent()
+		url = fmt.Sprintf("/namespace/%s/job/%s/task/%s/pod", pc.namespace, job.Name(), tsl.Name())
+	}
+
+	err := pc.client.Get(url).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
@@ -68,7 +91,26 @@ func (pc *PodClient) Get(ctx context.Context) (*vv1.Pod, error) {
 	var s *vv1.Pod
 	var e *errors.Http
 
-	err := pc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod/%s", pc.namespace, pc.service, pc.deployment, pc.name)).
+	var url string
+
+	switch pc.parent.kind {
+	case types.KindDeployment:
+		dsl := types.DeploymentSelfLink{}
+		if err := dsl.Parse(pc.parent.selflink); err != nil {
+			return nil, err
+		}
+		_, svc := dsl.Parent()
+		url = fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod/%s", pc.namespace, svc.Name(), dsl.Name(), pc.name)
+	case types.KindTask:
+		tsl := types.TaskSelfLink{}
+		if err := tsl.Parse(pc.parent.selflink); err != nil {
+			return nil, err
+		}
+		_, job := tsl.Parent()
+		url = fmt.Sprintf("/namespace/%s/job/%s/task/%s/pod/%s", pc.namespace, job.Name(), tsl.Name(), pc.name)
+	}
+
+	err := pc.client.Get(url).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
@@ -84,10 +126,38 @@ func (pc *PodClient) Get(ctx context.Context) (*vv1.Pod, error) {
 
 func (pc *PodClient) Logs(ctx context.Context, opts *rv1.PodLogsOptions) (io.ReadCloser, error) {
 
-	res := pc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/logs", pc.namespace, pc.service))
+	var url, parent string
+
+	switch pc.parent.kind {
+	case types.KindDeployment:
+		dsl := types.DeploymentSelfLink{}
+		if err := dsl.Parse(pc.parent.selflink); err != nil {
+			return nil, err
+		}
+		parent = dsl.Name()
+		_, svc := dsl.Parent()
+		url = fmt.Sprintf("/namespace/%s/service/%s/logs", pc.namespace, svc.Name())
+	case types.KindTask:
+		tsl := types.TaskSelfLink{}
+		if err := tsl.Parse(pc.parent.selflink); err != nil {
+			return nil, err
+		}
+		parent = tsl.Name()
+		_, job := tsl.Parent()
+		url = fmt.Sprintf("/namespace/%s/job/%s/logs", pc.namespace, job.Name())
+	}
+
+	res := pc.client.Get(url)
 
 	if opts != nil {
-		res.Param("deployment", pc.deployment)
+
+		switch pc.parent.kind {
+		case types.KindDeployment:
+			res.Param("deployment", parent)
+		case types.KindTask:
+			res.Param("task", parent)
+		}
+
 		res.Param("pod", pc.name)
 		res.Param("container", opts.Container)
 
@@ -99,6 +169,9 @@ func (pc *PodClient) Logs(ctx context.Context, opts *rv1.PodLogsOptions) (io.Rea
 	return res.Stream()
 }
 
-func newPodClient(client *request.RESTClient, namespace, service, deployment, name string) *PodClient {
-	return &PodClient{client: client, namespace: namespace, service: service, deployment: deployment, name: name}
+func newPodClient(client *request.RESTClient, namespace, kind, parent, name string) *PodClient {
+	pc := PodClient{client: client, namespace: namespace, name: name}
+	pc.parent.kind = kind
+	pc.parent.selflink = parent
+	return &pc
 }

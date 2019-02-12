@@ -18,8 +18,6 @@
 
 package types
 
-import "fmt"
-
 type Task struct {
 	System
 	Meta   TaskMeta   `json:"meta"`
@@ -39,14 +37,23 @@ type TaskList struct {
 
 type TaskMeta struct {
 	Meta
-	Namespace string `json:"namespace"`
-	Job       string `json:"job"`
-	SelfLink  string `json:"self_link"`
+	Namespace string       `json:"namespace"`
+	Job       string       `json:"job"`
+	SelfLink  TaskSelfLink `json:"self_link"`
 }
 
 type TaskStatus struct {
-	State   string `json:"state"`
-	Message string `json:"message"`
+	State        string             `json:"state"`
+	Message      string             `json:"message"`
+	Dependencies StatusDependencies `json:"dependencies"`
+	Pod          TaskStatusPod      `json:"pod"`
+}
+
+type TaskStatusPod struct {
+	SelfLink string           `json:"self_link"`
+	Status   string           `json:"status"`
+	State    string           `json:"state"`
+	Runtime  PodStatusRuntime `json:"runtime"`
 }
 
 type TaskSpec struct {
@@ -56,50 +63,116 @@ type TaskSpec struct {
 	Template SpecTemplate `json:"template" yaml:"template"`
 }
 
-func (j *TaskStatus) SetCreated() {
-	j.State = StateCreated
-	j.Message = ""
+type TaskManifest struct {
+	Meta TaskManifestMeta
+	Spec TaskManifestSpec
 }
 
-func (j *TaskStatus) SetProvision() {
-	j.State = StateProvision
-	j.Message = ""
+type TaskManifestMeta struct {
+	Name        *string
+	Description *string
+	Labels      map[string]string
 }
 
-func (j *TaskStatus) SetStarted() {
-	j.State = StateStarted
-	j.Message = ""
+type TaskManifestSpec struct {
+	Runtime  *ManifestSpecRuntime
+	Selector *ManifestSpecSelector
+	Template *ManifestSpecTemplate
 }
 
-func (j *TaskStatus) SetFinished() {
-	j.State = StateExited
-	j.Message = ""
-}
-
-func (j *TaskStatus) SetCancel() {
-	j.State = StateCancel
-	j.Message = ""
-}
-
-func (j *TaskStatus) SetDestroy() {
-	j.State = StateDestroy
-	j.Message = ""
-}
-
-func (j *TaskStatus) SetError(message string) {
-	j.State = StateError
-	j.Message = message
-}
-
-func (j *Task) SelfLink() string {
-	if j.Meta.SelfLink == EmptyString {
-		j.Meta.SelfLink = j.CreateSelfLink(j.Meta.Namespace, j.Meta.Job, j.Meta.Name)
+func (t *TaskManifest) SetTaskMeta(task *Task) {
+	if task.Meta.Name == EmptyString {
+		task.Meta.Name = *t.Meta.Name
 	}
-	return j.Meta.SelfLink
+
+	if t.Meta.Labels != nil {
+		task.Meta.Labels = t.Meta.Labels
+	}
 }
 
-func (j *Task) CreateSelfLink(namespace, job, name string) string {
-	return fmt.Sprintf("%s:%s:%s", namespace, job, name)
+func (t *TaskManifest) SetTaskSpec(task *Task) error {
+
+	if t.Spec.Runtime != nil {
+		t.Spec.Runtime.SetSpecRuntime(&task.Spec.Runtime)
+	}
+
+	if t.Spec.Selector != nil {
+		t.Spec.Selector.SetSpecSelector(&task.Spec.Selector)
+	}
+
+	if t.Spec.Template != nil {
+		if err := t.Spec.Template.SetSpecTemplate(&task.Spec.Template); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (ts *TaskStatus) CheckDeps() bool {
+
+	for _, d := range ts.Dependencies.Volumes {
+		if d.Status != StateReady {
+			return false
+		}
+	}
+
+	for _, d := range ts.Dependencies.Secrets {
+		if d.Status != StateReady {
+			return false
+		}
+	}
+
+	for _, d := range ts.Dependencies.Configs {
+		if d.Status != StateReady {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (ts *TaskStatus) SetCreated() {
+	ts.State = StateCreated
+	ts.Message = ""
+}
+
+func (ts *TaskStatus) SetProvision() {
+	ts.State = StateProvision
+	ts.Message = ""
+}
+
+func (ts *TaskStatus) SetStarted() {
+	ts.State = StateStarted
+	ts.Message = ""
+}
+
+func (ts *TaskStatus) SetFinished() {
+	ts.State = StateExited
+	ts.Message = ""
+}
+
+func (ts *TaskStatus) SetCancel() {
+	ts.State = StateCancel
+	ts.Message = ""
+}
+
+func (ts *TaskStatus) SetDestroy() {
+	ts.State = StateDestroy
+	ts.Message = ""
+}
+
+func (ts *TaskStatus) SetError(message string) {
+	ts.State = StateError
+	ts.Message = message
+}
+
+func (j *Task) SelfLink() *TaskSelfLink {
+	return &j.Meta.SelfLink
+}
+
+func (t *Task) JobLink() *JobSelfLink {
+	return t.Meta.SelfLink.parent.SelfLink.(*JobSelfLink)
 }
 
 // GetResourceRequest - request resources for task creation

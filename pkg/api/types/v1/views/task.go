@@ -18,9 +18,24 @@
 
 package views
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"sort"
+)
 
 type TaskList []*Task
+
+func (p TaskList) Len() int {
+	return len(p)
+}
+
+func (p TaskList) Less(i, j int) bool {
+	return p[j].Meta.Created.Before(p[i].Meta.Created)
+}
+
+func (p TaskList) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
 
 type Task struct {
 	Meta   TaskMeta   `json:"meta"`
@@ -36,8 +51,9 @@ type TaskMeta struct {
 }
 
 type TaskStatus struct {
-	State   string `json:"state"`
-	Message string `json:"message"`
+	State   string        `json:"state"`
+	Message string        `json:"message"`
+	Pod     TaskStatusPod `json:"pod"`
 }
 
 type TaskSpec struct {
@@ -46,10 +62,18 @@ type TaskSpec struct {
 	Template ManifestSpecTemplate `json:"template"`
 }
 
+type TaskStatusPod struct {
+	SelfLink string           `json:"self_link"`
+	Status   string           `json:"status"`
+	State    string           `json:"state"`
+	Runtime  PodStatusRuntime `json:"runtime"`
+}
+
 func (t *Task) ToJson() ([]byte, error) {
 	return json.Marshal(t)
 }
 
 func (tl *TaskList) ToJson() ([]byte, error) {
+	sort.Sort(tl)
 	return json.Marshal(tl)
 }

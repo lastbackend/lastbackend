@@ -92,8 +92,21 @@ type PodStatus struct {
 	Steps PodSteps `json:"steps"`
 	// Pod network
 	Network PodNetwork `json:"network"`
-	// Pod containers
-	Containers PodContainers `json:"containers"`
+	// Pod runtime
+	Runtime PodStatusRuntime `json:"runtime"`
+}
+
+type PodStatusRuntime struct {
+	Services []PodContainer          `json:"services"`
+	Pipeline []PodStatusPipelineStep `json:"pipeline"`
+}
+
+type PodStatusPipelineStep struct {
+	Name     string         `json:"name"`
+	Status   string         `json:"status"`
+	Error    bool           `json:"error"`
+	Message  string         `json:"message"`
+	Commands []PodContainer `json:"commands"`
 }
 
 // PodContainers is a list of pod containers

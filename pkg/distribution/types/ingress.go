@@ -18,8 +18,6 @@
 
 package types
 
-import "fmt"
-
 // swagger:ignore
 type Ingress struct {
 	System
@@ -41,7 +39,8 @@ type IngressMap struct {
 // swagger:ignore
 type IngressMeta struct {
 	Meta
-	Node string `json:"node"`
+	SelfLink IngressSelfLink `json:"self_link"`
+	Node     string          `json:"node"`
 }
 
 type IngressInfo struct {
@@ -68,11 +67,8 @@ type IngressSpec struct {
 }
 
 // swagger:ignore
-func (n *Ingress) SelfLink() string {
-	if n.Meta.SelfLink == "" {
-		n.Meta.SelfLink = fmt.Sprintf("%s", n.Meta.Name)
-	}
-	return n.Meta.SelfLink
+func (n *Ingress) SelfLink() *IngressSelfLink {
+	return &n.Meta.SelfLink
 }
 
 func NewIngressList() *IngressList {

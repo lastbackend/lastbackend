@@ -20,6 +20,7 @@ package state
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/controller/state/job"
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/cluster"
@@ -34,6 +35,7 @@ const logLevel = 3
 type State struct {
 	Cluster *cluster.ClusterState
 	Service map[string]*service.ServiceState
+	Job     map[string]*job.JobState
 }
 
 func (s *State) Loop() {
@@ -42,11 +44,13 @@ func (s *State) Loop() {
 	s.Cluster.Loop()
 	log.Info("finish cluster restore\n\n")
 
-	log.Info("start services restore")
+	log.Info("start namespace restore")
 	nm := distribution.NewNamespaceModel(context.Background(), envs.Get().GetStorage())
 	sm := distribution.NewServiceModel(context.Background(), envs.Get().GetStorage())
+	jm := distribution.NewJobModel(context.Background(), envs.Get().GetStorage())
 	vm := distribution.NewVolumeModel(context.Background(), envs.Get().GetStorage())
 	dm := distribution.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
+	tm := distribution.NewTaskModel(context.Background(), envs.Get().GetStorage())
 	pm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
 	cm := distribution.NewConfigModel(context.Background(), envs.Get().GetStorage())
 	sc := distribution.NewSecretModel(context.Background(), envs.Get().GetStorage())
@@ -57,7 +61,19 @@ func (s *State) Loop() {
 		return
 	}
 
+	tr, err := tm.Runtime()
+	if err != nil {
+		log.Errorf("%s", err.Error())
+		return
+	}
+
 	sr, err := sm.Runtime()
+	if err != nil {
+		log.Errorf("%s", err.Error())
+		return
+	}
+
+	jr, err := jm.Runtime()
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return
@@ -94,8 +110,8 @@ func (s *State) Loop() {
 	}
 
 	for _, n := range ns.Items {
-		log.V(logLevel).Debugf("\n\nrestore service in namespace: %s", n.SelfLink())
-		ss, err := sm.List(n.SelfLink())
+		log.V(logLevel).Debugf("\n\nrestore namespace: %s", n.SelfLink())
+		ss, err := sm.List(n.SelfLink().String())
 		if err != nil {
 			log.Errorf("%s", err.Error())
 			return
@@ -104,14 +120,30 @@ func (s *State) Loop() {
 		for _, svc := range ss.Items {
 
 			log.V(logLevel).Debugf("restore service state: %s \n", svc.SelfLink())
-			if _, ok := s.Service[svc.SelfLink()]; !ok {
-				s.Service[svc.SelfLink()] = service.NewServiceState(s.Cluster, svc)
+			if _, ok := s.Service[svc.SelfLink().String()]; !ok {
+				s.Service[svc.SelfLink().String()] = service.NewServiceState(s.Cluster, svc)
 			}
 
-			s.Service[svc.SelfLink()].Restore()
+			s.Service[svc.SelfLink().String()].Restore()
 		}
 
-		vl, err := vm.ListByNamespace(n.SelfLink())
+		js, err := jm.ListByNamespace(n.SelfLink().String())
+		if err != nil {
+			log.Errorf("%s", err.Error())
+			return
+		}
+
+		for _, jb := range js.Items {
+
+			log.V(logLevel).Debugf("restore jobs state: %s \n", jb.SelfLink())
+			if _, ok := s.Job[jb.SelfLink().String()]; !ok {
+				s.Job[jb.SelfLink().String()] = job.NewJobState(s.Cluster, jb)
+			}
+
+			s.Job[jb.SelfLink().String()].Restore()
+		}
+
+		vl, err := vm.ListByNamespace(n.SelfLink().String())
 		if err != nil {
 			log.Errorf("%s", err.Error())
 			return
@@ -127,7 +159,9 @@ func (s *State) Loop() {
 
 	go s.watchPods(context.Background(), &pr.Storage.Revision)
 	go s.watchDeployments(context.Background(), &dr.Storage.Revision)
+	go s.watchTasks(context.Background(), &tr.Storage.Revision)
 	go s.watchServices(context.Background(), &sr.Storage.Revision)
+	go s.watchJobs(context.Background(), &jr.Storage.Revision)
 	go s.watchVolumes(context.Background(), &vr.Storage.Revision)
 	go s.watchSecrets(context.Background(), &scr.Storage.Revision)
 	go s.watchConfigs(context.Background(), &cr.Storage.Revision)
@@ -155,19 +189,59 @@ func (s *State) watchServices(ctx context.Context, rev *int64) {
 				}
 
 				if w.IsActionRemove() {
-					_, ok := s.Service[w.Data.SelfLink()]
+					_, ok := s.Service[w.Data.SelfLink().String()]
 					if ok {
-						delete(s.Service, w.Data.SelfLink())
+						delete(s.Service, w.Data.SelfLink().String())
 					}
 					continue
 				}
 
-				_, ok := s.Service[w.Data.SelfLink()]
+				_, ok := s.Service[w.Data.SelfLink().String()]
 				if !ok {
-					s.Service[w.Data.SelfLink()] = service.NewServiceState(s.Cluster, w.Data)
+					s.Service[w.Data.SelfLink().String()] = service.NewServiceState(s.Cluster, w.Data)
 				}
 
-				s.Service[w.Data.SelfLink()].SetService(w.Data)
+				s.Service[w.Data.SelfLink().String()].SetService(w.Data)
+			}
+		}
+	}()
+
+	sm.Watch(svc, rev)
+}
+
+func (s *State) watchJobs(ctx context.Context, rev *int64) {
+
+	var (
+		svc = make(chan types.JobEvent)
+	)
+
+	sm := distribution.NewJobModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-svc:
+
+				if w.Data == nil {
+					continue
+				}
+
+				if w.IsActionRemove() {
+					_, ok := s.Job[w.Data.SelfLink().String()]
+					if ok {
+						delete(s.Job, w.Data.SelfLink().String())
+					}
+					continue
+				}
+
+				_, ok := s.Job[w.Data.SelfLink().String()]
+				if !ok {
+					s.Job[w.Data.SelfLink().String()] = job.NewJobState(s.Cluster, w.Data)
+				}
+
+				s.Job[w.Data.SelfLink().String()].SetJob(w.Data)
 			}
 		}
 	}()
@@ -195,25 +269,68 @@ func (s *State) watchDeployments(ctx context.Context, rev *int64) {
 					continue
 				}
 
+				_, sl := w.Data.SelfLink().Parent()
 				if w.IsActionRemove() {
-					_, ok := s.Service[w.Data.ServiceLink()]
+					_, ok := s.Service[sl.String()]
 					if ok {
-						s.Service[w.Data.ServiceLink()].DelDeployment(w.Data)
+						s.Service[sl.String()].DelDeployment(w.Data)
 					}
 					continue
 				}
 
-				_, ok := s.Service[w.Data.ServiceLink()]
+				_, ok := s.Service[sl.String()]
 				if !ok {
 					break
 				}
 
-				s.Service[w.Data.ServiceLink()].SetDeployment(w.Data)
+				s.Service[sl.String()].SetDeployment(w.Data)
 			}
 		}
 	}()
 
 	dm.Watch(d, rev)
+}
+
+func (s *State) watchTasks(ctx context.Context, rev *int64) {
+
+	// Watch pods change
+	var (
+		d = make(chan types.TaskEvent)
+	)
+
+	tm := distribution.NewTaskModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-d:
+
+				if w.Data == nil {
+					continue
+				}
+
+				_, sl := w.Data.SelfLink().Parent()
+				if w.IsActionRemove() {
+					_, ok := s.Job[w.Data.Meta.Job]
+					if ok {
+						s.Job[sl.String()].DelTask(w.Data)
+					}
+					continue
+				}
+
+				_, ok := s.Job[sl.String()]
+				if !ok {
+					break
+				}
+
+				s.Job[sl.String()].SetTask(w.Data)
+			}
+		}
+	}()
+
+	tm.Watch(d, rev)
 }
 
 func (s *State) watchPods(ctx context.Context, rev *int64) {
@@ -236,20 +353,56 @@ func (s *State) watchPods(ctx context.Context, rev *int64) {
 					continue
 				}
 
-				if w.IsActionRemove() {
-					_, ok := s.Service[w.Data.ServiceLink()]
-					if ok {
-						s.Service[w.Data.ServiceLink()].DelPod(w.Data)
+				kind, parent := w.Data.SelfLink().Parent()
+
+				switch kind {
+				case types.KindDeployment:
+
+					k, sl := parent.Parent()
+
+					if k != types.KindService {
+						continue
 					}
-					continue
+
+					_, ok := s.Service[sl.String()]
+					if !ok {
+						break
+					}
+
+					if w.IsActionRemove() {
+						_, ok := s.Service[sl.String()]
+						if ok {
+							s.Service[sl.String()].DelPod(w.Data)
+						}
+						continue
+					}
+
+					s.Service[sl.String()].SetPod(w.Data)
+
+				case types.KindTask:
+
+					k, sl := parent.Parent()
+
+					if k != types.KindJob {
+						continue
+					}
+
+					_, ok := s.Job[sl.String()]
+					if !ok {
+						break
+					}
+
+					if w.IsActionRemove() {
+						_, ok := s.Job[sl.String()]
+						if ok {
+							s.Job[sl.String()].DelPod(w.Data)
+						}
+						continue
+					}
+
+					s.Job[sl.String()].SetPod(w.Data)
 				}
 
-				_, ok := s.Service[w.Data.ServiceLink()]
-				if !ok {
-					break
-				}
-
-				s.Service[w.Data.ServiceLink()].SetPod(w.Data)
 			}
 		}
 	}()
@@ -287,7 +440,20 @@ func (s *State) watchVolumes(ctx context.Context, rev *int64) {
 						continue
 					}
 
-					ss.CheckDeps(types.DeploymentStatusDependency{
+					ss.CheckDeps(types.StatusDependency{
+						Name:   w.Data.Meta.Name,
+						Type:   types.KindVolume,
+						Status: w.Data.Status.State,
+					})
+				}
+
+				for _, js := range s.Job {
+
+					if js.Namespace() != w.Data.Meta.Namespace {
+						continue
+					}
+
+					js.CheckJobDeps(types.StatusDependency{
 						Name:   w.Data.Meta.Name,
 						Type:   types.KindVolume,
 						Status: w.Data.Status.State,
@@ -319,7 +485,7 @@ func (s *State) watchSecrets(ctx context.Context, rev *int64) {
 					continue
 				}
 
-				var dep = types.DeploymentStatusDependency{
+				var dep = types.StatusDependency{
 					Name:   w.Data.Meta.Name,
 					Type:   types.KindSecret,
 					Status: types.StateReady,
@@ -334,6 +500,13 @@ func (s *State) watchSecrets(ctx context.Context, rev *int64) {
 						continue
 					}
 					ss.CheckDeps(dep)
+				}
+
+				for _, js := range s.Job {
+					if js.Namespace() != w.Data.Meta.Namespace {
+						continue
+					}
+					js.CheckJobDeps(dep)
 				}
 			}
 		}
@@ -361,7 +534,7 @@ func (s *State) watchConfigs(ctx context.Context, rev *int64) {
 					continue
 				}
 
-				var dep = types.DeploymentStatusDependency{
+				var dep = types.StatusDependency{
 					Name:   w.Data.Meta.Name,
 					Type:   types.KindConfig,
 					Status: types.StateReady,
@@ -377,6 +550,13 @@ func (s *State) watchConfigs(ctx context.Context, rev *int64) {
 					}
 					ss.CheckDeps(dep)
 				}
+
+				for _, js := range s.Job {
+					if js.Namespace() != w.Data.Meta.Namespace {
+						continue
+					}
+					js.CheckJobDeps(dep)
+				}
 			}
 		}
 	}()
@@ -388,5 +568,6 @@ func NewState() *State {
 	var state = new(State)
 	state.Cluster = cluster.NewClusterState()
 	state.Service = make(map[string]*service.ServiceState)
+	state.Job = make(map[string]*job.JobState)
 	return state
 }

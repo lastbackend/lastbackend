@@ -56,7 +56,7 @@ func serviceStart(ctx context.Context, pod string, m *types.ContainerManifest, s
 		return err
 	}
 
-	status.Containers[c.ID] = c
+	status.Runtime.Services[c.ID] = c
 
 	if err := containerInspect(context.Background(), c); err != nil {
 		log.Errorf("%s inspect container after create: err %s", logServicePrefix, err.Error())
