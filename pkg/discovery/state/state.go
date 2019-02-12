@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -21,8 +21,6 @@ package state
 import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
-
-const logLevel = 3
 
 type State struct {
 	discovery *DiscoveryState

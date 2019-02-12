@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,10 +20,11 @@ package runtime
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
 	"github.com/spf13/viper"
-	"os"
 )
 
 func DiscoveryInfo() types.DiscoveryInfo {
@@ -63,10 +64,8 @@ func DiscoveryStatus() types.DiscoveryStatus {
 		_ = fmt.Errorf("get ip err: %s", err)
 	}
 
-
 	state.Port = uint16(viper.GetInt("dns.port"))
 	state.IP = ip
 
 	return state
 }
-

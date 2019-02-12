@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -59,16 +59,12 @@ type ClusterList []*Cluster
 type ClusterResources struct {
 	// number of containers
 	Containers int `json:"containers"`
-
 	// number of pods
 	Pods int `json:"pods"`
-
-	// memory volume
-	Memory int64 `json:"memory"`
-
-	// number of cpu
-	Cpu int `json:"cpu"`
-
-	// storage volume
+	// ram size
+	RAM string `json:"ram"`
+	// cpu  size
+	Cpu string `json:"cpu"`
+	// storage size
 	Storage string `json:"storage"`
 }

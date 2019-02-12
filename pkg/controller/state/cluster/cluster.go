@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -44,7 +44,6 @@ func clusterStatusState(cs *ClusterState) error {
 		cs.cluster.Status.Capacity.Storage += n.Status.Capacity.Storage
 		cs.cluster.Status.Capacity.Containers += n.Status.Capacity.Containers
 		cs.cluster.Status.Capacity.Pods += n.Status.Capacity.Pods
-
 	}
 
 	if err := distribution.NewClusterModel(context.Background(), envs.Get().GetStorage()).Set(cs.cluster); err != nil {

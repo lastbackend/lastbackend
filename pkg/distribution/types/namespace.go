@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -204,18 +204,19 @@ func (n *Namespace) AllocateResources(resources ResourceRequest) error {
 	requestedRam = resources.Limits.RAM
 	requestedCpu = resources.Limits.CPU
 
-	if availableRam > 0 && availableCpu > 0 {
-
+	if availableRam > 0 {
 		if requestedRam == 0 {
 			return errors.New(errors.ResourcesRamLimitIsRequired)
 		}
 
-		if requestedCpu == 0 {
-			return errors.New(errors.ResourcesCpuLimitIsRequired)
-		}
-
 		if (availableRam - allocatedRam - requestedRam) <= 0 {
 			return errors.New(errors.ResourcesRamLimitExceeded)
+		}
+	}
+
+	if availableCpu > 0 {
+		if requestedCpu == 0 {
+			return errors.New(errors.ResourcesCpuLimitIsRequired)
 		}
 
 		if (availableCpu - allocatedCpu - requestedCpu) <= 0 {
@@ -235,16 +236,11 @@ func (n *Namespace) AllocateResources(resources ResourceRequest) error {
 func (n *Namespace) ReleaseResources(resources ResourceRequest) {
 
 	var (
-		availableRam int64
-		availableCpu int64
 		allocatedRam int64
 		allocatedCpu int64
 		requestedRam int64
 		requestedCpu int64
 	)
-
-	availableRam = n.Spec.Resources.Limits.RAM
-	availableCpu = n.Spec.Resources.Limits.CPU
 
 	allocatedRam = n.Status.Resources.Allocated.RAM
 	allocatedCpu = n.Status.Resources.Allocated.CPU
@@ -252,16 +248,14 @@ func (n *Namespace) ReleaseResources(resources ResourceRequest) {
 	requestedRam = resources.Limits.RAM
 	requestedCpu = resources.Limits.CPU
 
-	if (allocatedRam+requestedRam) > availableRam && (availableRam > 0) {
-		allocatedRam = availableRam
-	} else {
-		allocatedRam -= requestedRam
+	allocatedRam -= requestedRam
+	if allocatedRam < 0 {
+		allocatedRam = 0
 	}
 
-	if (allocatedCpu+requestedCpu) > availableCpu && (availableRam > 0) {
-		allocatedCpu = availableCpu
-	} else {
-		allocatedCpu -= requestedCpu
+	allocatedCpu -= requestedCpu
+	if allocatedCpu < 0 {
+		allocatedCpu = 0
 	}
 
 	n.Status.Resources.Allocated.RAM = allocatedRam

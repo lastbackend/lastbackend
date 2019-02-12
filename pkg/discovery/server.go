@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,8 +20,8 @@ package discovery
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/discovery/resources"
-	"github.com/lastbackend/lastbackend/pkg/util/dns"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/util/dns"
 )
 
 const logLevel = 3
