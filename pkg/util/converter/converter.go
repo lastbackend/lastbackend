@@ -59,6 +59,18 @@ func StringToBool(s string) bool {
 	return false
 }
 
+func ParseBool(str string) (bool, error) {
+	switch str {
+	case "":
+		return false, nil
+	case "1", "t", "T", "true", "TRUE", "True":
+		return true, nil
+	case "0", "f", "F", "false", "FALSE", "False":
+		return false, nil
+	}
+	return false, errors.New(fmt.Sprintf("parse bool string: %s", str))
+}
+
 func Int64ToInt(i int64) int {
 	return StringToInt(strconv.FormatInt(i, 10))
 }
