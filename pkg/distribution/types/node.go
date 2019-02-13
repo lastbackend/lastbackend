@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -155,7 +155,7 @@ type NodeResources struct {
 	// Node total memory
 	RAM int64 `json:"ram"`
 	// Node total cpu
-	CPU int `json:"cpu"`
+	CPU int64 `json:"cpu"`
 	// Node storage
 	Storage int64 `json:"storage"`
 }

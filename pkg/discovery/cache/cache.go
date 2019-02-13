@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,9 +19,10 @@
 package cache
 
 import (
+	"time"
+
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/spf13/viper"
-	"time"
 )
 
 const (

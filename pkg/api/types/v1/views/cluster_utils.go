@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -62,15 +62,15 @@ func (cv *ClusterView) ToClusterStatus(status types.ClusterStatus) ClusterStatus
 		Capacity: ClusterResources{
 			Containers: status.Capacity.Containers,
 			Pods:       status.Capacity.Pods,
-			Memory:     status.Capacity.RAM,
-			Cpu:        status.Capacity.CPU,
+			RAM:        resource.EncodeMemoryResource(status.Capacity.RAM),
+			Cpu:        resource.EncodeCpuResource(status.Capacity.CPU),
 			Storage:    resource.EncodeMemoryResource(status.Capacity.Storage),
 		},
 		Allocated: ClusterResources{
 			Containers: status.Allocated.Containers,
 			Pods:       status.Allocated.Pods,
-			Memory:     status.Allocated.RAM,
-			Cpu:        status.Allocated.CPU,
+			RAM:        resource.EncodeMemoryResource(status.Allocated.RAM),
+			Cpu:        resource.EncodeCpuResource(status.Allocated.CPU),
 			Storage:    resource.EncodeMemoryResource(status.Allocated.Storage),
 		},
 	}

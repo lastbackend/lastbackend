@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -153,7 +153,9 @@ func Update(ctx context.Context, ns *types.Namespace, svc *types.Service, mf *re
 	}
 
 	requestedResources := svc.Spec.GetResourceRequest()
+
 	if !resources.Equal(requestedResources) {
+
 		allocatedResources := ns.Status.Resources.Allocated
 		ns.ReleaseResources(resources)
 

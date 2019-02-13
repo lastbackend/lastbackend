@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -102,7 +102,7 @@ type NodeResources struct {
 	Containers int   `json:"containers"`
 	Pods       int   `json:"pods"`
 	Memory     int64 `json:"ram"`
-	CPU        int   `json:"cpu"`
+	CPU        int64 `json:"cpu"`
 	Storage    int64 `json:"storage"`
 }
 

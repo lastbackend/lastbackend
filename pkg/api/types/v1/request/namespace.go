@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -106,6 +106,15 @@ func (s *NamespaceManifest) SetNamespaceSpec(ns *types.Namespace) error {
 
 				ns.Spec.Resources.Request.CPU = cpu
 			}
+
+			if s.Spec.Resources.Request.Storage != nil {
+				storage, err := resource.DecodeMemoryResource(*s.Spec.Resources.Request.Storage)
+				if err != nil {
+					return err
+				}
+
+				ns.Spec.Resources.Request.Storage = storage
+			}
 		}
 
 		if s.Spec.Resources.Limits != nil {
@@ -128,6 +137,15 @@ func (s *NamespaceManifest) SetNamespaceSpec(ns *types.Namespace) error {
 				}
 
 				ns.Spec.Resources.Limits.CPU = cpu
+			}
+
+			if s.Spec.Resources.Limits.Storage != nil {
+				storage, err := resource.DecodeMemoryResource(*s.Spec.Resources.Limits.Storage)
+				if err != nil {
+					return err
+				}
+
+				ns.Spec.Resources.Limits.Storage = storage
 			}
 		}
 

@@ -22,7 +22,7 @@ docs: docs/*
 
 build:
 	@echo "== Pre-building configuration"
-	mkdir -p build/linux && mkdir -p build/darwin
+	mkdir -p build/linux && mkdir -p build/darwin && mkdir -p build/windows
 	@echo "== Building Last.Backend platform: ${APP}"
 	@bash ./hack/build-cross.sh ${APP}
 

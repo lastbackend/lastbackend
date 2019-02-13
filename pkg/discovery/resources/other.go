@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -98,5 +98,7 @@ func other(w dns.ResponseWriter, r *dns.Msg) {
 
 	log.V(logLevel).Debugf("%s:other:> send message info  %#v", logPrefix, m)
 
-	w.WriteMsg(m)
+	if err := w.WriteMsg(m); err != nil {
+		log.V(logLevel).Errorf("%s:other:> write message err: %v", logPrefix, err)
+	}
 }
