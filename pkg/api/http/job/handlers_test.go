@@ -612,31 +612,45 @@ func TestJobUpdate(t *testing.T) {
 	m3.SetJobSpec(s3)
 
 	sm1 := getJobManifest("limited", "image")
+	sm1.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm1.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm1.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "0.5GB"
 
 	sm2 := getJobManifest("limited", "image")
+	sm2.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm2.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm2.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "2GB"
 	sm2.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm3 := getJobManifest("limited", "image")
+	sm3.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm3.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm3.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	sm3.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "1.5"
 
 	sm4 := getJobManifest("limited", "image")
+	sm4.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm4.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm4.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "2GB"
 	sm4.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "1.5"
 
 	var rsm5 = 3
 	sm5 := getJobManifest("limited", "image")
 	sm5.Spec.Concurrency.Limit = rsm5
+	sm5.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm5.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm5.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "128MB"
 	sm5.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm6 := getJobManifest("limited", "image")
+	sm6.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm6.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm6.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "600MB"
 	sm6.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "0.6"
 
 	sm7 := getJobManifest("limited", "image")
+	sm7.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm7.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm7.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	sm7.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
