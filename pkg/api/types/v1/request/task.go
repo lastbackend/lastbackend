@@ -34,7 +34,7 @@ type TaskManifestMeta struct {
 }
 
 type TaskManifestSpec struct {
-	Runtime  *ManifestSpecRuntime  `json:"runtime" yaml:"runtime"`
+	Runtime  *ManifestSpecRuntime  `json:"runtime,omitempty" yaml:"runtime,omitempty"`
 	Selector *ManifestSpecSelector `json:"selector,omitempty" yaml:"selector,omitempty"`
 	Template *ManifestSpecTemplate `json:"template,omitempty" yaml:"template,omitempty"`
 }

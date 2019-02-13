@@ -325,31 +325,45 @@ func TestJobCreate(t *testing.T) {
 	s4 := getJobAsset(ns1.Meta.Name, "success", "")
 
 	sm1 := getJobManifest("errored", "image")
+	sm1.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm1.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm1.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "0.5GB"
 
 	sm2 := getJobManifest("errored", "image")
+	sm2.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm2.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm2.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "2GB"
 	sm2.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm3 := getJobManifest("errored", "image")
+	sm3.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm3.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm3.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	sm3.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "1.5"
 
 	sm4 := getJobManifest("errored", "image")
+	sm4.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm4.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm4.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "2GB"
 	sm4.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "1.5"
 
 	var rsm5 = 3
 	sm5 := getJobManifest("errored", "image")
 	sm5.Spec.Concurrency.Limit = rsm5
+	sm5.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm5.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm5.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "128MB"
 	sm5.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm6 := getJobManifest("success", "image")
+	sm6.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm6.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm6.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	sm6.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm7 := getJobManifest("success", "image")
+	sm7.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm7.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm7.Spec.Task.Template.Containers[0].Resources.Limits.RAM = ""
 	sm7.Spec.Task.Template.Containers[0].Resources.Limits.CPU = ""
 
@@ -598,31 +612,45 @@ func TestJobUpdate(t *testing.T) {
 	m3.SetJobSpec(s3)
 
 	sm1 := getJobManifest("limited", "image")
+	sm1.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm1.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm1.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "0.5GB"
 
 	sm2 := getJobManifest("limited", "image")
+	sm2.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm2.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm2.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "2GB"
 	sm2.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm3 := getJobManifest("limited", "image")
+	sm3.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm3.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm3.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	sm3.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "1.5"
 
 	sm4 := getJobManifest("limited", "image")
+	sm4.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm4.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm4.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "2GB"
 	sm4.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "1.5"
 
 	var rsm5 = 3
 	sm5 := getJobManifest("limited", "image")
 	sm5.Spec.Concurrency.Limit = rsm5
+	sm5.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm5.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm5.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "128MB"
 	sm5.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm6 := getJobManifest("limited", "image")
+	sm6.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm6.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm6.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "600MB"
 	sm6.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "0.6"
 
 	sm7 := getJobManifest("limited", "image")
+	sm7.Spec.Task.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm7.Spec.Task.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm7.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	sm7.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
@@ -1111,14 +1139,14 @@ func getJobManifest(name, image string) *request.JobManifest {
 		replicas  = 1
 		container = request.ManifestSpecTemplateContainer{
 			Name: image,
-			Image: request.ManifestSpecTemplateContainerImage{
+			Image: &request.ManifestSpecTemplateContainerImage{
 				Name: image,
 			},
 			Env: make([]request.ManifestSpecTemplateContainerEnv, 0),
 		}
 		volume = request.ManifestSpecTemplateVolume{
 			Name: "demo",
-			Secret: request.ManifestSpecTemplateSecretVolume{
+			Secret: &request.ManifestSpecTemplateSecretVolume{
 				Name:  "test",
 				Binds: make([]request.ManifestSpecTemplateSecretVolumeBind, 0),
 			},
@@ -1137,7 +1165,7 @@ func getJobManifest(name, image string) *request.JobManifest {
 
 	container.Env = append(container.Env, request.ManifestSpecTemplateContainerEnv{
 		Name: "Secret",
-		Secret: request.ManifestSpecTemplateContainerEnvSecret{
+		Secret: &request.ManifestSpecTemplateContainerEnvSecret{
 			Name: "secret-name",
 			Key:  "secret-key",
 		},

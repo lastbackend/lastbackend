@@ -325,31 +325,45 @@ func TestServiceCreate(t *testing.T) {
 	s3 := getServiceAsset(ns3.Meta.Name, "success", "")
 
 	sm1 := getServiceManifest("errored", "image")
+	sm1.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm1.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm1.Spec.Template.Containers[0].Resources.Limits.RAM = "0.5GB"
 
 	sm2 := getServiceManifest("errored", "image")
+	sm2.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm2.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm2.Spec.Template.Containers[0].Resources.Limits.RAM = "2GB"
 	sm2.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm3 := getServiceManifest("errored", "image")
+	sm3.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm3.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm3.Spec.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	sm3.Spec.Template.Containers[0].Resources.Limits.CPU = "1.5"
 
 	sm4 := getServiceManifest("errored", "image")
+	sm4.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm4.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm4.Spec.Template.Containers[0].Resources.Limits.RAM = "2GB"
 	sm4.Spec.Template.Containers[0].Resources.Limits.CPU = "1.5"
 
 	var rsm5 = 3
 	sm5 := getServiceManifest("errored", "image")
+	sm5.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm5.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm5.Spec.Replicas = &rsm5
 	sm5.Spec.Template.Containers[0].Resources.Limits.RAM = "128MB"
 	sm5.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm6 := getServiceManifest("success", "image")
+	sm6.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm6.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm6.Spec.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	sm6.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm7 := getServiceManifest("success", "image")
+	sm7.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm7.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm7.Spec.Template.Containers[0].Resources.Limits.RAM = ""
 	sm7.Spec.Template.Containers[0].Resources.Limits.CPU = ""
 
@@ -596,31 +610,45 @@ func TestServiceUpdate(t *testing.T) {
 	m3.SetServiceSpec(s3)
 
 	sm1 := getServiceManifest("limited", "image")
+	sm1.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm1.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm1.Spec.Template.Containers[0].Resources.Limits.RAM = "0.5GB"
 
 	sm2 := getServiceManifest("limited", "image")
+	sm2.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm2.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm2.Spec.Template.Containers[0].Resources.Limits.RAM = "2GB"
 	sm2.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm3 := getServiceManifest("limited", "image")
+	sm3.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm3.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm3.Spec.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	sm3.Spec.Template.Containers[0].Resources.Limits.CPU = "1.5"
 
 	sm4 := getServiceManifest("limited", "image")
+	sm4.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm4.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm4.Spec.Template.Containers[0].Resources.Limits.RAM = "2GB"
 	sm4.Spec.Template.Containers[0].Resources.Limits.CPU = "1.5"
 
 	var rsm5 = 3
 	sm5 := getServiceManifest("limited", "image")
 	sm5.Spec.Replicas = &rsm5
+	sm5.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm5.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm5.Spec.Template.Containers[0].Resources.Limits.RAM = "128MB"
 	sm5.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm6 := getServiceManifest("limited", "image")
+	sm6.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm6.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm6.Spec.Template.Containers[0].Resources.Limits.RAM = "600MB"
 	sm6.Spec.Template.Containers[0].Resources.Limits.CPU = "0.6"
 
 	sm7 := getServiceManifest("limited", "image")
+	sm7.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm7.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm7.Spec.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	sm7.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
@@ -1111,14 +1139,14 @@ func getServiceManifest(name, image string) *request.ServiceManifest {
 		replicas  = 1
 		container = request.ManifestSpecTemplateContainer{
 			Name: image,
-			Image: request.ManifestSpecTemplateContainerImage{
+			Image: &request.ManifestSpecTemplateContainerImage{
 				Name: image,
 			},
 			Env: make([]request.ManifestSpecTemplateContainerEnv, 0),
 		}
 		volume = request.ManifestSpecTemplateVolume{
 			Name: "demo",
-			Secret: request.ManifestSpecTemplateSecretVolume{
+			Secret: &request.ManifestSpecTemplateSecretVolume{
 				Name:  "test",
 				Binds: make([]request.ManifestSpecTemplateSecretVolumeBind, 0),
 			},
@@ -1137,7 +1165,7 @@ func getServiceManifest(name, image string) *request.ServiceManifest {
 
 	container.Env = append(container.Env, request.ManifestSpecTemplateContainerEnv{
 		Name: "Secret",
-		Secret: request.ManifestSpecTemplateContainerEnvSecret{
+		Secret: &request.ManifestSpecTemplateContainerEnvSecret{
 			Name: "secret-name",
 			Key:  "secret-key",
 		},
