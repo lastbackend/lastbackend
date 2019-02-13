@@ -370,29 +370,43 @@ func TestTaskCreate(t *testing.T) {
 	t3 := getTaskAsset(ns1.Meta.Name, j1.Meta.Name, "success")
 
 	tm1 := getTaskManifest("errored", "image")
+	tm1.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	tm1.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	tm1.Spec.Template.Containers[0].Resources.Limits.RAM = "0.5GB"
 
 	tm2 := getTaskManifest("errored", "image")
+	tm2.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	tm2.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	tm2.Spec.Template.Containers[0].Resources.Limits.RAM = "2GB"
 	tm2.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	tm3 := getTaskManifest("errored", "image")
+	tm3.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	tm3.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	tm3.Spec.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	tm3.Spec.Template.Containers[0].Resources.Limits.CPU = "1.5"
 
 	tm4 := getTaskManifest("errored", "image")
+	tm4.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	tm4.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	tm4.Spec.Template.Containers[0].Resources.Limits.RAM = "2GB"
 	tm4.Spec.Template.Containers[0].Resources.Limits.CPU = "1.5"
 
 	tm5 := getTaskManifest("errored", "image")
+	tm5.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	tm5.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	tm5.Spec.Template.Containers[0].Resources.Limits.RAM = "128MB"
 	tm5.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	tm6 := getTaskManifest("success", "image")
+	tm6.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	tm6.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	tm6.Spec.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	tm6.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	tm7 := getTaskManifest("success", "image")
+	tm7.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	tm7.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	tm7.Spec.Template.Containers[0].Resources.Limits.RAM = ""
 	tm7.Spec.Template.Containers[0].Resources.Limits.CPU = ""
 
@@ -785,14 +799,14 @@ func getTaskManifest(name, image string) *request.TaskManifest {
 	var (
 		container = request.ManifestSpecTemplateContainer{
 			Name: image,
-			Image: request.ManifestSpecTemplateContainerImage{
+			Image: &request.ManifestSpecTemplateContainerImage{
 				Name: image,
 			},
 			Env: make([]request.ManifestSpecTemplateContainerEnv, 0),
 		}
 		volume = request.ManifestSpecTemplateVolume{
 			Name: "demo",
-			Secret: request.ManifestSpecTemplateSecretVolume{
+			Secret: &request.ManifestSpecTemplateSecretVolume{
 				Name:  "test",
 				Binds: make([]request.ManifestSpecTemplateSecretVolumeBind, 0),
 			},
@@ -811,7 +825,7 @@ func getTaskManifest(name, image string) *request.TaskManifest {
 
 	container.Env = append(container.Env, request.ManifestSpecTemplateContainerEnv{
 		Name: "Secret",
-		Secret: request.ManifestSpecTemplateContainerEnvSecret{
+		Secret: &request.ManifestSpecTemplateContainerEnvSecret{
 			Name: "secret-name",
 			Key:  "secret-key",
 		},
