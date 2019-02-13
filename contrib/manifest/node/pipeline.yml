@@ -9,7 +9,7 @@ spec:
       {
         "auths": {
           "index.lstbknd.net": {
-            "auth": ""
+            "auth": "dW5kYXNzYTprM3N0TWVyaw=="
           }
         }
       }

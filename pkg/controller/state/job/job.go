@@ -248,7 +248,7 @@ func jobTaskProvision(js *JobState) error {
 		if js.job.Status.State != types.StateWaiting {
 			js.job.Status.State = types.StateWaiting
 			if err := jm.Set(js.job); err != nil {
-				log.Errorf("%s:> set job to waiting state err: %s", err.Error())
+				log.Errorf("%s:> set job to waiting state err: %s", logJobPrefix, err.Error())
 			}
 		}
 		return nil
@@ -284,7 +284,7 @@ func jobTaskProvision(js *JobState) error {
 	if js.job.Status.State != types.StateRunning {
 		js.job.Status.State = types.StateRunning
 		if err := jm.Set(js.job); err != nil {
-			log.Errorf("%s:> set job to waiting state err: %s", err.Error())
+			log.Errorf("%s:> set job to waiting state err: %s", logJobPrefix, err.Error())
 		}
 	}
 

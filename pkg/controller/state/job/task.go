@@ -96,7 +96,7 @@ func taskObserve(js *JobState, task *types.Task) error {
 	}
 
 	if err := jobTaskProvision(js); err != nil {
-		log.Errorf("%s:> job task queue pop err: %s", err.Error())
+		log.Errorf("%s:> job task queue pop err: %s", logTaskPrefix, err.Error())
 		return err
 	}
 

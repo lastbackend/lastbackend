@@ -1,0 +1,22 @@
+{
+  "description": "Last.Backend driver",
+  "documentation": "-",
+  "entrypoint": ["/usr/bin/lastbackend"],
+  "network": {
+    "type": "host"
+  },
+  "interface": {
+    "types": [
+      "docker.logdriver/1.0"
+    ],
+    "socket": "lb.sock"
+  },
+  "env": [
+    {
+      "name": "LOG_LEVEL",
+      "description": "Set log level to output for plugin logs",
+      "value": "info",
+      "settable": ["value"]
+    }
+  ]
+}
