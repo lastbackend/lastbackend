@@ -73,7 +73,6 @@ func containerSubscribe(ctx context.Context) error {
 		switch c.State {
 		case types.StateDestroyed:
 			state.DelContainer(container)
-			break
 		case types.StateCreated:
 			container.State = types.PodContainerState{
 				Created: types.PodContainerStateCreated{
@@ -173,7 +172,6 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 
 			env := fmt.Sprintf("%s=%s", s.Name, val)
 			mf.Envs = append(mf.Envs, env)
-			break
 
 		case s.Config.Name != types.EmptyString && s.Config.Key != types.EmptyString:
 			configSelfLink := fmt.Sprintf("%s:%s", name[0], s.Config.Name)
@@ -190,7 +188,6 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 
 			env := fmt.Sprintf("%s=%s", s.Name, value)
 			mf.Envs = append(mf.Envs, env)
-			break
 		default:
 			continue
 		}

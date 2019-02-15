@@ -139,7 +139,6 @@ func (r *Runtime) Provision(ctx context.Context, dir string) error {
 				}
 				log.Debugf("Add config Manifest: %s", *m.Meta.Name)
 				mf.Configs[*m.Meta.Name] = m.GetManifest()
-				break
 			case types.KindPod:
 
 				m := new(request.PodManifest)
@@ -154,7 +153,6 @@ func (r *Runtime) Provision(ctx context.Context, dir string) error {
 				log.Debugf("Add Pod Manifest: %s", *m.Meta.Name)
 				mf.Pods[*m.Meta.Name] = m.GetManifest()
 				envs.Get().GetState().Pods().SetLocal(*m.Meta.Name)
-				break
 			case types.KindVolume:
 
 				m := new(request.VolumeManifest)
