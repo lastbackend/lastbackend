@@ -228,19 +228,25 @@ func state(s *types.PodStatus) {
 		case cn.State.Error.Error:
 			sts[types.StateError] += 1
 			ems = cn.State.Error.Message
+			break
 		case cn.State.Stopped.Stopped:
 			sts[types.StatusStopped] += 1
+			break
 		case cn.State.Started.Started:
 			sts[types.StateStarted] += 1
+			break
 		}
 	}
 
 	switch true {
 	case len(s.Runtime.Services) == sts[types.StateError]:
 		s.SetError(errors.New(ems))
+		break
 	case len(s.Runtime.Services) == sts[types.StateStarted]:
 		s.SetRunning()
+		break
 	case len(s.Runtime.Services) == sts[types.StatusStopped]:
 		s.SetStopped()
+		break
 	}
 }
