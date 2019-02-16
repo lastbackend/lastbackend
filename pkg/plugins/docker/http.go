@@ -21,11 +21,9 @@ package docker
 import (
 	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 
 	"github.com/docker/docker/daemon/logger"
-	"github.com/docker/docker/pkg/ioutils"
 	"github.com/docker/go-plugins-helpers/sdk"
 )
 
@@ -76,28 +74,9 @@ func Handlers(h *sdk.Handler, d *driver) {
 	})
 
 	h.HandleFunc("/LogDriver.Capabilities", func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(&CapabilitiesResponse{
-			Cap: logger.Capability{ReadLogs: true},
+		_ = json.NewEncoder(w).Encode(&CapabilitiesResponse{
+			Cap: logger.Capability{ReadLogs: false},
 		})
-	})
-
-	h.HandleFunc("/LogDriver.ReadLogs", func(w http.ResponseWriter, r *http.Request) {
-		var req ReadLogsRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		stream, err := d.ReadLogs(req.Info, req.Config)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer stream.Close()
-
-		w.Header().Set("Content-Type", "application/x-json-stream")
-		wf := ioutils.NewWriteFlusher(w)
-		io.Copy(wf, stream)
 	})
 }
 
@@ -110,5 +89,7 @@ func respond(err error, w http.ResponseWriter) {
 	if err != nil {
 		res.Err = err.Error()
 	}
-	json.NewEncoder(w).Encode(&res)
+	if err := json.NewEncoder(w).Encode(&res); err != nil {
+		return
+	}
 }

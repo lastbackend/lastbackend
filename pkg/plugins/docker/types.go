@@ -18,43 +18,16 @@
 
 package docker
 
-import (
-	"encoding/json"
-	"fmt"
-	"time"
-)
+import "github.com/lastbackend/lastbackend/pkg/util/proxy"
 
-type jsonTime struct {
-	time.Time
-}
-
-type jsonLogLine struct {
-	Message          string            `json:"message"`
+type Message struct {
+	Data             string            `json:"message"`
 	ContainerId      string            `json:"container_id"`
 	ContainerName    string            `json:"container_name"`
-	ContainerCreated jsonTime          `json:"container_created"`
-	ImageId          string            `json:"image_id"`
-	ImageName        string            `json:"image_name"`
-	Command          string            `json:"command"`
+	Selflink         string            `json:"selflink"`
+	ContainerCreated proxy.JsonTime    `json:"container_created"`
 	Tag              string            `json:"tag"`
 	Extra            map[string]string `json:"extra"`
 	Host             string            `json:"host"`
-	Timestamp        jsonTime          `json:"timestamp"`
-}
-
-func logMessage(lp *logPair, message []byte) error {
-	lp.logLine.Message = string(message[:])
-	lp.logLine.Timestamp = jsonTime{time.Now()}
-
-	_, err := json.Marshal(lp.logLine)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (t jsonTime) MarshalJSON() ([]byte, error) {
-	str := fmt.Sprintf("\"%s\"", t.Format(time.RFC3339Nano))
-	return []byte(str), nil
+	Timestamp        proxy.JsonTime    `json:"timestamp"`
 }

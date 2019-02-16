@@ -23,12 +23,12 @@ import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/network"
+	"github.com/lastbackend/lastbackend/pkg/node/collector"
 	"github.com/lastbackend/lastbackend/pkg/node/controller"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cii/cii"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"github.com/lastbackend/lastbackend/pkg/runtime/cii/cii"
 
 	"github.com/lastbackend/lastbackend/pkg/node/runtime"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
@@ -104,6 +104,13 @@ func Daemon() {
 	r.Restore(ctx)
 	r.Subscribe(ctx)
 	r.Loop(ctx)
+
+	c, err := collector.NewCollector()
+	if err != nil {
+		log.Errorf("can not initialize collector: %s", err.Error())
+		os.Exit(1)
+	}
+	go c.Listen()
 
 	if viper.IsSet("node.manifest.dir") || viper.IsSet("dir") {
 
