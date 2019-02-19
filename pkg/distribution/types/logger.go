@@ -18,27 +18,52 @@
 
 package types
 
-import "github.com/golang/protobuf/proto"
+import (
+	"fmt"
+	"github.com/golang/protobuf/proto"
+	"time"
+)
 
 type ProxyMessage struct {
-	Type               string                   `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
-	Source             string                   `protobuf:"bytes,2,opt,name=source,proto3" json:"source,omitempty"`
-	TimeNano           int64                    `protobuf:"varint,3,opt,name=time_nano,json=timeNano,proto3" json:"time_nano,omitempty"`
-	Line               []byte                   `protobuf:"bytes,4,opt,name=line,proto3" json:"line,omitempty"`
-	Partial            bool                     `protobuf:"varint,5,opt,name=partial,proto3" json:"partial,omitempty"`
-	PartialLogMetadata *PartialLogEntryMetadata `protobuf:"bytes,6,opt,name=partial_log_metadata,json=partialLogMetadata" json:"partial_log_metadata,omitempty"`
+	Type               string                       `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Source             string                       `protobuf:"bytes,2,opt,name=source,proto3" json:"source,omitempty"`
+	TimeNano           int64                        `protobuf:"varint,3,opt,name=time_nano,json=timeNano,proto3" json:"time_nano,omitempty"`
+	Line               []byte                       `protobuf:"bytes,4,opt,name=line,proto3" json:"line,omitempty"`
+	Partial            bool                         `protobuf:"varint,5,opt,name=partial,proto3" json:"partial,omitempty"`
+	PartialLogMetadata *PartialProxyMessageMetadata `protobuf:"bytes,6,opt,name=partial_log_metadata,json=partialLogMetadata" json:"partial_log_metadata,omitempty"`
 }
 
-type PartialLogEntryMetadata struct {
+type PartialProxyMessageMetadata struct {
 	Last    bool   `protobuf:"varint,1,opt,name=last,proto3" json:"last,omitempty"`
 	Id      string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
 	Ordinal int32  `protobuf:"varint,3,opt,name=ordinal,proto3" json:"ordinal,omitempty"`
+}
+
+type LogMessage struct {
+	Data             string            `json:"message"`
+	ContainerId      string            `json:"container_id"`
+	ContainerName    string            `json:"container_name"`
+	Selflink         string            `json:"selflink"`
+	ContainerCreated JsonTime          `json:"container_created"`
+	Tag              string            `json:"tag"`
+	Extra            map[string]string `json:"extra"`
+	Host             string            `json:"host"`
+	Timestamp        JsonTime          `json:"timestamp"`
 }
 
 func (m *ProxyMessage) Reset()                    { *m = ProxyMessage{} }
 func (m *ProxyMessage) String() string            { return proto.CompactTextString(m) }
 func (*ProxyMessage) ProtoMessage()               {}
 func (*ProxyMessage) Descriptor() ([]byte, []int) { return fileDescriptorEntry, []int{0} }
+
+type JsonTime struct {
+	time.Time
+}
+
+func (t JsonTime) MarshalJSON() ([]byte, error) {
+	str := fmt.Sprintf("\"%s\"", t.Format(time.RFC3339Nano))
+	return []byte(str), nil
+}
 
 var fileDescriptorEntry = []byte{
 	// 237 bytes of a gzipped FileDescriptorProto

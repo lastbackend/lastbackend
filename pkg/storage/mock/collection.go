@@ -41,6 +41,7 @@ const (
 	subnetCollection  = "subnet"
 
 	ingressCollection   = "ingress"
+	exporterCollection  = "exporter"
 	discoveryCollection = "discovery"
 	routeCollection     = "route"
 
@@ -63,6 +64,8 @@ type NodeCollection struct{}
 type DiscoveryCollection struct{}
 
 type IngressCollection struct{}
+
+type ExporterCollection struct{}
 
 type JobCollection struct{}
 
@@ -100,6 +103,10 @@ func (Collection) Volume() string {
 
 func (Collection) Ingress() types.IngressCollection {
 	return new(IngressCollection)
+}
+
+func (Collection) Exporter() types.ExporterCollection {
+	return new(ExporterCollection)
 }
 
 func (Collection) Discovery() types.DiscoveryCollection {
@@ -192,6 +199,14 @@ func (NodeCollection) Info() string {
 
 func (NodeCollection) Status() string {
 	return fmt.Sprintf("%s/%s", nodeCollection, statusColletion)
+}
+
+func (ExporterCollection) Info() string {
+	return fmt.Sprintf("%s/%s", exporterCollection, infoColletion)
+}
+
+func (ExporterCollection) Status() string {
+	return fmt.Sprintf("%s/%s", exporterCollection, statusColletion)
 }
 
 func (DiscoveryCollection) Info() string {

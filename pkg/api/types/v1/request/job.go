@@ -130,6 +130,8 @@ func (j *JobManifest) SetJobSpec(job *types.Job) (err error) {
 		job.Spec.Provider.Http.Endpoint = j.Spec.Provider.Http.Endpoint
 		job.Spec.Provider.Http.Method = j.Spec.Provider.Http.Method
 		job.Spec.Provider.Http.Headers = j.Spec.Provider.Http.Headers
+	} else {
+		job.Spec.Provider.Http = nil
 	}
 
 	if j.Spec.Provider.Cron != nil {
@@ -145,6 +147,8 @@ func (j *JobManifest) SetJobSpec(job *types.Job) (err error) {
 		job.Spec.Hook.Http.Endpoint = j.Spec.Hook.Http.Endpoint
 		job.Spec.Hook.Http.Method = j.Spec.Hook.Http.Method
 		job.Spec.Hook.Http.Headers = j.Spec.Hook.Http.Headers
+	} else {
+		job.Spec.Hook.Http = nil
 	}
 
 	if j.Spec.Resources != nil {

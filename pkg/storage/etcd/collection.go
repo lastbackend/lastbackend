@@ -41,6 +41,7 @@ const (
 	subnetCollection  = "subnet"
 
 	discoveryCollection = "discovery"
+	exporterCollection  = "exporter"
 	ingressCollection   = "ingress"
 	routeCollection     = "route"
 
@@ -61,6 +62,8 @@ type ManifestCollection struct{}
 type NodeCollection struct{}
 
 type DiscoveryCollection struct{}
+
+type ExporterCollection struct{}
 
 type IngressCollection struct{}
 
@@ -102,6 +105,10 @@ func (Collection) Discovery() types.DiscoveryCollection {
 
 func (Collection) Ingress() types.IngressCollection {
 	return new(IngressCollection)
+}
+
+func (Collection) Exporter() types.ExporterCollection {
+	return new(ExporterCollection)
 }
 
 func (Collection) Route() string {
@@ -198,6 +205,14 @@ func (DiscoveryCollection) Info() string {
 
 func (DiscoveryCollection) Status() string {
 	return fmt.Sprintf("%s/%s", discoveryCollection, statusColletion)
+}
+
+func (ExporterCollection) Info() string {
+	return fmt.Sprintf("%s/%s", exporterCollection, infoColletion)
+}
+
+func (ExporterCollection) Status() string {
+	return fmt.Sprintf("%s/%s", exporterCollection, statusColletion)
 }
 
 func (IngressCollection) Info() string {

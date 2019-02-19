@@ -51,7 +51,7 @@ type logPair struct {
 	active  bool
 	file    string
 	info    logger.Info
-	Message Message
+	Message types.LogMessage
 	stream  io.ReadCloser
 }
 
@@ -97,11 +97,11 @@ func (d *driver) StartLogging(file string, logCtx logger.Info) error {
 		return err
 	}
 
-	msg := Message{
+	msg := types.LogMessage{
 		ContainerId:      logCtx.FullID(),
 		ContainerName:    logCtx.Name(),
 		Selflink:         logCtx.ContainerLabels[types.ContainerTypeLBC],
-		ContainerCreated: proxy.JsonTime{logCtx.ContainerCreated},
+		ContainerCreated: types.JsonTime{logCtx.ContainerCreated},
 		Tag:              tag,
 		Extra:            extra,
 		Host:             hostname,
@@ -157,7 +157,7 @@ func consumeLog(d *driver, lp *logPair) {
 		}
 
 		lp.Message.Data = string(buf.Line[:])
-		lp.Message.Timestamp = proxy.JsonTime{time.Now()}
+		lp.Message.Timestamp = types.JsonTime{time.Now()}
 
 		msg, err := json.Marshal(lp.Message)
 		if err != nil {

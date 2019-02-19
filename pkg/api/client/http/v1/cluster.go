@@ -61,6 +61,21 @@ func (cc *ClusterClient) Ingress(args ...string) types.IngressClientV1 {
 	return newIngressClient(cc.client, name)
 }
 
+func (cc *ClusterClient) Exporter(args ...string) types.ExporterClientV1 {
+	name := ""
+	// Get any parameters passed to us out of the args variable into "real"
+	// variables we created for them.
+	for i := range args {
+		switch i {
+		case 0: // hostname
+			name = args[0]
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
+	}
+	return newExporterClient(cc.client, name)
+}
+
 func (cc *ClusterClient) Discovery(args ...string) types.DiscoveryClientV1 {
 	name := ""
 	// Get any parameters passed to us out of the args variable into "real"

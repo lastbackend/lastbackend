@@ -19,18 +19,7 @@
 package proxy
 
 import (
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"time"
 )
 
 type Handler func(message types.ProxyMessage) error
-
-type JsonTime struct {
-	time.Time
-}
-
-func (t JsonTime) MarshalJSON() ([]byte, error) {
-	str := fmt.Sprintf("\"%s\"", t.Format(time.RFC3339Nano))
-	return []byte(str), nil
-}

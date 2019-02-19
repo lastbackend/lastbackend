@@ -31,6 +31,8 @@ const (
 	DeadlineRead  = 5 * time.Second
 
 	DefaultServer = ":2963"
+	DefaultHost   = "127.0.0.1"
+	DefaultPort   = 2963
 )
 
 func NewServer(addr string) (*Server, error) {

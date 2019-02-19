@@ -60,6 +60,10 @@ func (Key) Ingress(name string) string {
 	return fmt.Sprintf("%s", name)
 }
 
+func (Key) Exporter(name string) string {
+	return fmt.Sprintf("%s", name)
+}
+
 func (Key) Discovery(name string) string {
 	return fmt.Sprintf("%s", name)
 }

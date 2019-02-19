@@ -20,6 +20,7 @@ package proxy
 
 import (
 	"encoding/binary"
+	"fmt"
 	protoio "github.com/gogo/protobuf/io"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"net"
@@ -45,7 +46,6 @@ func (srv Server) Listen(handler Handler) error {
 		return err
 	}
 	defer listener.Close()
-
 	for {
 
 		c, err := listener.Accept()
@@ -62,9 +62,11 @@ func (srv Server) Listen(handler Handler) error {
 			writer:      protoio.NewUint32DelimitedWriter(c, binary.BigEndian),
 		}
 
+		fmt.Println("connected")
 		log.Debugf("accepted connection from %v", conn.RemoteAddr())
 		go conn.Handle(handler)
 
 		srv.conns[conn] = true
 	}
+
 }

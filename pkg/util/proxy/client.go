@@ -20,6 +20,7 @@ package proxy
 
 import (
 	"encoding/binary"
+	"fmt"
 	protoio "github.com/gogo/protobuf/io"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -28,23 +29,24 @@ import (
 	"time"
 )
 
-const defaultAddr = "127.0.0.1:2963"
-
 type Client struct {
 	io.Writer
-	name   string
-	conn   net.Conn
-	done   chan bool
-	writer protoio.WriteCloser
-	active bool
+	name    string
+	conn    net.Conn
+	addr    string
+	done    chan bool
+	writer  protoio.WriteCloser
+	active  bool
+	handler Handler
 }
 
-func (p *Client) Connect(addr string, cl Handler) error {
+func (p *Client) Connect() error {
 
-	if addr == types.EmptyString {
-		addr = defaultAddr
+	if p.addr == types.EmptyString {
+		return nil
 	}
-	conn, err := net.Dial("tcp", addr)
+
+	conn, err := net.Dial("tcp", p.addr)
 	if err != nil {
 		return err
 	}
@@ -93,8 +95,8 @@ func (p *Client) Connect(addr string, cl Handler) error {
 				}
 			case KindPong:
 			case KindMSG:
-				if cl != nil {
-					if err := cl(msg); err != nil {
+				if p.handler != nil {
+					if err := p.handler(msg); err != nil {
 						log.Debug("msg handle err")
 						p.done <- true
 					}
@@ -110,6 +112,13 @@ func (p *Client) Connect(addr string, cl Handler) error {
 	p.active = false
 
 	return nil
+}
+
+func (p *Client) Reconnect(addr string) {
+	p.addr = addr
+	if p.active {
+		p.done <- true
+	}
 }
 
 func (p *Client) Write(msg []byte) error {
@@ -179,11 +188,18 @@ func (p *Client) updateDeadline() error {
 
 func NewClient(name, addr string, handler Handler) *Client {
 	p := new(Client)
+	if addr == types.EmptyString {
+		addr = fmt.Sprintf("%s:%d", DefaultHost, DefaultPort)
+	}
 	p.name = name
+	p.addr = addr
+	p.handler = handler
 	p.done = make(chan bool)
 	go func() {
 		for {
-			_ = p.Connect(addr, handler)
+			if p.addr != types.EmptyString {
+				_ = p.Connect()
+			}
 			<-time.NewTimer(time.Second).C
 		}
 	}()

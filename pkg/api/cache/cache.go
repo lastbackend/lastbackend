@@ -26,6 +26,7 @@ type Cache struct {
 	node      *CacheNodeManifest
 	ingress   *CacheIngressManifest
 	discovery *CacheDiscoveryManifest
+	exporter  *CacheExporterManifest
 }
 
 type Cleaner func(ctx context.Context) error
@@ -42,10 +43,15 @@ func (c *Cache) Discovery() *CacheDiscoveryManifest {
 	return c.discovery
 }
 
+func (c *Cache) Exporter() *CacheExporterManifest {
+	return c.exporter
+}
+
 func NewCache() *Cache {
 	c := new(Cache)
 	c.node = NewCacheNodeManifest()
 	c.ingress = NewCacheIngressManifest()
 	c.discovery = NewCacheDiscoveryManifest()
+	c.exporter = NewCacheExporterManifest()
 	return c
 }

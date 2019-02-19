@@ -20,16 +20,15 @@ package namespace
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/api/http/job/job"
-	"net/http"
-
 	"github.com/lastbackend/lastbackend/pkg/api/http/config/config"
+	"github.com/lastbackend/lastbackend/pkg/api/http/job/job"
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/http/route/route"
 	"github.com/lastbackend/lastbackend/pkg/api/http/secret/secret"
 	"github.com/lastbackend/lastbackend/pkg/api/http/service/service"
 	"github.com/lastbackend/lastbackend/pkg/api/http/volume/volume"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"net/http"
 
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	v1 "github.com/lastbackend/lastbackend/pkg/api/types/v1"
@@ -40,8 +39,9 @@ import (
 )
 
 const (
-	logLevel  = 2
-	logPrefix = "api:handler:namespace"
+	logLevel    = 2
+	logPrefix   = "api:handler:namespace"
+	BUFFER_SIZE = 512
 )
 
 func NamespaceListH(w http.ResponseWriter, r *http.Request) {

@@ -211,6 +211,7 @@ func (s *Network) SubnetPut(hostname string, spec types.SubnetSpec) (*types.Subn
 	snet.Meta.SetDefault()
 	snet.Meta.Name = types.SubnetGetNameFromCIDR(spec.CIDR)
 	snet.Meta.Node = hostname
+	snet.Meta.SelfLink = *types.NewSubnetSelfLink(spec.CIDR)
 	snet.Spec = spec
 
 	if err := s.storage.Put(s.context, s.storage.Collection().Subnet(),

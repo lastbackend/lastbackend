@@ -74,6 +74,17 @@ func (r *Runtime) Run() {
 		c.Node().SetDiscovery(i)
 		c.Ingress().SetDiscovery(i)
 	}
+
+	em := distribution.NewExporterModel(ctx, envs.Get().GetStorage())
+	el, err := em.List()
+	if err != nil {
+		return
+	}
+	go r.exporterWatch(ctx, &cl.Storage.Revision)
+	for _, i := range el.Items {
+		c.Node().SetExporter(i)
+	}
+
 }
 
 func (r *Runtime) podManifestWatch(ctx context.Context, rev *int64) {
@@ -354,6 +365,39 @@ func (r *Runtime) discoveryWatch(ctx context.Context, rev *int64) {
 				}
 				c.Node().SetDiscovery(w.Data)
 				c.Ingress().SetDiscovery(w.Data)
+			}
+		}
+	}()
+
+	im.Watch(n, rev)
+}
+
+func (r *Runtime) exporterWatch(ctx context.Context, rev *int64) {
+
+	// Watch node changes
+	var (
+		n = make(chan types.ExporterEvent)
+		c = envs.Get().GetCache()
+	)
+
+	im := distribution.NewExporterModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-n:
+
+				if w.Data == nil {
+					continue
+				}
+
+				if w.IsActionRemove() {
+					c.Node().DelExporter(w.Name)
+					continue
+				}
+				c.Node().SetExporter(w.Data)
 			}
 		}
 	}()

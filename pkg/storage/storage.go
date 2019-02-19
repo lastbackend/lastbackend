@@ -33,6 +33,7 @@ const (
 	ClusterKind    types.Kind = "cluster"
 	PodKind        types.Kind = "pod"
 	IngressKind    types.Kind = "ingress"
+	ExporterKind   types.Kind = "exporter"
 	SystemKind     types.Kind = "system"
 	NodeKind       types.Kind = "node"
 	RouteKind      types.Kind = "route"

@@ -201,6 +201,7 @@ func IngressConnectH(w http.ResponseWriter, r *http.Request) {
 		ingress := new(types.Ingress)
 		ingress.Meta.SetDefault()
 		ingress.Meta.Name = opts.Info.Hostname
+		ingress.Meta.SelfLink = *types.NewIngressSelfLink(opts.Info.Hostname)
 		ingress.Status.Ready = opts.Status.Ready
 
 		im.Put(ingress)

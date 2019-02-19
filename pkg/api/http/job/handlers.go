@@ -19,12 +19,15 @@
 package job
 
 import (
+	"context"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/job/job"
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
@@ -392,4 +395,193 @@ func JobRemoveH(w http.ResponseWriter, r *http.Request) {
 		log.V(logLevel).Errorf("%s:remove:> write response err: %s", logPrefix, err.Error())
 		return
 	}
+}
+
+func JobLogsH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation GET /namespace/{namespace}/job/{job}/logs job jobLogs
+	//
+	// Shows logs of the job
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: job
+	//     in: path
+	//     description: job id
+	//     required: true
+	//     type: string
+	//   - name: deployment
+	//     in: query
+	//     description: deployment id
+	//     required: true
+	//     type: string
+	//   - name: pod
+	//     in: query
+	//     description: pod id
+	//     required: true
+	//     type: string
+	//   - name: container
+	//     in: query
+	//     description: container id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Service logs received
+	//   '404':
+	//     description: Namespace not found / Service not found
+	//   '500':
+	//     description: Internal server error
+
+	nid := utils.Vars(r)["namespace"]
+	jid := utils.Vars(r)["job"]
+	tid := r.URL.Query().Get("task")
+
+	//pid := r.URL.Query().Get("pod")
+	//cid := r.URL.Query().Get("container")
+
+	log.V(logLevel).Debugf("%s:logs:> get logs for job `%s` in namespace `%s`", logPrefix, jid, nid)
+
+	var (
+		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		jm  = distribution.NewJobModel(r.Context(), envs.Get().GetStorage())
+		em  = distribution.NewExporterModel(r.Context(), envs.Get().GetStorage())
+		tm  = distribution.NewTaskModel(r.Context(), envs.Get().GetStorage())
+	)
+
+	ns, err := nsm.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("%s:logs:> get namespace", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if ns == nil {
+		err := errors.New("namespace not found")
+		log.V(logLevel).Errorf("%s:logs:> get namespace", logPrefix, err.Error())
+		errors.New("namespace").NotFound().Http(w)
+		return
+	}
+
+	jsl := types.NewJobSelfLink(ns.Meta.Name, jid)
+	job, err := jm.Get(jsl.String())
+	if err != nil {
+		log.V(logLevel).Errorf("%s:logs:> get job by name `%s` err: %s", logPrefix, jid, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if job == nil {
+		log.V(logLevel).Warnf("%s:logs:> job name `%s` in namespace `%s` not found", logPrefix, jid, ns.Meta.Name)
+		errors.New("job").NotFound().Http(w)
+		return
+	}
+
+	tsl := types.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, tid)
+	task, err := tm.Get(tsl.String())
+	if err != nil {
+		log.V(logLevel).Errorf("%s:logs:> get task by name `%s` err: %s", logPrefix, tsl.String(), err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if task == nil {
+		log.V(logLevel).Warnf("%s:logs:> task name `%s` in namespace `%s` not found", logPrefix, tsl.String(), ns.Meta.Name)
+		errors.New("task").NotFound().Http(w)
+		return
+	}
+
+	el, err := em.List()
+	if err != nil {
+		log.V(logLevel).Errorf("%s:logs:> get exporters", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if len(el.Items) == 0 {
+		log.V(logLevel).Errorf("%s:logs:>exporters not found", logPrefix, err.Error())
+		errors.HTTP.NotFound(w)
+		return
+	}
+
+	exp := new(types.Exporter)
+
+	for _, e := range el.Items {
+		if e.Status.Ready {
+			exp = e
+			break
+		}
+	}
+
+	if exp == nil {
+		log.V(logLevel).Errorf("%s:logs:> active exporters not found", logPrefix, err.Error())
+		errors.HTTP.NotFound(w)
+		return
+	}
+
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/logs?kind=%s&selflink=%s", exp.Status.Http.IP, exp.Status.Http.Port, types.KindTask, task.SelfLink().String()), nil)
+	if err != nil {
+		log.V(logLevel).Errorf("%s:logs:> create http client err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.V(logLevel).Errorf("%s:logs:> get pod logs err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	var buffer = make([]byte, BUFFER_SIZE)
+
+	for {
+
+		select {
+		case <-r.Context().Done():
+			fmt.Println("context done")
+			return
+		default:
+
+			n, err := res.Body.Read(buffer)
+			if err != nil {
+
+				if err == context.Canceled {
+					log.V(logLevel).Debug("Stream is canceled")
+					return
+				}
+
+				log.Errorf("Error read bytes from stream %s", err)
+				return
+			}
+
+			_, err = func(p []byte) (n int, err error) {
+
+				n, err = w.Write(p)
+				if err != nil {
+					log.Errorf("Error write bytes to stream %s", err)
+					return n, err
+				}
+
+				if f, ok := w.(http.Flusher); ok {
+					f.Flush()
+				}
+
+				return n, nil
+			}(buffer[0:n])
+
+			if err != nil {
+				log.Errorf("Error written to stream %s", err)
+				return
+			}
+
+			for i := 0; i < n; i++ {
+				buffer[i] = 0
+			}
+		}
+	}
+
 }

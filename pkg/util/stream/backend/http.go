@@ -16,43 +16,47 @@
 // from Last.Backend LLC.
 //
 
-package collector
+package backend
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/util/proxy"
-	"time"
+	"net/http"
 )
 
-type Collector struct {
-	srv    *proxy.Server
-	client *proxy.Client
+type HttpWriter struct {
+	writer http.ResponseWriter
+	done   chan bool
 }
 
-func (c *Collector) Handler(msg types.ProxyMessage) error {
-	log.Debugf("collector: receive message: %s", msg.Line)
-	return nil
+func (hw *HttpWriter) Disconnect() {
+	<-hw.done
 }
 
-func (c *Collector) Listen() {
-	for {
-		if err := c.srv.Listen(c.Handler); err != nil {
-			log.Errorf(err.Error())
-		}
-		<-time.NewTimer(3 * time.Second).C
-	}
-}
-
-func NewCollector() (*Collector, error) {
+func (hw *HttpWriter) Write(data []byte) {
 
 	var err error
 
-	c := new(Collector)
-	c.srv, err = proxy.NewServer(proxy.DefaultServer)
-	if err != nil {
-		return nil, err
+	_, err = hw.writer.Write(data)
+	if err == context.Canceled {
+		log.V(logLevel).Debug("Stream is canceled")
+		hw.done <- true
+		return
 	}
 
-	return c, nil
+	if f, ok := hw.writer.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
+func (hw *HttpWriter) End() error {
+	hw.done <- true
+	return nil
+}
+
+func NewHttpWriterBackend(writer http.ResponseWriter) StreamBackend {
+	hw := new(HttpWriter)
+	hw.writer = writer
+	hw.done = make(chan bool)
+	return hw
 }

@@ -1,0 +1,19 @@
+---
+# Runtime
+verbose: 3
+token: lstbknd
+api:
+  uri: "127.0.0.1:2967"
+  tls:
+    insecure: true
+
+exporter:
+  http:
+    host: 0.0.0.0
+    port: 2964
+    tls:
+      insecure: true
+  dir: /var/lastbackend/logs
+  clickhouse: "127.0.0.1:9000"
+
+# Runtime

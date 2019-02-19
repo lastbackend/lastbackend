@@ -1102,6 +1102,53 @@ func NewDiscoverySelfLink(hostname string) *DiscoverySelfLink {
 	return sl
 }
 
+type ExporterSelfLink struct {
+	string
+	hostname string
+}
+
+func (sl *ExporterSelfLink) Parse(selflink string) {
+	sl.hostname = selflink
+	sl.string = selflink
+}
+
+func (sl *ExporterSelfLink) String() string {
+	return sl.string
+}
+
+func (sl *ExporterSelfLink) Hostname() string {
+	return sl.hostname
+}
+
+func (sl ExporterSelfLink) MarshalJSON() ([]byte, error) {
+	buffer := bytes.NewBufferString("\"")
+	buffer.WriteString(sl.string)
+	buffer.WriteString("\"")
+	return buffer.Bytes(), nil
+}
+
+func (sl *ExporterSelfLink) UnmarshalJSON(b []byte) error {
+	var link string
+	if err := json.Unmarshal(b, &link); err != nil {
+		return err
+	}
+
+	sl.Parse(link)
+	return nil
+}
+
+func NewExporterSelfLink(hostname string) *ExporterSelfLink {
+
+	sl := new(ExporterSelfLink)
+
+	link := fmt.Sprintf("%s", hostname)
+
+	sl.string = link
+	sl.hostname = hostname
+
+	return sl
+}
+
 type ProcessSelfLink struct {
 	string
 	name string

@@ -20,6 +20,9 @@ node:
     server_key: "/opt/cert/node/server-key.pem"
     client_cert: "/opt/cert/node/client.pem"
     client_key: "/opt/cert/node/client-key.pem"
+  logs:
+    driver: "lastbackend"
+    collector: "api.lbdp.io:2963"
 
 # Runtime
 runtime:
