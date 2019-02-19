@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,4 +16,21 @@
 // from Last.Backend LLC.
 //
 
-package collector
+package request
+
+import "github.com/lastbackend/lastbackend/pkg/distribution/types"
+
+// swagger:model request_ingress_connect
+type ExporterConnectOptions struct {
+	Info    types.ExporterInfo   `json:"info"`
+	Status  types.ExporterStatus `json:"status"`
+	Network types.NetworkState   `json:"network"`
+}
+
+// swagger:ignore
+// swagger:model request_ingress_remove
+type ExporterRemoveOptions struct {
+	Force bool `json:"force"`
+}
+
+type ExporterStatusOptions types.ExporterStatus

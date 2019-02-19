@@ -292,6 +292,10 @@ func (js *JobState) Provider() {
 			select {
 			case _ = <-fetch:
 
+				if js.provider == nil {
+					return
+				}
+
 				manifest, err := js.provider.Fetch()
 
 				if err != nil {
@@ -314,14 +318,22 @@ func (js *JobState) Provider() {
 
 	for {
 
+		if js.provider == nil {
+			return
+		}
+
 		if len(js.task.active) < limit {
 			fetch <- true
 		}
 
+		if js.job.Spec.Provider.Timeout == types.EmptyString {
+			js.job.Spec.Provider.Timeout = "5s"
+		}
+
 		t, _ := time.ParseDuration(js.job.Spec.Provider.Timeout)
 
-		if t < 1000 {
-			t = 1000
+		if t < 1000000 {
+			t = 1000000
 		}
 
 		<-time.NewTimer(t).C

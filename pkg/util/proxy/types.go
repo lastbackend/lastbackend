@@ -16,4 +16,10 @@
 // from Last.Backend LLC.
 //
 
-package collector
+package proxy
+
+import (
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+)
+
+type Handler func(message types.ProxyMessage) error

@@ -180,3 +180,10 @@ type NamespaceResourceOptions struct {
 	CPU     *string `json:"cpu"`
 	Storage *string `json:"storage"`
 }
+
+// swagger:ignore
+// swagger:model request_service_logs
+type NamespaceLogsOptions struct {
+	SelfLink string `json:"selflink"`
+	Follow   bool   `json:"follow"`
+}

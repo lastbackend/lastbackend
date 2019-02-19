@@ -25,6 +25,7 @@ type Collection interface {
 	Cluster() string
 	Pod() string
 	Ingress() IngressCollection
+	Exporter() ExporterCollection
 	Discovery() DiscoveryCollection
 	System() string
 	Node() NodeCollection
@@ -60,6 +61,11 @@ type NodeCollection interface {
 }
 
 type DiscoveryCollection interface {
+	Info() string
+	Status() string
+}
+
+type ExporterCollection interface {
 	Info() string
 	Status() string
 }

@@ -29,4 +29,5 @@ var Routes = []http.Route{
 	{Path: "/namespace/{namespace}/job/{job}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: JobInfoH},
 	{Path: "/namespace/{namespace}/job/{job}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: JobUpdateH},
 	{Path: "/namespace/{namespace}/job/{job}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Authenticate}, Handler: JobRemoveH},
+	{Path: "/namespace/{namespace}/job/{job}/logs", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: JobLogsH},
 }

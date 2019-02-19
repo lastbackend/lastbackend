@@ -25,6 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/http/deployment"
 	"github.com/lastbackend/lastbackend/pkg/api/http/discovery"
 	"github.com/lastbackend/lastbackend/pkg/api/http/events"
+	"github.com/lastbackend/lastbackend/pkg/api/http/exporter"
 	"github.com/lastbackend/lastbackend/pkg/api/http/ingress"
 	"github.com/lastbackend/lastbackend/pkg/api/http/job"
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
@@ -67,6 +68,8 @@ func init() {
 	AddRoutes(cluster.Routes)
 	AddRoutes(node.Routes)
 	AddRoutes(ingress.Routes)
+	AddRoutes(exporter.Routes)
+	AddRoutes(discovery.Routes)
 
 	// Namespace
 	AddRoutes(namespace.Routes)
@@ -77,7 +80,6 @@ func init() {
 	AddRoutes(deployment.Routes)
 	AddRoutes(volume.Routes)
 	AddRoutes(ingress.Routes)
-	AddRoutes(discovery.Routes)
 	AddRoutes(job.Routes)
 	AddRoutes(task.Routes)
 

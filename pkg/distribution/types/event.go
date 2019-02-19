@@ -92,6 +92,16 @@ type IngressStatusEvent struct {
 	Data *IngressStatus
 }
 
+type ExporterEvent struct {
+	event
+	Data *Exporter
+}
+
+type ExporterStatusEvent struct {
+	event
+	Data *ExporterStatus
+}
+
 type DiscoveryEvent struct {
 	event
 	Data *Discovery

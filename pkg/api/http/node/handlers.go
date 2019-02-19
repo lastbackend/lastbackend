@@ -340,7 +340,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	snet, err := sn.SubnetGet(opts.Network.CIDR)
+	snet, err := sn.SubnetGet(opts.Network.SubnetSpec.CIDR)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:connect:> get subnet err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -382,6 +382,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 			if _, err := sn.SubnetPut(node.SelfLink().String(), opts.Network.SubnetSpec); err != nil {
 				log.V(logLevel).Errorf("%s:connect:> snet put error: %s", logPrefix, err.Error())
 				errors.HTTP.InternalServerError(w)
+				return
 			}
 		}
 
@@ -691,6 +692,7 @@ func getNodeSpec(ctx context.Context, n *types.Node) (*types.NodeManifest, error
 		spec = new(types.NodeManifest)
 		spec.Meta.Initial = true
 		spec.Resolvers = cache.GetResolvers()
+		spec.Exporter = cache.GetExporterEndpoint()
 		spec.Configs = cache.GetConfigs()
 
 		pods, err := pm.ManifestMap(n.Meta.Name)

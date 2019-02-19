@@ -261,6 +261,11 @@ func (r *Runtime) Loop(ctx context.Context) {
 					}
 				}
 
+				if spec.Exporter != nil {
+					log.V(logLevel).Debugf("%s>set cluster exporter endpoint: %s", logNodeRuntimePrefix, spec.Exporter.Endpoint)
+					envs.Get().GetExporter().Reconnect(spec.Exporter.Endpoint)
+				}
+
 				log.V(logLevel).Debugf("%s> provision init", logNodeRuntimePrefix)
 
 				if network != nil {

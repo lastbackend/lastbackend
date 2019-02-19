@@ -27,7 +27,9 @@ import (
 func New(specProvider types.JobSpecProvider) (provider.JobProvider, error) {
 
 	if specProvider.Http != nil {
-		return http.New(specProvider.Http)
+		if specProvider.Http.Endpoint != types.EmptyString {
+			return http.New(specProvider.Http)
+		}
 	}
 
 	return nil, nil

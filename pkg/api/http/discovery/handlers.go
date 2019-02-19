@@ -203,6 +203,8 @@ func DiscoveryConnectH(w http.ResponseWriter, r *http.Request) {
 		discovery.Meta.SetDefault()
 		discovery.Meta.Name = opts.Info.Hostname
 
+		discovery.Meta.SelfLink = *types.NewDiscoverySelfLink(opts.Info.Hostname)
+
 		discovery.Status.Port = opts.Status.Port
 		discovery.Status.IP = opts.Status.IP
 		discovery.Status.Ready = opts.Status.Ready

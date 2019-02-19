@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/stream/backend"
 	"io"
+	"net/http"
 	"sync"
 	"time"
 )
@@ -156,14 +157,12 @@ func (s *Stream) Done() {
 func (s *Stream) AddSocketBackend(endpoint string) *Stream {
 
 	s.stream = backend.NewSocketBackend(endpoint)
+	return s
+}
 
-	go func() {
-		s.stream.End()
-		s.close = true
-		log.V(logLevel).Debug("stream closed")
-		s.done <- true
-	}()
-
+func (s *Stream) AddHttpWriter(writer http.ResponseWriter) *Stream {
+	log.V(logLevel).Debug("add http backend")
+	s.stream = backend.NewHttpWriterBackend(writer)
 	return s
 }
 

@@ -34,6 +34,7 @@ type ClientV1 interface {
 type ClusterClientV1 interface {
 	Node(args ...string) NodeClientV1
 	Ingress(args ...string) IngressClientV1
+	Exporter(args ...string) ExporterClientV1
 	Discovery(args ...string) DiscoveryClientV1
 	Get(ctx context.Context) (*vv1.Cluster, error)
 }
@@ -58,6 +59,13 @@ type IngressClientV1 interface {
 	Get(ctx context.Context) (*vv1.Ingress, error)
 	Connect(ctx context.Context, opts *rv1.IngressConnectOptions) error
 	SetStatus(ctx context.Context, opts *rv1.IngressStatusOptions) (*vv1.IngressManifest, error)
+}
+
+type ExporterClientV1 interface {
+	List(ctx context.Context) (*vv1.ExporterList, error)
+	Get(ctx context.Context) (*vv1.Exporter, error)
+	Connect(ctx context.Context, opts *rv1.ExporterConnectOptions) error
+	SetStatus(ctx context.Context, opts *rv1.ExporterStatusOptions) (*vv1.ExporterManifest, error)
 }
 
 type NamespaceClientV1 interface {

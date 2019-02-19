@@ -28,6 +28,7 @@ import (
 type NodeManifest struct {
 	Meta      NodeManifestMeta             `json:"meta"`
 	Resolvers map[string]*ResolverManifest `json:"resolvers"`
+	Exporter  *ExporterManifest            `json:"exporter"`
 	Secrets   map[string]*SecretManifest   `json:"secrets"`
 	Configs   map[string]*ConfigManifest   `json:"configs"`
 	Endpoints map[string]*EndpointManifest `json:"endpoint"`
@@ -43,6 +44,10 @@ type NodeManifestMeta struct {
 type ResolverManifest struct {
 	IP   string `json:"ip"`
 	Port uint16 `json:"port"`
+}
+
+type ExporterManifest struct {
+	Endpoint string `json:"endpoint"`
 }
 
 type IngressManifest struct {

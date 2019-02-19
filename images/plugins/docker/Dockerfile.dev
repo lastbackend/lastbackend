@@ -25,5 +25,5 @@ RUN rm -rf /go/pkg \
 
 # Production manifest
 FROM alpine:3.8 as production
-COPY --from=build /usr/bin/lastbackendr /usr/bin/lastbackend
+COPY --from=build /usr/bin/lastbackend /usr/bin/lastbackend
 ENTRYPOINT /usr/bin/lastbackend
