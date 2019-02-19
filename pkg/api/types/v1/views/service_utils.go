@@ -206,11 +206,11 @@ func (sv Service) ToRequestManifest() *request.ServiceManifest {
 					item := request.ManifestSpecTemplateContainerEnv{
 						Name:  v.Name,
 						Value: v.Value,
-						Secret: request.ManifestSpecTemplateContainerEnvSecret{
+						Secret: &request.ManifestSpecTemplateContainerEnvSecret{
 							Name: v.Secret.Name,
 							Key:  v.Secret.Key,
 						},
-						Config: request.ManifestSpecTemplateContainerEnvConfig{
+						Config: &request.ManifestSpecTemplateContainerEnvConfig{
 							Name: v.Config.Name,
 							Key:  v.Config.Key,
 						},

@@ -43,15 +43,15 @@ type ManifestSpecStrategy struct {
 }
 
 type ManifestSpecRuntime struct {
-	Services []string                  `json:"services"`
-	Tasks    []ManifestSpecRuntimeTask `json:"tasks"`
+	Services []string                  `json:"services,omitempty"`
+	Tasks    []ManifestSpecRuntimeTask `json:"tasks,omitempty"`
 }
 
 type ManifestSpecRuntimeTask struct {
 	Name      string                             `json:"name"`
 	Container string                             `json:"container" yaml:"container"`
 	Env       []ManifestSpecTemplateContainerEnv `json:"env,omitempty" yaml:"env,omitempty"`
-	Commands  []ManifestSpecRuntimeTaskCommand   `json:"commands" yaml:"commands"`
+	Commands  []ManifestSpecRuntimeTaskCommand   `json:"commands,omitempty" yaml:"commands,omitempty"`
 }
 
 type ManifestSpecRuntimeTaskCommand struct {
@@ -67,25 +67,25 @@ type ManifestSpecTemplate struct {
 }
 
 type ManifestSpecTemplateContainer struct {
-	Name          string                                 `json:"name,omitempty" yaml:"name,omitempty"`
-	Command       string                                 `json:"command,omitempty" yaml:"command,omitempty"`
-	Workdir       string                                 `json:"workdir,omitempty" yaml:"workdir,omitempty"`
-	Entrypoint    string                                 `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
-	Args          []string                               `json:"args,omitempty" yaml:"args,omitempty"`
-	Ports         []string                               `json:"ports,omitempty" yaml:"ports,omitempty"`
-	Env           []ManifestSpecTemplateContainerEnv     `json:"env,omitempty" yaml:"env,omitempty"`
-	Volumes       []ManifestSpecTemplateContainerVolume  `json:"volumes,omitempty" yaml:"volumes,omitempty"`
-	Image         ManifestSpecTemplateContainerImage     `json:"image,omitempty" yaml:"image,omitempty"`
-	Resources     ManifestSpecTemplateContainerResources `json:"resources,omitempty" yaml:"resources,omitempty"`
-	RestartPolicy ManifestSpecTemplateRestartPolicy      `json:"restart,omitempty" yaml:"restart,omitempty"`
-	Security      ManifestSpecSecurity                   `json:"security,omitempty" yaml:"security,omitempty"`
+	Name          string                                  `json:"name,omitempty" yaml:"name,omitempty"`
+	Command       string                                  `json:"command,omitempty" yaml:"command,omitempty"`
+	Workdir       string                                  `json:"workdir,omitempty" yaml:"workdir,omitempty"`
+	Entrypoint    string                                  `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
+	Args          []string                                `json:"args,omitempty" yaml:"args,omitempty"`
+	Ports         []string                                `json:"ports,omitempty" yaml:"ports,omitempty"`
+	Env           []ManifestSpecTemplateContainerEnv      `json:"env,omitempty" yaml:"env,omitempty"`
+	Volumes       []ManifestSpecTemplateContainerVolume   `json:"volumes,omitempty" yaml:"volumes,omitempty"`
+	Image         *ManifestSpecTemplateContainerImage     `json:"image,omitempty" yaml:"image,omitempty"`
+	Resources     *ManifestSpecTemplateContainerResources `json:"resources,omitempty" yaml:"resources,omitempty"`
+	RestartPolicy *ManifestSpecTemplateRestartPolicy      `json:"restart,omitempty" yaml:"restart,omitempty"`
+	Security      *ManifestSpecSecurity                   `json:"security,omitempty" yaml:"security,omitempty"`
 }
 
 type ManifestSpecTemplateContainerEnv struct {
-	Name   string                                 `json:"name,omitempty" yaml:"name,omitempty"`
-	Value  string                                 `json:"value,omitempty" yaml:"value,omitempty"`
-	Secret ManifestSpecTemplateContainerEnvSecret `json:"secret,omitempty" yaml:"secret,omitempty"`
-	Config ManifestSpecTemplateContainerEnvConfig `json:"config,omitempty" yaml:"config,omitempty"`
+	Name   string                                  `json:"name,omitempty" yaml:"name,omitempty"`
+	Value  string                                  `json:"value,omitempty" yaml:"value,omitempty"`
+	Secret *ManifestSpecTemplateContainerEnvSecret `json:"secret,omitempty" yaml:"secret,omitempty"`
+	Config *ManifestSpecTemplateContainerEnvConfig `json:"config,omitempty" yaml:"config,omitempty"`
 }
 
 type ManifestSpecTemplateContainerEnvSecret struct {
@@ -105,9 +105,9 @@ type ManifestSpecTemplateContainerImage struct {
 
 type ManifestSpecTemplateContainerResources struct {
 	// Limit resources
-	Limits ManifestSpecTemplateContainerResource `json:"limits,omitempty" yaml:"limits,omitempty"`
+	Limits *ManifestSpecTemplateContainerResource `json:"limits,omitempty" yaml:"limits,omitempty"`
 	// Request resources
-	Request ManifestSpecTemplateContainerResource `json:"quota,omitempty" yaml:"quota,omitempty"`
+	Request *ManifestSpecTemplateContainerResource `json:"quota,omitempty" yaml:"quota,omitempty"`
 }
 
 type ManifestSpecTemplateContainerVolume struct {
@@ -132,11 +132,11 @@ type ManifestSpecTemplateVolume struct {
 	// Template volume types
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
 	// Template volume from persistent volume
-	Volume ManifestSpecTemplateVolumeClaim `json:"volume,omitempty" yaml:"volume,omitempty"`
+	Volume *ManifestSpecTemplateVolumeClaim `json:"volume,omitempty" yaml:"volume,omitempty"`
 	// Template volume from secret type
-	Secret ManifestSpecTemplateSecretVolume `json:"secret,omitempty" yaml:"secret,omitempty"`
+	Secret *ManifestSpecTemplateSecretVolume `json:"secret,omitempty" yaml:"secret,omitempty"`
 	// Template volume from config type
-	Config ManifestSpecTemplateConfigVolume `json:"config,omitempty" yaml:"config,omitempty"`
+	Config *ManifestSpecTemplateConfigVolume `json:"config,omitempty" yaml:"config,omitempty"`
 }
 
 type ManifestSpecTemplateVolumeClaim struct {
@@ -615,7 +615,7 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 			st.Updated = time.Now()
 		}
 
-		if spec.Security.Privileged != c.Security.Privileged {
+		if c.Security != nil && spec.Security.Privileged != c.Security.Privileged {
 			spec.Security.Privileged = c.Security.Privileged
 			st.Updated = time.Now()
 		}
@@ -633,13 +633,13 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 						st.Updated = time.Now()
 					}
 
-					if se.Secret.Name != ce.Secret.Name || se.Secret.Key != ce.Secret.Key {
+					if ce.Secret != nil && (se.Secret.Name != ce.Secret.Name || se.Secret.Key != ce.Secret.Key) {
 						se.Secret.Name = ce.Secret.Name
 						se.Secret.Key = ce.Secret.Key
 						st.Updated = time.Now()
 					}
 
-					if se.Config.Name != ce.Config.Name || se.Secret.Key != ce.Config.Key {
+					if ce.Config != nil && (se.Config.Name != ce.Config.Name || se.Config.Key != ce.Config.Key) {
 						se.Config.Name = ce.Config.Name
 						se.Config.Key = ce.Config.Key
 						st.Updated = time.Now()
@@ -648,18 +648,26 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 			}
 
 			if !f {
-				spec.EnvVars = append(spec.EnvVars, &types.SpecTemplateContainerEnv{
+				item := &types.SpecTemplateContainerEnv{
 					Name:  ce.Name,
 					Value: ce.Value,
-					Secret: types.SpecTemplateContainerEnvSecret{
+				}
+
+				if ce.Secret != nil {
+					item.Secret = types.SpecTemplateContainerEnvSecret{
 						Name: ce.Secret.Name,
 						Key:  ce.Secret.Key,
-					},
-					Config: types.SpecTemplateContainerEnvConfig{
+					}
+				}
+
+				if ce.Config != nil {
+					item.Config = types.SpecTemplateContainerEnvConfig{
 						Name: ce.Config.Name,
 						Key:  ce.Config.Key,
-					},
-				})
+					}
+				}
+
+				spec.EnvVars = append(spec.EnvVars, item)
 				st.Updated = time.Now()
 			}
 		}
@@ -688,29 +696,33 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 		)
 
 		// Resources check
-		if c.Resources.Request.RAM != types.EmptyString {
-			resourcesRequestRam, err = resource.DecodeMemoryResource(c.Resources.Request.RAM)
-			if err != nil {
-				return handleErr("request.ram", err)
+		if c.Resources != nil && c.Resources.Request != nil {
+			if c.Resources.Request.RAM != types.EmptyString {
+				resourcesRequestRam, err = resource.DecodeMemoryResource(c.Resources.Request.RAM)
+				if err != nil {
+					return handleErr("request.ram", err)
+				}
 			}
-		}
-		if c.Resources.Request.CPU != types.EmptyString {
-			resourcesRequestCPU, err = resource.DecodeCpuResource(c.Resources.Request.CPU)
-			if err != nil {
-				return handleErr("request.cpu", err)
+			if c.Resources.Request.CPU != types.EmptyString {
+				resourcesRequestCPU, err = resource.DecodeCpuResource(c.Resources.Request.CPU)
+				if err != nil {
+					return handleErr("request.cpu", err)
+				}
 			}
 		}
 
-		if c.Resources.Limits.RAM != types.EmptyString {
-			resourcesLimitsRam, err = resource.DecodeMemoryResource(c.Resources.Limits.RAM)
-			if err != nil {
-				return handleErr("limit.ram", err)
+		if c.Resources != nil && c.Resources.Limits != nil {
+			if c.Resources.Limits.RAM != types.EmptyString {
+				resourcesLimitsRam, err = resource.DecodeMemoryResource(c.Resources.Limits.RAM)
+				if err != nil {
+					return handleErr("limit.ram", err)
+				}
 			}
-		}
-		if c.Resources.Limits.CPU != types.EmptyString {
-			resourcesLimitsCPU, err = resource.DecodeCpuResource(c.Resources.Limits.CPU)
-			if err != nil {
-				return handleErr("limit.cpu", err)
+			if c.Resources.Limits.CPU != types.EmptyString {
+				resourcesLimitsCPU, err = resource.DecodeCpuResource(c.Resources.Limits.CPU)
+				if err != nil {
+					return handleErr("limit.cpu", err)
+				}
 			}
 		}
 
@@ -821,35 +833,36 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 			st.Updated = time.Now()
 		}
 
-		if v.Type != spec.Type || v.Volume.Name != spec.Volume.Name || v.Volume.Subpath != spec.Volume.Subpath {
+		if v.Type != spec.Type || v.Volume != nil && (v.Volume.Name != spec.Volume.Name || v.Volume.Subpath != spec.Volume.Subpath) {
 			spec.Type = v.Type
 			spec.Volume.Name = v.Volume.Name
 			spec.Volume.Subpath = v.Volume.Subpath
 			st.Updated = time.Now()
 		}
 
-		if v.Type != spec.Type || v.Secret.Name != spec.Secret.Name {
+		if v.Type != spec.Type || (v.Secret != nil && v.Secret.Name != spec.Secret.Name) {
 			spec.Type = v.Type
 			spec.Secret.Name = v.Secret.Name
 			st.Updated = time.Now()
 		}
 
 		var e = true
-		for _, vf := range v.Secret.Binds {
+		if v.Secret != nil {
+			for _, vf := range v.Secret.Binds {
 
-			var f = false
-			for _, sf := range spec.Secret.Binds {
-				if vf.Key == sf.Key && vf.File == sf.File {
-					f = true
+				var f = false
+				for _, sf := range spec.Secret.Binds {
+					if vf.Key == sf.Key && vf.File == sf.File {
+						f = true
+						break
+					}
+				}
+
+				if !f {
+					e = false
 					break
 				}
 			}
-
-			if !f {
-				e = false
-				break
-			}
-
 		}
 
 		if !e {
@@ -863,28 +876,29 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 			st.Updated = time.Now()
 		}
 
-		if v.Type != spec.Type || v.Config.Name != spec.Config.Name {
+		if v.Type != spec.Type || (v.Config != nil && v.Config.Name != spec.Config.Name) {
 			spec.Type = v.Type
 			spec.Config.Name = v.Config.Name
 			st.Updated = time.Now()
 		}
 
 		var ce = true
-		for _, vf := range v.Config.Binds {
+		if v.Config != nil {
+			for _, vf := range v.Config.Binds {
 
-			var f = false
-			for _, sf := range spec.Config.Binds {
-				if vf.Key == sf.Key && vf.File == sf.File {
-					f = true
+				var f = false
+				for _, sf := range spec.Config.Binds {
+					if vf.Key == sf.Key && vf.File == sf.File {
+						f = true
+						break
+					}
+				}
+
+				if !f {
+					ce = false
 					break
 				}
 			}
-
-			if !f {
-				ce = false
-				break
-			}
-
 		}
 
 		if !ce {

@@ -151,7 +151,7 @@
   revision = "680095405094e61218bdfaa8d53c1f70e00f5113"
 
 [[projects]]
-  digest = "1:811c86996b1ca46729bad2724d4499014c4b9effd05ef8c71b852aad90deb0ce"
+  digest = "1:02f8f4889e53a6adbc7bf3f2b9007ce8aecb0b79686fc9f99265246c88063f10"
   name = "github.com/docker/go-connections"
   packages = [
     "nat",
@@ -702,7 +702,6 @@
   analyzer-version = 1
   input-imports = [
     "github.com/asaskevich/govalidator",
-    "github.com/beorn7/perks/quantile",
     "github.com/coreos/etcd/clientv3",
     "github.com/coreos/etcd/etcdserver/etcdserverpb",
     "github.com/coreos/etcd/mvcc/mvccpb",
