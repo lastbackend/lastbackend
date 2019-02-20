@@ -49,14 +49,23 @@ func (t *TaskManifest) SetTaskManifestMeta(task *types.TaskManifest) {
 func (t *TaskManifest) SetTaskManifestSpec(task *types.TaskManifest) error {
 
 	if t.Spec.Runtime != nil {
+		if task.Spec.Runtime == nil {
+			task.Spec.Runtime = new(types.ManifestSpecRuntime)
+		}
 		t.Spec.Runtime.SetManifestSpecRuntime(task.Spec.Runtime)
 	}
 
 	if t.Spec.Selector != nil {
+		if task.Spec.Selector == nil {
+			task.Spec.Selector = new(types.ManifestSpecSelector)
+		}
 		t.Spec.Selector.SetManifestSpecSelector(task.Spec.Selector)
 	}
 
 	if t.Spec.Template != nil {
+		if task.Spec.Template == nil {
+			task.Spec.Template = new(types.ManifestSpecTemplate)
+		}
 		if err := t.Spec.Template.SetManifestSpecTemplate(task.Spec.Template); err != nil {
 			return err
 		}

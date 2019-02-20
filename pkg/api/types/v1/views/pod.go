@@ -152,7 +152,7 @@ type PodContainerState struct {
 // PodContainerStateCreated represents creation time of the pod container
 // swagger:model views_pod_container_state_created
 type PodContainerStateCreated struct {
-	Created time.Time `json:"created"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 // swagger:ignore

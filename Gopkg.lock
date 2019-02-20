@@ -283,6 +283,20 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:59392ed8afb901aab4287d4894df8191722e34f3957716f4350c8c133ce99046"
+  name = "github.com/hpcloud/tail"
+  packages = [
+    ".",
+    "ratelimiter",
+    "util",
+    "watch",
+    "winfile",
+  ]
+  pruneopts = "UT"
+  revision = "a1dbeea552b7c8df4b542c66073e393de198a800"
+
+[[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
@@ -690,6 +704,22 @@
   version = "v1.15.0"
 
 [[projects]]
+  digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
+  name = "gopkg.in/fsnotify/fsnotify.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
+  version = "v1.4.7"
+
+[[projects]]
+  branch = "v1"
+  digest = "1:0caa92e17bc0b65a98c63e5bc76a9e844cd5e56493f8fdbb28fad101a16254d9"
+  name = "gopkg.in/tomb.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "dd632973f1e7218eb1089048e0798ec9ae7dceb8"
+
+[[projects]]
   digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -718,14 +748,15 @@
     "github.com/docker/docker/client",
     "github.com/docker/docker/daemon/logger",
     "github.com/docker/docker/daemon/logger/loggerutils",
-    "github.com/docker/docker/pkg/ioutils",
     "github.com/docker/go-connections/nat",
     "github.com/docker/go-plugins-helpers/sdk",
     "github.com/docker/go-units",
     "github.com/docker/libnetwork/ipvs",
     "github.com/gogo/protobuf/io",
+    "github.com/golang/protobuf/proto",
     "github.com/gorilla/mux",
     "github.com/gorilla/websocket",
+    "github.com/hpcloud/tail",
     "github.com/miekg/dns",
     "github.com/pkg/errors",
     "github.com/satori/go.uuid",

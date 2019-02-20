@@ -52,6 +52,7 @@ type TaskMeta struct {
 
 type TaskStatus struct {
 	State   string        `json:"state"`
+	Status  string        `json:"status"`
 	Message string        `json:"message"`
 	Pod     TaskStatusPod `json:"pod"`
 }

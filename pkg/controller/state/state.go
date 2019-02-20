@@ -315,6 +315,7 @@ func (s *State) watchTasks(ctx context.Context, rev *int64) {
 				if w.IsActionRemove() {
 					_, ok := s.Job[w.Data.Meta.Job]
 					if ok {
+						// TODO: check of nil
 						s.Job[sl.String()].DelTask(w.Data)
 					}
 					continue

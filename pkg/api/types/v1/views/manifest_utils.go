@@ -52,17 +52,18 @@ func (mv *ManifestView) NewManifestSpecTemplate(obj types.SpecTemplate) Manifest
 			c.Env = append(c.Env, ManifestSpecTemplateContainerEnv{
 				Name:  env.Name,
 				Value: env.Value,
-				Secret: ManifestSpecTemplateContainerEnvSecret{
+				Secret: &ManifestSpecTemplateContainerEnvSecret{
 					Name: env.Secret.Name,
 					Key:  env.Secret.Key,
 				},
-				Config: ManifestSpecTemplateContainerEnvConfig{
+				Config: &ManifestSpecTemplateContainerEnvConfig{
 					Name: env.Config.Name,
 					Key:  env.Config.Key,
 				},
 			})
 		}
 
+		c.Image = new(ManifestSpecTemplateContainerImage)
 		c.Image.Name = s.Image.Name
 		c.Image.Secret = s.Image.Secret
 
@@ -74,8 +75,11 @@ func (mv *ManifestView) NewManifestSpecTemplate(obj types.SpecTemplate) Manifest
 			})
 		}
 
+		c.Resources = new(ManifestSpecTemplateContainerResources)
+		c.Resources.Limits = new(ManifestSpecTemplateContainerResource)
 		c.Resources.Limits.RAM = resource.EncodeMemoryResource(s.Resources.Limits.RAM)
 		c.Resources.Limits.CPU = resource.EncodeCpuResource(s.Resources.Limits.CPU)
+		c.Resources.Request = new(ManifestSpecTemplateContainerResource)
 		c.Resources.Request.RAM = resource.EncodeMemoryResource(s.Resources.Request.RAM)
 		c.Resources.Request.CPU = resource.EncodeCpuResource(s.Resources.Request.CPU)
 
@@ -86,15 +90,15 @@ func (mv *ManifestView) NewManifestSpecTemplate(obj types.SpecTemplate) Manifest
 		v := ManifestSpecTemplateVolume{
 			Name: s.Name,
 			Type: s.Type,
-			Volume: ManifestSpecTemplateVolumeClaim{
+			Volume: &ManifestSpecTemplateVolumeClaim{
 				Name:    s.Volume.Name,
 				Subpath: s.Volume.Subpath,
 			},
-			Secret: ManifestSpecTemplateSecretVolume{
+			Secret: &ManifestSpecTemplateSecretVolume{
 				Name:  s.Secret.Name,
 				Binds: make([]ManifestSpecTemplateSecretVolumeBind, 0),
 			},
-			Config: ManifestSpecTemplateConfigVolume{
+			Config: &ManifestSpecTemplateConfigVolume{
 				Name:  s.Config.Name,
 				Binds: make([]ManifestSpecTemplateConfigVolumeBind, 0),
 			},
@@ -131,24 +135,24 @@ func (mv *ManifestView) NewManifestSpecRuntime(obj types.SpecRuntime) ManifestSp
 
 	mfr := ManifestSpecRuntime{}
 	mfr.Services = obj.Services
-	mfr.Tasks = make([]ManifestSpecRuntimeTask, len(obj.Tasks))
+	mfr.Tasks = make([]ManifestSpecRuntimeTask, 0)
 	for _, task := range obj.Tasks {
 		mft := ManifestSpecRuntimeTask{
 			Name:      task.Name,
 			Container: task.Container,
-			Env:       make([]ManifestSpecTemplateContainerEnv, len(task.EnvVars)),
-			Commands:  make([]ManifestSpecRuntimeTaskCommand, len(task.Commands)),
+			Env:       make([]ManifestSpecTemplateContainerEnv, 0),
+			Commands:  make([]ManifestSpecRuntimeTaskCommand, 0),
 		}
 
 		for _, e := range task.EnvVars {
 			env := ManifestSpecTemplateContainerEnv{
 				Name:  e.Name,
 				Value: e.Value,
-				Secret: ManifestSpecTemplateContainerEnvSecret{
+				Secret: &ManifestSpecTemplateContainerEnvSecret{
 					Name: e.Secret.Name,
 					Key:  e.Secret.Key,
 				},
-				Config: ManifestSpecTemplateContainerEnvConfig{
+				Config: &ManifestSpecTemplateContainerEnvConfig{
 					Name: e.Config.Name,
 					Key:  e.Config.Key,
 				},

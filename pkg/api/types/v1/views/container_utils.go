@@ -210,15 +210,15 @@ func (cv *ContainerView) FromImageSpec(spec ContainerImageSpec) types.ImageSpec 
 func (cv *ContainerView) NewPodContainer(c *types.PodContainer) PodContainer {
 
 	container := PodContainer{
-		ID:      c.ID,
-		Pod:     c.Pod,
-		Name:    c.Name,
-		Ready:   c.Ready,
+		ID:    c.ID,
+		Pod:   c.Pod,
+		Name:  c.Name,
+		Ready: c.Ready,
 	}
 
 	container.State.Error.Error = c.State.Error.Error
 	container.State.Error.Message = c.State.Error.Message
-	container.State.Created.Created = c.State.Created.Created
+	container.State.Created.Timestamp = c.State.Created.Created
 	container.State.Started.Started = c.State.Started.Started
 	container.State.Started.Timestamp = c.State.Started.Timestamp
 	container.State.Stopped.Stopped = c.State.Stopped.Stopped

@@ -20,6 +20,7 @@ package job
 
 import (
 	"context"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/job/hook"
 	jh "github.com/lastbackend/lastbackend/pkg/controller/state/job/hook/hook"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/job/provider"
@@ -298,12 +299,14 @@ func (js *JobState) Provider() {
 				manifest, err := js.provider.Fetch()
 
 				if err != nil {
-					log.Errorf("%s:>provider fetch err: %s", logPrefix, err.Error())
+					log.Errorf("%s:> provider fetch err: %s", logPrefix, err.Error())
 				}
 
-				if manifest == nil {
+				if manifest != nil && manifest.Spec.Template == nil && manifest.Spec.Runtime == nil {
 					continue
 				}
+
+				fmt.Println(manifest)
 
 				if _, err := taskCreate(js.job, manifest); err != nil {
 					log.Error(err.Error())
@@ -343,7 +346,7 @@ func (js *JobState) Hook(task *types.Task) error {
 
 	if js.hook != nil {
 		if err := js.hook.Execute(task); err != nil {
-			log.Errorf("%s:>hook>execute err: %s", logPrefix, err.Error())
+			log.Errorf("%s:hook> execute err: %s", logPrefix, err.Error())
 			return err
 		}
 	}
