@@ -33,7 +33,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-const MinContainerMemory = 32
+const MinContainerMemory uint64 = 32
 
 func NodeInfo() types.NodeInfo {
 
@@ -101,8 +101,8 @@ func NodeCapacity() types.NodeResources {
 		Storage:    int64(storage),
 		RAM:        int64(m),
 		CPU:        0, // TODO: need get cpu resource value
-		Pods:       int(m / MinContainerMemory),
-		Containers: int(m / MinContainerMemory),
+		Pods:       int(m / (MinContainerMemory * 1024 * 1024)),
+		Containers: int(m / (MinContainerMemory * 1024 * 1024)),
 	}
 }
 
