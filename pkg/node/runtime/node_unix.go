@@ -95,11 +95,12 @@ func NodeCapacity() types.NodeResources {
 	// Available blocks * size per block = available space in bytes
 	storage := stat.Bfree * uint64(stat.Bsize)
 
-	m := vmStat.Total / 1024 / 1024
+	m := vmStat.Total
 
 	return types.NodeResources{
-		Storage:    int64(storage / 1024 / 1024),
+		Storage:    int64(storage),
 		RAM:        int64(m),
+		CPU:        0, // TODO: need get cpu resource value
 		Pods:       int(m / MinContainerMemory),
 		Containers: int(m / MinContainerMemory),
 	}
@@ -112,11 +113,12 @@ func NodeAllocation() types.NodeResources {
 		_ = fmt.Errorf("get memory err: %s", err)
 	}
 
-	m := vmStat.Free / 1024 / 1024
+	m := vmStat.Free
 	s := envs.Get().GetState().Pods()
 
 	return types.NodeResources{
 		RAM:        int64(m),
+		CPU:        0, // TODO: need get cpu resource value
 		Pods:       s.GetPodsCount(),
 		Containers: s.GetContainersCount(),
 	}

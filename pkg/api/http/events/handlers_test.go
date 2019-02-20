@@ -44,7 +44,7 @@ func TestEventsSubscribe(t *testing.T) {
 
 	var ctx = context.Background()
 
-	viper.Set("security.token", "lstbknd")
+	viper.Set("token", "lstbknd")
 
 	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
@@ -149,7 +149,7 @@ func TestEventsSubscribe(t *testing.T) {
 		obj    interface{}
 	}
 
-	var token = viper.GetString("security.token")
+	var token = viper.GetString("token")
 
 	tests := []struct {
 		name         string
