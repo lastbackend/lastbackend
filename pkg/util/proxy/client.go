@@ -89,11 +89,6 @@ func (p *Client) Connect() error {
 			}
 
 			switch msg.Type {
-			case KindPing:
-				if err := p.Pong(); err != nil {
-					return
-				}
-			case KindPong:
 			case KindMSG:
 				if p.handler != nil {
 					if err := p.handler(msg); err != nil {

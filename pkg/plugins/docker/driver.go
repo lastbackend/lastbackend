@@ -76,7 +76,6 @@ func (d *driver) StartLogging(file string, logCtx logger.Info) error {
 	}
 	d.mu.Unlock()
 
-	fmt.Println("start logging:> ", path.Base(file), logCtx.ContainerName)
 	stream, err := fifo.OpenFifo(context.Background(), file, syscall.O_RDONLY, 0700)
 	if err != nil {
 		return errors.Wrapf(err, "error opening logger fifo: %q", file)
@@ -118,7 +117,6 @@ func (d *driver) StartLogging(file string, logCtx logger.Info) error {
 }
 
 func (d *driver) StopLogging(file string) error {
-	fmt.Println("Stop logging >", path.Base(file))
 	d.mu.Lock()
 	lp, ok := d.logs[path.Base(file)]
 	if ok {

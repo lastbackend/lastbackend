@@ -19,7 +19,7 @@
 package logger
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
@@ -41,16 +41,13 @@ func TestNewLogger(t *testing.T) {
 	}
 
 	go func() {
-		fmt.Println("start logger listen")
 		if err := logger.Listen(); err != nil {
 			assert.NoError(t, err, "logger listen error")
 			return
 		}
-		fmt.Println("stop logger listen")
 	}()
 
 	<-time.NewTimer(time.Second).C
-	fmt.Println("start send messages")
 
 	cl := proxy.NewClient("test", types.EmptyString, nil)
 	if !assert.NotNil(t, cl, "client can not be nil") {
@@ -58,73 +55,90 @@ func TestNewLogger(t *testing.T) {
 	}
 
 	var (
-		count  = 10
-		done   = make(chan bool)
-		tail   = make(chan bool)
-		sl     = types.NewTaskSelfLink("ns", "job", "task").String()
-		psl, _ = types.NewPodSelfLink(types.KindTask, sl, "pod")
+		ctx, cf = context.WithCancel(context.Background())
+		count   = 500
+		lines   = 100
+		total   = 0
+		done    = make(chan bool)
+		sl      = types.NewTaskSelfLink("ns", "job", "task").String()
+		psl, _  = types.NewPodSelfLink(types.KindTask, sl, "pod")
 	)
+
+	<-time.NewTimer(time.Millisecond * 100).C
+
+	var i = 0
+	for {
+
+		if i >= lines {
+			break
+		}
+
+		i++
+		log := types.LogMessage{
+			Selflink: psl.String(),
+			Data:     fmt.Sprintf("stored log: %d", i),
+		}
+
+		b, err := json.Marshal(log)
+		if !assert.NoError(t, err, "can not marshal log message") {
+			return
+		}
+
+		if err := cl.Send(b); err != nil {
+			assert.NoError(t, err, "logger send message error")
+			return
+		}
+
+		<-time.NewTimer(time.Millisecond * 10).C
+	}
 
 	go func() {
 
 		var stream *File
 
 		for {
-			stream = logger.storage.Collection[types.KindTask][sl]
+			stream = logger.storage.GetStream(types.KindTask, sl, false)
 			if stream != nil {
 				break
 			}
 		}
 
 		var (
-			data = []byte{}
-			buf  = bytes.NewBuffer(data)
+			lch = make(chan string)
 		)
 
-		err = stream.Tail(count, false, buf)
-		if err != nil {
-			t.Error(err.Error())
-			return
-		}
-
-		var l = 0
-		for {
-
-			if l >= count {
-				tail <- true
-				break
-			}
-
-			l++
-			var b = []byte{}
-			_, err = buf.Read(b)
+		go func() {
+			err = stream.Read(ctx, lines, true, lch)
 			if err != nil {
 				t.Error(err.Error())
 				return
 			}
-			fmt.Println("tail:>", string(b))
+		}()
+
+		for range lch {
+			total++
+
+			if total == count+lines {
+				done <- true
+				break
+			}
+
 		}
 	}()
 
 	go func() {
 		var i = 0
-
 		for {
 
 			if i >= count {
-				fmt.Println("stop sending messages")
-				done <- true
-				return
-			}
-
-			fmt.Printf("send message: %d\n", i)
-
-			log := types.LogMessage{
-				Selflink: psl.String(),
-				Data:     fmt.Sprintf("log: %d", i),
+				break
 			}
 
 			i++
+			log := types.LogMessage{
+				Selflink: psl.String(),
+				Data:     fmt.Sprintf("realtime log: %d", i),
+			}
 
 			b, err := json.Marshal(log)
 			if !assert.NoError(t, err, "can not marshal log message") {
@@ -136,31 +150,24 @@ func TestNewLogger(t *testing.T) {
 				return
 			}
 
-			<-time.NewTimer(time.Second).C
+			<-time.NewTimer(time.Millisecond * 10).C
 		}
 	}()
 
-	<-done
+	for {
+		select {
+		case <-done:
+			cf()
+			if !assert.Equal(t, count+lines, total, "should read all lines") {
+				return
+			}
 
-	_, ok := logger.storage.Collection[types.KindTask][sl]
-	if !ok {
-		t.Error("task storage should exists")
-		return
+			return
+		case <-time.NewTimer(time.Second * 30).C:
+			cf()
+			t.Errorf("messages not recevied")
+			return
+		}
 	}
-
-	lines, err := logger.storage.Collection[types.KindTask][sl].ReadLines(0, false)
-	if !assert.NoError(t, err, "read lines err") {
-		return
-	}
-
-	if !assert.Equal(t, count, len(lines), "should read all lines") {
-		return
-	}
-
-	for _, l := range lines {
-		fmt.Println(l)
-	}
-
-	<-tail
 
 }

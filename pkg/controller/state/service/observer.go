@@ -20,7 +20,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -113,7 +112,7 @@ func (ss *ServiceState) Restore() error {
 
 		index, err := strconv.Atoi(strings.Replace(d.Meta.Name, "v", "", -1))
 		if err != nil {
-			fmt.Println(err)
+			log.Errorf("%s;> get deployment index err: %s", err.Error())
 		}
 
 		if ss.deployment.index < index {

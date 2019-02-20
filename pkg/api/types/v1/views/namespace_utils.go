@@ -89,8 +89,6 @@ func (r *Namespace) ToMeta(obj types.NamespaceMeta) NamespaceMeta {
 	meta.Updated = obj.Updated
 	meta.Labels = make(map[string]string, 0)
 
-	fmt.Println(meta.SelfLink)
-
 	if obj.Labels != nil {
 		meta.Labels = obj.Meta.Labels
 	}

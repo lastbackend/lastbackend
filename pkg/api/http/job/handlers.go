@@ -542,7 +542,6 @@ func JobLogsH(w http.ResponseWriter, r *http.Request) {
 
 		select {
 		case <-r.Context().Done():
-			fmt.Println("context done")
 			return
 		default:
 

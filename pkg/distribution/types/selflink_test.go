@@ -20,7 +20,6 @@ package types_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -34,8 +33,6 @@ func TestNamespaceSelfLink_MarshalJSON(t *testing.T) {
 	ns.Meta.SelfLink = *types.NewNamespaceSelfLink("test")
 
 	nsj, _ := json.Marshal(ns)
-
-	fmt.Println(string(nsj))
 
 	ns2 := types.Namespace{}
 
@@ -52,9 +49,6 @@ func TestServiceSelfLink_MarshalJSON(t *testing.T) {
 	ns.Meta.SelfLink = *types.NewServiceSelfLink("demo", "test")
 
 	nsj, _ := json.Marshal(ns)
-
-	fmt.Println(string(nsj))
-
 	ns2 := types.Service{}
 
 	_ = json.Unmarshal(nsj, &ns2)

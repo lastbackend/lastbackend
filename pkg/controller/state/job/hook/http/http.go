@@ -20,7 +20,6 @@ package http
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -67,7 +66,7 @@ func (h *JobHttpHook) Execute(task *types.Task) error {
 		return err
 	}
 
-	fmt.Println("response Status:", resp.Status)
+	log.V(logLevel).Debugf("response Status: %s", resp.Status)
 
 	return nil
 }

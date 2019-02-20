@@ -19,18 +19,20 @@
 package logger
 
 import (
-	"bufio"
-	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"github.com/hpcloud/tail"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/util/filesystem"
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 type Storage struct {
+	lock       sync.Mutex
 	root       string
 	Collection map[string]map[string]*File
 }
@@ -42,58 +44,77 @@ type File struct {
 	file *os.File
 }
 
-func (f *File) Write(msg string) error {
+func (f *File) Write(msg []byte) (int, error) {
 
 	if f.file == nil {
-		return errors.New("file descriptor not found")
+		return 0, errors.New("file descriptor not found")
 	}
 
-	f.file.Write([]byte(msg))
-	f.file.Write([]byte("\n"))
-
-	return nil
+	msg = append(msg, filesystem.LineSeparator)
+	return f.file.Write(msg)
 }
 
-func (f *File) ReadLines(count int, clear bool) ([]string, error) {
-	var lines []string
-	scanner := bufio.NewScanner(f.file)
-	var i = 0
-	for scanner.Scan() {
-		if count > 0 {
-			if i >= count {
-				break
-			}
-			i++
+func (f *File) Read(ctx context.Context, lines int, follow bool, l chan string) error {
+
+	var (
+		seek *tail.SeekInfo
+		done bool
+	)
+	if lines > 0 {
+		offset, err := filesystem.LineSeek(lines, f.file)
+		if err != nil {
+			return err
 		}
-		fmt.Println("read", scanner.Text())
-		lines = append(lines, scanner.Text())
+		seek = new(tail.SeekInfo)
+		seek.Offset = offset
+		seek.Whence = 1
 	}
-	return lines, scanner.Err()
-}
 
-func (f *File) Tail(count int, clear bool, buffer *bytes.Buffer) error {
-
-	t, err := tail.TailFile(f.path, tail.Config{Follow: true})
+	t, err := tail.TailFile(f.path, tail.Config{Follow: follow, Location: seek, Logger: tail.DiscardingLogger})
 	if err != nil {
 		log.Errorf("tail err: %s", err.Error())
 		return err
 	}
-	for line := range t.Lines {
-		fmt.Println(">tail:", line.Text)
-		buffer.Write([]byte(line.Text))
-	}
+
+	go func() {
+		for line := range t.Lines {
+
+			if done {
+				return
+			}
+
+			l <- line.Text
+		}
+	}()
+
+	<-ctx.Done()
+	t.Cleanup()
+	done = true
+
 	return nil
 }
 
-func (s Storage) GetStream(kind, selflink string) *File {
+func (f *File) Clear() error {
+	if err := f.file.Truncate(0); err != nil {
+		return err
+	}
+	if _, err := f.file.Seek(0, 0); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s Storage) GetStream(kind, selflink string, clear bool) *File {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 
 	if _, ok := s.Collection[kind]; !ok {
 		s.Collection[kind] = make(map[string]*File)
 	}
 
 	if _, ok := s.Collection[kind][selflink]; !ok {
-		fmt.Println("create new fie")
-		f, err := newFile(s.root, kind, selflink)
+		f, err := newFile(s.root, kind, selflink, clear)
 		if err != nil {
 			log.Errorf("can not create storage file: %s", err.Error())
 			return nil
@@ -112,13 +133,11 @@ func NewStorage(root string) *Storage {
 	return stg
 }
 
-func newFile(root, kind, selflink string) (*File, error) {
+func newFile(root, kind, selflink string, clear bool) (*File, error) {
 	f := new(File)
 
 	f.dir = filepath.Join(root, kind)
 	f.path = filepath.Join(root, kind, selflink)
-
-	fmt.Println("dir:", f.dir, " path:", f.path)
 
 	if _, err := os.Stat(f.dir); os.IsNotExist(err) {
 		err = os.MkdirAll(f.dir, 0755)
@@ -127,25 +146,29 @@ func newFile(root, kind, selflink string) (*File, error) {
 		}
 	}
 
-	if _, err := os.Stat(f.path); os.IsNotExist(err) {
-		fmt.Println("create new file:", f.path)
-		file, err := os.Create(f.path)
-		if err != nil {
-			fmt.Errorf(err.Error())
-			return nil, err
+	if _, err := os.Stat(f.path); err != nil {
+		if os.IsNotExist(err) {
+			_, err := os.Create(f.path)
+			if err != nil {
+				_ = fmt.Errorf(err.Error())
+				return nil, err
+			}
 		}
-		fmt.Println("file is created:", f.path)
-		f.file = file
 	}
 
 	if f.file == nil {
-		file, err := os.OpenFile(f.path, os.O_APPEND, os.ModeAppend)
+		file, err := os.OpenFile(f.path, os.O_APPEND|os.O_RDWR, os.ModePerm)
 		if err != nil {
-			fmt.Errorf(err.Error())
+			_ = fmt.Errorf(err.Error())
 			return nil, err
 		}
-		fmt.Println("open file:", f.path)
 		f.file = file
+	}
+
+	if clear {
+		if err := f.Clear(); err != nil {
+			return nil, err
+		}
 	}
 
 	return f, nil

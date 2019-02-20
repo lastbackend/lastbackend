@@ -80,17 +80,11 @@ func (c *Conn) Handle(handler Handler) {
 				} else {
 					log.Warn("consume: error reading encoded message, trying to continue")
 					dec = protoio.NewUint32DelimitedReader(c, binary.BigEndian, 1e6)
-					return
+					continue
 				}
 			}
 
 			switch msg.Type {
-			case KindPing:
-				if err := c.Pong(); err != nil {
-					c.error <- err.Error()
-					return
-				}
-			case KindPong:
 			case KindMSG:
 				if handler != nil {
 					if err := handler(msg); err != nil {
@@ -107,11 +101,6 @@ func (c *Conn) Handle(handler Handler) {
 
 	for {
 		select {
-		case <-time.NewTimer(1 * time.Second).C:
-			if err := c.Ping(); err != nil {
-				log.Errorf("connection deadline")
-				return
-			}
 		case e := <-c.error:
 			log.Errorf(e)
 			return

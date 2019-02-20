@@ -545,7 +545,6 @@ func TestServiceCreate(t *testing.T) {
 			assert.NoError(t, err)
 			// Check the status code is what we expect.
 			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
-				fmt.Println(string(body))
 				return
 			}
 

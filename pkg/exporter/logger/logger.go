@@ -19,8 +19,6 @@
 package logger
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -55,8 +53,6 @@ func (l *Logger) Handle(msg types.ProxyMessage) error {
 		return nil
 	}
 
-	fmt.Println(m.Selflink, " ", m.Data)
-
 	pod := types.PodSelfLink{}
 	if err := pod.Parse(m.Selflink); err != nil {
 		return nil
@@ -69,9 +65,9 @@ func (l *Logger) Handle(msg types.ProxyMessage) error {
 	switch k {
 	case types.KindDeployment:
 		kind, p := parent.Parent()
-		stream = l.storage.GetStream(kind, p.String())
+		stream = l.storage.GetStream(kind, p.String(), false)
 	case types.KindTask:
-		stream = l.storage.GetStream(k, parent.String())
+		stream = l.storage.GetStream(k, parent.String(), false)
 	}
 
 	if stream == nil {
@@ -79,7 +75,7 @@ func (l *Logger) Handle(msg types.ProxyMessage) error {
 		return nil
 	}
 
-	if err := stream.Write(string(msg.Line)); err != nil {
+	if _, err := stream.Write(msg.Line); err != nil {
 		return nil
 	}
 
@@ -89,32 +85,21 @@ func (l *Logger) Handle(msg types.ProxyMessage) error {
 func (l *Logger) Stream(ctx context.Context, kind, selflink string, writer http.ResponseWriter) error {
 
 	var (
-		data = []byte{}
-		buf  = bytes.NewBuffer(data)
+		lch = make(chan string)
 	)
 
-	err := l.storage.GetStream(kind, selflink).Tail(0, false, buf)
+	err := l.storage.GetStream(kind, selflink, false).Read(ctx, 0, true, lch)
 	if err != nil {
 		return err
 	}
-
-	reader := bytes.NewReader(data)
-	r := bufio.NewReader(reader)
 
 	for {
 
 		select {
 		case <-ctx.Done():
 			return nil
-		default:
-			var b = []byte{}
-
-			_, err = r.Read(b)
-			if err != nil {
-				return err
-			}
-
-			if _, err := writer.Write(b); err != nil {
+		case l := <-lch:
+			if _, err := writer.Write([]byte(l)); err != nil {
 				return err
 			}
 

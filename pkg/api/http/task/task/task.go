@@ -20,7 +20,6 @@ package task
 
 import (
 	"context"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
@@ -105,11 +104,9 @@ func Create(ctx context.Context, ns *types.Namespace, job *types.Job, mf *reques
 	if job.Spec.Resources.Limits.RAM != 0 || job.Spec.Resources.Limits.CPU != 0 {
 		for _, c := range task.Spec.Template.Containers {
 			if c.Resources.Limits.RAM == 0 {
-				fmt.Println("set default RAM")
 				c.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(types.DEFAULT_RESOURCE_LIMITS_RAM)
 			}
 			if c.Resources.Limits.CPU == 0 {
-				fmt.Println("set default CPU")
 				c.Resources.Limits.CPU, _ = resource.DecodeCpuResource(types.DEFAULT_RESOURCE_LIMITS_CPU)
 			}
 		}
