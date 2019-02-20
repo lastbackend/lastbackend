@@ -109,8 +109,8 @@ type NodeResources struct {
 // swagger:model views_node_spec
 type NodeManifest struct {
 	Meta      NodeManifestMeta                   `json:"meta"`
-	Discovery map[string]*types.ResolverManifest `json:"discovery"`
-	Exporter  *types.ExporterManifest            `json:"exporter"`
+	Discovery map[string]*types.ResolverManifest `json:"discovery,omitempty"`
+	Exporter  *types.ExporterManifest            `json:"exporter,omitempty"`
 	Configs   map[string]*types.ConfigManifest   `json:"configs,omitempty"`
 	Secrets   map[string]*types.SecretManifest   `json:"secrets,omitempty"`
 	Network   map[string]*types.SubnetManifest   `json:"network,omitempty"`

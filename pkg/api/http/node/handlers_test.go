@@ -223,6 +223,7 @@ func TestNodeGetManifestH(t *testing.T) {
 	)
 
 	nm.Meta.Initial = true
+	nm.Exporter = new(types.ExporterManifest)
 	nm.Resolvers = make(map[string]*types.ResolverManifest, 0)
 	nm.Network = make(map[string]*types.SubnetManifest, 0)
 	nm.Pods = make(map[string]*types.PodManifest, 0)
@@ -626,6 +627,7 @@ func TestNodeSetStatusH(t *testing.T) {
 	)
 
 	nm.Meta.Initial = true
+	nm.Exporter = new(types.ExporterManifest)
 	nm.Resolvers = make(map[string]*types.ResolverManifest, 0)
 	uo.Resources.Capacity.Pods = 20
 

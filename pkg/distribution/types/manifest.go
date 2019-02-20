@@ -47,7 +47,7 @@ type ResolverManifest struct {
 }
 
 type ExporterManifest struct {
-	Endpoint string `json:"endpoint"`
+	Endpoint string `json:"endpoint,omitempty"`
 }
 
 type IngressManifest struct {
