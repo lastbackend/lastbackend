@@ -40,3 +40,9 @@ const (
 	KindConfig     = "config"
 	KindVolume     = "volume"
 )
+
+type Vault struct {
+	Name     string
+	Endpoint string
+	Token    string
+}

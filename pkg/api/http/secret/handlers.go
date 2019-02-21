@@ -19,15 +19,21 @@
 package secret
 
 import (
+	"context"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/http/secret/secret"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
+	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -63,9 +69,10 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:get:> get secret", logPrefix)
 
 	var (
-		sid = utils.Vars(r)["secret"]
-		nid = utils.Vars(r)["namespace"]
-		rm  = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
+		sid  = utils.Vars(r)["secret"]
+		nid  = utils.Vars(r)["namespace"]
+		rm   = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
+		item *types.Secret
 	)
 
 	ns, e := namespace.FetchFromRequest(r.Context(), nid)
@@ -74,11 +81,60 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	item, err := rm.Get(ns.Meta.Name, sid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:get:> find secret list err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
+	parts := strings.Split(sid, ":")
+
+	switch len(parts) {
+	case 1:
+		var err error
+		item, err = rm.Get(ns.Meta.Name, sid)
+		if err != nil {
+			log.V(logLevel).Errorf("%s:get:> find secret list err: %s", logPrefix, err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+	case 2:
+		cx, cancel := context.WithCancel(context.Background())
+
+		vault := envs.Get().GetVault(parts[0])
+		if vault == nil {
+			log.V(logLevel).Warnf("%s:get:> secret `%s` not found", logPrefix, sid)
+			errors.New("vault").NotFound().Http(w)
+			return
+		}
+
+		url := fmt.Sprintf("%s/vault/?secret=%s&namespace=%s", vault.Endpoint, parts[1], ns.SelfLink().String())
+		req, err := http.NewRequest(http.MethodGet, url, nil)
+		if err != nil {
+			log.V(logLevel).Errorf("%s:secret:> create http client err: %s", logPrefix, err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+		req.Header.Set("x-lastbackend-token", vault.Token)
+
+		req.WithContext(cx)
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.V(logLevel).Errorf("%s:secret:> get secret err: %s", logPrefix, err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			log.V(logLevel).Errorf("%s:secret:> read secret err: %s", logPrefix, err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+
+		sv := views.SecretView{}
+		item, err = sv.Parse(body)
+		if err != nil {
+			log.V(logLevel).Errorf("%s:secret:> parse secret err: %s", logPrefix, err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+
+		defer cancel()
 	}
 
 	if item == nil {

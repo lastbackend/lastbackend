@@ -57,6 +57,16 @@ func (s *Secret) ToSpec(obj types.SecretSpec) SecretSpec {
 	return spec
 }
 
+func (sv *SecretView) Parse(data []byte) (*types.Secret, error) {
+
+	v := Secret{}
+	if err := json.Unmarshal(data, &v); err != nil {
+		return nil, err
+	}
+
+	return v.Decode(), nil
+}
+
 func (sv SecretView) NewList(obj *types.SecretList) *SecretList {
 	if obj == nil {
 		return nil
