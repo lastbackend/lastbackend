@@ -102,6 +102,8 @@ func (t *Task) ListByJob(namespace, job string) (*types.TaskList, error) {
 
 func (t *Task) Create(task *types.Task) (*types.Task, error) {
 
+	task.Status.State = types.StateCreated
+
 	if err := t.storage.Put(t.context, t.storage.Collection().Task(),
 		task.SelfLink().String(), task, nil); err != nil {
 		log.Errorf("%s:create:> task %s create err: %v", logTaskPrefix, task.Meta.SelfLink.String(), err)

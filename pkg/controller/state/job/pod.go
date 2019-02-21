@@ -78,7 +78,6 @@ func PodObserve(js *JobState, p *types.Pod) error {
 			return err
 		}
 		break
-
 	}
 
 	log.V(logLevel).Debugf("%s:> observe state finish: %s", logPodPrefix, p.SelfLink())

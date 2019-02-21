@@ -30,7 +30,8 @@ import (
 func Authenticate(h http.HandlerFunc) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		t := viper.GetString("security.token")
+
+		t := viper.GetString("token")
 		if t == "" {
 			h.ServeHTTP(w, r)
 			return

@@ -1172,7 +1172,7 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 			spec.Workdir = c.Workdir
 		}
 
-		if spec.Security.Privileged != c.Security.Privileged {
+		if c.Security != nil && spec.Security.Privileged != c.Security.Privileged {
 			spec.Security.Privileged = c.Security.Privileged
 		}
 
@@ -1201,18 +1201,26 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 			}
 
 			if !f {
-				spec.Env = append(spec.Env, types.ManifestSpecTemplateContainerEnv{
+				env := types.ManifestSpecTemplateContainerEnv{
 					Name:  ce.Name,
 					Value: ce.Value,
-					Secret: types.ManifestSpecTemplateContainerEnvSecret{
+				}
+
+				if ce.Secret != nil {
+					env.Secret = types.ManifestSpecTemplateContainerEnvSecret{
 						Name: ce.Secret.Name,
 						Key:  ce.Secret.Key,
-					},
-					Config: types.ManifestSpecTemplateContainerEnvConfig{
+					}
+				}
+
+				if ce.Config != nil {
+					env.Config = types.ManifestSpecTemplateContainerEnvConfig{
 						Name: ce.Config.Name,
 						Key:  ce.Config.Key,
-					},
-				})
+					}
+				}
+
+				spec.Env = append(spec.Env, env)
 			}
 		}
 
@@ -1227,10 +1235,16 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 		}
 
 		spec.Env = envs
-		spec.Resources.Request.RAM = c.Resources.Request.RAM
-		spec.Resources.Request.CPU = c.Resources.Request.CPU
-		spec.Resources.Limits.RAM = c.Resources.Limits.RAM
-		spec.Resources.Limits.CPU = c.Resources.Limits.CPU
+		if c.Resources != nil {
+			if c.Resources.Request != nil {
+				spec.Resources.Request.RAM = c.Resources.Request.RAM
+				spec.Resources.Request.CPU = c.Resources.Request.CPU
+			}
+			if c.Resources.Limits != nil {
+				spec.Resources.Limits.RAM = c.Resources.Limits.RAM
+				spec.Resources.Limits.CPU = c.Resources.Limits.CPU
+			}
+		}
 
 		// Volumes check
 		for _, v := range c.Volumes {
@@ -1308,33 +1322,36 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 			spec.Name = v.Name
 		}
 
-		if v.Type != spec.Type || v.Volume.Name != spec.Volume.Name || v.Volume.Subpath != spec.Volume.Subpath {
+		if v.Type != spec.Type || v.Volume != nil && (v.Volume.Name != spec.Volume.Name || v.Volume.Subpath != spec.Volume.Subpath) {
 			spec.Type = v.Type
 			spec.Volume.Name = v.Volume.Name
 			spec.Volume.Subpath = v.Volume.Subpath
 		}
 
-		if v.Type != spec.Type || v.Secret.Name != spec.Secret.Name {
+		if v.Type != spec.Type || v.Secret != nil && (v.Secret.Name != spec.Secret.Name) {
 			spec.Type = v.Type
 			spec.Secret.Name = v.Secret.Name
 		}
 
 		var e = true
-		for _, vf := range v.Secret.Binds {
 
-			var f = false
-			for _, sf := range spec.Secret.Binds {
-				if vf.Key == sf.Key && vf.File == sf.File {
-					f = true
+		if v.Secret != nil {
+			for _, vf := range v.Secret.Binds {
+
+				var f = false
+				for _, sf := range spec.Secret.Binds {
+					if vf.Key == sf.Key && vf.File == sf.File {
+						f = true
+						break
+					}
+				}
+
+				if !f {
+					e = false
 					break
 				}
-			}
 
-			if !f {
-				e = false
-				break
 			}
-
 		}
 
 		if !e {
@@ -1347,27 +1364,30 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 			}
 		}
 
-		if v.Type != spec.Type || v.Config.Name != spec.Config.Name {
+		if v.Type != spec.Type || v.Config != nil && (v.Config.Name != spec.Config.Name) {
 			spec.Type = v.Type
 			spec.Config.Name = v.Config.Name
 		}
 
 		var ce = true
-		for _, vf := range v.Config.Binds {
 
-			var f = false
-			for _, sf := range spec.Config.Binds {
-				if vf.Key == sf.Key && vf.File == sf.File {
-					f = true
+		if v.Config != nil {
+			for _, vf := range v.Config.Binds {
+
+				var f = false
+				for _, sf := range spec.Config.Binds {
+					if vf.Key == sf.Key && vf.File == sf.File {
+						f = true
+						break
+					}
+				}
+
+				if !f {
+					ce = false
 					break
 				}
-			}
 
-			if !f {
-				ce = false
-				break
 			}
-
 		}
 
 		if !ce {

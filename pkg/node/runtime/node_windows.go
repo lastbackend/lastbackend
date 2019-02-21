@@ -95,10 +95,11 @@ func NodeCapacity() types.NodeResources {
 
 	_, _, err = c.Call(uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(wd))), uintptr(unsafe.Pointer(&storage)))
 
-	m := vmStat.Total / 1024 / 1024
+	m := vmStat.Total
 
 	return types.NodeResources{
-		Storage:    int64(storage / 1024 / 1024),
+		Storage:    int64(storage),
+		CPU:        0, // TODO: need get cpu resource value
 		RAM:        int64(m),
 		Pods:       int(m / MinContainerMemory),
 		Containers: int(m / MinContainerMemory),
@@ -112,11 +113,12 @@ func NodeAllocation() types.NodeResources {
 		_ = fmt.Errorf("get memory err: %s", err)
 	}
 
-	m := vmStat.Free / 1024 / 1024
+	m := vmStat.Free
 	s := envs.Get().GetState().Pods()
 
 	return types.NodeResources{
 		RAM:        int64(m),
+		CPU:        0, // TODO: need get cpu resource value
 		Pods:       s.GetPodsCount(),
 		Containers: s.GetContainersCount(),
 	}
