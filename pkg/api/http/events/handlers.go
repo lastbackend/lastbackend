@@ -78,7 +78,6 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 
 			case <-leave:
 				done <- true
-				close(es)
 				return
 
 			case e := <-es:
