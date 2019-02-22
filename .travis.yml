@@ -16,7 +16,7 @@ before_install:
   - ./etcd-v3.2.9-linux-amd64/etcd > /dev/null
 
 before_script:
-  - travis_wait 30 make test
+  - make test
 
 script:
   - make build
