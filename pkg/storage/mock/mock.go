@@ -262,8 +262,12 @@ func (s *Storage) Del(ctx context.Context, collection string, name string) error
 }
 
 func (s *Storage) Watch(ctx context.Context, collection string, event chan *types.WatcherEvent, opts *types.Opts) error {
+
 	s.check(collection)
+	s.lock.Lock()
 	s.watchers[event] = collection
+	s.lock.Unlock()
+
 	defer delete(s.watchers, event)
 	<-ctx.Done()
 	return nil
