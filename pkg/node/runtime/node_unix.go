@@ -30,6 +30,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/cpu"
 	"github.com/spf13/viper"
 )
 
@@ -86,9 +87,17 @@ func NodeCapacity() types.NodeResources {
 		_ = fmt.Errorf("get memory err: %s", err)
 	}
 
+	cpuStat, err := cpu.Info()
+	if err != nil {
+		_ = fmt.Errorf("get cpu err: %s", err)
+	}
+
 	var stat syscall.Statfs_t
 
 	wd, err := os.Getwd()
+	if err != nil {
+		_ = fmt.Errorf("get storage err: %s", err)
+	}
 
 	syscall.Statfs(wd, &stat)
 
@@ -100,7 +109,7 @@ func NodeCapacity() types.NodeResources {
 	return types.NodeResources{
 		Storage:    int64(storage),
 		RAM:        int64(m),
-		CPU:        0, // TODO: need get cpu resource value
+		CPU:        int64(cpuStat[0].Mhz)*int64(1e6)*int64(cpuStat[0].Cores),
 		Pods:       int(m / (MinContainerMemory * 1024 * 1024)),
 		Containers: int(m / (MinContainerMemory * 1024 * 1024)),
 	}
