@@ -449,9 +449,10 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:d6962d5c108ea66e1ba40269404db31ce1490cb23f8134110f9f434251d63d4a"
+  digest = "1:9c24a5104820f4997839671b93ae98efb6a3ed400991e33e5fbf16af1085b4ad"
   name = "github.com/shirou/gopsutil"
   packages = [
+    "cpu",
     "internal/common",
     "mem",
   ]
@@ -760,6 +761,7 @@
     "github.com/miekg/dns",
     "github.com/pkg/errors",
     "github.com/satori/go.uuid",
+    "github.com/shirou/gopsutil/cpu",
     "github.com/shirou/gopsutil/mem",
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",

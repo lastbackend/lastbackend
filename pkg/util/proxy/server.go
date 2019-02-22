@@ -39,7 +39,7 @@ func (srv Server) Listen(handler Handler) error {
 	if addr == "" {
 		addr = ":2963"
 	}
-	log.Debugf("starting server on %v\n", addr)
+	log.Debugf("starting server on %v", addr)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err

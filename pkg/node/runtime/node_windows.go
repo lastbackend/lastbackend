@@ -23,6 +23,7 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"github.com/shirou/gopsutil/cpu"
 	"os"
 	"syscall"
 	"unsafe"
@@ -87,6 +88,11 @@ func NodeCapacity() types.NodeResources {
 		_ = fmt.Errorf("get memory err: %s", err)
 	}
 
+	cpuStat, err := cpu.Info()
+	if err != nil {
+		_ = fmt.Errorf("get cpu err: %s", err)
+	}
+
 	var storage int64
 
 	wd, err := os.Getwd()
@@ -99,7 +105,7 @@ func NodeCapacity() types.NodeResources {
 
 	return types.NodeResources{
 		Storage:    int64(storage),
-		CPU:        0, // TODO: need get cpu resource value
+		CPU:        int64(cpuStat[0].Mhz)*int64(1e6)*int64(cpuStat[0].Cores),
 		RAM:        int64(m),
 		Pods:       int(m / MinContainerMemory),
 		Containers: int(m / MinContainerMemory),

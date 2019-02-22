@@ -87,19 +87,25 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 			allocated = new(types.NodeResources)
 		)
 
+		if node == nil {
+			node = n
+		}
+
 		if nl.Request.RAM != nil {
 			if (n.Status.Capacity.RAM - n.Status.Allocated.RAM) > *nl.Request.RAM {
-				node = n
 				allocated.Pods++
 				allocated.RAM += *nl.Request.RAM
 			}
 		}
 
+		if nl.Request.CPU != nil {
+			if (n.Status.Capacity.CPU - n.Status.Allocated.CPU) > *nl.Request.CPU {
+				allocated.CPU += *nl.Request.CPU
+			}
+		}
+
 		if nl.Request.Storage != nil {
 			if (n.Status.Capacity.Storage - n.Status.Allocated.Storage) > *nl.Request.Storage {
-				if node == nil {
-					node = n
-				}
 				allocated.Storage += *nl.Request.Storage
 			}
 		}
@@ -108,6 +114,7 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 
 			node.Status.Allocated.Pods += allocated.Pods
 			node.Status.Allocated.RAM += allocated.RAM
+			node.Status.Allocated.CPU += allocated.CPU
 			node.Status.Allocated.Storage += allocated.Storage
 
 			nm := distribution.NewNodeModel(context.Background(), envs.Get().GetStorage())
@@ -141,6 +148,10 @@ func handleNodeRelease(cs *ClusterState, nl *NodeLease) error {
 	if nl.Request.RAM != nil {
 		n.Status.Allocated.Pods--
 		n.Status.Allocated.RAM -= *nl.Request.RAM
+	}
+
+	if nl.Request.CPU != nil {
+		n.Status.Allocated.CPU -= *nl.Request.CPU
 	}
 
 	if nl.Request.Storage != nil {
