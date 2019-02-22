@@ -22,11 +22,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/pkg/util/resource"
-	"strconv"
-	"strings"
-
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"strconv"
 )
 
 type ServiceView struct{}
@@ -60,7 +57,7 @@ func (sv *Service) ToMeta(obj types.ServiceMeta) ServiceMeta {
 	sm := ServiceMeta{
 		Name:        obj.Name,
 		Description: obj.Description,
-		SelfLink:    obj.SelfLink,
+		SelfLink:    obj.SelfLink.String(),
 		Endpoint:    obj.Endpoint,
 		Namespace:   obj.Namespace,
 		Labels:      obj.Labels,
@@ -85,16 +82,12 @@ func (sv *Service) ToStatus(obj types.ServiceStatus) ServiceStatus {
 
 func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 
+	mv := new(ManifestView)
+
 	var spec = ServiceSpec{
 		Replicas: obj.Replicas,
-		Template: ManifestSpecTemplate{
-			Containers: make([]ManifestSpecTemplateContainer, 0),
-			Volumes:    make([]ManifestSpecTemplateVolume, 0),
-		},
-		Selector: ManifestSpecSelector{
-			Node:   obj.Selector.Node,
-			Labels: obj.Selector.Labels,
-		},
+		Template: mv.NewManifestSpecTemplate(obj.Template),
+		Selector: mv.NewManifestSpecSelector(obj.Selector),
 		Network: ManifestSpecNetwork{
 			IP:    obj.Network.IP,
 			Ports: obj.Network.Ports,
@@ -102,89 +95,6 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 		Strategy: ManifestSpecStrategy{
 			Type: obj.Strategy.Type,
 		},
-	}
-
-	for _, s := range obj.Template.Containers {
-
-		c := ManifestSpecTemplateContainer{
-			Name:       s.Name,
-			Command:    strings.Join(s.Exec.Command, " "),
-			Workdir:    s.Exec.Workdir,
-			Args:       s.Exec.Args,
-			Entrypoint: strings.Join(s.Exec.Entrypoint, " "),
-		}
-
-		for _, p := range s.Ports {
-			c.Ports = append(c.Ports, fmt.Sprintf("%d/%s", p.ContainerPort, p.Protocol))
-		}
-
-		for _, env := range s.EnvVars {
-			c.Env = append(c.Env, ManifestSpecTemplateContainerEnv{
-				Name:  env.Name,
-				Value: env.Value,
-				Secret: ManifestSpecTemplateContainerEnvSecret{
-					Name: env.Secret.Name,
-					Key:  env.Secret.Key,
-				},
-				Config: ManifestSpecTemplateContainerEnvConfig{
-					Name: env.Config.Name,
-					Key:  env.Config.Key,
-				},
-			})
-		}
-
-		c.Image.Name = s.Image.Name
-		c.Image.Secret = s.Image.Secret
-
-		for _, volume := range s.Volumes {
-			c.Volumes = append(c.Volumes, ManifestSpecTemplateContainerVolume{
-				Name: volume.Name,
-				Mode: volume.Mode,
-				Path: volume.Path,
-			})
-		}
-
-		c.Resources.Limits.RAM = resource.EncodeMemoryResource(s.Resources.Limits.RAM)
-		c.Resources.Limits.CPU = resource.EncodeCpuResource(s.Resources.Limits.CPU)
-		c.Resources.Request.RAM = resource.EncodeMemoryResource(s.Resources.Request.RAM)
-		c.Resources.Request.CPU = resource.EncodeCpuResource(s.Resources.Request.CPU)
-
-		spec.Template.Containers = append(spec.Template.Containers, c)
-	}
-
-	for _, s := range obj.Template.Volumes {
-		v := ManifestSpecTemplateVolume{
-			Name: s.Name,
-			Type: s.Type,
-			Volume: ManifestSpecTemplateVolumeClaim{
-				Name:    s.Volume.Name,
-				Subpath: s.Volume.Subpath,
-			},
-			Secret: ManifestSpecTemplateSecretVolume{
-				Name:  s.Secret.Name,
-				Binds: make([]ManifestSpecTemplateSecretVolumeBind, 0),
-			},
-			Config: ManifestSpecTemplateConfigVolume{
-				Name:  s.Config.Name,
-				Binds: make([]ManifestSpecTemplateConfigVolumeBind, 0),
-			},
-		}
-
-		for _, b := range s.Secret.Binds {
-			v.Secret.Binds = append(v.Secret.Binds, ManifestSpecTemplateSecretVolumeBind{
-				Key:  b.Key,
-				File: b.File,
-			})
-		}
-
-		for _, b := range s.Config.Binds {
-			v.Config.Binds = append(v.Config.Binds, ManifestSpecTemplateConfigVolumeBind{
-				Key:  b.Key,
-				File: b.File,
-			})
-		}
-
-		spec.Template.Volumes = append(spec.Template.Volumes, v)
 	}
 
 	return spec
@@ -296,11 +206,11 @@ func (sv Service) ToRequestManifest() *request.ServiceManifest {
 					item := request.ManifestSpecTemplateContainerEnv{
 						Name:  v.Name,
 						Value: v.Value,
-						Secret: request.ManifestSpecTemplateContainerEnvSecret{
+						Secret: &request.ManifestSpecTemplateContainerEnvSecret{
 							Name: v.Secret.Name,
 							Key:  v.Secret.Key,
 						},
-						Config: request.ManifestSpecTemplateContainerEnvConfig{
+						Config: &request.ManifestSpecTemplateContainerEnvConfig{
 							Name: v.Config.Name,
 							Key:  v.Config.Key,
 						},

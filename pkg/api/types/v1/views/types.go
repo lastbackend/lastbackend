@@ -24,6 +24,7 @@ type IView interface {
 	Cluster() *ClusterView
 	Node() *NodeView
 	Ingress() *IngressView
+	Exporter() *ExporterView
 	Discovery() *DiscoveryView
 
 	Namespace() *NamespaceView
@@ -36,6 +37,11 @@ type IView interface {
 	Pod() *Pod
 	Container() *ContainerView
 	Volume() *VolumeView
+
+	Job() *JobView
+	Task() *TaskView
+
+	Event() *EventView
 }
 
 type View struct{}
@@ -48,6 +54,9 @@ func (View) Node() *NodeView {
 }
 func (View) Ingress() *IngressView {
 	return new(IngressView)
+}
+func (View) Exporter() *ExporterView {
+	return new(ExporterView)
 }
 func (View) Discovery() *DiscoveryView {
 	return new(DiscoveryView)
@@ -83,4 +92,16 @@ func (View) Container() *ContainerView {
 
 func (View) Volume() *VolumeView {
 	return new(VolumeView)
+}
+
+func (View) Event() *EventView {
+	return new(EventView)
+}
+
+func (View) Job() *JobView {
+	return new(JobView)
+}
+
+func (View) Task() *TaskView {
+	return new(TaskView)
 }

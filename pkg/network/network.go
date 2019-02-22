@@ -29,7 +29,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-const DefaultResolverIP = "172.17.0.1"
+const (
+	DefaultResolverIP = "172.17.0.1"
+)
 
 type Network struct {
 	state    *state.State
@@ -64,12 +66,12 @@ func New() (*Network, error) {
 		return nil, err
 	}
 
-	ip := viper.GetString("network.resolver.ip")
-	if ip == types.EmptyString {
-		ip = DefaultResolverIP
+	rip := viper.GetString("network.resolver.ip")
+	if rip == types.EmptyString {
+		rip = DefaultResolverIP
 	}
 
-	net.resolver.ip = ip
+	net.resolver.ip = rip
 	net.resolver.external = viper.GetStringSlice("network.resolver.external")
 	if len(net.resolver.external) == 0 {
 		net.resolver.external = []string{"8.8.8.8", "8.8.4.4"}

@@ -19,6 +19,8 @@
 package api
 
 import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/monitor"
 	"os"
 	"os/signal"
 	"syscall"
@@ -44,13 +46,30 @@ func Daemon() bool {
 
 	stg, err := storage.Get(viper.GetString("etcd"))
 	if err != nil {
-		log.Fatalf("Cannot initialize storage: %v", err)
+		log.Fatalf("Cannot initialize storage: %s", err.Error())
 	}
+
+	mnt := monitor.New()
 
 	envs.Get().SetStorage(stg)
 	envs.Get().SetCache(cache.NewCache())
+	envs.Get().SetMonitor(mnt)
+
+	go func() {
+		if err := mnt.Watch(context.Background(), stg, nil); err != nil {
+			log.Fatalf("Cannot initialize monitor: %s", err.Error())
+		}
+	}()
 
 	runtime.New().Run()
+
+	vault := &types.Vault{
+		Name:     viper.GetString("vault.name"),
+		Endpoint: viper.GetString("vault.endpoint"),
+		Token:    viper.GetString("vault.token"),
+	}
+
+	envs.Get().SetVault(vault)
 
 	go func() {
 		opts := new(http.HttpOpts)

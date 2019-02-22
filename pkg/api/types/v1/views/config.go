@@ -63,7 +63,7 @@ func (s *Config) Decode() *types.Config {
 	o.Meta.Name = s.Meta.Name
 	o.Meta.Namespace = s.Meta.Namespace
 	o.Meta.Kind = s.Meta.Kind
-	o.Meta.SelfLink = s.Meta.SelfLink
+	o.Meta.SelfLink = *types.NewConfigSelfLink(s.Meta.Namespace, s.Meta.Name)
 	o.Meta.Updated = s.Meta.Updated
 	o.Meta.Created = s.Meta.Created
 

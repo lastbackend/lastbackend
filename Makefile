@@ -22,15 +22,26 @@ docs: docs/*
 
 build:
 	@echo "== Pre-building configuration"
-	mkdir -p build/linux && mkdir -p build/darwin
+	mkdir -p build/linux && mkdir -p build/darwin && mkdir -p build/windows
 	@echo "== Building Last.Backend platform: ${APP}"
 	@bash ./hack/build-cross.sh ${APP}
+
+build-plugin:
+	@echo "== Pre-building configuration"
+	mkdir -p build/linux && mkdir -p build/plugins
+	@echo "== Building Last.Backend plugin"
+	@bash ./hack/build-plugin.sh
+
 
 install:
 	@echo "== Install binaries"
 	@bash ./hack/install-cross.sh ${APP}
 
 image:
+	@echo "== Pre-building configuration"
+	@sh ./hack/build-images.sh $(app)
+
+image-develop:
 	@echo "== Pre-building configuration"
 	@sh ./hack/build-images.sh $(app)
 

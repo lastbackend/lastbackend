@@ -3,7 +3,7 @@
 verbose: 3
 token: lstbknd
 api:
-  uri: "192.168.99.100:2967"
+  uri: "127.0.0.1:2967"
   tls:
     insecure: true
     ca: "/opt/cert/lastbackend/ca.pem"
@@ -13,13 +13,15 @@ api:
 # Etcd database
 etcd:
   prefix: lastbackend
-  endpoints: ["192.168.99.100:2379"]
+  endpoints: ["127.0.0.1:2379"]
 
 # Runtime
 runtime:
-  interface: "eth1"
+  interface: "ens3"
+  cni:
+    type: vxlan
 
 dns:
   host: 0.0.0.0
-  port: 5353
+  port: 5354
   default_ip: "127.0.0.1"

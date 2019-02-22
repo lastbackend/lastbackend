@@ -20,6 +20,8 @@ package envs
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/api/cache"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/monitor"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
@@ -28,6 +30,8 @@ var e Env
 type Env struct {
 	storage storage.Storage
 	cache   *cache.Cache
+	monitor *monitor.Monitor
+	vault   *types.Vault
 }
 
 func Get() *Env {
@@ -42,10 +46,26 @@ func (c *Env) GetStorage() storage.Storage {
 	return c.storage
 }
 
+func (c *Env) SetVault(vault *types.Vault) {
+	c.vault = vault
+}
+
+func (c *Env) GetVault() *types.Vault {
+	return c.vault
+}
+
 func (c *Env) SetCache(ch *cache.Cache) {
 	c.cache = ch
 }
 
 func (c *Env) GetCache() *cache.Cache {
 	return c.cache
+}
+
+func (c *Env) SetMonitor(monitor *monitor.Monitor) {
+	c.monitor = monitor
+}
+
+func (c *Env) GetMonitor() *monitor.Monitor {
+	return c.monitor
 }

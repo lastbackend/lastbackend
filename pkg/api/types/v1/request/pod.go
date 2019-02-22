@@ -38,6 +38,7 @@ type PodManifestMeta struct {
 
 type PodManifestSpec struct {
 	Selector *ManifestSpecSelector `json:"selector,omitempty" yaml:"selector,omitempty"`
+	Runtime  *ManifestSpecRuntime  `json:"runtime,omitempty" yaml:"runtime,omitempty"`
 	Template *ManifestSpecTemplate `json:"template,omitempty" yaml:"template,omitempty"`
 }
 
@@ -83,6 +84,173 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 
 		if s.Spec.Selector.Labels != nil {
 			pod.Spec.Selector.Labels = s.Spec.Selector.Labels
+		}
+
+	}
+
+	if s.Spec.Runtime != nil {
+
+		// update services
+		if len(s.Spec.Runtime.Services) != len(pod.Spec.Runtime.Services) {
+			pod.Spec.Runtime.Services = s.Spec.Runtime.Services
+			pod.Spec.Template.Updated = time.Now()
+		} else {
+			for _, svc := range s.Spec.Runtime.Services {
+				var f = false
+
+				for _, ssvc := range pod.Spec.Runtime.Services {
+					if svc == ssvc {
+						f = true
+					}
+				}
+
+				if !f {
+					pod.Spec.Runtime.Services = s.Spec.Runtime.Services
+					pod.Spec.Template.Updated = time.Now()
+					break
+				}
+			}
+		}
+
+		// update tasks
+		var tne = false
+		if len(s.Spec.Runtime.Tasks) != len(pod.Spec.Runtime.Tasks) {
+			tne = true
+		}
+
+		if tne {
+			for _, st := range s.Spec.Runtime.Tasks {
+
+				var f = false
+				for _, pt := range pod.Spec.Runtime.Tasks {
+
+					if st.Name != pt.Name && st.Container != pt.Container {
+						continue
+					}
+
+					// check envs
+					if len(st.Env) != len(pt.EnvVars) {
+						break
+					}
+
+					for _, ce := range st.Env {
+						var f = false
+						for _, se := range pt.EnvVars {
+
+							if ce.Name != se.Name {
+								continue
+							}
+
+							if se.Value != ce.Value {
+								continue
+							}
+
+							if se.Secret.Name != ce.Secret.Name || se.Secret.Key != ce.Secret.Key {
+								continue
+							}
+
+							if se.Config.Name != ce.Config.Name || se.Config.Key != ce.Config.Key {
+								continue
+							}
+
+							f = true
+						}
+
+						if !f {
+							break
+						}
+					}
+
+					// check commands
+					if len(st.Commands) != len(pt.Commands) {
+						break
+					}
+					for _, cc := range st.Commands {
+						var f = false
+
+						for _, sc := range pt.Commands {
+
+							if strings.Join(sc.Command, " ") != cc.Command {
+								continue
+							}
+
+							if strings.Join(sc.Args, "") != strings.Join(cc.Args, "") {
+								continue
+							}
+
+							if strings.Join(sc.Entrypoint, " ") != cc.Entrypoint {
+								continue
+							}
+
+							if sc.Workdir != cc.Workdir {
+								continue
+							}
+
+							f = true
+						}
+
+						if !f {
+							break
+						}
+					}
+
+					f = true
+				}
+
+				if !f {
+					tne = true
+					break
+				}
+			}
+		}
+
+		if tne {
+			pod.Spec.Runtime.Tasks = make([]types.SpecRuntimeTask, 0)
+			for _, t := range s.Spec.Runtime.Tasks {
+
+				task := types.SpecRuntimeTask{
+					Name:      t.Name,
+					Container: t.Container,
+					EnvVars:   make(types.SpecTemplateContainerEnvs, 0),
+					Commands:  make([]types.SpecTemplateContainerExec, 0),
+				}
+
+				for _, env := range t.Env {
+					task.EnvVars = append(task.EnvVars, &types.SpecTemplateContainerEnv{
+						Name:  env.Name,
+						Value: env.Value,
+						Secret: types.SpecTemplateContainerEnvSecret{
+							Name: env.Secret.Name,
+							Key:  env.Secret.Key,
+						},
+						Config: types.SpecTemplateContainerEnvConfig{
+							Name: env.Config.Name,
+							Key:  env.Config.Key,
+						},
+					})
+				}
+
+				for _, cmd := range t.Commands {
+					c := types.SpecTemplateContainerExec{}
+
+					if cmd.Command != types.EmptyString {
+						c.Command = strings.Split(cmd.Command, " ")
+					}
+
+					if cmd.Entrypoint != types.EmptyString {
+						c.Entrypoint = strings.Split(cmd.Entrypoint, " ")
+					}
+
+					c.Args = cmd.Args
+					c.Workdir = cmd.Workdir
+
+					task.Commands = append(task.Commands, c)
+				}
+
+				pod.Spec.Runtime.Tasks = append(pod.Spec.Runtime.Tasks, task)
+			}
+
+			pod.Spec.Template.Updated = time.Now()
 		}
 
 	}
@@ -139,6 +307,11 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 
 			if spec.Exec.Workdir != c.Workdir {
 				spec.Exec.Workdir = c.Workdir
+				pod.Spec.Template.Updated = time.Now()
+			}
+
+			if spec.Security.Privileged != c.Security.Privileged {
+				spec.Security.Privileged = c.Security.Privileged
 				pod.Spec.Template.Updated = time.Now()
 			}
 
@@ -203,7 +376,6 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 
 			resourcesLimitsRam, _ := resource.DecodeMemoryResource(c.Resources.Limits.RAM)
 			resourcesLimitsCPU, _ := resource.DecodeCpuResource(c.Resources.Limits.CPU)
-
 
 			if resourcesRequestRam != spec.Resources.Request.RAM ||
 				resourcesRequestCPU != spec.Resources.Request.CPU {
@@ -332,7 +504,7 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 				spec.Secret.Binds = make([]types.SpecTemplateSecretVolumeBind, 0)
 				for _, v := range v.Secret.Binds {
 					spec.Secret.Binds = append(spec.Secret.Binds, types.SpecTemplateSecretVolumeBind{
-						Key: v.Key,
+						Key:  v.Key,
 						File: v.File,
 					})
 				}
@@ -361,7 +533,7 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 				spec.Config.Binds = make([]types.SpecTemplateConfigVolumeBind, 0)
 				for _, v := range v.Config.Binds {
 					spec.Config.Binds = append(spec.Config.Binds, types.SpecTemplateConfigVolumeBind{
-						Key: v.Key,
+						Key:  v.Key,
 						File: v.File,
 					})
 				}
@@ -397,6 +569,10 @@ func (s *PodManifest) GetManifest() *types.PodManifest {
 	sm := new(types.PodManifest)
 	if s.Spec.Selector != nil {
 		sm.Selector = s.Spec.Selector.GetSpec()
+	}
+
+	if s.Spec.Runtime != nil {
+		sm.Runtime = s.Spec.Runtime.GetSpec()
 	}
 
 	if s.Spec.Template != nil {

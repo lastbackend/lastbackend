@@ -43,7 +43,7 @@ func TestAuthenticateMiddleware(t *testing.T) {
 
 	const token = "demotoken"
 
-	viper.Set("security.token", token)
+	viper.Set("token", token)
 
 	tests := []struct {
 		description  string

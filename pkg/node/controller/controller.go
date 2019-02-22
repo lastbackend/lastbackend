@@ -69,7 +69,10 @@ func (c *Controller) Connect(ctx context.Context) error {
 	log.Info(opts.Info)
 
 	opts.Status = envs.Get().GetState().Node().Status
-	opts.Network = *envs.Get().GetNet().Info(ctx)
+	var network = envs.Get().GetNet()
+	if network != nil {
+		opts.Network = *envs.Get().GetNet().Info(ctx)
+	}
 
 	if viper.IsSet("node.tls") {
 		opts.TLS = !viper.GetBool("node.tls.insecure")
@@ -137,10 +140,6 @@ func (c *Controller) Sync(ctx context.Context) error {
 			}
 		}
 
-		for p := range opts.Pods {
-			delete(c.cache.pods, p)
-		}
-
 		var iv = 0
 		for v, status := range c.cache.volumes {
 			iv++
@@ -153,6 +152,10 @@ func (c *Controller) Sync(ctx context.Context) error {
 			} else {
 				delete(c.cache.volumes, v)
 			}
+		}
+
+		for p := range opts.Pods {
+			delete(c.cache.pods, p)
 		}
 
 		for v := range opts.Volumes {
@@ -219,7 +222,7 @@ func getPodOptions(p *types.PodStatus) *request.NodePodStatusOptions {
 	opts.Status = p.Status
 	opts.Running = p.Running
 	opts.Message = p.Message
-	opts.Containers = p.Containers
+	opts.Runtime = p.Runtime
 	opts.Network = p.Network
 	opts.Steps = p.Steps
 	return opts

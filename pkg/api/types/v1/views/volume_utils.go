@@ -43,7 +43,7 @@ func (r *Volume) ToMeta(obj types.VolumeMeta) VolumeMeta {
 	meta := VolumeMeta{}
 	meta.Name = obj.Name
 	meta.Namespace = obj.Namespace
-	meta.SelfLink = obj.SelfLink
+	meta.SelfLink = obj.SelfLink.String()
 	meta.Updated = obj.Updated
 	meta.Created = obj.Created
 

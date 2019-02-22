@@ -18,6 +18,8 @@
 
 package views
 
+import "time"
+
 type ManifestSpecSelector struct {
 	Node   string            `json:"node,omitempty" yaml:"node,omitempty"`
 	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
@@ -32,30 +34,50 @@ type ManifestSpecStrategy struct {
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
 }
 
+type ManifestSpecRuntime struct {
+	Services []string                  `json:"services,omitempty" yaml:"services,omitempty"`
+	Tasks    []ManifestSpecRuntimeTask `json:"tasks,omitempty" yaml:"tasks,omitempty"`
+	Updated  time.Time                 `json:"updated,omitempty" yaml:"updated,omitempty"`
+}
+
+type ManifestSpecRuntimeTask struct {
+	Name      string                             `json:"name,omitempty" yaml:"name,omitempty"`
+	Container string                             `json:"container,omitempty" yaml:"container,omitempty"`
+	Env       []ManifestSpecTemplateContainerEnv `json:"env,omitempty" yaml:"env,omitempty"`
+	Commands  []ManifestSpecRuntimeTaskCommand   `json:"commands,omitempty" yaml:"commands,omitempty"`
+}
+
+type ManifestSpecRuntimeTaskCommand struct {
+	Command    string   `json:"command,omitempty" yaml:"command,omitempty"`
+	Workdir    string   `json:"workdir,omitempty" yaml:"workdir,omitempty"`
+	Entrypoint string   `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
+	Args       []string `json:"args,omitempty" yaml:"args,omitempty"`
+}
+
 type ManifestSpecTemplate struct {
-	Containers []ManifestSpecTemplateContainer `json:"containers,omitempty" yaml:"containers"`
-	Volumes    []ManifestSpecTemplateVolume    `json:"volumes,omitempty" yaml:"volumes"`
+	Containers []ManifestSpecTemplateContainer `json:"containers,omitempty" yaml:"containers,omitempty"`
+	Volumes    []ManifestSpecTemplateVolume    `json:"volumes,omitempty" yaml:"volumes,omitempty"`
 }
 
 type ManifestSpecTemplateContainer struct {
-	Name          string                                 `json:"name,omitempty" yaml:"name,omitempty"`
-	Command       string                                 `json:"command,omitempty" yaml:"command,omitempty"`
-	Workdir       string                                 `json:"workdir,omitempty" yaml:"workdir,omitempty"`
-	Entrypoint    string                                 `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
-	Args          []string                               `json:"args,omitempty" yaml:"args,omitempty"`
-	Ports         []string                               `json:"ports,omitempty" yaml:"ports,omitempty"`
-	Env           []ManifestSpecTemplateContainerEnv     `json:"env,omitempty" yaml:"env,omitempty"`
-	Image         ManifestSpecTemplateContainerImage     `json:"image,omitempty" yaml:"image,omitempty"`
-	Resources     ManifestSpecTemplateContainerResources `json:"resources,omitempty" yaml:"resources,omitempty"`
-	Volumes       []ManifestSpecTemplateContainerVolume  `json:"volumes,omitempty" yaml:"volumes,omitempty"`
-	RestartPolicy ManifestSpecTemplateRestartPolicy      `json:"restart_policy,omitempty" yaml:"restart_policy,omitempty"`
+	Name          string                                  `json:"name,omitempty" yaml:"name,omitempty"`
+	Command       string                                  `json:"command,omitempty" yaml:"command,omitempty"`
+	Workdir       string                                  `json:"workdir,omitempty" yaml:"workdir,omitempty"`
+	Entrypoint    string                                  `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
+	Args          []string                                `json:"args,omitempty" yaml:"args,omitempty"`
+	Ports         []string                                `json:"ports,omitempty" yaml:"ports,omitempty"`
+	Env           []ManifestSpecTemplateContainerEnv      `json:"env,omitempty" yaml:"env,omitempty"`
+	Image         *ManifestSpecTemplateContainerImage     `json:"image,omitempty" yaml:"image,omitempty"`
+	Resources     *ManifestSpecTemplateContainerResources `json:"resources,omitempty" yaml:"resources,omitempty"`
+	RestartPolicy *ManifestSpecTemplateRestartPolicy      `json:"restart_policy,omitempty" yaml:"restart_policy,omitempty"`
+	Volumes       []ManifestSpecTemplateContainerVolume   `json:"volumes,omitempty" yaml:"volumes,omitempty"`
 }
 
 type ManifestSpecTemplateContainerEnv struct {
-	Name   string                                 `json:"name,omitempty" yaml:"name,omitempty"`
-	Value  string                                 `json:"value,omitempty" yaml:"value,omitempty"`
-	Secret ManifestSpecTemplateContainerEnvSecret `json:"secret,omitempty" yaml:"secret,omitempty"`
-	Config ManifestSpecTemplateContainerEnvConfig `json:"config,omitempty" yaml:"config,omitempty"`
+	Name   string                                  `json:"name,omitempty" yaml:"name,omitempty"`
+	Value  string                                  `json:"value,omitempty" yaml:"value,omitempty"`
+	Secret *ManifestSpecTemplateContainerEnvSecret `json:"secret,omitempty" yaml:"secret,omitempty"`
+	Config *ManifestSpecTemplateContainerEnvConfig `json:"config,omitempty" yaml:"config,omitempty"`
 }
 
 type ManifestSpecTemplateContainerEnvSecret struct {
@@ -75,9 +97,9 @@ type ManifestSpecTemplateContainerImage struct {
 
 type ManifestSpecTemplateContainerResources struct {
 	// Limit resources
-	Limits ManifestSpecTemplateContainerResource `json:"limits,omitempty" yaml:"limits,omitempty"`
+	Limits *ManifestSpecTemplateContainerResource `json:"limits,omitempty" yaml:"limits,omitempty"`
 	// Request resources
-	Request ManifestSpecTemplateContainerResource `json:"quota,omitempty" yaml:"quota,omitempty"`
+	Request *ManifestSpecTemplateContainerResource `json:"quota,omitempty" yaml:"quota,omitempty"`
 }
 
 type ManifestSpecTemplateContainerVolume struct {
@@ -107,11 +129,11 @@ type ManifestSpecTemplateVolume struct {
 	// Template volume type
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
 	// Template volume from secret type
-	Volume ManifestSpecTemplateVolumeClaim `json:"volume,omitempty" yaml:"volume,omitempty"`
+	Volume *ManifestSpecTemplateVolumeClaim `json:"volume,omitempty" yaml:"volume,omitempty"`
 	// Template volume from secret type
-	Config ManifestSpecTemplateConfigVolume `json:"config,omitempty" yaml:"config,omitempty"`
+	Config *ManifestSpecTemplateConfigVolume `json:"config,omitempty" yaml:"config,omitempty"`
 	// Template volume from secret type
-	Secret ManifestSpecTemplateSecretVolume `json:"secret,omitempty" yaml:"secret,omitempty"`
+	Secret *ManifestSpecTemplateSecretVolume `json:"secret,omitempty" yaml:"secret,omitempty"`
 }
 
 type ManifestSpecTemplateVolumeClaim struct {
@@ -129,8 +151,8 @@ type ManifestSpecTemplateSecretVolume struct {
 }
 
 type ManifestSpecTemplateSecretVolumeBind struct {
-	Key  string `json:"key" yaml:"key"`
-	File string `json:"file" yaml:"file"`
+	Key  string `json:"key,omitempty" yaml:"key,omitempty"`
+	File string `json:"file,omitempty" yaml:"file,omitempty"`
 }
 
 type ManifestSpecTemplateConfigVolume struct {
@@ -141,6 +163,6 @@ type ManifestSpecTemplateConfigVolume struct {
 }
 
 type ManifestSpecTemplateConfigVolumeBind struct {
-	Key  string `json:"key" yaml:"key"`
-	File string `json:"file" yaml:"file"`
+	Key  string `json:"key,omitempty" yaml:"key,omitempty"`
+	File string `json:"file,omitempty" yaml:"file,omitempty"`
 }

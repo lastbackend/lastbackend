@@ -43,7 +43,10 @@ type IRequest interface {
 	Config() *ConfigRequest
 	Volume() *VolumeRequest
 	Ingress() *IngressRequest
+	Exporter() *ExporterRequest
 	Discovery() *DiscoveryRequest
+	Job() *JobRequest
+	Task() *TaskRequest
 }
 
 type Request struct{}
@@ -81,6 +84,17 @@ func (Request) Volume() *VolumeRequest {
 func (Request) Ingress() *IngressRequest {
 	return new(IngressRequest)
 }
+func (Request) Exporter() *ExporterRequest {
+	return new(ExporterRequest)
+}
 func (Request) Discovery() *DiscoveryRequest {
 	return new(DiscoveryRequest)
+}
+
+func (Request) Job() *JobRequest {
+	return new(JobRequest)
+}
+
+func (Request) Task() *TaskRequest {
+	return new(TaskRequest)
 }

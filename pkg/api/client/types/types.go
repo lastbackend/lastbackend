@@ -34,6 +34,7 @@ type ClientV1 interface {
 type ClusterClientV1 interface {
 	Node(args ...string) NodeClientV1
 	Ingress(args ...string) IngressClientV1
+	Exporter(args ...string) ExporterClientV1
 	Discovery(args ...string) DiscoveryClientV1
 	Get(ctx context.Context) (*vv1.Cluster, error)
 }
@@ -60,10 +61,18 @@ type IngressClientV1 interface {
 	SetStatus(ctx context.Context, opts *rv1.IngressStatusOptions) (*vv1.IngressManifest, error)
 }
 
+type ExporterClientV1 interface {
+	List(ctx context.Context) (*vv1.ExporterList, error)
+	Get(ctx context.Context) (*vv1.Exporter, error)
+	Connect(ctx context.Context, opts *rv1.ExporterConnectOptions) error
+	SetStatus(ctx context.Context, opts *rv1.ExporterStatusOptions) (*vv1.ExporterManifest, error)
+}
+
 type NamespaceClientV1 interface {
 	Secret(args ...string) SecretClientV1
 	Config(args ...string) ConfigClientV1
 	Service(args ...string) ServiceClientV1
+	Job(args ...string) JobClientV1
 	Route(args ...string) RouteClientV1
 	Volume(args ...string) VolumeClientV1
 	Create(ctx context.Context, opts *rv1.NamespaceManifest) (*vv1.Namespace, error)
@@ -82,6 +91,25 @@ type ServiceClientV1 interface {
 	Update(ctx context.Context, opts *rv1.ServiceManifest) (*vv1.Service, error)
 	Remove(ctx context.Context, opts *rv1.ServiceRemoveOptions) error
 	Logs(ctx context.Context, opts *rv1.ServiceLogsOptions) (io.ReadCloser, error)
+}
+
+type JobClientV1 interface {
+	Tasks(args ...string) TaskClientV1
+	Create(ctx context.Context, opts *rv1.JobManifest) (*vv1.Job, error)
+	Run(ctx context.Context, opts *rv1.TaskManifest) (*vv1.Task, error)
+	List(ctx context.Context) (*vv1.JobList, error)
+	Get(ctx context.Context) (*vv1.Job, error)
+	Update(ctx context.Context, opts *rv1.JobManifest) (*vv1.Job, error)
+	Remove(ctx context.Context, opts *rv1.JobRemoveOptions) error
+	Logs(ctx context.Context, opts *rv1.JobLogsOptions) (io.ReadCloser, error)
+}
+
+type TaskClientV1 interface {
+	Pod(args ...string) PodClientV1
+
+	List(ctx context.Context) (*vv1.TaskList, error)
+	Get(ctx context.Context) (*vv1.Task, error)
+	Cancel(ctx context.Context, opts *rv1.TaskCancelOptions) (*vv1.Task, error)
 }
 
 type DeploymentClientV1 interface {

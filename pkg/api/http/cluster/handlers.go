@@ -66,7 +66,7 @@ func ClusterInfoH(w http.ResponseWriter, r *http.Request) {
 		cl = new(types.Cluster)
 		cl.Meta.SetDefault()
 		cl.Meta.Name = viper.GetString("name")
-		cl.Meta.SelfLink = cl.Meta.Name
+		cl.Meta.SelfLink = *types.NewClusterSelfLink(cl.Meta.Name)
 		cl.Meta.Description = viper.GetString("description")
 	}
 

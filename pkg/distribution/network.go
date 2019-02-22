@@ -36,15 +36,15 @@ type Network struct {
 	storage storage.Storage
 }
 
-func (s *Network) Runtime() (*types.Runtime, error) {
+func (s *Network) Runtime() (*types.System, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get network runtime info", logNetworkPrefix)
 	runtime, err := s.storage.Info(s.context, s.storage.Collection().Network(), "")
 	if err != nil {
 		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logNetworkPrefix, err)
-		return &runtime.Runtime, err
+		return &runtime.System, err
 	}
-	return &runtime.Runtime, nil
+	return &runtime.System, nil
 
 }
 
@@ -185,7 +185,9 @@ func (s *Network) SubnetGet(cidr string) (*types.Subnet, error) {
 
 	name := types.SubnetGetNameFromCIDR(cidr)
 	snet := new(types.Subnet)
-	err := s.storage.Get(s.context, s.storage.Collection().Subnet(), s.storage.Key().Subnet(name), snet, nil)
+	key := types.NewSubnetSelfLink(cidr).String()
+
+	err := s.storage.Get(s.context, s.storage.Collection().Subnet(), key, snet, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -209,10 +211,11 @@ func (s *Network) SubnetPut(hostname string, spec types.SubnetSpec) (*types.Subn
 	snet.Meta.SetDefault()
 	snet.Meta.Name = types.SubnetGetNameFromCIDR(spec.CIDR)
 	snet.Meta.Node = hostname
+	snet.Meta.SelfLink = *types.NewSubnetSelfLink(spec.CIDR)
 	snet.Spec = spec
 
 	if err := s.storage.Put(s.context, s.storage.Collection().Subnet(),
-		s.storage.Key().Subnet(snet.SelfLink()), snet, nil); err != nil {
+		snet.SelfLink().String(), snet, nil); err != nil {
 		log.V(logLevel).Errorf("%s:SubnetPut:> insert subnet err: %v", logNetworkPrefix, err)
 		return nil, err
 	}
@@ -231,12 +234,12 @@ func (s *Network) SubnetSet(snet *types.Subnet) error {
 	log.V(logLevel).Debugf("%s:SubnetSet:> set subnet", logNetworkPrefix)
 
 	if err := s.storage.Set(s.context, s.storage.Collection().Subnet(),
-		s.storage.Key().Subnet(snet.SelfLink()), snet, nil); err != nil {
+		snet.SelfLink().String(), snet, nil); err != nil {
 		log.V(logLevel).Errorf("%s:SubnetSet:> err: %v", logNetworkPrefix, err)
 		return err
 	}
 
-	m, err := s.SubnetManifestGet(snet.SelfLink())
+	m, err := s.SubnetManifestGet(snet.SelfLink().String())
 	if err != nil {
 		log.V(logLevel).Errorf("%s:SubnetSet:> get manifest err: %v", logNetworkPrefix, err)
 		return err
@@ -245,7 +248,6 @@ func (s *Network) SubnetSet(snet *types.Subnet) error {
 	if m == nil {
 		return s.SubnetManifestAdd(snet)
 	}
-
 
 	if !types.SubnetSpecEqual(&m.SubnetSpec, &snet.Spec) {
 		if err := s.SubnetManifestSet(m, snet); err != nil {
@@ -261,9 +263,9 @@ func (s *Network) SubnetSet(snet *types.Subnet) error {
 func (s *Network) SubnetDel(name string) error {
 
 	log.V(logLevel).Debugf("%s:SubnetDel:> remove subnet", logNetworkPrefix)
+	key := types.NewSubnetSelfLink(name).String()
 
-	err := s.storage.Del(s.context, s.storage.Collection().Network(),
-		s.storage.Key().Subnet(name))
+	err := s.storage.Del(s.context, s.storage.Collection().Network(), key)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:SubnetDel:> remove subnet err: %v", logNetworkPrefix, err)
 		return err
@@ -403,7 +405,7 @@ func (s *Network) SubnetManifestAdd(snet *types.Subnet) error {
 	m := new(types.SubnetManifest)
 	m.SubnetSpec = snet.Spec
 
-	if err := s.storage.Put(s.context, s.storage.Collection().Manifest().Subnet(), snet.SelfLink(),
+	if err := s.storage.Put(s.context, s.storage.Collection().Manifest().Subnet(), snet.SelfLink().String(),
 		m, nil); err != nil {
 		log.Errorf("%s:SubnetManifestAdd:> err :%s", logNetworkPrefix, err.Error())
 		return err
@@ -416,7 +418,7 @@ func (s *Network) SubnetManifestAdd(snet *types.Subnet) error {
 func (s *Network) SubnetManifestSet(m *types.SubnetManifest, snet *types.Subnet) error {
 	log.V(logLevel).Debugf("%s:SubnetManifestAdd:> ", logNetworkPrefix)
 	m.SubnetSpec = snet.Spec
-	if err := s.storage.Set(s.context, s.storage.Collection().Manifest().Subnet(), snet.SelfLink(), m, nil); err != nil {
+	if err := s.storage.Set(s.context, s.storage.Collection().Manifest().Subnet(), snet.SelfLink().String(), m, nil); err != nil {
 		log.Errorf("%s:SubnetManifestAdd:> err :%s", logNetworkPrefix, err.Error())
 		return err
 	}

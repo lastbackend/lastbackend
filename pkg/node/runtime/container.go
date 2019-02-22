@@ -28,7 +28,7 @@ import (
 	"time"
 )
 
-func containerInspect(ctx context.Context, status *types.PodStatus, container *types.PodContainer) error {
+func containerInspect(ctx context.Context, container *types.PodContainer) error {
 	info, err := envs.Get().GetCRI().Inspect(ctx, container.ID)
 	if err != nil {
 		switch err {
@@ -38,23 +38,16 @@ func containerInspect(ctx context.Context, status *types.PodStatus, container *t
 		}
 		log.Errorf("Can-not inspect container: %v", err)
 		return err
-	} else {
-		container.Image = types.PodContainerImage{
-			Name: info.Image,
-		}
-		if info.Status == types.StatusStopped {
-			container.State.Stopped = types.PodContainerStateStopped{
-				Stopped: true,
-				Exit: types.PodContainerStateExit{
-					Code:      info.ExitCode,
-					Timestamp: time.Now().UTC(),
-				},
-			}
-		}
 	}
 
-	if status.Network.PodIP == "" {
-		status.Network.PodIP = info.Network.IPAddress
+	container.Pod = info.Pod
+	container.Name = info.Name
+	container.Exec = info.Exec
+	container.Envs = info.Envs
+	container.Binds = info.Binds
+
+	container.Image = types.PodContainerImage{
+		Name: info.Image,
 	}
 
 	return nil
@@ -72,7 +65,6 @@ func containerSubscribe(ctx context.Context) error {
 
 		container := state.GetContainer(c.ID)
 		if container == nil {
-			log.V(logLevel).Debugf("Container not found")
 			continue
 		}
 
@@ -130,7 +122,7 @@ func containerSubscribe(ctx context.Context) error {
 
 		pod := state.GetPod(c.Pod)
 		if pod != nil {
-			pod.Containers[c.ID] = container
+			pod.Runtime.Services[c.ID] = container
 			state.SetPod(c.Pod, pod)
 		}
 	}
@@ -158,9 +150,7 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 
 		case s.Secret.Name != types.EmptyString && s.Secret.Key != types.EmptyString:
 
-			secretSelfLink := fmt.Sprintf("%s:%s", name[0], s.Secret.Name)
-
-			secret, err := SecretGet(ctx, secretSelfLink)
+			secret, err := SecretGet(ctx, name[0], s.Secret.Name)
 			if err != nil {
 				log.Errorf("Can not get secret for container: %s", err.Error())
 				return nil, err
@@ -235,13 +225,14 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 	// TODO: Add dns search option only for LB domains
 
 	net := envs.Get().GetNet()
+	if net != nil {
+		if net.GetResolverIP() != types.EmptyString {
+			mf.DNS.Server = append(mf.DNS.Server, net.GetResolverIP())
+		}
 
-	if net.GetResolverIP() != types.EmptyString {
-		mf.DNS.Server = append(mf.DNS.Server, net.GetResolverIP())
-	}
-
-	if len(net.GetExternalDNS()) != 0 {
-		mf.DNS.Server = append(mf.DNS.Server, net.GetExternalDNS()...)
+		if len(net.GetExternalDNS()) != 0 {
+			mf.DNS.Server = append(mf.DNS.Server, net.GetExternalDNS()...)
+		}
 	}
 
 	return mf, nil

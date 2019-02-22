@@ -20,6 +20,8 @@ package service
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"strings"
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
@@ -34,7 +36,7 @@ const logPodPrefix = "state:observer:pod"
 // PodObserve function manages pod handlers based on pod state
 func PodObserve(ss *ServiceState, p *types.Pod) error {
 
-	log.V(logLevel).Debugf("%s:> observe start: %s > state %s", logPodPrefix, p.SelfLink(), p.Status.State)
+	log.V(logLevel).Debugf("%s:> observe start: %s > state %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 	// Call pod state manager methods
 	switch p.Status.State {
 	case types.StateCreated:
@@ -79,28 +81,33 @@ func PodObserve(ss *ServiceState, p *types.Pod) error {
 
 	}
 
-	log.V(logLevel).Debugf("%s:> observe state finish: %s", logPodPrefix, p.SelfLink())
+	log.V(logLevel).Debugf("%s:> observe state finish: %s", logPodPrefix, p.SelfLink().String())
 
-	pl, ok := ss.pod.list[p.DeploymentLink()]
-	if ok && p.Status.State != types.StateDestroyed {
-		pl[p.SelfLink()] = p
-	}
+	_, sl := p.SelfLink().Parent()
 
-	d, ok := ss.deployment.list[p.DeploymentLink()]
-	if !ok {
-		log.V(logLevel).Debugf("%s:> deployment node found: %s", logPodPrefix, p.DeploymentLink())
+	if sl == nil {
 		return nil
 	}
 
-	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
+	pl, ok := ss.pod.list[sl.String()]
+	if ok && p.Status.State != types.StateDestroyed {
+		pl[p.SelfLink().String()] = p
+	}
 
+	d, ok := ss.deployment.list[sl.String()]
+	if !ok {
+		log.V(logLevel).Debugf("%s:> deployment node found: %s", logPodPrefix, sl.String())
+		return nil
+	}
+
+	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 
 	if err := deploymentStatusState(d, pl); err != nil {
 		return err
 	}
 
 	if ss.deployment.active != nil {
-		if ss.deployment.active.SelfLink() == d.SelfLink() && d.Status.State == types.StateReady {
+		if ss.deployment.active.SelfLink().String() == d.SelfLink().String() && d.Status.State == types.StateReady {
 			if err := endpointCheck(ss); err != nil {
 				return err
 			}
@@ -112,18 +119,18 @@ func PodObserve(ss *ServiceState, p *types.Pod) error {
 
 func handlePodStateCreated(ss *ServiceState, p *types.Pod) error {
 
-	log.V(logLevel).Debugf("%s:> handlePodStateCreated: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
+	log.V(logLevel).Debugf("%s:> handlePodStateCreated: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 
 	if err := podProvision(ss, p); err != nil {
 		return err
 	}
-	log.V(logLevel).Debugf("%s handle pod create state finish: %s : %s", logPodPrefix, p.SelfLink(), p.Status.State)
+	log.V(logLevel).Debugf("%s handle pod create state finish: %s : %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 	return nil
 }
 
 func handlePodStateProvision(ss *ServiceState, p *types.Pod) error {
 
-	log.V(logLevel).Debugf("%s:> handlePodStateProvision: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
+	log.V(logLevel).Debugf("%s:> handlePodStateProvision: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 
 	if err := podProvision(ss, p); err != nil {
 		return err
@@ -133,28 +140,28 @@ func handlePodStateProvision(ss *ServiceState, p *types.Pod) error {
 
 func handlePodStateReady(ss *ServiceState, p *types.Pod) error {
 
-	log.V(logLevel).Debugf("%s:> handlePodStateReady: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
+	log.V(logLevel).Debugf("%s:> handlePodStateReady: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 
 	return nil
 }
 
 func handlePodStateError(ss *ServiceState, p *types.Pod) error {
 
-	log.V(logLevel).Debugf("%s:> handlePodStateError: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
+	log.V(logLevel).Debugf("%s:> handlePodStateError: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 
 	return nil
 }
 
 func handlePodStateDegradation(ss *ServiceState, p *types.Pod) error {
 
-	log.V(logLevel).Debugf("%s:> handlePodStateDegradation: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
+	log.V(logLevel).Debugf("%s:> handlePodStateDegradation: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 
 	return nil
 }
 
 func handlePodStateDestroy(ss *ServiceState, p *types.Pod) error {
 
-	log.V(logLevel).Debugf("%s:> handlePodStateDestroy: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
+	log.V(logLevel).Debugf("%s:> handlePodStateDestroy: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 
 	if err := podDestroy(ss, p); err != nil {
 		log.Errorf("%s", err.Error())
@@ -166,7 +173,7 @@ func handlePodStateDestroy(ss *ServiceState, p *types.Pod) error {
 
 func handlePodStateDestroyed(ss *ServiceState, p *types.Pod) error {
 
-	log.V(logLevel).Debugf("%s:> handlePodStateDestroyed: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
+	log.V(logLevel).Debugf("%s:> handlePodStateDestroyed: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 
 	if err := podRemove(ss, p); err != nil {
 		log.Errorf("%s", err.Error())
@@ -179,7 +186,19 @@ func handlePodStateDestroyed(ss *ServiceState, p *types.Pod) error {
 // podCreate function creates new pod based on deployment spec
 func podCreate(d *types.Deployment) (*types.Pod, error) {
 	dm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
-	return dm.Create(d)
+
+	pod := types.NewPod()
+	pod.Meta.SetDefault()
+	pod.Meta.Name = strings.Split(generator.GetUUIDV4(), "-")[4][5:]
+	pod.Meta.Namespace = d.Meta.Namespace
+	sl, _ := types.NewPodSelfLink(types.KindDeployment, d.SelfLink().String(), pod.Meta.Name)
+	pod.Meta.SelfLink = *sl
+	pod.Status.SetCreated()
+
+	pod.Spec.SetSpecTemplate(pod.SelfLink().String(), d.Spec.Template)
+	pod.Spec.Selector = d.Spec.Selector
+
+	return dm.Put(pod)
 }
 
 // podDestroy function marks pod as provision
@@ -212,7 +231,7 @@ func podProvision(ss *ServiceState, p *types.Pod) (err error) {
 			return nil
 		}
 
-		p.Meta.Node = node.SelfLink()
+		p.Meta.Node = node.SelfLink().String()
 		p.Meta.Updated = time.Now()
 	}
 
@@ -324,7 +343,7 @@ func podUpdate(p *types.Pod, timestamp time.Time) error {
 func podManifestPut(p *types.Pod) error {
 
 	mm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
-	m, err := mm.ManifestGet(p.Meta.Node, p.Meta.SelfLink)
+	m, err := mm.ManifestGet(p.Meta.Node, p.Meta.SelfLink.String())
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
 			log.Errorf("%s", err.Error())
@@ -335,7 +354,7 @@ func podManifestPut(p *types.Pod) error {
 	if m == nil {
 		pm := types.PodManifest(p.Spec)
 
-		if err := mm.ManifestAdd(p.Meta.Node, p.Meta.SelfLink, &pm); err != nil {
+		if err := mm.ManifestAdd(p.Meta.Node, p.Meta.SelfLink.String(), &pm); err != nil {
 			log.Errorf("%s", err.Error())
 			return err
 		}
@@ -352,9 +371,12 @@ func podManifestSet(p *types.Pod) error {
 	)
 
 	mm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
-	m, err = mm.ManifestGet(p.Meta.Node, p.Meta.SelfLink)
+	m, err = mm.ManifestGet(p.Meta.Node, p.Meta.SelfLink.String())
 	if err != nil {
-		return err
+		if !errors.Storage().IsErrEntityNotFound(err) {
+			log.Errorf("%s", err.Error())
+			return err
+		}
 	}
 
 	// Update manifest
@@ -365,7 +387,7 @@ func podManifestSet(p *types.Pod) error {
 		*m = types.PodManifest(p.Spec)
 	}
 
-	if err := mm.ManifestSet(p.Meta.Node, p.Meta.SelfLink, m); err != nil {
+	if err := mm.ManifestSet(p.Meta.Node, p.SelfLink().String(), m); err != nil {
 		return err
 	}
 
@@ -380,7 +402,7 @@ func podManifestDel(p *types.Pod) error {
 
 	// Remove manifest
 	mm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
-	err := mm.ManifestDel(p.Meta.Node, p.SelfLink())
+	err := mm.ManifestDel(p.Meta.Node, p.SelfLink().String())
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
 			return err

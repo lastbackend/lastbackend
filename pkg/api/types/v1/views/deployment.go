@@ -91,11 +91,9 @@ type DeploymentSources struct {
 //
 // swagger:model views_deployment_spec
 type DeploymentSpec struct {
-	Strategy types.SpecStrategy `json:"strategy"`
-	Triggers types.SpecTriggers `json:"triggers"`
-	Replicas int                `json:"replicas"`
-	Selector types.SpecSelector `json:"selector"`
-	Template types.SpecTemplate `json:"template"`
+	Replicas int                  `json:"replicas"`
+	Selector ManifestSpecSelector `json:"selector"`
+	Template ManifestSpecTemplate `json:"template"`
 }
 
 // DeploymentStatusInfo is an info about deployment status

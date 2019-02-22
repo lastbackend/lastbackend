@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
@@ -497,18 +498,17 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 
 	nid := utils.Vars(r)["namespace"]
 	sid := utils.Vars(r)["service"]
-	did := r.URL.Query().Get("deployment")
-	pid := r.URL.Query().Get("pod")
-	cid := r.URL.Query().Get("container")
 
-	log.V(logLevel).Debugf("%s:logs:> get logs service `%s` in namespace `%s`", logPrefix, sid, nid)
+	//did := r.URL.Query().Get("deployment")
+	//pid := r.URL.Query().Get("pod")
+	//cid := r.URL.Query().Get("container")
+
+	log.V(logLevel).Debugf("%s:logs:> get logs for service `%s` in namespace `%s`", logPrefix, sid, nid)
 
 	var (
 		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		pm  = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
-		dm  = distribution.NewDeploymentModel(r.Context(), envs.Get().GetStorage())
-		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		em  = distribution.NewExporterModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	ns, err := nsm.Get(nid)
@@ -536,49 +536,42 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deployment, err := dm.Get(ns.Meta.Name, svc.Meta.Name, did)
+	el, err := em.List()
 	if err != nil {
-		log.V(logLevel).Errorf("%s:logs:> get deployment by name err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:logs:> get exporters", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
-	if deployment == nil {
-		log.V(logLevel).Warnf("%s:logs:> deployment `%s` not found", logPrefix, pid)
-		errors.New("service").NotFound().Http(w)
+	if len(el.Items) == 0 {
+		log.V(logLevel).Errorf("%s:logs:>exporters not found", logPrefix, err.Error())
+		errors.HTTP.NotFound(w)
 		return
 	}
 
-	pod, err := pm.Get(ns.Meta.Name, svc.Meta.Name, deployment.Meta.Name, pid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:logs:> get pod by name` err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
+	exp := new(types.Exporter)
+
+	for _, e := range el.Items {
+		if e.Status.Ready {
+			exp = e
+			break
+		}
 	}
-	if pod == nil {
-		log.V(logLevel).Warnf("%s:logs:> pod `%s` not found", logPrefix, pid)
-		errors.New("service").NotFound().Http(w)
+
+	if exp == nil {
+		log.V(logLevel).Errorf("%s:logs:> active exporters not found", logPrefix, err.Error())
+		errors.HTTP.NotFound(w)
 		return
 	}
 
-	node, err := nm.Get(pod.Meta.Node)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:logs:> get node by name err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if node == nil {
-		log.V(logLevel).Warnf("%s:logs:> node %s not found", logPrefix, pod.Meta.Node)
-		errors.New("service").NotFound().Http(w)
-		return
-	}
-
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/pod/%s/%s/logs", node.Meta.ExternalIP, 2969, pod.Meta.SelfLink, cid), nil)
+	cx, cancel := context.WithCancel(context.Background())
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/logs?kind=%s&selflink=%s&follow=true", exp.Status.Http.IP, exp.Status.Http.Port, types.KindService, svc.SelfLink().String()), nil)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> create http client err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
+	req.WithContext(cx)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> get pod logs err: %s", logPrefix, err.Error())
@@ -586,21 +579,13 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notify := w.(http.CloseNotifier).CloseNotify()
-	done := make(chan bool, 1)
-
-	go func() {
-		<-notify
-		log.V(logLevel).Debugf("%s:logs:> HTTP connection just closed.", logPrefix)
-		done <- true
-	}()
-
+	defer cancel()
 	var buffer = make([]byte, BUFFER_SIZE)
 
 	for {
+
 		select {
-		case <-done:
-			res.Body.Close()
+		case <-r.Context().Done():
 			return
 		default:
 

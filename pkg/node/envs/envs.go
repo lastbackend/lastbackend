@@ -22,6 +22,7 @@ import (
 	"errors"
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 	"github.com/lastbackend/lastbackend/pkg/network"
+	"github.com/lastbackend/lastbackend/pkg/node/exporter"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cii"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri"
@@ -39,15 +40,16 @@ type Env struct {
 	cii cii.CII
 	csi map[string]csi.CSI
 
-	state  *state.State
-	net *network.Network
+	state *state.State
+	net   *network.Network
 
 	client struct {
 		node types.NodeClientV1
 		rest types.ClientV1
 	}
 
-	mode struct {
+	exporter *exporter.Exporter
+	mode     struct {
 		provision bool
 	}
 }
@@ -89,7 +91,7 @@ func (c *Env) SetCSI(kind string, si csi.CSI) {
 	c.csi[kind] = si
 }
 
-func (c *Env) ListCSI () []string {
+func (c *Env) ListCSI() []string {
 	var types = []string{}
 
 	for t := range c.csi {
@@ -103,6 +105,14 @@ func (c *Env) GetCSI(kind string) (csi.CSI, error) {
 		return nil, errors.New("storage container interface not supported")
 	}
 	return c.csi[kind], nil
+}
+
+func (c *Env) SetExporter(s *exporter.Exporter) {
+	c.exporter = s
+}
+
+func (c *Env) GetExporter() *exporter.Exporter {
+	return c.exporter
 }
 
 func (c *Env) SetState(s *state.State) {

@@ -20,27 +20,26 @@ package types
 
 import (
 	"context"
-	"fmt"
 )
 
 // swagger:ignore
 // swagger:model types_node_map
 type NodeMap struct {
-	Runtime
+	System
 	Items map[string]*Node
 }
 
 // swagger:ignore
 // swagger:model types_node_list
 type NodeList struct {
-	Runtime
+	System
 	Items []*Node
 }
 
 // swagger:ignore
 // swagger:model types_node
 type Node struct {
-	Runtime
+	System
 	Meta   NodeMeta   `json:"meta"`
 	Status NodeStatus `json:"status"`
 	Spec   NodeSpec   `json:"spec"`
@@ -51,8 +50,9 @@ type Node struct {
 type NodeMeta struct {
 	Meta
 	NodeInfo
-	Subnet  string `json:"subnet"`
-	Cluster string `json:"cluster"`
+	SelfLink NodeSelfLink `json:"self_link"`
+	Subnet   string       `json:"subnet"`
+	Cluster  string       `json:"cluster"`
 }
 
 func (m *NodeMeta) Set(meta *NodeUpdateMetaOptions) {
@@ -153,9 +153,9 @@ type NodeResources struct {
 	// Node total pods
 	Pods int `json:"pods"`
 	// Node total memory
-	Memory int64 `json:"memory"`
+	RAM int64 `json:"ram"`
 	// Node total cpu
-	Cpu int `json:"cpu"`
+	CPU int64 `json:"cpu"`
 	// Node storage
 	Storage int64 `json:"storage"`
 }
@@ -225,11 +225,8 @@ type NodeCreateOptions struct {
 	Security NodeSecurity          `json:"security", yaml:"security"`
 }
 
-func (n *Node) SelfLink() string {
-	if n.Meta.SelfLink == "" {
-		n.Meta.SelfLink = fmt.Sprintf("%s", n.Meta.Name)
-	}
-	return n.Meta.SelfLink
+func (n *Node) SelfLink() *NodeSelfLink {
+	return &n.Meta.SelfLink
 }
 
 func NewNodeList() *NodeList {

@@ -32,29 +32,30 @@ const (
 // swagger:ignore
 // swagger:model types_config
 type Config struct {
-	Runtime
+	System
 	Meta ConfigMeta `json:"meta" yaml:"meta"`
 	Spec ConfigSpec `json:"spec" yaml:"spec"`
 }
 
 // swagger:ignore
 type ConfigList struct {
-	Runtime
+	System
 	Items []*Config
 }
 
 // swagger:ignore
 type ConfigMap struct {
-	Runtime
+	System
 	Items map[string]*Config
 }
 
 // swagger:ignore
 // swagger:model types_config_meta
 type ConfigMeta struct {
-	Kind      string `json:"kind"`
-	Namespace string `json:"namespace"`
 	Meta      `yaml:",inline"`
+	Kind      string         `json:"kind"`
+	Namespace string         `json:"namespace"`
+	SelfLink  ConfigSelfLink `json:"self_link"`
 }
 
 type ConfigSpec struct {
@@ -63,7 +64,7 @@ type ConfigSpec struct {
 }
 
 type ConfigManifest struct {
-	Runtime
+	System
 	State   string            `json:"state"`
 	Type    string            `json:"kind"`
 	Data    map[string]string `json:"data" yaml:"data"`
@@ -90,15 +91,8 @@ func (s *Config) GetHash() string {
 	return base64.URLEncoding.EncodeToString(h.Sum(nil))
 }
 
-func (s *Config) SelfLink() string {
-	if s.Meta.SelfLink == "" {
-		s.Meta.SelfLink = s.CreateSelfLink(s.Meta.Namespace, s.Meta.Name)
-	}
-	return s.Meta.SelfLink
-}
-
-func (s *Config) CreateSelfLink(namespace, name string) string {
-	return fmt.Sprintf("%s:%s", namespace, name)
+func (s *Config) SelfLink() *ConfigSelfLink {
+	return &s.Meta.SelfLink
 }
 
 // swagger:ignore

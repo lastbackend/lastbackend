@@ -33,6 +33,7 @@ type event struct {
 
 type Event struct {
 	event
+	Kind string
 	Data interface{}
 }
 
@@ -89,6 +90,16 @@ type IngressEvent struct {
 type IngressStatusEvent struct {
 	event
 	Data *IngressStatus
+}
+
+type ExporterEvent struct {
+	event
+	Data *Exporter
+}
+
+type ExporterStatusEvent struct {
+	event
+	Data *ExporterStatus
 }
 
 type DiscoveryEvent struct {
@@ -157,6 +168,16 @@ type NodeEvent struct {
 type NodeStatusEvent struct {
 	event
 	Data *NodeStatus
+}
+
+type TaskEvent struct {
+	event
+	Data *Task
+}
+
+type JobEvent struct {
+	event
+	Data *Job
 }
 
 func (e *event) IsActionCreate() bool {

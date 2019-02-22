@@ -92,6 +92,7 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.VolumeManifest
 
 	vol := new(types.Volume)
 	vol.Meta.SetDefault()
+	vol.Meta.SelfLink = *types.NewVolumeSelfLink(ns.Meta.Name, *mf.Meta.Name)
 	vol.Meta.Namespace = ns.Meta.Name
 
 	mf.SetVolumeMeta(vol)

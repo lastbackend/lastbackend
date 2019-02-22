@@ -29,6 +29,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/cluster"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
@@ -60,7 +61,7 @@ func TestClusterInfo(t *testing.T) {
 		fields       fields
 		args         args
 		handler      func(http.ResponseWriter, *http.Request)
-		want         *types.Cluster
+		want         *views.Cluster
 		wantErr      bool
 		err          string
 		expectedCode int
@@ -70,7 +71,7 @@ func TestClusterInfo(t *testing.T) {
 			args:         args{ctx, c},
 			fields:       fields{stg},
 			handler:      cluster.ClusterInfoH,
-			want:         c,
+			want:         v1.View().Cluster().New(c),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -132,7 +133,7 @@ func TestClusterInfo(t *testing.T) {
 				err := json.Unmarshal(body, &s)
 				assert.NoError(t, err)
 
-				assert.Equal(t, tc.want.Status.Capacity.Memory, s.Status.Capacity.Memory, "memory not equal")
+				assert.Equal(t, tc.want.Status.Capacity.RAM, s.Status.Capacity.RAM, "memory not equal")
 			}
 		})
 	}
@@ -140,7 +141,8 @@ func TestClusterInfo(t *testing.T) {
 
 func getClusterAsset(memory int64) *types.Cluster {
 	var c = types.Cluster{}
-	c.Status.Capacity.Memory = memory
+	c.Meta.SelfLink = *types.NewClusterSelfLink(types.EmptyString)
+	c.Status.Capacity.RAM = memory
 	return &c
 }
 

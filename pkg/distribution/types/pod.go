@@ -19,14 +19,13 @@
 package types
 
 import (
-	"fmt"
 	"time"
 )
 
 // swagger:ignore
 // swagger:model types_pod
 type Pod struct {
-	Runtime
+	System
 	// Pod Meta
 	Meta PodMeta `json:"meta" yaml:"meta"`
 	// Pod Spec
@@ -36,12 +35,12 @@ type Pod struct {
 }
 
 type PodList struct {
-	Runtime
+	System
 	Items []*Pod
 }
 
 type PodMap struct {
-	Runtime
+	System
 	Items map[string]*Pod
 }
 
@@ -51,11 +50,7 @@ type PodMap struct {
 type PodMeta struct {
 	Meta `yaml:",inline"`
 	// Pod SelfLink
-	SelfLink string `json:"self_link" yaml:"self_link"`
-	// Pod deployment
-	Deployment string `json:"deployment" yaml:"deployment"`
-	// Pod service
-	Service string `json:"service" yaml:"service"`
+	SelfLink PodSelfLink `json:"self_link" yaml:"self_link"`
 	// Pod service id
 	Namespace string `json:"namespace" yaml:"namespace"`
 	// Pod node hostname
@@ -66,11 +61,17 @@ type PodMeta struct {
 	Endpoint string `json:"endpoint" yaml:"endpoint"`
 }
 
+type PodMetaParent struct {
+	Kind     string `json:"kind" yaml:"kind"`
+	SelfLink string `json:"self_link", yaml:"self_link"`
+}
+
 // PodSpec is a spec of pod
 // swagger:model types_pod_spec
 type PodSpec struct {
 	Local    bool         `json:"local,omitempty"`
 	State    SpecState    `json:"state"`
+	Runtime  SpecRuntime  `json:"runtime"`
 	Selector SpecSelector `json:"selector"`
 	Template SpecTemplate `json:"template" yaml:"template"`
 }
@@ -93,10 +94,22 @@ type PodStatus struct {
 	Steps PodSteps `json:"steps" yaml:"steps"`
 	// Pod network
 	Network PodNetwork `json:"network" yaml:"network"`
-	// Pod containers
-	Containers map[string]*PodContainer `json:"containers" yaml:"containers"`
+	// Pod runtime
+	Runtime PodStatusRuntime `json:"runtime" yaml:"runtime"`
 	// Pod volumes
 	Volumes map[string]*VolumeClaim `json:"volumes" yaml:"volumes"`
+}
+
+type PodStatusRuntime struct {
+	Services map[string]*PodContainer          `json:"containers" yaml:"containers"`
+	Pipeline map[string]*PodStatusPipelineStep `json:"pipeline" yaml:"pipeline"`
+}
+
+type PodStatusPipelineStep struct {
+	Status   string          `json:"status" yaml:"status"`
+	Error    bool            `json:"error" yaml:"error"`
+	Message  string          `json:"message" yaml:"message"`
+	Commands []*PodContainer `json:"commands" yaml:"commands"`
 }
 
 // PodSteps is a map of pod steps
@@ -174,13 +187,10 @@ type PodContainerState struct {
 	Restarted PodContainerStateRestarted `json:"restarted" yaml:"restarted"`
 	// Container create state
 	Created PodContainerStateCreated `json:"created" yaml:"created"`
-
 	// Container started state
 	Started PodContainerStateStarted `json:"started" yaml:"started"`
-
 	// Container stopped state
 	Stopped PodContainerStateStopped `json:"stopped" yaml:"stopped"`
-
 	// Container error state
 	Error PodContainerStateError `json:"error" yaml:"error"`
 }
@@ -228,8 +238,19 @@ func (s *PodStatus) SetInitialized() {
 	s.Message = EmptyString
 }
 
+func (s *PodStatus) SetExited() {
+	s.State = StateExited
+	s.Status = StateExited
+	s.Running = false
+	s.Message = EmptyString
+}
+
 func (s *PodStatus) SetDestroy() {
 	s.State = StateDestroy
+	s.Steps[StepDestroy] = PodStep{
+		Ready:     true,
+		Timestamp: time.Now().UTC(),
+	}
 }
 
 func (s *PodStatus) SetDestroyed() {
@@ -241,6 +262,10 @@ func (s *PodStatus) SetPull() {
 	s.State = StateProvision
 	s.Status = StatusPull
 	s.Running = false
+	s.Steps[StepPull] = PodStep{
+		Ready:     true,
+		Timestamp: time.Now().UTC(),
+	}
 }
 
 func (s *PodStatus) SetProvision() {
@@ -253,6 +278,10 @@ func (s *PodStatus) SetCreated() {
 	s.Status = StateCreated
 	s.Running = false
 	s.Message = EmptyString
+	s.Steps[StepInitialized] = PodStep{
+		Ready:     true,
+		Timestamp: time.Now().UTC(),
+	}
 }
 
 func (s *PodStatus) SetStarting() {
@@ -260,6 +289,10 @@ func (s *PodStatus) SetStarting() {
 	s.Status = StatusStarting
 	s.Running = false
 	s.Message = EmptyString
+	s.Steps[StepStarted] = PodStep{
+		Ready:     true,
+		Timestamp: time.Now().UTC(),
+	}
 }
 
 func (s *PodStatus) SetRunning() {
@@ -274,11 +307,36 @@ func (s *PodStatus) SetStopped() {
 	s.Status = StatusStopped
 	s.Running = false
 	s.Message = EmptyString
+	s.Steps[StepStarted] = PodStep{
+		Ready:     true,
+		Timestamp: time.Now().UTC(),
+	}
 }
 
 func (s *PodStatus) SetError(err error) {
 	s.State = StateError
 	s.Message = err.Error()
+}
+
+func (s *PodSpec) SetSpecTemplate(selflink string, template SpecTemplate) {
+	for _, c := range template.Containers {
+		c.Labels = make(map[string]string)
+		c.Labels[ContainerTypeLBC] = selflink
+		c.DNS = SpecTemplateContainerDNS{}
+		s.Template.Containers = append(s.Template.Containers, c)
+	}
+
+	for _, v := range template.Volumes {
+		s.Template.Volumes = append(s.Template.Volumes, v)
+	}
+}
+
+func (s *PodSpec) SetSpecSelector(selector SpecSelector) {
+	s.Selector = selector
+}
+
+func (s *PodSpec) SetSpecRuntime(runtime SpecRuntime) {
+	s.Runtime = runtime
 }
 
 func NewPod() *Pod {
@@ -301,30 +359,53 @@ func NewPodMap() *PodMap {
 
 func NewPodStatus() *PodStatus {
 	status := PodStatus{
-		Steps:      make(PodSteps, 0),
-		Containers: make(map[string]*PodContainer, 0),
-		Volumes:    make(map[string]*VolumeClaim, 0),
+		Steps: make(PodSteps, 0),
+		Runtime: PodStatusRuntime{
+			Services: make(map[string]*PodContainer, 0),
+			Pipeline: make(map[string]*PodStatusPipelineStep, 0),
+		},
+		Volumes: make(map[string]*VolumeClaim, 0),
 	}
 	return &status
 }
 
-func (p *Pod) SelfLink() string {
-	if p.Meta.SelfLink == "" {
-		p.Meta.SelfLink = p.CreateSelfLink(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment, p.Meta.Name)
+func (s *PodStatus) AddTask(name string) *PodStatusPipelineStep {
+
+	pst := PodStatusPipelineStep{
+		Status:   StateCreated,
+		Error:    false,
+		Message:  EmptyString,
+		Commands: make([]*PodContainer, 0),
 	}
-	return p.Meta.SelfLink
+
+	s.Runtime.Pipeline[name] = &pst
+	return &pst
 }
 
-func (p *Pod) ServiceLink() string {
-	return new(Service).CreateSelfLink(p.Meta.Namespace, p.Meta.Service)
+func (s *PodStatusPipelineStep) SetCreated() {
+	s.Status = StateCreated
+	s.Error = false
+	s.Message = EmptyString
 }
 
-func (p *Pod) DeploymentLink() string {
-	return new(Deployment).CreateSelfLink(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment)
+func (s *PodStatusPipelineStep) SetStarted() {
+	s.Status = StateStarted
+	s.Error = false
+	s.Message = EmptyString
 }
 
-func (p *Pod) CreateSelfLink(namespace, service, deployment, name string) string {
-	return fmt.Sprintf("%s:%s:%s:%s", namespace, service, deployment, name)
+func (s *PodStatusPipelineStep) SetExited(error bool, message string) {
+	s.Status = StateExited
+	s.Error = error
+	s.Message = message
+}
+
+func (s *PodStatusPipelineStep) AddTaskCommandContainer(c *PodContainer) {
+	s.Commands = append(s.Commands, c)
+}
+
+func (p *Pod) SelfLink() *PodSelfLink {
+	return &p.Meta.SelfLink
 }
 
 func (c *PodContainer) GetManifest() *ContainerManifest {

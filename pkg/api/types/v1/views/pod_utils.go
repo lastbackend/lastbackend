@@ -22,48 +22,45 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
-type PodViewHelper struct{}
+type PodView struct{}
 
-func (pv *PodViewHelper) New(pod *types.Pod) Pod {
+func (pv *PodView) New(pod *types.Pod) Pod {
 	p := Pod{}
-	p.ID = pod.Meta.Name
-	p.Meta = p.toMeta(pod.Meta)
-	p.Spec = p.toSpec(pod.Spec)
-	p.Status = p.toStatus(pod.Status)
+	p.SetMeta(pod.Meta)
+	p.SetStatus(pod.Status)
+	p.SetSpec(pod.Spec)
+
 	return p
 }
 
-func (pv *Pod) toMeta(pod types.PodMeta) PodMeta {
+func (p *Pod) SetMeta(pod types.PodMeta) {
 	meta := PodMeta{}
-	meta.Name = pod.Name
-	meta.Description = pod.Description
-	meta.SelfLink = pod.SelfLink
 	meta.Namespace = pod.Namespace
-	meta.Deployment = pod.Deployment
-	meta.SelfLink = pod.SelfLink
+	meta.Name = pod.Name
+
+	meta.Description = pod.Description
+	meta.SelfLink = pod.SelfLink.String()
+
 	meta.Node = pod.Node
 	meta.Status = pod.Status
 	meta.Updated = pod.Updated
 	meta.Created = pod.Created
 
-	return meta
+	p.Meta = meta
 }
 
-func (pv *Pod) toSpec(pod types.PodSpec) PodSpec {
-	return PodSpec{
+func (p *Pod) SetSpec(pod types.PodSpec) {
+	mv := new(ManifestView)
+	p.Spec = PodSpec{
 		State: PodSpecState{
 			Destroy:     pod.State.Destroy,
 			Maintenance: pod.State.Maintenance,
 		},
-		Template: PodSpecTemplate{
-			Containers:  pod.Template.Containers,
-			Volumes:     pod.Template.Volumes,
-			Termination: pod.Template.Termination,
-		},
+		Template: mv.NewManifestSpecTemplate(pod.Template),
 	}
 }
 
-func (pv *Pod) toStatus(pod types.PodStatus) PodStatus {
+func (p *Pod) SetStatus(pod types.PodStatus) {
 	var status = PodStatus{
 		State:   pod.State,
 		Message: pod.Message,
@@ -79,11 +76,31 @@ func (pv *Pod) toStatus(pod types.PodStatus) PodStatus {
 			Timestamp: step.Timestamp,
 		}
 	}
-
-	status.Containers = make(PodContainers, 0)
-	for _, container := range pod.Containers {
-		cv := new(ContainerView)
-		status.Containers = append(status.Containers, cv.NewPodContainer(container))
+	status.Runtime = PodStatusRuntime{
+		Services: make(PodContainers, 0),
+		Pipeline: make([]PodStatusPipelineStep, 0),
 	}
-	return status
+
+	for _, container := range pod.Runtime.Services {
+		cv := new(ContainerView)
+		status.Runtime.Services = append(status.Runtime.Services, cv.NewPodContainer(container))
+	}
+
+	for name, step := range pod.Runtime.Pipeline {
+
+		s := PodStatusPipelineStep{
+			Name:    name,
+			Status:  step.Status,
+			Error:   step.Error,
+			Message: step.Message,
+		}
+
+		for _, container := range step.Commands {
+			cv := new(ContainerView)
+			s.Commands = append(s.Commands, cv.NewPodContainer(container))
+		}
+
+	}
+
+	p.Status = status
 }

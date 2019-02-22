@@ -1,0 +1,35 @@
+---
+
+# Runtime
+verbose: 3
+token: lstbknd
+name: "lastbackend"
+description: "lastbackend cluster"
+
+# Etcd database
+etcd:
+  prefix: lastbackend
+  endpoints:
+    "127.0.0.1:2379"
+
+# Domain
+domain:
+  internal: "lb.local"
+  external: "undassa.lbdp.io"
+
+api:
+  host: 0.0.0.0
+  port: 2967
+  tls:
+    insecure: true
+
+dns:
+  host: 0.0.0.0
+  port: 53
+  default_ip: "127.0.0.1"
+
+
+vault:
+  name: lastbackend
+  endpoint: http://127.0.0.1:8080
+  token: lstbknd

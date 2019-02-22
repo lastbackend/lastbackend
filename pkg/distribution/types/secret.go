@@ -37,20 +37,20 @@ const (
 // swagger:ignore
 // swagger:model types_secret
 type Secret struct {
-	Runtime
+	System
 	Meta SecretMeta `json:"meta" yaml:"meta"`
 	Spec SecretSpec `json:"spec" yaml:"yaml"`
 }
 
 // swagger:ignore
 type SecretList struct {
-	Runtime
+	System
 	Items []*Secret
 }
 
 // swagger:ignore
 type SecretMap struct {
-	Runtime
+	System
 	Items map[string]*Secret
 }
 
@@ -58,7 +58,8 @@ type SecretMap struct {
 // swagger:model types_secret_meta
 type SecretMeta struct {
 	Meta      `yaml:",inline"`
-	Namespace string `json:"namespace" yaml:"namespace"`
+	SelfLink  SecretSelfLink `json:"self_link"`
+	Namespace string         `json:"namespace" yaml:"namespace"`
 }
 
 type SecretSpec struct {
@@ -67,7 +68,7 @@ type SecretSpec struct {
 }
 
 type SecretManifest struct {
-	Runtime
+	System
 	State   string    `json:"state"`
 	Type    string    `json:"type"`
 	Created time.Time `json:"created"`
@@ -75,12 +76,12 @@ type SecretManifest struct {
 }
 
 type SecretManifestList struct {
-	Runtime
+	System
 	Items []*SecretManifest
 }
 
 type SecretManifestMap struct {
-	Runtime
+	System
 	Items map[string]*SecretManifest
 }
 
@@ -163,15 +164,8 @@ func (s *Secret) GetHash() string {
 	return base64.URLEncoding.EncodeToString(h.Sum(nil))
 }
 
-func (s *Secret) SelfLink() string {
-	if s.Meta.SelfLink == "" {
-		s.Meta.SelfLink = s.CreateSelfLink(s.Meta.Namespace, s.Meta.Name)
-	}
-	return s.Meta.SelfLink
-}
-
-func (s *Secret) CreateSelfLink(namespace, name string) string {
-	return fmt.Sprintf("%s:%s", namespace, name)
+func (s *Secret) SelfLink() *SecretSelfLink {
+	return &s.Meta.SelfLink
 }
 
 func (s *Secret) DecodeRegistry() {

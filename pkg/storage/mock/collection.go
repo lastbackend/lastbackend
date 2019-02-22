@@ -41,8 +41,12 @@ const (
 	subnetCollection  = "subnet"
 
 	ingressCollection   = "ingress"
+	exporterCollection  = "exporter"
 	discoveryCollection = "discovery"
 	routeCollection     = "route"
+
+	jobCollection  = "job"
+	taskCollection = "task"
 
 	systemCollection = "system"
 	testCollection   = "test"
@@ -60,6 +64,10 @@ type NodeCollection struct{}
 type DiscoveryCollection struct{}
 
 type IngressCollection struct{}
+
+type ExporterCollection struct{}
+
+type JobCollection struct{}
 
 func (Collection) Namespace() string {
 	return namespaceCollection
@@ -97,6 +105,10 @@ func (Collection) Ingress() types.IngressCollection {
 	return new(IngressCollection)
 }
 
+func (Collection) Exporter() types.ExporterCollection {
+	return new(ExporterCollection)
+}
+
 func (Collection) Discovery() types.DiscoveryCollection {
 	return new(DiscoveryCollection)
 }
@@ -129,8 +141,20 @@ func (Collection) Manifest() types.ManifestCollection {
 	return new(ManifestCollection)
 }
 
+func (Collection) Job() string {
+	return jobCollection
+}
+
+func (Collection) Task() string {
+	return taskCollection
+}
+
 func (Collection) Test() string {
 	return testCollection
+}
+
+func (Collection) Root() string {
+	return ""
 }
 
 func (ManifestCollection) Node() string {
@@ -175,6 +199,14 @@ func (NodeCollection) Info() string {
 
 func (NodeCollection) Status() string {
 	return fmt.Sprintf("%s/%s", nodeCollection, statusColletion)
+}
+
+func (ExporterCollection) Info() string {
+	return fmt.Sprintf("%s/%s", exporterCollection, infoColletion)
+}
+
+func (ExporterCollection) Status() string {
+	return fmt.Sprintf("%s/%s", exporterCollection, statusColletion)
 }
 
 func (DiscoveryCollection) Info() string {

@@ -18,20 +18,18 @@
 
 package types
 
-import "fmt"
-
 type DeploymentMap struct {
-	Runtime
+	System
 	Items map[string]*Deployment
 }
 
 type DeploymentList struct {
-	Runtime
+	System
 	Items []*Deployment
 }
 
 type Deployment struct {
-	Runtime
+	System
 	// Deployment Meta
 	Meta DeploymentMeta `json:"meta"`
 	// Deployment status
@@ -51,7 +49,7 @@ type DeploymentMeta struct {
 	// Upstream
 	Endpoint string `json:"endpoint"`
 	// Self Link
-	Status string `json:"status"`
+	SelfLink DeploymentSelfLink `json:"self_link"`
 }
 
 type DeploymentSpec struct {
@@ -62,18 +60,18 @@ type DeploymentSpec struct {
 }
 
 type DeploymentStatus struct {
-	State        string                       `json:"state"`
-	Message      string                       `json:"message"`
-	Dependencies DeploymentStatusDependencies `json:"dependencies"`
+	State        string             `json:"state"`
+	Message      string             `json:"message"`
+	Dependencies StatusDependencies `json:"dependencies"`
 }
 
-type DeploymentStatusDependencies struct {
-	Volumes map[string]DeploymentStatusDependency `json:"volumes"`
-	Secrets map[string]DeploymentStatusDependency `json:"secrets"`
-	Configs map[string]DeploymentStatusDependency `json:"configs"`
+type StatusDependencies struct {
+	Volumes map[string]StatusDependency `json:"volumes"`
+	Secrets map[string]StatusDependency `json:"secrets"`
+	Configs map[string]StatusDependency `json:"configs"`
 }
 
-type DeploymentStatusDependency struct {
+type StatusDependency struct {
 	Type   string `json:"type"`
 	Name   string `json:"name"`
 	Status string `json:"status"`
@@ -93,19 +91,12 @@ type DeploymentOptions struct {
 	Replicas int `json:"replicas"`
 }
 
-func (d *Deployment) SelfLink() string {
-	if d.Meta.SelfLink == "" {
-		d.Meta.SelfLink = d.CreateSelfLink(d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
-	}
-	return d.Meta.SelfLink
+func (d *Deployment) SelfLink() *DeploymentSelfLink {
+	return &d.Meta.SelfLink
 }
 
-func (d *Deployment) CreateSelfLink(namespace, service, name string) string {
-	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
-}
-
-func (d *Deployment) ServiceLink() string {
-	return fmt.Sprintf("%s:%s", d.Meta.Namespace, d.Meta.Service)
+func (d *Deployment) ServiceLink() *ServiceSelfLink {
+	return d.Meta.SelfLink.parent.SelfLink.(*ServiceSelfLink)
 }
 
 func (ds *DeploymentStatus) CheckDeps() bool {

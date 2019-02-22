@@ -18,39 +18,34 @@
 
 package types
 
-import (
-	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/util/resource"
-)
-
 const (
 	DEFAULT_SERVICE_MEMORY   int64 = 128
 	DEFAULT_SERVICE_REPLICAS int   = 1
 )
 
 type Service struct {
-	Runtime
+	System
 	Meta   ServiceMeta   `json:"meta"`
 	Status ServiceStatus `json:"status"`
 	Spec   ServiceSpec   `json:"spec"`
 }
 
 type ServiceMap struct {
-	Runtime
+	System
 	Items map[string]*Service
 }
 
 type ServiceList struct {
-	Runtime
+	System
 	Items []*Service
 }
 
 type ServiceMeta struct {
 	Meta
-	Namespace string `json:"namespace"`
-	SelfLink  string `json:"self_link"`
-	Endpoint  string `json:"endpoint"`
-	IP        string `json:"ip"`
+	Namespace string          `json:"namespace"`
+	SelfLink  ServiceSelfLink `json:"self_link"`
+	Endpoint  string          `json:"endpoint"`
+	IP        string          `json:"ip"`
 }
 
 type ServiceEndpoint struct {
@@ -59,12 +54,10 @@ type ServiceEndpoint struct {
 }
 
 type ServiceStatus struct {
-	State        string                             `json:"state"`
-	Message      string                             `json:"message"`
-	Network      ServiceStatusNetwork               `json:"network"`
+	State   string               `json:"state"`
+	Message string               `json:"message"`
+	Network ServiceStatusNetwork `json:"network"`
 }
-
-
 
 type ServiceSpec struct {
 	Replicas int          `json:"replicas" yaml:"replicas"`
@@ -105,22 +98,14 @@ type ServiceReplicas struct {
 	Errored   int `json:"errored"`
 }
 
-
 func (s *ServiceSpec) SetDefault() {
 	s.Replicas = DEFAULT_SERVICE_REPLICAS
 	s.Template.Volumes = make(SpecTemplateVolumeList, 0)
 	s.Template.Containers = make(SpecTemplateContainers, 0)
 }
 
-func (s *Service) SelfLink() string {
-	if s.Meta.SelfLink == "" {
-		s.Meta.SelfLink = s.CreateSelfLink(s.Meta.Namespace, s.Meta.Name)
-	}
-	return s.Meta.SelfLink
-}
-
-func (s *Service) CreateSelfLink(namespace, name string) string {
-	return fmt.Sprintf("%s:%s", namespace, name)
+func (s *Service) SelfLink() *ServiceSelfLink {
+	return &s.Meta.SelfLink
 }
 
 type ServiceManifest struct {
@@ -178,22 +163,22 @@ func (s *ServiceSpec) GetResourceRequest() ResourceRequest {
 
 	if requestRAM > 0 {
 		requestRAM = int64(s.Replicas) * requestRAM
-		rr.Request.RAM = resource.EncodeMemoryResource(requestRAM)
+		rr.Request.RAM = requestRAM
 	}
 
 	if requestCPU > 0 {
 		requestCPU = int64(s.Replicas) * requestCPU
-		rr.Request.CPU = resource.EncodeCpuResource(requestCPU)
+		rr.Request.CPU = requestCPU
 	}
 
 	if limitsRAM > 0 {
 		limitsRAM = int64(s.Replicas) * limitsRAM
-		rr.Limits.RAM = resource.EncodeMemoryResource(limitsRAM)
+		rr.Limits.RAM = limitsRAM
 	}
 
 	if limitsCPU > 0 {
 		limitsCPU = int64(s.Replicas) * limitsCPU
-		rr.Limits.CPU = resource.EncodeCpuResource(limitsCPU)
+		rr.Limits.CPU = limitsCPU
 	}
 
 	return rr

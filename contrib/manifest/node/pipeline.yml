@@ -1,0 +1,42 @@
+kind: Pod
+version: v1
+meta:
+  name: api
+  labels:
+    app: lastbackend
+    type: job
+spec:
+  runtime:
+    services: [dind]
+    tasks:
+      - name: "auth"
+        container: "git"
+        commands:
+          - command: "docker auth -u x-lastbackend-token -p $TOKEN"
+      - name: "build"
+        container: "git"
+        commands:
+          - command: "docker build -t index.lstbknd.net/undassa/alpine github.com/undassa/alpine"
+      - name: "push"
+        container: "git"
+        commands:
+          - command: "docker push index.lstbknd.net/undassa/alpine"
+  template:
+    containers:
+      - name: dind
+        image:
+          name: docker:18.09.1-dind
+        restart:
+          policy: always
+        security:
+          privileged: true
+      - name: git
+        image:
+          name: docker:18.09.1-git
+        env:
+          - name: TOKEN
+            secret:
+              name: "vault:token"
+              key: "docker"
+          - name: DOCKER_HOST
+            value: "tcp://127.0.0.1:2375"

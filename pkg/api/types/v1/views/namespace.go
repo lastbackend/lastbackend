@@ -54,7 +54,6 @@ type NamespaceStatus struct {
 
 type NamespaceStatusResources struct {
 	Allocated NamespaceResource `json:"allocated"`
-	Usage     NamespaceResource `json:"usage"`
 }
 
 // swagger:model views_namespace_envs
@@ -86,4 +85,5 @@ type NamespaceApplyStatus struct {
 	Volumes  map[string]bool `json:"volumes,omitempty"`
 	Services map[string]bool `json:"services,omitempty"`
 	Routes   map[string]bool `json:"routes,omitempty"`
+	Jobs     map[string]bool `json:"jobs,omitempty"`
 }

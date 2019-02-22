@@ -19,9 +19,10 @@
 package cache
 
 import (
+	"time"
+
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/spf13/viper"
-	"time"
 )
 
 const (

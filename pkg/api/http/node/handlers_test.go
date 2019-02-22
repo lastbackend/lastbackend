@@ -78,7 +78,7 @@ func TestNodeListH(t *testing.T) {
 		assert.NoError(t, err)
 
 		for _, n := range nl.Items {
-			err = stg.Put(context.Background(), stg.Collection().Node().Info(), stg.Key().Node(n.Meta.Name), &n, nil)
+			err = stg.Put(context.Background(), stg.Collection().Node().Info(), n.SelfLink().String(), &n, nil)
 			assert.NoError(t, err)
 		}
 
@@ -165,7 +165,7 @@ func TestNodeGetH(t *testing.T) {
 		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Put(context.Background(), stg.Collection().Node().Info(), stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), stg.Collection().Node().Info(), n1.SelfLink().String(), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -223,6 +223,7 @@ func TestNodeGetManifestH(t *testing.T) {
 	)
 
 	nm.Meta.Initial = true
+	nm.Exporter = new(types.ExporterManifest)
 	nm.Resolvers = make(map[string]*types.ResolverManifest, 0)
 	nm.Network = make(map[string]*types.SubnetManifest, 0)
 	nm.Pods = make(map[string]*types.PodManifest, 0)
@@ -268,7 +269,7 @@ func TestNodeGetManifestH(t *testing.T) {
 			err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Manifest().Pod(n1.Meta.Name), types.EmptyString)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Node().Info(), stg.Key().Node(n1.Meta.Name), &n1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Node().Info(), n1.SelfLink().String(), &n1, nil)
 			assert.NoError(t, err)
 
 			err = stg.Put(context.Background(), stg.Collection().Manifest().Pod(n1.Meta.Name), p1, getPodManifest(), nil)
@@ -355,7 +356,7 @@ func TestNodeRemoveH(t *testing.T) {
 		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Put(context.Background(), stg.Collection().Node().Info(), stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), stg.Collection().Node().Info(), n1.SelfLink().String(), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -453,7 +454,7 @@ func TestNodeSetMetaH(t *testing.T) {
 		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Put(context.Background(), stg.Collection().Node().Info(), stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), stg.Collection().Node().Info(), n1.SelfLink().String(), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -490,7 +491,7 @@ func TestNodeSetMetaH(t *testing.T) {
 
 			if tc.expectedCode == http.StatusOK {
 				got := new(types.Node)
-				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node().Info(), envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
+				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node().Info(), tc.args.node, got, nil)
 				assert.NoError(t, err)
 				if !assert.NotNil(t, got, "node should not be empty") {
 					return
@@ -556,7 +557,7 @@ func TestNodeConnectH(t *testing.T) {
 		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Put(context.Background(), stg.Collection().Node().Info(), stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), stg.Collection().Node().Info(), n1.SelfLink().String(), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -593,7 +594,7 @@ func TestNodeConnectH(t *testing.T) {
 
 			if tc.expectedCode == http.StatusOK {
 				got := new(types.Node)
-				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node().Info(), envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
+				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node().Info(), tc.args.node, got, nil)
 				if assert.NoError(t, err) {
 					assert.Equal(t, uo.Info.Hostname, got.Meta.Hostname, "hostname not equal")
 					assert.Equal(t, uo.Info.Architecture, got.Meta.Architecture, "architecture not equal")
@@ -626,6 +627,7 @@ func TestNodeSetStatusH(t *testing.T) {
 	)
 
 	nm.Meta.Initial = true
+	nm.Exporter = new(types.ExporterManifest)
 	nm.Resolvers = make(map[string]*types.ResolverManifest, 0)
 	uo.Resources.Capacity.Pods = 20
 
@@ -668,7 +670,7 @@ func TestNodeSetStatusH(t *testing.T) {
 		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Put(context.Background(), stg.Collection().Node().Info(), stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), stg.Collection().Node().Info(), n1.SelfLink().String(), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -705,7 +707,7 @@ func TestNodeSetStatusH(t *testing.T) {
 
 			if tc.expectedCode == http.StatusOK {
 				got := new(types.Node)
-				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node().Info(), envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
+				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node().Info(), tc.args.node, got, nil)
 				assert.NoError(t, err)
 				assert.Equal(t, uo.Resources.Capacity.Pods, got.Status.Capacity.Pods, "pods not equal")
 			}
@@ -730,15 +732,15 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 			Capacity: types.NodeResources{
 				Containers: 2,
 				Pods:       2,
-				Memory:     1024,
-				Cpu:        2,
+				RAM:        1024,
+				CPU:        2,
 				Storage:    512,
 			},
 			Allocated: types.NodeResources{
 				Containers: 1,
 				Pods:       1,
-				Memory:     512,
-				Cpu:        1,
+				RAM:        512,
+				CPU:        1,
 				Storage:    256,
 			},
 		},
@@ -748,6 +750,7 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 	n.Meta.Name = name
 	n.Meta.Description = desc
 	n.Meta.Hostname = name
+	n.Meta.SelfLink = *types.NewNodeSelfLink(n.Meta.Hostname)
 
 	return n
 }

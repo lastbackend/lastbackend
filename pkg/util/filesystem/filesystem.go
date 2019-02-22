@@ -19,74 +19,89 @@
 package filesystem
 
 import (
-	"io/ioutil"
+	"bytes"
+	"io"
 	"os"
-	"runtime"
 )
 
-const _WINDOWS = "windows"
+const (
+	LineSeparator = '\n'
+)
 
-// Check OS Windows
-func IsWindows() bool {
-	return runtime.GOOS == _WINDOWS
-}
+func LineSeek(lines int, f *os.File) (int64, error) {
 
-// MkDir is used to create directory
-func MkDir(path string, mode os.FileMode) (err error) {
-	err = os.MkdirAll(path, mode)
-	return err
-}
+	count := 0
+	pos, err := f.Seek(0, io.SeekEnd)
 
-// CreateFile is used to create file
-func CreateFile(path string) (err error) {
-	file, err := os.Create(path)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	err = file.Close()
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
-func WriteStrToFile(path, value string, mode os.FileMode) (err error) {
-	err = ioutil.WriteFile(path, []byte(value), mode)
-	if err != nil {
-		if os.IsNotExist(err) {
-			CreateFile(path)
+	chunk := 4096
+
+	b1 := make([]byte, 1)
+	if _, err := f.ReadAt(b1, pos-1); err != nil {
+		return 0, err
+	}
+
+	if '\n' == b1[0] {
+		pos = pos - 1
+	}
+
+	for {
+		rf := pos - int64(chunk)
+		ids := make([]int64, 0)
+
+		if rf <= 0 {
+			chunk += int(rf)
+			rf = 0
+			ids = append(ids, 0)
+			count++
 		}
-		return err
-	}
-	return nil
-}
 
-func ReadFile(path string) (value []byte, err error) {
-	value, err = ioutil.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
+		b := make([]byte, chunk)
+
+		_, err := f.ReadAt(b, rf)
+
+		if err != nil {
+			return 0, err
 		}
-		return nil, err
-	}
-	return value, nil
-}
 
-// HomeDir returns the home directory for the current user
-func HomeDir() string {
-	if runtime.GOOS == "windows" {
-		if homeDrive, homePath := os.Getenv("HOMEDRIVE"), os.Getenv("HOMEPATH"); len(homeDrive) > 0 && len(homePath) > 0 {
-			homeDir := homeDrive + homePath
-			if _, err := os.Stat(homeDir); err == nil {
-				return homeDir
+		i := 0
+
+		for {
+			pos := bytes.IndexByte(b[i:], LineSeparator)
+			if pos == -1 {
+				break
 			}
+			i = i + pos + 1
+			ids = append(ids, int64(i))
+			count++
 		}
-		if userProfile := os.Getenv("USERPROFILE"); len(userProfile) > 0 {
-			if _, err := os.Stat(userProfile); err == nil {
-				return userProfile
-			}
-		}
-	}
-	return os.Getenv("HOME")
-}
 
+		var lpos int64
+
+		if len(ids) == 0 {
+			lpos = 0
+		} else {
+			lpos = ids[0]
+		}
+
+		if count == lines {
+			return lpos + rf, nil
+		}
+
+		if count > lines {
+			left := count - lines
+			pos := ids[left]
+			return pos + rf, nil
+
+		}
+
+		if rf == 0 {
+			return 0, nil
+		}
+		pos = lpos + rf - 1
+	}
+
+}

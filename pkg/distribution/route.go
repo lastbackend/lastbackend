@@ -42,15 +42,15 @@ type Route struct {
 	storage storage.Storage
 }
 
-func (r *Route) Runtime() (*types.Runtime, error) {
+func (r *Route) Runtime() (*types.System, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get route runtime info", logPodPrefix)
 	runtime, err := r.storage.Info(r.context, r.storage.Collection().Pod(), "")
 	if err != nil {
 		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logPodPrefix, err)
-		return &runtime.Runtime, err
+		return &runtime.System, err
 	}
-	return &runtime.Runtime, nil
+	return &runtime.System, nil
 }
 
 func (r *Route) List() (*types.RouteList, error) {
@@ -91,8 +91,9 @@ func (r *Route) Get(namespace, name string) (*types.Route, error) {
 	log.V(logLevel).Debug("%s:get:> get route by id %s/%s", logRoutePrefix, namespace, name)
 
 	route := new(types.Route)
+	key := types.NewRouteSelfLink(namespace, name).String()
 
-	err := r.storage.Get(r.context, r.storage.Collection().Route(), r.storage.Key().Route(namespace, name), &route, nil)
+	err := r.storage.Get(r.context, r.storage.Collection().Route(), key, &route, nil)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logRoutePrefix, namespace, name)
@@ -117,10 +118,8 @@ func (r *Route) Add(namespace *types.Namespace, route *types.Route) (*types.Rout
 		route.Spec.Endpoint = fmt.Sprintf("%s.%s.%s", strings.ToLower(route.Meta.Name), strings.ToLower(namespace.Meta.Name), viper.GetString("domain.external"))
 	}
 
-	route.SelfLink()
-
 	if err := r.storage.Put(r.context, r.storage.Collection().Route(),
-		r.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {
+		route.SelfLink().String(), route, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert route err: %v", logRoutePrefix, err)
 		return nil, err
 	}
@@ -133,7 +132,7 @@ func (r *Route) Set(route *types.Route) (*types.Route, error) {
 	log.V(logLevel).Debugf("%s:update:> update route %s", logRoutePrefix, route.Meta.Name)
 
 	if err := r.storage.Set(r.context, r.storage.Collection().Route(),
-		r.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {
+		route.SelfLink().String(), route, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update route err: %v", logRoutePrefix, err)
 		return nil, err
 	}
@@ -146,7 +145,7 @@ func (r *Route) Del(route *types.Route) error {
 	log.V(logLevel).Debugf("%s:remove:> remove route %#v", logRoutePrefix, route)
 
 	if err := r.storage.Del(r.context, r.storage.Collection().Route(),
-		r.storage.Key().Route(route.Meta.Namespace, route.Meta.Name)); err != nil {
+		route.SelfLink().String()); err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove route  err: %v", logRoutePrefix, err)
 		return err
 	}
@@ -303,7 +302,7 @@ func (r *Route) ManifestWatch(ingress string, ch chan types.RouteManifestEvent, 
 					continue
 				}
 
-				keys := rg.FindStringSubmatch(e.System.Key)
+				keys := rg.FindStringSubmatch(e.Storage.Key)
 				if len(keys) == 0 {
 					continue
 				}

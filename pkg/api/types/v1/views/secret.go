@@ -54,7 +54,7 @@ func (s *Secret) Decode() *types.Secret {
 	o := new(types.Secret)
 	o.Meta.Name = s.Meta.Name
 
-	o.Meta.SelfLink = s.Meta.SelfLink
+	o.Meta.SelfLink = *types.NewSecretSelfLink(s.Meta.Namespace, s.Meta.Name)
 	o.Meta.Updated = s.Meta.Updated
 	o.Meta.Created = s.Meta.Created
 

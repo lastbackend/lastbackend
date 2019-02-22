@@ -22,6 +22,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -107,7 +108,7 @@ func TestNamespaceInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -153,6 +154,7 @@ func TestNamespaceInfo(t *testing.T) {
 				assert.NoError(t, err)
 
 				assert.Equal(t, tc.want.Meta.Name, n.Meta.Name, "name not equal")
+				assert.Equal(t, tc.want.Meta.SelfLink, n.Meta.SelfLink, "name not equal")
 			}
 
 		})
@@ -217,10 +219,10 @@ func TestNamespaceList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns2.Meta.Name), ns2, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns2.SelfLink().String(), ns2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -361,7 +363,7 @@ func TestNamespaceCreate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -403,7 +405,7 @@ func TestNamespaceCreate(t *testing.T) {
 			} else {
 
 				got := new(types.Namespace)
-				err = tc.fields.stg.Get(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(tc.args.namespace.Meta.Name), got, nil)
+				err = tc.fields.stg.Get(context.Background(), stg.Collection().Namespace(), tc.args.namespace.Meta.Name, got, nil)
 				assert.NoError(t, err)
 				assert.Equal(t, ns1.Meta.Name, got.Meta.Name, "name not equal")
 			}
@@ -424,7 +426,7 @@ func TestNamespaceUpdate(t *testing.T) {
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("empty", "new description")
 	ns3 := getNamespaceAsset("demo", "")
-	ns3.Spec.Resources.Request.RAM = "512MB"
+	ns3.Spec.Resources.Request.RAM, _ = resource.DecodeMemoryResource("512MB")
 
 	nsm1, _ := createNamespaceManifest("test", "nil", nil).ToJson()
 	nsm3, _ := createNamespaceManifest(ns1.Meta.Name, ns3.Meta.Description, &request.NamespaceResourcesOptions{Request: &request.NamespaceResourceOptions{RAM: getStrPtr("512MB")}}).ToJson()
@@ -494,7 +496,7 @@ func TestNamespaceUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -612,7 +614,7 @@ func TestNamespaceRemove(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -654,7 +656,7 @@ func TestNamespaceRemove(t *testing.T) {
 			} else {
 
 				got := new(types.Namespace)
-				err = tc.fields.stg.Get(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(tc.args.namespace.Meta.Name), got, nil)
+				err = tc.fields.stg.Get(context.Background(), stg.Collection().Namespace(), tc.args.namespace.SelfLink().String(), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}
@@ -688,6 +690,17 @@ func getNamespaceAsset(name, desc string) *types.Namespace {
 
 	n.Meta.Name = name
 	n.Meta.Description = desc
+
+	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
+
+	n.Status.Resources.Allocated.RAM, _ = resource.DecodeMemoryResource("512 MB")
+	n.Status.Resources.Allocated.CPU, _ = resource.DecodeCpuResource("0.1")
+
+	n.Spec.Resources.Limits.RAM, _ = resource.DecodeMemoryResource("1 GB")
+	n.Spec.Resources.Limits.CPU, _ = resource.DecodeCpuResource("0.1")
+
+	n.Spec.Resources.Request.RAM, _ = resource.DecodeMemoryResource("1 GB")
+	n.Spec.Resources.Request.CPU, _ = resource.DecodeCpuResource("0.1")
 
 	return &n
 }

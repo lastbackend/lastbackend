@@ -119,10 +119,10 @@ func TestServiceInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), s1.SelfLink().String(), s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -186,8 +186,8 @@ func TestServiceList(t *testing.T) {
 	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
 
 	sl := types.NewServiceMap()
-	sl.Items[s1.SelfLink()] = s1
-	sl.Items[s2.SelfLink()] = s2
+	sl.Items[s1.SelfLink().String()] = s1
+	sl.Items[s2.SelfLink().String()] = s2
 
 	type fields struct {
 		stg storage.Storage
@@ -245,13 +245,13 @@ func TestServiceList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), s1.SelfLink().String(), s1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s2.Meta.Namespace, s2.Meta.Name), s2, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), s2.SelfLink().String(), s2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -317,39 +317,53 @@ func TestServiceCreate(t *testing.T) {
 	ns2 := getNamespaceAsset("test", "")
 
 	ns3 := getNamespaceAsset("limits", "")
-	ns3.Spec.Resources.Limits.RAM = "1GB"
-	ns3.Spec.Resources.Limits.CPU = "1"
+	ns3.Spec.Resources.Limits.RAM, _ = resource.DecodeMemoryResource("1GB")
+	ns3.Spec.Resources.Limits.CPU, _ = resource.DecodeCpuResource("1")
 
 	s1 := getServiceAsset(ns1.Meta.Name, "demo", "")
-	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
-	s3 := getServiceAsset(ns1.Meta.Name, "success", "")
+	s2 := getServiceAsset(ns1.Meta.Name, "success", "")
+	s3 := getServiceAsset(ns3.Meta.Name, "success", "")
 
 	sm1 := getServiceManifest("errored", "image")
+	sm1.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm1.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm1.Spec.Template.Containers[0].Resources.Limits.RAM = "0.5GB"
 
 	sm2 := getServiceManifest("errored", "image")
+	sm2.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm2.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm2.Spec.Template.Containers[0].Resources.Limits.RAM = "2GB"
 	sm2.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm3 := getServiceManifest("errored", "image")
+	sm3.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm3.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm3.Spec.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	sm3.Spec.Template.Containers[0].Resources.Limits.CPU = "1.5"
 
 	sm4 := getServiceManifest("errored", "image")
+	sm4.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm4.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm4.Spec.Template.Containers[0].Resources.Limits.RAM = "2GB"
 	sm4.Spec.Template.Containers[0].Resources.Limits.CPU = "1.5"
 
 	var rsm5 = 3
 	sm5 := getServiceManifest("errored", "image")
+	sm5.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm5.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm5.Spec.Replicas = &rsm5
 	sm5.Spec.Template.Containers[0].Resources.Limits.RAM = "128MB"
 	sm5.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm6 := getServiceManifest("success", "image")
+	sm6.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm6.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm6.Spec.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	sm6.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm7 := getServiceManifest("success", "image")
+	sm7.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm7.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm7.Spec.Template.Containers[0].Resources.Limits.RAM = ""
 	sm7.Spec.Template.Containers[0].Resources.Limits.CPU = ""
 
@@ -448,11 +462,11 @@ func TestServiceCreate(t *testing.T) {
 		// TODO: check another spec parameters
 		{
 			name:         "check create service success",
-			args:         args{ctx, ns1, s3},
+			args:         args{ctx, ns1, s2},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
 			data:         getServiceManifest("success", "redis"),
-			want:         v1.View().Service().NewWithDeployment(s3, nil, nil),
+			want:         v1.View().Service().NewWithDeployment(s2, nil, nil),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -492,13 +506,13 @@ func TestServiceCreate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns3.Meta.Name), ns3, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns3.SelfLink().String(), ns3, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), s1.SelfLink().String(), s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -531,7 +545,6 @@ func TestServiceCreate(t *testing.T) {
 			assert.NoError(t, err)
 			// Check the status code is what we expect.
 			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
-				fmt.Println(string(body))
 				return
 			}
 
@@ -540,7 +553,7 @@ func TestServiceCreate(t *testing.T) {
 			} else {
 
 				got := new(types.Service)
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Service(), stg.Key().Service(tc.args.namespace.Meta.Name, tc.args.service.Meta.Name), got, nil)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Service(), tc.args.service.SelfLink().String(), got, nil)
 				assert.NoError(t, err)
 
 				if got == nil {
@@ -568,11 +581,11 @@ func TestServiceUpdate(t *testing.T) {
 	ns2 := getNamespaceAsset("test", "")
 	ns3 := getNamespaceAsset("limits", "")
 
-	ns3.Status.Resources.Allocated.RAM = "1.5GB"
-	ns3.Status.Resources.Allocated.CPU = "1.5"
+	ns3.Status.Resources.Allocated.RAM, _ = resource.DecodeMemoryResource("1.5GB")
+	ns3.Status.Resources.Allocated.CPU, _ = resource.DecodeCpuResource("1.5")
 
-	ns3.Spec.Resources.Limits.RAM = "2GB"
-	ns3.Spec.Resources.Limits.CPU = "2"
+	ns3.Spec.Resources.Limits.RAM, _ = resource.DecodeMemoryResource("2GB")
+	ns3.Spec.Resources.Limits.CPU, _ = resource.DecodeCpuResource("2")
 
 	s1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
@@ -595,33 +608,46 @@ func TestServiceUpdate(t *testing.T) {
 
 	m3.SetServiceSpec(s3)
 
-
 	sm1 := getServiceManifest("limited", "image")
+	sm1.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm1.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm1.Spec.Template.Containers[0].Resources.Limits.RAM = "0.5GB"
 
 	sm2 := getServiceManifest("limited", "image")
+	sm2.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm2.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm2.Spec.Template.Containers[0].Resources.Limits.RAM = "2GB"
 	sm2.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm3 := getServiceManifest("limited", "image")
+	sm3.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm3.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm3.Spec.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	sm3.Spec.Template.Containers[0].Resources.Limits.CPU = "1.5"
 
 	sm4 := getServiceManifest("limited", "image")
+	sm4.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm4.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm4.Spec.Template.Containers[0].Resources.Limits.RAM = "2GB"
 	sm4.Spec.Template.Containers[0].Resources.Limits.CPU = "1.5"
 
 	var rsm5 = 3
 	sm5 := getServiceManifest("limited", "image")
 	sm5.Spec.Replicas = &rsm5
+	sm5.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm5.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm5.Spec.Template.Containers[0].Resources.Limits.RAM = "128MB"
 	sm5.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	sm6 := getServiceManifest("limited", "image")
+	sm6.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm6.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm6.Spec.Template.Containers[0].Resources.Limits.RAM = "600MB"
 	sm6.Spec.Template.Containers[0].Resources.Limits.CPU = "0.6"
 
 	sm7 := getServiceManifest("limited", "image")
+	sm7.Spec.Template.Containers[0].Resources = new(request.ManifestSpecTemplateContainerResources)
+	sm7.Spec.Template.Containers[0].Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
 	sm7.Spec.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	sm7.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
@@ -764,16 +790,16 @@ func TestServiceUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns3.Meta.Name), ns3, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns3.SelfLink().String(), ns3, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), tc.args.service, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), s1.SelfLink().String(), s1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s4.Meta.Namespace, tc.args.service.Meta.Name), tc.args.service, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), s4.SelfLink().String(), s4, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -1014,10 +1040,10 @@ func TestServiceRemove(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), s1.SelfLink().String(), s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -1057,7 +1083,7 @@ func TestServiceRemove(t *testing.T) {
 			} else {
 
 				got := new(types.Service)
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Service(), stg.Key().Service(tc.args.namespace.Meta.Name, tc.args.service.Meta.Name), got, nil)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Service(), tc.args.service.SelfLink().String(), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}
@@ -1079,6 +1105,7 @@ func getNamespaceAsset(name, desc string) *types.Namespace {
 	n.Meta.SetDefault()
 	n.Meta.Name = name
 	n.Meta.Description = desc
+	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
 	return &n
 }
 
@@ -1093,6 +1120,7 @@ func getServiceAsset(namespace, name, desc string) *types.Service {
 	s.Spec.Template.Containers = append(s.Spec.Template.Containers, &types.SpecTemplateContainer{
 		Name: "demo",
 	})
+	s.Meta.SelfLink = *types.NewServiceSelfLink(namespace, name)
 	return &s
 }
 
@@ -1110,14 +1138,14 @@ func getServiceManifest(name, image string) *request.ServiceManifest {
 		replicas  = 1
 		container = request.ManifestSpecTemplateContainer{
 			Name: image,
-			Image: request.ManifestSpecTemplateContainerImage{
+			Image: &request.ManifestSpecTemplateContainerImage{
 				Name: image,
 			},
 			Env: make([]request.ManifestSpecTemplateContainerEnv, 0),
 		}
 		volume = request.ManifestSpecTemplateVolume{
 			Name: "demo",
-			Secret: request.ManifestSpecTemplateSecretVolume{
+			Secret: &request.ManifestSpecTemplateSecretVolume{
 				Name:  "test",
 				Binds: make([]request.ManifestSpecTemplateSecretVolumeBind, 0),
 			},
@@ -1136,7 +1164,7 @@ func getServiceManifest(name, image string) *request.ServiceManifest {
 
 	container.Env = append(container.Env, request.ManifestSpecTemplateContainerEnv{
 		Name: "Secret",
-		Secret: request.ManifestSpecTemplateContainerEnvSecret{
+		Secret: &request.ManifestSpecTemplateContainerEnvSecret{
 			Name: "secret-name",
 			Key:  "secret-key",
 		},

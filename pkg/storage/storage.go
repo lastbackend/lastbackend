@@ -33,6 +33,7 @@ const (
 	ClusterKind    types.Kind = "cluster"
 	PodKind        types.Kind = "pod"
 	IngressKind    types.Kind = "ingress"
+	ExporterKind   types.Kind = "exporter"
 	SystemKind     types.Kind = "system"
 	NodeKind       types.Kind = "node"
 	RouteKind      types.Kind = "route"
@@ -44,11 +45,13 @@ const (
 	ManifestKind   types.Kind = "manifest"
 	NetworkKind    types.Kind = "network"
 	SubnetKind     types.Kind = "subnet"
+	TaskKind       types.Kind = "task"
+	JobKind        types.Kind = "job"
 	TestKind       types.Kind = "test"
 )
 
 type Storage interface {
-	Info(ctx context.Context, collection, name string) (*types.Runtime, error)
+	Info(ctx context.Context, collection, name string) (*types.System, error)
 	Get(ctx context.Context, collection, name string, obj interface{}, opts *types.Opts) error
 	List(ctx context.Context, collection, q string, obj interface{}, opts *types.Opts) error
 	Map(ctx context.Context, collection, q string, obj interface{}, opts *types.Opts) error
@@ -56,7 +59,6 @@ type Storage interface {
 	Set(ctx context.Context, collection, name string, obj interface{}, opts *types.Opts) error
 	Del(ctx context.Context, collection, name string) error
 	Watch(ctx context.Context, collection string, event chan *types.WatcherEvent, opts *types.Opts) error
-	Key() types.Key
 	Collection() types.Collection
 	Filter() types.Filter
 }

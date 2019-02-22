@@ -37,7 +37,7 @@ func (nv *NodeView) New(obj *types.Node) *Node {
 func (nv *NodeView) ToNodeMeta(meta types.NodeMeta) NodeMeta {
 	nm := NodeMeta{}
 	nm.Name = meta.Name
-	nm.SelfLink = meta.SelfLink
+	nm.SelfLink = meta.SelfLink.String()
 	nm.Created = meta.Created
 	nm.Updated = meta.Updated
 	nm.Hostname = meta.Hostname
@@ -57,14 +57,14 @@ func (nv *NodeView) ToNodeStatus(status types.NodeStatus) NodeStatus {
 
 	ns.Capacity.Containers = status.Capacity.Containers
 	ns.Capacity.Pods = status.Capacity.Pods
-	ns.Capacity.Memory = status.Capacity.Memory
-	ns.Capacity.Cpu = status.Capacity.Cpu
+	ns.Capacity.Memory = status.Capacity.RAM
+	ns.Capacity.CPU = status.Capacity.CPU
 	ns.Capacity.Storage = status.Capacity.Storage
 
 	ns.Allocated.Containers = status.Allocated.Containers
 	ns.Allocated.Pods = status.Allocated.Pods
-	ns.Allocated.Memory = status.Allocated.Memory
-	ns.Allocated.Cpu = status.Allocated.Cpu
+	ns.Allocated.Memory = status.Allocated.RAM
+	ns.Allocated.CPU = status.Allocated.CPU
 	ns.Allocated.Storage = status.Allocated.Storage
 
 	ns.State.CNI.Type = status.State.CNI.Type
@@ -113,10 +113,13 @@ func (obj *NodeManifest) Decode() *types.NodeManifest {
 
 	manifest.Meta.Initial = obj.Meta.Initial
 	manifest.Resolvers = make(map[string]*types.ResolverManifest, 0)
+	manifest.Exporter = new(types.ExporterManifest)
 
 	for i, s := range obj.Discovery {
 		manifest.Resolvers[i] = s
 	}
+
+	manifest.Exporter = obj.Exporter
 
 	for i, s := range obj.Network {
 		manifest.Network[i] = s
@@ -175,6 +178,7 @@ func (nv *NodeView) NewManifest(obj *types.NodeManifest) *NodeManifest {
 
 	manifest.Meta.Initial = obj.Meta.Initial
 	manifest.Discovery = obj.Resolvers
+	manifest.Exporter = obj.Exporter
 
 	manifest.Configs = obj.Configs
 	manifest.Secrets = obj.Secrets

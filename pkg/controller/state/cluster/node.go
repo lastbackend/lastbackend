@@ -37,7 +37,8 @@ type NodeLease struct {
 
 type NodeLeaseOptions struct {
 	Node     *string
-	Memory   *int64
+	CPU      *int64
+	RAM      *int64
 	Storage  *int64
 	Selector types.SpecSelector
 }
@@ -59,7 +60,7 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 		// check selectors first
 
 		if nl.Request.Selector.Node != types.EmptyString {
-			if n.SelfLink() != nl.Request.Selector.Node {
+			if n.SelfLink().Hostname() != nl.Request.Selector.Node {
 				continue
 			}
 		}
@@ -86,19 +87,25 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 			allocated = new(types.NodeResources)
 		)
 
-		if nl.Request.Memory != nil {
-			if (n.Status.Capacity.Memory - n.Status.Allocated.Memory) > *nl.Request.Memory {
-				node = n
+		if node == nil {
+			node = n
+		}
+
+		if nl.Request.RAM != nil {
+			if (n.Status.Capacity.RAM - n.Status.Allocated.RAM) > *nl.Request.RAM {
 				allocated.Pods++
-				allocated.Memory += *nl.Request.Memory
+				allocated.RAM += *nl.Request.RAM
+			}
+		}
+
+		if nl.Request.CPU != nil {
+			if (n.Status.Capacity.CPU - n.Status.Allocated.CPU) > *nl.Request.CPU {
+				allocated.CPU += *nl.Request.CPU
 			}
 		}
 
 		if nl.Request.Storage != nil {
 			if (n.Status.Capacity.Storage - n.Status.Allocated.Storage) > *nl.Request.Storage {
-				if node == nil {
-					node = n
-				}
 				allocated.Storage += *nl.Request.Storage
 			}
 		}
@@ -106,7 +113,8 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 		if node != nil {
 
 			node.Status.Allocated.Pods += allocated.Pods
-			node.Status.Allocated.Memory += allocated.Memory
+			node.Status.Allocated.RAM += allocated.RAM
+			node.Status.Allocated.CPU += allocated.CPU
 			node.Status.Allocated.Storage += allocated.Storage
 
 			nm := distribution.NewNodeModel(context.Background(), envs.Get().GetStorage())
@@ -137,9 +145,13 @@ func handleNodeRelease(cs *ClusterState, nl *NodeLease) error {
 
 	n := cs.node.list[*nl.Request.Node]
 
-	if nl.Request.Memory != nil {
+	if nl.Request.RAM != nil {
 		n.Status.Allocated.Pods--
-		n.Status.Allocated.Memory -= *nl.Request.Memory
+		n.Status.Allocated.RAM -= *nl.Request.RAM
+	}
+
+	if nl.Request.CPU != nil {
+		n.Status.Allocated.CPU -= *nl.Request.CPU
 	}
 
 	if nl.Request.Storage != nil {
@@ -147,7 +159,5 @@ func handleNodeRelease(cs *ClusterState, nl *NodeLease) error {
 	}
 
 	nm := distribution.NewNodeModel(context.Background(), envs.Get().GetStorage())
-	nm.Set(n)
-
-	return nil
+	return nm.Set(n)
 }

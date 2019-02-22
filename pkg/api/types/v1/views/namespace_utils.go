@@ -21,6 +21,7 @@ package views
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
@@ -40,6 +41,7 @@ func (nv *NamespaceView) NewApplyStatus(status struct {
 	Secrets  map[string]bool
 	Volumes  map[string]bool
 	Services map[string]bool
+	Jobs     map[string]bool
 	Routes   map[string]bool
 }) *NamespaceApplyStatus {
 	n := NamespaceApplyStatus{}
@@ -48,6 +50,7 @@ func (nv *NamespaceView) NewApplyStatus(status struct {
 	n.Volumes = make(map[string]bool, 0)
 	n.Services = make(map[string]bool, 0)
 	n.Routes = make(map[string]bool, 0)
+	n.Jobs = make(map[string]bool, 0)
 
 	for name, status := range status.Secrets {
 		n.Secrets[name] = status
@@ -69,6 +72,10 @@ func (nv *NamespaceView) NewApplyStatus(status struct {
 		n.Routes[name] = status
 	}
 
+	for name, status := range status.Jobs {
+		n.Jobs[name] = status
+	}
+
 	return &n
 }
 
@@ -76,7 +83,7 @@ func (r *Namespace) ToMeta(obj types.NamespaceMeta) NamespaceMeta {
 	meta := NamespaceMeta{}
 	meta.Name = obj.Name
 	meta.Description = obj.Description
-	meta.SelfLink = obj.SelfLink
+	meta.SelfLink = obj.SelfLink.String()
 	meta.Endpoint = obj.Endpoint
 	meta.Created = obj.Created
 	meta.Updated = obj.Updated
@@ -119,11 +126,11 @@ func (r *Namespace) ToEnv(obj types.NamespaceEnvs) NamespaceEnvs {
 	return envs
 }
 
-func (r *Namespace) ToResources(obj types.ResourceRequestItem) NamespaceResource {
+func (r *Namespace) ToResources(obj types.ResourceItem) NamespaceResource {
 	return NamespaceResource{
-		RAM:     obj.RAM,
-		CPU:     obj.CPU,
-		Storage: obj.Storage,
+		RAM:     resource.EncodeMemoryResource(obj.RAM),
+		CPU:     resource.EncodeCpuResource(obj.CPU),
+		Storage: resource.EncodeMemoryResource(obj.Storage),
 	}
 }
 

@@ -101,15 +101,16 @@ type NodeSecurity struct {
 type NodeResources struct {
 	Containers int   `json:"containers"`
 	Pods       int   `json:"pods"`
-	Memory     int64 `json:"memory"`
-	Cpu        int   `json:"cpu"`
+	Memory     int64 `json:"ram"`
+	CPU        int64 `json:"cpu"`
 	Storage    int64 `json:"storage"`
 }
 
 // swagger:model views_node_spec
 type NodeManifest struct {
 	Meta      NodeManifestMeta                   `json:"meta"`
-	Discovery map[string]*types.ResolverManifest `json:"discovery"`
+	Discovery map[string]*types.ResolverManifest `json:"discovery,omitempty"`
+	Exporter  *types.ExporterManifest            `json:"exporter,omitempty"`
 	Configs   map[string]*types.ConfigManifest   `json:"configs,omitempty"`
 	Secrets   map[string]*types.SecretManifest   `json:"secrets,omitempty"`
 	Network   map[string]*types.SubnetManifest   `json:"network,omitempty"`

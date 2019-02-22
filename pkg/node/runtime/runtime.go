@@ -37,7 +37,7 @@ const (
 	logLevel             = 3
 )
 
-// Runtime main node process
+// System main node process
 type Runtime struct {
 	spec chan *types.NodeManifest
 }
@@ -46,18 +46,22 @@ type Runtime struct {
 func (r *Runtime) Restore(ctx context.Context) error {
 	log.V(logLevel).Debugf("%s:restore:> restore init", logNodeRuntimePrefix)
 
-	if err := envs.Get().GetNet().SubnetRestore(ctx); err != nil {
-		log.Errorf("can not restore subnets: %s", err.Error())
-		return err
-	}
+	var network = envs.Get().GetNet()
 
-	if err := envs.Get().GetNet().EndpointRestore(ctx); err != nil {
-		log.Errorf("can not restore endpoint: %s", err.Error())
-		return err
-	}
+	if network != nil {
+		if err := network.SubnetRestore(ctx); err != nil {
+			log.Errorf("can not restore subnets: %s", err.Error())
+			return err
+		}
 
-	if err := envs.Get().GetNet().ResolverManage(ctx); err != nil {
-		log.Errorf("%s:> can not manage resolver:%s", logNodeRuntimePrefix, err.Error())
+		if err := network.EndpointRestore(ctx); err != nil {
+			log.Errorf("can not restore endpoint: %s", err.Error())
+			return err
+		}
+
+		if err := network.ResolverManage(ctx); err != nil {
+			log.Errorf("%s:> can not manage resolver:%s", logNodeRuntimePrefix, err.Error())
+		}
 	}
 
 	if err := VolumeRestore(ctx); err != nil {
@@ -185,6 +189,9 @@ func (r *Runtime) Loop(ctx context.Context) {
 	log.V(logLevel).Debugf("%s:loop:> start runtime loop", logNodeRuntimePrefix)
 
 	go func(ctx context.Context) {
+
+		var network = envs.Get().GetNet()
+
 		for {
 			select {
 			case spec := <-r.spec:
@@ -192,17 +199,21 @@ func (r *Runtime) Loop(ctx context.Context) {
 				log.V(logLevel).Debugf("%s:loop:> provision new spec", logNodeRuntimePrefix)
 
 				if spec.Meta.Initial {
-					log.V(logLevel).Debugf("%s> clean up endpoints", logNodeRuntimePrefix)
-					endpoints := envs.Get().GetNet().Endpoints().GetEndpoints()
-					for e := range endpoints {
 
-						// skip resolver endpoint
-						if e == envs.Get().GetNet().GetResolverEndpointKey() {
-							continue
-						}
+					if network != nil {
 
-						if _, ok := spec.Endpoints[e]; !ok {
-							envs.Get().GetNet().EndpointDestroy(context.Background(), e, endpoints[e])
+						log.V(logLevel).Debugf("%s> clean up endpoints", logNodeRuntimePrefix)
+						endpoints := network.Endpoints().GetEndpoints()
+						for e := range endpoints {
+
+							// skip resolver endpoint
+							if e == network.GetResolverEndpointKey() {
+								continue
+							}
+
+							if _, ok := spec.Endpoints[e]; !ok {
+								network.EndpointDestroy(context.Background(), e, endpoints[e])
+							}
 						}
 					}
 
@@ -228,31 +239,42 @@ func (r *Runtime) Loop(ctx context.Context) {
 						}
 					}
 
-					log.V(logLevel).Debugf("%s> clean up subnets", logNodeRuntimePrefix)
-					nets := envs.Get().GetNet().Subnets().GetSubnets()
+					if network != nil {
+						log.V(logLevel).Debugf("%s> clean up subnets", logNodeRuntimePrefix)
+						nets := network.Subnets().GetSubnets()
 
-					for cidr := range nets {
-						if _, ok := spec.Network[cidr]; !ok {
-							envs.Get().GetNet().SubnetDestroy(ctx, cidr)
+						for cidr := range nets {
+							if _, ok := spec.Network[cidr]; !ok {
+								network.SubnetDestroy(ctx, cidr)
+							}
 						}
 					}
 				}
 
-				if len(spec.Resolvers) != 0 {
-					log.V(logLevel).Debugf("%s>set cluster dns ips: %#v", logNodeRuntimePrefix, spec.Resolvers)
-					for key, res := range spec.Resolvers {
-						envs.Get().GetNet().Resolvers().SetResolver(key, res)
-						envs.Get().GetNet().ResolverManage(ctx)
+				if network != nil {
+					if len(spec.Resolvers) != 0 {
+						log.V(logLevel).Debugf("%s>set cluster dns ips: %#v", logNodeRuntimePrefix, spec.Resolvers)
+						for key, res := range spec.Resolvers {
+							network.Resolvers().SetResolver(key, res)
+							network.ResolverManage(ctx)
+						}
 					}
+				}
+
+				if spec.Exporter != nil {
+					log.V(logLevel).Debugf("%s>set cluster exporter endpoint: %s", logNodeRuntimePrefix, spec.Exporter.Endpoint)
+					envs.Get().GetExporter().Reconnect(spec.Exporter.Endpoint)
 				}
 
 				log.V(logLevel).Debugf("%s> provision init", logNodeRuntimePrefix)
 
-				log.V(logLevel).Debugf("%s> provision networks", logNodeRuntimePrefix)
-				for cidr, n := range spec.Network {
-					log.V(logLevel).Debugf("network: %v", n)
-					if err := envs.Get().GetNet().SubnetManage(ctx, cidr, n); err != nil {
-						log.Errorf("Subnet [%s] create err: %s", n.CIDR, err.Error())
+				if network != nil {
+					log.V(logLevel).Debugf("%s> provision networks", logNodeRuntimePrefix)
+					for cidr, n := range spec.Network {
+						log.V(logLevel).Debugf("network: %v", n)
+						if err := network.SubnetManage(ctx, cidr, n); err != nil {
+							log.Errorf("Subnet [%s] create err: %s", n.CIDR, err.Error())
+						}
 					}
 				}
 
@@ -277,11 +299,13 @@ func (r *Runtime) Loop(ctx context.Context) {
 					}
 				}
 
-				log.V(logLevel).Debugf("%s> provision endpoints", logNodeRuntimePrefix)
-				for e, spec := range spec.Endpoints {
-					log.V(logLevel).Debugf("endpoint: %v", e)
-					if err := envs.Get().GetNet().EndpointManage(ctx, e, spec); err != nil {
-						log.Errorf("Endpoint [%s] manage err: %s", e, err.Error())
+				if network != nil {
+					log.V(logLevel).Debugf("%s> provision endpoints", logNodeRuntimePrefix)
+					for e, spec := range spec.Endpoints {
+						log.V(logLevel).Debugf("endpoint: %v", e)
+						if err := network.EndpointManage(ctx, e, spec); err != nil {
+							log.Errorf("Endpoint [%s] manage err: %s", e, err.Error())
+						}
 					}
 				}
 

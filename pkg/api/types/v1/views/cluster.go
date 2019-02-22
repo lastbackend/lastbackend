@@ -59,16 +59,12 @@ type ClusterList []*Cluster
 type ClusterResources struct {
 	// number of containers
 	Containers int `json:"containers"`
-
 	// number of pods
 	Pods int `json:"pods"`
-
-	// memory volume
-	Memory int64 `json:"memory"`
-
-	// number of cpu
-	Cpu int `json:"cpu"`
-
-	// storage volume
+	// ram size
+	RAM string `json:"ram"`
+	// cpu  size
+	Cpu string `json:"cpu"`
+	// storage size
 	Storage string `json:"storage"`
 }

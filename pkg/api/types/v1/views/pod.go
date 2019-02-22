@@ -20,14 +20,10 @@ package views
 
 import (
 	"time"
-
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 // swagger:model views_pod
 type Pod struct {
-	// Pod meta id
-	ID string `json:"id"`
 	// Pod Meta
 	Meta PodMeta `json:"meta"`
 	// Pod Spec
@@ -39,7 +35,7 @@ type Pod struct {
 // swagger:ignore
 // PodList is a map of pods
 // swagger:model views_pod_list
-type PodList map[string]*Pod
+type PodList map[string]Pod
 
 // PodMeta is a meta of pod
 // swagger:model views_pod_meta
@@ -50,9 +46,9 @@ type PodMeta struct {
 	Description string `json:"description"`
 	// Pod SelfLink
 	SelfLink string `json:"self_link"`
-	// Pod deployment id
-	Deployment string `json:"deployment"`
-	// Pod service id
+	// Pod parent
+	Parent PodMetaParent `json:"parent"`
+	// Pod namespace
 	Namespace string `json:"namespace"`
 	// Pod node id
 	Node string `json:"node"`
@@ -66,11 +62,16 @@ type PodMeta struct {
 	Updated time.Time `json:"updated"`
 }
 
+type PodMetaParent struct {
+	Kind     string `json:"kind"`
+	SelfLink string `json:"self_link"`
+}
+
 // PodSpec is a spec of pod
 // swagger:model views_pod_spec
 type PodSpec struct {
-	State    PodSpecState    `json:"state"`
-	Template PodSpecTemplate `json:"template"`
+	State    PodSpecState         `json:"state"`
+	Template ManifestSpecTemplate `json:"template"`
 }
 
 // PodSpecState is a state of pod spec
@@ -78,17 +79,6 @@ type PodSpec struct {
 type PodSpecState struct {
 	Destroy     bool `json:"destroy"`
 	Maintenance bool `json:"maintenance"`
-}
-
-// PodSpecTemplate is a template of pod spec
-// swagger:model views_pod_spec_template
-type PodSpecTemplate struct {
-	// Template Volume
-	Volumes types.SpecTemplateVolumeList `json:"volumes"`
-	// Template main container
-	Containers types.SpecTemplateContainers `json:"containers"`
-	// Termination period
-	Termination int `json:"termination"`
 }
 
 // PodStatus is a status of pod
@@ -102,8 +92,21 @@ type PodStatus struct {
 	Steps PodSteps `json:"steps"`
 	// Pod network
 	Network PodNetwork `json:"network"`
-	// Pod containers
-	Containers PodContainers `json:"containers"`
+	// Pod runtime
+	Runtime PodStatusRuntime `json:"runtime"`
+}
+
+type PodStatusRuntime struct {
+	Services []PodContainer          `json:"services"`
+	Pipeline []PodStatusPipelineStep `json:"pipeline"`
+}
+
+type PodStatusPipelineStep struct {
+	Name     string         `json:"name"`
+	Status   string         `json:"status"`
+	Error    bool           `json:"error"`
+	Message  string         `json:"message"`
+	Commands []PodContainer `json:"commands"`
 }
 
 // PodContainers is a list of pod containers
@@ -149,7 +152,7 @@ type PodContainerState struct {
 // PodContainerStateCreated represents creation time of the pod container
 // swagger:model views_pod_container_state_created
 type PodContainerStateCreated struct {
-	Created time.Time `json:"created"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 // swagger:ignore

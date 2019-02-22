@@ -171,25 +171,25 @@ func testServiceObserver(t *testing.T, name, werr string, wst *ServiceState, sta
 
 		for _, d := range wst.deployment.list {
 
-			if _, ok := state.deployment.list[d.SelfLink()]; ok {
+			if _, ok := state.deployment.list[d.SelfLink().String()]; ok {
 
 				if !assert.Equal(t,
 					d.Spec.Replicas,
-					state.deployment.list[d.SelfLink()].Spec.Replicas,
+					state.deployment.list[d.SelfLink().String()].Spec.Replicas,
 					"deployment replicas not match") {
 					return
 				}
 
 				if !assert.Equal(t,
 					d.Status.State,
-					state.deployment.list[d.SelfLink()].Status.State,
+					state.deployment.list[d.SelfLink().String()].Status.State,
 					"deployment status state not match") {
 					return
 				}
 
 				if !assert.Equal(t,
 					d.Status.Message,
-					state.deployment.list[d.SelfLink()].Status.Message,
+					state.deployment.list[d.SelfLink().String()].Status.Message,
 					"deployment status message not match") {
 					return
 				}
@@ -301,25 +301,25 @@ func testStatusState(t *testing.T, fn func(*ServiceState) error, name string, ws
 
 		for _, d := range wst.deployment.list {
 
-			if _, ok := state.deployment.list[d.SelfLink()]; ok {
+			if _, ok := state.deployment.list[d.SelfLink().String()]; ok {
 
 				if !assert.Equal(t,
 					d.Spec.Replicas,
-					state.deployment.list[d.SelfLink()].Spec.Replicas,
+					state.deployment.list[d.SelfLink().String()].Spec.Replicas,
 					"deployment replicas not match") {
 					return
 				}
 
 				if !assert.Equal(t,
 					d.Status.State,
-					state.deployment.list[d.SelfLink()].Status.State,
+					state.deployment.list[d.SelfLink().String()].Status.State,
 					"deployment status state not match") {
 					return
 				}
 
 				if !assert.Equal(t,
 					d.Status.Message,
-					state.deployment.list[d.SelfLink()].Status.Message,
+					state.deployment.list[d.SelfLink().String()].Status.Message,
 					"deployment status message not match") {
 					return
 				}
@@ -355,7 +355,7 @@ func TestHandleServiceStateCreated(t *testing.T) {
 		s.want.state = getServiceStateAsset(s.args.svc)
 		dp := getDeploymentAsset(s.want.state.service, types.StateCreated, types.EmptyString)
 		s.want.state.deployment.provision = dp
-		s.want.state.deployment.list[dp.SelfLink()] = dp
+		s.want.state.deployment.list[dp.SelfLink().String()] = dp
 
 		return s
 	}())
@@ -374,7 +374,7 @@ func TestHandleServiceStateCreated(t *testing.T) {
 		dp := getDeploymentAsset(s.want.state.service, types.StateCreated, types.EmptyString)
 
 		s.want.state.deployment.provision = dp
-		s.want.state.deployment.list[dp.SelfLink()] = dp
+		s.want.state.deployment.list[dp.SelfLink().String()] = dp
 		s.want.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 
 		return s
@@ -396,7 +396,7 @@ func TestHandleServiceStateCreated(t *testing.T) {
 		dp := getDeploymentAsset(s.want.state.service, types.StateCreated, types.EmptyString)
 
 		s.want.state.deployment.provision = dp
-		s.want.state.deployment.list[dp.SelfLink()] = dp
+		s.want.state.deployment.list[dp.SelfLink().String()] = dp
 
 		s.args.svc.Spec.Network.Ports[8080] = "8080/tcp"
 		s.want.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
@@ -421,7 +421,7 @@ func TestHandleServiceStateCreated(t *testing.T) {
 		dp := getDeploymentAsset(s.want.state.service, types.StateCreated, types.EmptyString)
 
 		s.want.state.deployment.provision = dp
-		s.want.state.deployment.list[dp.SelfLink()] = dp
+		s.want.state.deployment.list[dp.SelfLink().String()] = dp
 
 		return s
 	}())
@@ -438,7 +438,7 @@ func TestHandleServiceStateCreated(t *testing.T) {
 		s.args.svc.Spec.Template.Updated = time.Now()
 
 		s.args.state.deployment.provision = dp1
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
@@ -447,8 +447,8 @@ func TestHandleServiceStateCreated(t *testing.T) {
 
 		s.want.state.service.Status.State = types.StateCreated
 		s.want.state.deployment.provision = dp2
-		s.want.state.deployment.list[dp2.SelfLink()] = dp2
-		s.want.state.deployment.list[dp1.SelfLink()].Status.State = types.StateDestroyed
+		s.want.state.deployment.list[dp2.SelfLink().String()] = dp2
+		s.want.state.deployment.list[dp1.SelfLink().String()].Status.State = types.StateDestroyed
 
 		return s
 	}())
@@ -462,16 +462,16 @@ func TestHandleServiceStateCreated(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(s.args.svc)
 		s.args.state.deployment.active = dp1
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
 
 		s.want.err = types.EmptyString
 		s.args.svc.Spec.Replicas++
 
 		cdp.Spec.Replicas = s.args.svc.Spec.Replicas
 		s.want.state = getServiceStateAsset(s.args.svc)
-		s.want.state.deployment.list[cdp.SelfLink()] = &cdp
+		s.want.state.deployment.list[cdp.SelfLink().String()] = &cdp
 		s.want.state.deployment.active = &cdp
-		s.want.state.deployment.list[cdp.SelfLink()].Status.State = types.StateProvision
+		s.want.state.deployment.list[cdp.SelfLink().String()].Status.State = types.StateProvision
 
 		return s
 	}())
@@ -512,7 +512,7 @@ func TestHandleServiceStateProvision(t *testing.T) {
 		dp := getDeploymentAsset(s.want.state.service, types.StateCreated, types.EmptyString)
 
 		s.want.state.deployment.provision = dp
-		s.want.state.deployment.list[dp.SelfLink()] = dp
+		s.want.state.deployment.list[dp.SelfLink().String()] = dp
 		s.want.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 
 		return s
@@ -534,7 +534,7 @@ func TestHandleServiceStateProvision(t *testing.T) {
 		dp := getDeploymentAsset(s.want.state.service, types.StateCreated, types.EmptyString)
 
 		s.want.state.deployment.provision = dp
-		s.want.state.deployment.list[dp.SelfLink()] = dp
+		s.want.state.deployment.list[dp.SelfLink().String()] = dp
 
 		s.args.svc.Spec.Network.Ports[80] = "8000/tcp"
 		s.args.svc.Spec.Network.Ports[8080] = "8080/tcp"
@@ -560,7 +560,7 @@ func TestHandleServiceStateProvision(t *testing.T) {
 		dp := getDeploymentAsset(s.want.state.service, types.StateCreated, types.EmptyString)
 
 		s.want.state.deployment.provision = dp
-		s.want.state.deployment.list[dp.SelfLink()] = dp
+		s.want.state.deployment.list[dp.SelfLink().String()] = dp
 
 		return s
 	}())
@@ -574,16 +574,16 @@ func TestHandleServiceStateProvision(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(s.args.svc)
 		s.args.state.deployment.active = dp1
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
 
 		s.want.err = types.EmptyString
 		s.args.svc.Spec.Replicas++
 
 		cdp.Spec.Replicas = s.args.svc.Spec.Replicas
 		s.want.state = getServiceStateAsset(s.args.svc)
-		s.want.state.deployment.list[cdp.SelfLink()] = &cdp
+		s.want.state.deployment.list[cdp.SelfLink().String()] = &cdp
 		s.want.state.deployment.active = &cdp
-		s.want.state.deployment.list[cdp.SelfLink()].Status.State = types.StateProvision
+		s.want.state.deployment.list[cdp.SelfLink().String()].Status.State = types.StateProvision
 
 		return s
 	}())
@@ -601,8 +601,8 @@ func TestHandleServiceStateProvision(t *testing.T) {
 		s.args.state = getServiceStateAsset(s.args.svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.want.err = types.EmptyString
 		s.args.svc.Spec.Replicas++
@@ -611,8 +611,8 @@ func TestHandleServiceStateProvision(t *testing.T) {
 		cdp2.Status.State = types.StateProvision
 
 		s.want.state = getServiceStateAsset(s.args.svc)
-		s.want.state.deployment.list[cdp1.SelfLink()] = &cdp1
-		s.want.state.deployment.list[cdp2.SelfLink()] = &cdp2
+		s.want.state.deployment.list[cdp1.SelfLink().String()] = &cdp1
+		s.want.state.deployment.list[cdp2.SelfLink().String()] = &cdp2
 		s.want.state.deployment.active = &cdp1
 		s.want.state.deployment.provision = &cdp2
 
@@ -630,17 +630,17 @@ func TestHandleServiceStateProvision(t *testing.T) {
 		s.args.state = getServiceStateAsset(s.args.svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.args.svc.Spec.Template.Updated = time.Now()
 		dp3 := getDeploymentAsset(s.args.svc, types.StateProvision, types.EmptyString)
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.deployment.list[dp1.SelfLink()].Status.State = types.StateReady
-		s.want.state.deployment.list[dp2.SelfLink()].Status.State = types.StateDestroyed
-		s.want.state.deployment.list[dp3.SelfLink()] = dp3
+		s.want.state.deployment.list[dp1.SelfLink().String()].Status.State = types.StateReady
+		s.want.state.deployment.list[dp2.SelfLink().String()].Status.State = types.StateDestroyed
+		s.want.state.deployment.list[dp3.SelfLink().String()] = dp3
 		s.want.state.deployment.provision = dp3
 
 		return s
@@ -655,15 +655,15 @@ func TestHandleServiceStateProvision(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(s.args.svc)
 		s.args.state.deployment.active = dp1
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
 
 		s.args.svc.Spec.Template.Updated = time.Now()
 		dp2 := getDeploymentAsset(s.args.svc, types.StateProvision, types.EmptyString)
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.deployment.list[dp1.SelfLink()].Status.State = types.StateDestroyed
-		s.want.state.deployment.list[dp2.SelfLink()] = dp2
+		s.want.state.deployment.list[dp1.SelfLink().String()].Status.State = types.StateDestroyed
+		s.want.state.deployment.list[dp2.SelfLink().String()] = dp2
 		s.want.state.deployment.provision = dp2
 
 		return s
@@ -837,8 +837,8 @@ func TestHandleServiceStateDestroy(t *testing.T) {
 
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		cdp1 := *dp1
 		cdp2 := *dp2
@@ -846,8 +846,8 @@ func TestHandleServiceStateDestroy(t *testing.T) {
 		s.want.err = types.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
-		s.want.state.deployment.list[cdp1.SelfLink()] = &cdp1
-		s.want.state.deployment.list[cdp2.SelfLink()] = &cdp2
+		s.want.state.deployment.list[cdp1.SelfLink().String()] = &cdp1
+		s.want.state.deployment.list[cdp2.SelfLink().String()] = &cdp2
 
 		s.want.state.deployment.active = &cdp1
 		s.want.state.deployment.provision = &cdp2
@@ -872,8 +872,8 @@ func TestHandleServiceStateDestroy(t *testing.T) {
 
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.args.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 
@@ -883,8 +883,8 @@ func TestHandleServiceStateDestroy(t *testing.T) {
 		s.want.err = types.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
-		s.want.state.deployment.list[cdp1.SelfLink()] = &cdp1
-		s.want.state.deployment.list[cdp2.SelfLink()] = &cdp2
+		s.want.state.deployment.list[cdp1.SelfLink().String()] = &cdp1
+		s.want.state.deployment.list[cdp2.SelfLink().String()] = &cdp2
 
 		s.want.state.deployment.active = &cdp1
 		s.want.state.deployment.provision = &cdp2
@@ -961,8 +961,8 @@ func TestHandleServiceStateDestroyed(t *testing.T) {
 
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		cdp1 := *dp1
 		cdp2 := *dp2
@@ -970,8 +970,8 @@ func TestHandleServiceStateDestroyed(t *testing.T) {
 		s.want.err = types.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
-		s.want.state.deployment.list[cdp1.SelfLink()] = &cdp1
-		s.want.state.deployment.list[cdp2.SelfLink()] = &cdp2
+		s.want.state.deployment.list[cdp1.SelfLink().String()] = &cdp1
+		s.want.state.deployment.list[cdp2.SelfLink().String()] = &cdp2
 
 		s.want.state.deployment.active = &cdp1
 		s.want.state.deployment.provision = &cdp2
@@ -998,8 +998,8 @@ func TestHandleServiceStateDestroyed(t *testing.T) {
 
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.args.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 
@@ -1009,8 +1009,8 @@ func TestHandleServiceStateDestroyed(t *testing.T) {
 		s.want.err = types.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
-		s.want.state.deployment.list[cdp1.SelfLink()] = &cdp1
-		s.want.state.deployment.list[cdp2.SelfLink()] = &cdp2
+		s.want.state.deployment.list[cdp1.SelfLink().String()] = &cdp1
+		s.want.state.deployment.list[cdp2.SelfLink().String()] = &cdp2
 
 		s.want.state.deployment.active = &cdp1
 		s.want.state.deployment.provision = &cdp2
@@ -1065,8 +1065,8 @@ func TestServiceStatusState(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp1
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.service.Status.State = types.StateProvision
@@ -1083,8 +1083,8 @@ func TestServiceStatusState(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.service.Status.State = types.StateProvision
@@ -1101,8 +1101,8 @@ func TestServiceStatusState(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.service.Status.State = types.StateCreated
@@ -1118,13 +1118,13 @@ func TestServiceStatusState(t *testing.T) {
 		dp1 := getDeploymentAsset(svc, types.StateReady, types.EmptyString)
 		dp2 := getDeploymentAsset(svc, types.StateError, types.EmptyString)
 		dp2.Spec.Template.Containers[0].Name = "changed"
-		dp2.Spec.Template.Updated.Add(3*time.Second)
+		dp2.Spec.Template.Updated.Add(3 * time.Second)
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.service.Status.State = types.StateReady
@@ -1143,8 +1143,8 @@ func TestServiceStatusState(t *testing.T) {
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.service.Status.State = types.StateReady
@@ -1163,8 +1163,8 @@ func TestServiceStatusState(t *testing.T) {
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.service.Status.State = types.StateReady
@@ -1183,8 +1183,8 @@ func TestServiceStatusState(t *testing.T) {
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-		s.args.state.deployment.list[dp2.SelfLink()] = dp2
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.service.Status.State = types.StateError
@@ -1201,7 +1201,7 @@ func TestServiceStatusState(t *testing.T) {
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp1
-		s.args.state.deployment.list[dp1.SelfLink()] = dp1
+		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
 
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.service.Status.State = types.StateError
@@ -1219,6 +1219,7 @@ func getServiceAsset(state, message string) *types.Service {
 
 	s.Meta.Namespace = "test"
 	s.Meta.Name = "service"
+	s.Meta.SelfLink = *types.NewServiceSelfLink(s.Meta.Namespace, s.Meta.Name)
 
 	s.Status.State = state
 	s.Status.Message = message
@@ -1234,6 +1235,7 @@ func getEndpointAsset(svc *types.Service) *types.Endpoint {
 
 	e.Meta.Namespace = svc.Meta.Namespace
 	e.Meta.Name = svc.Meta.Name
+	e.Meta.SelfLink = *types.NewEndpointSelfLink(e.Meta.Namespace, e.Meta.Name)
 
 	e.Spec.PortMap = make(map[uint16]string)
 	for k, v := range svc.Spec.Network.Ports {
@@ -1250,12 +1252,13 @@ func getDeploymentAsset(svc *types.Service, state, message string) *types.Deploy
 	d.Meta.Namespace = svc.Meta.Namespace
 	d.Meta.Service = svc.Meta.Name
 	d.Meta.Name = generator.GetUUIDV4()
+	d.Meta.SelfLink = *types.NewDeploymentSelfLink(d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
 
 	d.Status.State = state
 	d.Status.Message = message
-	d.Status.Dependencies.Volumes = make(map[string]types.DeploymentStatusDependency, 0)
-	d.Status.Dependencies.Secrets = make(map[string]types.DeploymentStatusDependency, 0)
-	d.Status.Dependencies.Configs = make(map[string]types.DeploymentStatusDependency, 0)
+	d.Status.Dependencies.Volumes = make(map[string]types.StatusDependency, 0)
+	d.Status.Dependencies.Secrets = make(map[string]types.StatusDependency, 0)
+	d.Status.Dependencies.Configs = make(map[string]types.StatusDependency, 0)
 
 	d.Spec.State = svc.Spec.State
 	d.Spec.Template = svc.Spec.Template
@@ -1274,9 +1277,10 @@ func getPodAsset(d *types.Deployment, state, message string) *types.Pod {
 	p := new(types.Pod)
 
 	p.Meta.Namespace = d.Meta.Namespace
-	p.Meta.Service = d.Meta.Service
-	p.Meta.Deployment = d.Meta.Name
 	p.Meta.Name = generator.GetUUIDV4()
+
+	sl, _ := types.NewPodSelfLink(types.KindDeployment, d.SelfLink().String(), p.Meta.Name)
+	p.Meta.SelfLink = *sl
 
 	p.Status.State = state
 	p.Status.Message = message
@@ -1300,11 +1304,11 @@ func getServiceStateAsset(svc *types.Service) *ServiceState {
 	n.Status.Capacity = types.NodeResources{
 		Containers: 10,
 		Pods:       10,
-		Memory:     1000,
-		Cpu:        1,
+		RAM:        1000,
+		CPU:        1,
 		Storage:    1000,
 	}
-	n.SelfLink()
+	n.Meta.SelfLink = *types.NewNodeSelfLink(n.Meta.Hostname)
 
 	cs := cluster.NewClusterState()
 	cs.SetNode(n)
@@ -1324,11 +1328,11 @@ func getServiceStateCopy(ss *ServiceState) *ServiceState {
 	}
 
 	if ss.deployment.active != nil {
-		s.deployment.active = s.deployment.list[ss.deployment.active.SelfLink()]
+		s.deployment.active = s.deployment.list[ss.deployment.active.SelfLink().String()]
 	}
 
 	if ss.deployment.provision != nil {
-		s.deployment.provision = s.deployment.list[ss.deployment.provision.SelfLink()]
+		s.deployment.provision = s.deployment.list[ss.deployment.provision.SelfLink().String()]
 	}
 
 	if len(ss.pod.list) > 0 {

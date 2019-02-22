@@ -267,10 +267,7 @@ func handleServiceStateDestroyed(ss *ServiceState, svc *types.Service) (err erro
 	}
 
 	if ns != nil {
-		resource := svc.Spec.GetResourceRequest()
-		if err := ns.ReleaseResources(resource); err != nil {
-			log.Errorf("%s:> namespece resource release err: %s", logServicePrefix, err.Error())
-		}
+		ns.ReleaseResources(svc.Spec.GetResourceRequest())
 
 		if err := nm.Update(ns); err != nil {
 			log.Errorf("%s:> namespece update err: %s", logServicePrefix, err.Error())
@@ -351,11 +348,10 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 			return err
 		}
 
-
 		for _, od := range ss.deployment.list {
 
 			if ss.deployment.active != nil {
-				if ss.deployment.active.SelfLink() == od.SelfLink() && od.Status.State == types.StateReady {
+				if ss.deployment.active.SelfLink().String() == od.SelfLink().String() && od.Status.State == types.StateReady {
 					continue
 				}
 			}
@@ -368,7 +364,7 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 			}
 		}
 
-		ss.deployment.list[d.SelfLink()] = d
+		ss.deployment.list[d.SelfLink().String()] = d
 		ss.deployment.provision = d
 	}
 

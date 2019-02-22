@@ -22,13 +22,15 @@ var (
 	SecretAccessToken = ""
 )
 
+const KindCluster = "cluster"
 const KindAPIServer = "api"
 const KindController = "controller"
 const KindDiscovery = "discovery"
+const KindIngress = "ingress"
 const KindNode = "node"
 
 type Process struct {
-	Runtime
+	System
 	// Process Meta
 	Meta ProcessMeta `json:"meta"`
 	// Process status

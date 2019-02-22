@@ -48,10 +48,10 @@ type dbstore struct {
 	watcher    *watcher
 }
 
-func (s *dbstore) Info(ctx context.Context, key string) (*types.Runtime, error) {
+func (s *dbstore) Info(ctx context.Context, key string) (*types.System, error) {
 
 	key = path.Join(s.pathPrefix, key)
-	r := new(types.Runtime)
+	r := new(types.System)
 
 	log.V(logLevel).Debugf("%s:count:> key: %s with filter: %s", logPrefix, key)
 
@@ -61,7 +61,7 @@ func (s *dbstore) Info(ctx context.Context, key string) (*types.Runtime, error) 
 		return r, err
 	}
 
-	r.System.Revision = getResp.Header.Revision
+	r.Storage.Revision = getResp.Header.Revision
 	return r, nil
 }
 
@@ -168,7 +168,7 @@ func (s *dbstore) List(ctx context.Context, key, keyRegexFilter string, listOutP
 
 	log.V(logLevel).Debugf("%s:list:> key: %s with filter: %s", logPrefix, key, keyRegexFilter)
 
-	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
+	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix(), clientv3.WithSort(clientv3.SortByCreateRevision, clientv3.SortDescend))
 	if err != nil {
 		log.V(logLevel).Errorf("%s:list:> request err: %v", logPrefix, err)
 		return err
@@ -208,7 +208,7 @@ func (s *dbstore) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr
 
 	log.V(logLevel).Debugf("%s:map:> key: %s with filter: %s", logPrefix, key, keyRegexFilter)
 
-	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
+	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix(), clientv3.WithSort(clientv3.SortByCreateRevision, clientv3.SortDescend))
 	if err != nil {
 		log.V(logLevel).Errorf("%s:map:> request err: %v", logPrefix, err)
 		return err
@@ -339,7 +339,7 @@ func (s *dbstore) Decode(ctx context.Context, value []byte, out interface{}) err
 	return decode(s.codec, value, out)
 }
 
-func setEntityRuntimeInfo(out interface{}, runtime types.Runtime) error {
+func setEntityRuntimeInfo(out interface{}, runtime types.System) error {
 
 	var (
 		v   reflect.Value
@@ -359,13 +359,13 @@ func setEntityRuntimeInfo(out interface{}, runtime types.Runtime) error {
 	return nil
 }
 
-func setValueRuntimeInfo(v reflect.Value, runtime types.Runtime) error {
+func setValueRuntimeInfo(v reflect.Value, runtime types.System) error {
 
 	if v.Kind() != reflect.Struct {
 		return nil
 	}
 
-	f := v.FieldByName("Runtime")
+	f := v.FieldByName("System")
 
 	if !f.IsValid() {
 		return nil
@@ -375,20 +375,20 @@ func setValueRuntimeInfo(v reflect.Value, runtime types.Runtime) error {
 		return nil
 	}
 
-	f.Set(reflect.ValueOf(runtime.Runtime))
+	f.Set(reflect.ValueOf(runtime.System))
 
 	return nil
 }
 
-func getRuntimeFromResponse(res *etcdserverpb.ResponseHeader) types.Runtime {
-	runtime := types.Runtime{}
-	runtime.System.Revision = res.Revision
+func getRuntimeFromResponse(res *etcdserverpb.ResponseHeader) types.System {
+	runtime := types.System{}
+	runtime.Storage.Revision = res.Revision
 	return runtime
 }
 
-func getRuntimeFromValue(res *mvccpb.KeyValue) types.Runtime {
-	runtime := types.Runtime{}
-	runtime.System.Revision = res.ModRevision
+func getRuntimeFromValue(res *mvccpb.KeyValue) types.System {
+	runtime := types.System{}
+	runtime.Storage.Revision = res.ModRevision
 	return runtime
 }
 

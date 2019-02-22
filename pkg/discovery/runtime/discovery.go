@@ -20,10 +20,11 @@ package runtime
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
 	"github.com/spf13/viper"
-	"os"
 )
 
 func DiscoveryInfo() types.DiscoveryInfo {
@@ -63,10 +64,8 @@ func DiscoveryStatus() types.DiscoveryStatus {
 		_ = fmt.Errorf("get ip err: %s", err)
 	}
 
-
 	state.Port = uint16(viper.GetInt("dns.port"))
 	state.IP = ip
 
 	return state
 }
-

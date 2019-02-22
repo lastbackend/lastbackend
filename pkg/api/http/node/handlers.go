@@ -340,7 +340,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	snet, err := sn.SubnetGet(opts.Network.CIDR)
+	snet, err := sn.SubnetGet(opts.Network.SubnetSpec.CIDR)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:connect:> get subnet err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -379,9 +379,10 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if snet == nil {
-			if _, err := sn.SubnetPut(node.SelfLink(), opts.Network.SubnetSpec); err != nil {
+			if _, err := sn.SubnetPut(node.SelfLink().String(), opts.Network.SubnetSpec); err != nil {
 				log.V(logLevel).Errorf("%s:connect:> snet put error: %s", logPrefix, err.Error())
 				errors.HTTP.InternalServerError(w)
+				return
 			}
 		}
 
@@ -413,7 +414,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if snet == nil {
-		if _, err := sn.SubnetPut(node.SelfLink(), opts.Network.SubnetSpec); err != nil {
+		if _, err := sn.SubnetPut(node.SelfLink().String(), opts.Network.SubnetSpec); err != nil {
 			log.V(logLevel).Errorf("%s:connect:> snet put error: %s", logPrefix, err.Error())
 			errors.HTTP.InternalServerError(w)
 		}
@@ -518,7 +519,12 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		pod, err := pm.Get(keys[0], keys[1], keys[2], keys[3])
+		sl := types.PodSelfLink{}
+		if err := sl.Parse(p); err != nil {
+			continue
+		}
+
+		pod, err := pm.Get(sl.String())
 		if err != nil {
 			log.V(logLevel).Errorf("%s:setpodstatus:> pod not found selflink err: %s", logPrefix, p)
 			errors.HTTP.InternalServerError(w)
@@ -539,7 +545,7 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 		pod.Status.Status = s.Status
 		pod.Status.Running = s.Running
 		pod.Status.Message = s.Message
-		pod.Status.Containers = s.Containers
+		pod.Status.Runtime = s.Runtime
 		pod.Status.Network = s.Network
 		pod.Status.Steps = s.Steps
 
@@ -686,6 +692,7 @@ func getNodeSpec(ctx context.Context, n *types.Node) (*types.NodeManifest, error
 		spec = new(types.NodeManifest)
 		spec.Meta.Initial = true
 		spec.Resolvers = cache.GetResolvers()
+		spec.Exporter = cache.GetExporterEndpoint()
 		spec.Configs = cache.GetConfigs()
 
 		pods, err := pm.ManifestMap(n.Meta.Name)

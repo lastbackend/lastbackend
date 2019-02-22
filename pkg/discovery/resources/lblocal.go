@@ -163,5 +163,7 @@ func lbLocal(w dns.ResponseWriter, r *dns.Msg) {
 
 	log.V(logLevel).Debugf("%s:lb.local:> send message info  %#v", logPrefix, m)
 
-	w.WriteMsg(m)
+	if err := w.WriteMsg(m); err != nil {
+		log.V(logLevel).Errorf("%s:lb.local:> write message err: %v", logPrefix, err)
+	}
 }

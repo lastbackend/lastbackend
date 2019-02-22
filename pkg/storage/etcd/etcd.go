@@ -71,7 +71,7 @@ func New() (*Storage, error) {
 	return s, nil
 }
 
-func (s Storage) Info(ctx context.Context, collection string, name string) (*types.Runtime, error) {
+func (s Storage) Info(ctx context.Context, collection string, name string) (*types.System, error) {
 	return s.client.store.Info(ctx, keyCreate(collection, name))
 }
 
@@ -206,8 +206,8 @@ func (s Storage) Watch(ctx context.Context, collection string, event chan *types
 			e := new(types.WatcherEvent)
 			e.Action = res.Type
 			e.SelfLink = keys[1]
-			e.System.Key = res.Key
-			e.System.Revision = res.Rev
+			e.Storage.Key = res.Key
+			e.Storage.Revision = res.Rev
 
 			match := strings.Split(res.Key, ":")
 

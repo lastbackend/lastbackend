@@ -20,8 +20,8 @@ package discovery
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/discovery/resources"
-	"github.com/lastbackend/lastbackend/pkg/util/dns"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/util/dns"
 )
 
 const logLevel = 3

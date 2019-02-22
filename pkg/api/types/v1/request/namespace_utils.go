@@ -33,7 +33,16 @@ func (NamespaceRequest) Manifest() *NamespaceManifest {
 }
 
 func (NamespaceRequest) ApplyManifest() *NamespaceApplyManifest {
-	return new(NamespaceApplyManifest)
+	mf := new(NamespaceApplyManifest)
+
+	mf.Secrets = make(map[string]*SecretManifest)
+	mf.Configs = make(map[string]*ConfigManifest)
+	mf.Services = make(map[string]*ServiceManifest)
+	mf.Volumes = make(map[string]*VolumeManifest)
+	mf.Routes = make(map[string]*RouteManifest)
+	mf.Jobs = make(map[string]*JobManifest)
+
+	return mf
 }
 
 func (s *NamespaceManifest) Validate() *errors.Err {

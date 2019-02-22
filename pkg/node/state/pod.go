@@ -26,7 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-const logPodPrefix = "state:pods:>"
+const logPodPrefix = "node:state:pods:>"
 
 type PodState struct {
 	lock       sync.RWMutex
@@ -125,7 +125,7 @@ func (s *PodState) SetPod(key string, pod *types.PodStatus) {
 	s.stats.pods++
 
 	s.lock.Unlock()
-	for _, c := range pod.Containers {
+	for _, c := range pod.Runtime.Services {
 		s.SetContainer(c)
 	}
 
@@ -192,7 +192,7 @@ func (s *PodState) DelContainer(c *types.PodContainer) {
 	}
 
 	s.lock.Lock()
-	delete(pod.Containers, c.ID)
+	delete(pod.Runtime.Services, c.ID)
 	state(pod)
 	s.lock.Unlock()
 }
@@ -203,6 +203,8 @@ func state(s *types.PodStatus) {
 	var ems string
 
 	switch s.State {
+	case types.StateExited:
+		return
 	case types.StateDestroyed:
 		return
 	case types.StateError:
@@ -215,12 +217,12 @@ func state(s *types.PodStatus) {
 		return
 	}
 
-	if len(s.Containers) == 0 {
+	if len(s.Runtime.Services) == 0 {
 		s.State = types.StateDegradation
 		return
 	}
 
-	for _, cn := range s.Containers {
+	for _, cn := range s.Runtime.Services {
 
 		switch true {
 		case cn.State.Error.Error:
@@ -237,13 +239,13 @@ func state(s *types.PodStatus) {
 	}
 
 	switch true {
-	case len(s.Containers) == sts[types.StateError]:
+	case len(s.Runtime.Services) == sts[types.StateError]:
 		s.SetError(errors.New(ems))
 		break
-	case len(s.Containers) == sts[types.StateStarted]:
+	case len(s.Runtime.Services) == sts[types.StateStarted]:
 		s.SetRunning()
 		break
-	case len(s.Containers) == sts[types.StatusStopped]:
+	case len(s.Runtime.Services) == sts[types.StatusStopped]:
 		s.SetStopped()
 		break
 	}

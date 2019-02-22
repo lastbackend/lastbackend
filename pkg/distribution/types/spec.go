@@ -33,7 +33,25 @@ const ContainerRoleSlave = "slave"
 // swagger:model types_spec_state
 type SpecState struct {
 	Destroy     bool `json:"destroy"`
+	Cancel      bool `json:"cancel"`
 	Maintenance bool `json:"maintenance"`
+}
+
+// SpecRuntime is a runtime of the spec
+// swagger:model types_spec_runtime
+type SpecRuntime struct {
+	Services []string          `json:"services"`
+	Tasks    []SpecRuntimeTask `json:"tasks"`
+	Updated  time.Time         `json:"updated"`
+}
+
+// SpecRuntimeTask is a runtime task to execute in runtime
+// swagger:model types_spec_runtime_task
+type SpecRuntimeTask struct {
+	Name      string                      `json:"name"`
+	Container string                      `json:"container" yaml:"container"`
+	EnvVars   SpecTemplateContainerEnvs   `json:"env" yaml:"env"`
+	Commands  []SpecTemplateContainerExec `json:"commands" yaml:"commands"`
 }
 
 // SpecTemplate is a template of the spec
@@ -433,6 +451,18 @@ func (s *SpecTemplateContainerEnvs) ToLinuxFormat() []string {
 	}
 
 	return env
+}
+
+func (ss *SpecSelector) SetDefault() {
+	if ss.Node != EmptyString {
+		ss.Node = EmptyString
+		ss.Updated = time.Now()
+	}
+
+	if len(ss.Labels) > 0 {
+		ss.Labels = make(map[string]string)
+		ss.Updated = time.Now()
+	}
 }
 
 func (s *SpecTemplate) SetDefault() {

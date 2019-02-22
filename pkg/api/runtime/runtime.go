@@ -50,18 +50,39 @@ func (r *Runtime) Run() {
 
 	c := envs.Get().GetCache()
 
+	nm := distribution.NewNamespaceModel(ctx, envs.Get().GetStorage())
+	for _, n := range []string{types.SYSTEM_NAMESPACE, types.DEFAULT_NAMESPACE} {
+		ns, err := nm.Get(n)
+		if err != nil {
+			return
+		}
+
+		if ns == nil {
+			ns = new(types.Namespace)
+			ns.Meta.SetDefault()
+			ns.Meta.Name = n
+			ns.Meta.SelfLink = types.NamespaceSelfLink{}
+			_ = ns.Meta.SelfLink.Parse(n)
+
+			if _, err := nm.Create(ns); err != nil {
+				return
+			}
+		}
+
+	}
+
 	cm := distribution.NewConfigModel(ctx, envs.Get().GetStorage())
 	cl, err := cm.List(types.EmptyString)
 	if err != nil {
 		return
 	}
-	go r.configWatch(ctx, &cl.System.Revision)
+	go r.configWatch(ctx, &cl.Storage.Revision)
 
 	for _, i := range cl.Items {
 		m := new(types.ConfigManifest)
 		m.Set(i)
 		m.State = types.StateReady
-		c.Node().SetConfigManifest(i.SelfLink(), m)
+		c.Node().SetConfigManifest(i.SelfLink().String(), m)
 	}
 
 	dm := distribution.NewDiscoveryModel(ctx, envs.Get().GetStorage())
@@ -69,11 +90,22 @@ func (r *Runtime) Run() {
 	if err != nil {
 		return
 	}
-	go r.discoveryWatch(ctx, &dl.System.Revision)
+	go r.discoveryWatch(ctx, &dl.Storage.Revision)
 	for _, i := range dl.Items {
 		c.Node().SetDiscovery(i)
 		c.Ingress().SetDiscovery(i)
 	}
+
+	em := distribution.NewExporterModel(ctx, envs.Get().GetStorage())
+	el, err := em.List()
+	if err != nil {
+		return
+	}
+	go r.exporterWatch(ctx, &cl.Storage.Revision)
+	for _, i := range el.Items {
+		c.Node().SetExporter(i)
+	}
+
 }
 
 func (r *Runtime) podManifestWatch(ctx context.Context, rev *int64) {
@@ -354,6 +386,39 @@ func (r *Runtime) discoveryWatch(ctx context.Context, rev *int64) {
 				}
 				c.Node().SetDiscovery(w.Data)
 				c.Ingress().SetDiscovery(w.Data)
+			}
+		}
+	}()
+
+	im.Watch(n, rev)
+}
+
+func (r *Runtime) exporterWatch(ctx context.Context, rev *int64) {
+
+	// Watch node changes
+	var (
+		n = make(chan types.ExporterEvent)
+		c = envs.Get().GetCache()
+	)
+
+	im := distribution.NewExporterModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-n:
+
+				if w.Data == nil {
+					continue
+				}
+
+				if w.IsActionRemove() {
+					c.Node().DelExporter(w.Name)
+					continue
+				}
+				c.Node().SetExporter(w.Data)
 			}
 		}
 	}()

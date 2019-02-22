@@ -77,7 +77,9 @@ func GetHostConfig(manifest *types.ContainerManifest) *container.HostConfig {
 		links = append(links, fmt.Sprintf("%s:%s", l.Link, l.Alias))
 	}
 
-	logC := container.LogConfig{}
+	logC := container.LogConfig{
+		Type: "lastbackend",
+	}
 	ports = make(nat.PortMap)
 
 	for _, p := range manifest.Ports {

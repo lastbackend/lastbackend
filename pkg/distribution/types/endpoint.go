@@ -18,8 +18,6 @@
 
 package types
 
-import "fmt"
-
 const (
 	// EndpointSpecRouteStrategyRR - round robin balancing strategy type
 	EndpointSpecRouteStrategyRR = "rr"
@@ -30,19 +28,19 @@ const (
 // swagger:ignore
 // Upstream - service endpoint
 type Endpoint struct {
-	Runtime
+	System
 	Meta   EndpointMeta   `json:"meta"`
 	Status EndpointStatus `json:"status"`
 	Spec   EndpointSpec   `json:"spec"`
 }
 
 type EndpointList struct {
-	Runtime
+	System
 	Items []*Endpoint
 }
 
 type EndpointMap struct {
-	Runtime
+	System
 	Items map[string]*Endpoint
 }
 
@@ -52,6 +50,8 @@ type EndpointMeta struct {
 	Meta
 	// Namespace name
 	Namespace string `json:"namespace"`
+	// SelfLink
+	SelfLink EndpointSelfLink `json:"self_link"`
 }
 
 // swagger:ignore
@@ -95,15 +95,8 @@ type EndpointUpstream struct {
 
 // swagger:ignore
 // SelfLink generates and returning link to object in platform
-func (e *Endpoint) SelfLink() string {
-	if e.Meta.SelfLink == "" {
-		e.Meta.SelfLink = e.CreateSelfLink(e.Meta.Namespace, e.Meta.Name)
-	}
-	return e.Meta.SelfLink
-}
-
-func (e *Endpoint) CreateSelfLink(namespace, name string) string {
-	return fmt.Sprintf("%s:%s", namespace, name)
+func (e *Endpoint) SelfLink() *EndpointSelfLink {
+	return &e.Meta.SelfLink
 }
 
 // swagger:ignore

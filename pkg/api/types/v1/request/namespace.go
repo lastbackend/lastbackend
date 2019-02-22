@@ -21,6 +21,7 @@ package request
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 )
@@ -71,7 +72,7 @@ func (s *NamespaceManifest) SetNamespaceMeta(ns *types.Namespace) {
 
 }
 
-func (s *NamespaceManifest) SetNamespaceSpec(ns *types.Namespace) {
+func (s *NamespaceManifest) SetNamespaceSpec(ns *types.Namespace) error {
 
 	ns.Spec.Domain.Internal = viper.GetString("domain.internal")
 
@@ -88,34 +89,69 @@ func (s *NamespaceManifest) SetNamespaceSpec(ns *types.Namespace) {
 		if s.Spec.Resources.Request != nil {
 
 			if s.Spec.Resources.Request.RAM != nil {
-				ns.Spec.Resources.Request.RAM = *s.Spec.Resources.Request.RAM
+				ram, err := resource.DecodeMemoryResource(*s.Spec.Resources.Request.RAM)
+				if err != nil {
+					return err
+				}
+
+				ns.Spec.Resources.Request.RAM = ram
 			}
 
 			if s.Spec.Resources.Request.CPU != nil {
-				ns.Spec.Resources.Request.CPU = *s.Spec.Resources.Request.CPU
+
+				cpu, err := resource.DecodeCpuResource(*s.Spec.Resources.Request.CPU)
+				if err != nil {
+					return err
+				}
+
+				ns.Spec.Resources.Request.CPU = cpu
 			}
 
 			if s.Spec.Resources.Request.Storage != nil {
-				ns.Spec.Resources.Request.Storage = *s.Spec.Resources.Request.Storage
+				storage, err := resource.DecodeMemoryResource(*s.Spec.Resources.Request.Storage)
+				if err != nil {
+					return err
+				}
+
+				ns.Spec.Resources.Request.Storage = storage
 			}
 		}
 
 		if s.Spec.Resources.Limits != nil {
 
 			if s.Spec.Resources.Limits.RAM != nil {
-				ns.Spec.Resources.Limits.RAM = *s.Spec.Resources.Limits.RAM
+
+				ram, err := resource.DecodeMemoryResource(*s.Spec.Resources.Limits.RAM)
+				if err != nil {
+					return err
+				}
+
+				ns.Spec.Resources.Limits.RAM = ram
 			}
 
 			if s.Spec.Resources.Limits.CPU != nil {
-				ns.Spec.Resources.Limits.CPU = *s.Spec.Resources.Limits.CPU
+
+				cpu, err := resource.DecodeCpuResource(*s.Spec.Resources.Limits.CPU)
+				if err != nil {
+					return err
+				}
+
+				ns.Spec.Resources.Limits.CPU = cpu
 			}
 
 			if s.Spec.Resources.Limits.Storage != nil {
-				ns.Spec.Resources.Limits.Storage = *s.Spec.Resources.Limits.Storage
+				storage, err := resource.DecodeMemoryResource(*s.Spec.Resources.Limits.Storage)
+				if err != nil {
+					return err
+				}
+
+				ns.Spec.Resources.Limits.Storage = storage
 			}
 		}
 
 	}
+
+	return nil
 
 }
 
@@ -125,6 +161,7 @@ type NamespaceApplyManifest struct {
 	Secrets  map[string]*SecretManifest  `json:"secrets"`
 	Routes   map[string]*RouteManifest   `json:"routes"`
 	Volumes  map[string]*VolumeManifest  `json:"volumes"`
+	Jobs     map[string]*JobManifest     `json:"jobs"`
 }
 
 // swagger:model request_namespace_remove
@@ -142,4 +179,11 @@ type NamespaceResourceOptions struct {
 	RAM     *string `json:"ram"`
 	CPU     *string `json:"cpu"`
 	Storage *string `json:"storage"`
+}
+
+// swagger:ignore
+// swagger:model request_service_logs
+type NamespaceLogsOptions struct {
+	SelfLink string `json:"selflink"`
+	Follow   bool   `json:"follow"`
 }

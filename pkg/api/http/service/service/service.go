@@ -48,7 +48,7 @@ func Fetch(ctx context.Context, namespace, name string) (*types.Service, *errors
 	}
 
 	if svc == nil {
-		err := errors.New("namespace not found")
+		err := errors.New("service not found")
 		log.V(logLevel).Errorf("%s:fetch:> err: %s", logPrefix, err.Error())
 		return nil, errors.New("service").NotFound()
 	}
@@ -99,6 +99,7 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifes
 
 	svc := new(types.Service)
 	mf.SetServiceMeta(svc)
+	svc.Meta.SelfLink = *types.NewServiceSelfLink(ns.Meta.Name, *mf.Meta.Name)
 	svc.Meta.Namespace = ns.Meta.Name
 	svc.Meta.Endpoint = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
 
@@ -106,7 +107,7 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifes
 		return nil, errors.New("service").BadRequest(err.Error())
 	}
 
-	if ns.Spec.Resources.Limits.RAM != types.EmptyString || ns.Spec.Resources.Limits.CPU != types.EmptyString {
+	if ns.Spec.Resources.Limits.RAM != 0 || ns.Spec.Resources.Limits.CPU != 0 {
 		for _, c := range svc.Spec.Template.Containers {
 			if c.Resources.Limits.RAM == 0 {
 				c.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(types.DEFAULT_RESOURCE_LIMITS_RAM)
@@ -152,12 +153,11 @@ func Update(ctx context.Context, ns *types.Namespace, svc *types.Service, mf *re
 	}
 
 	requestedResources := svc.Spec.GetResourceRequest()
+
 	if !resources.Equal(requestedResources) {
+
 		allocatedResources := ns.Status.Resources.Allocated
-		if err := ns.ReleaseResources(resources); err != nil {
-			log.V(logLevel).Errorf("%s:update:> %s", logPrefix, err.Error())
-			return nil, errors.New("service").InternalServerError()
-		}
+		ns.ReleaseResources(resources)
 
 		if err := ns.AllocateResources(svc.Spec.GetResourceRequest()); err != nil {
 			ns.Status.Resources.Allocated = allocatedResources

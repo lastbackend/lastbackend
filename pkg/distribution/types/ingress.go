@@ -18,30 +18,29 @@
 
 package types
 
-import "fmt"
-
 // swagger:ignore
 type Ingress struct {
-	Runtime
+	System
 	Meta   IngressMeta   `json:"meta"`
 	Status IngressStatus `json:"status"`
 	Spec   IngressSpec   `json:"spec"`
 }
 
 type IngressList struct {
-	Runtime
+	System
 	Items []*Ingress
 }
 
 type IngressMap struct {
-	Runtime
+	System
 	Items map[string]*Ingress
 }
 
 // swagger:ignore
 type IngressMeta struct {
 	Meta
-	Node string `json:"node"`
+	SelfLink IngressSelfLink `json:"self_link"`
+	Node     string          `json:"node"`
 }
 
 type IngressInfo struct {
@@ -60,20 +59,16 @@ type IngressInfo struct {
 
 // swagger:model types_ingress_status
 type IngressStatus struct {
-	Ready bool `json:"ready"`
+	Ready  bool `json:"ready"`
 	Online bool `json:"online"`
 }
 
 type IngressSpec struct {
-
 }
 
 // swagger:ignore
-func (n *Ingress) SelfLink() string {
-	if n.Meta.SelfLink == "" {
-		n.Meta.SelfLink = fmt.Sprintf("%s", n.Meta.Name)
-	}
-	return n.Meta.SelfLink
+func (n *Ingress) SelfLink() *IngressSelfLink {
+	return &n.Meta.SelfLink
 }
 
 func NewIngressList() *IngressList {

@@ -15,7 +15,7 @@ etcd:
 # Domain
 domain:
   internal: "lb.local"
-  external: "lstbknd.io"
+  external: "undassa.lbdp.io"
 
 api:
   host: 0.0.0.0

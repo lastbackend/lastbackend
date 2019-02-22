@@ -20,7 +20,6 @@ package views
 
 import (
 	"encoding/json"
-
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
@@ -28,65 +27,72 @@ type DeploymentView struct{}
 
 func (dv *DeploymentView) New(obj *types.Deployment, pl *types.PodList) *Deployment {
 	d := Deployment{}
-	d.Meta = d.ToMeta(obj.Meta)
-	d.Status = d.ToStatus(obj.Status)
-	d.Spec = d.ToSpec(obj.Spec)
+	d.SetMeta(obj.Meta)
+	d.SetStatus(obj.Status)
+	d.SetSpec(obj.Spec)
 
 	d.Pods = make(map[string]Pod, 0)
 	if pl != nil {
-		d.Pods = d.ToPods(pl)
+		d.JoinPods(pl)
 	}
 
 	return &d
 }
 
-func (di *Deployment) ToMeta(obj types.DeploymentMeta) DeploymentMeta {
+func (d *Deployment) SetMeta(obj types.DeploymentMeta) {
 	meta := DeploymentMeta{}
 	meta.Name = obj.Name
 	meta.Description = obj.Description
 	meta.Version = obj.Version
-	meta.SelfLink = obj.SelfLink
+	meta.SelfLink = obj.SelfLink.String()
 	meta.Namespace = obj.Namespace
 	meta.Service = obj.Service
-	meta.Status = obj.Status
 	meta.Endpoint = obj.Endpoint
 	meta.Updated = obj.Updated
 	meta.Created = obj.Created
 
-	return meta
+	d.Meta = meta
 }
 
-func (di *Deployment) ToStatus(obj types.DeploymentStatus) DeploymentStatusInfo {
-	return DeploymentStatusInfo{
+func (d *Deployment) SetStatus(obj types.DeploymentStatus) {
+	d.Status = DeploymentStatusInfo{
 		State:   obj.State,
 		Message: obj.Message,
 	}
 }
 
-func (di *Deployment) ToSpec(obj types.DeploymentSpec) DeploymentSpec {
-
+func (d *Deployment) SetSpec(obj types.DeploymentSpec) {
+	mv := new(ManifestView)
 	var spec = DeploymentSpec{
-		Selector: obj.Selector,
 		Replicas: obj.Replicas,
-		Template: obj.Template,
+		Template: mv.NewManifestSpecTemplate(obj.Template),
+		Selector: mv.NewManifestSpecSelector(obj.Selector),
 	}
 
-	return spec
+	d.Spec = spec
 }
 
-func (di *Deployment) ToPods(obj *types.PodList) map[string]Pod {
-	pods := make(map[string]Pod, 0)
+func (d *Deployment) JoinPods(obj *types.PodList) {
 	for _, p := range obj.Items {
-		if p.Meta.Namespace == di.Meta.Namespace && p.Meta.Service == di.Meta.Service && p.Meta.Deployment == di.Meta.Name {
-			pv := new(PodViewHelper)
-			pods[p.Meta.Name] = pv.New(p)
+
+		if p.Meta.Namespace != d.Meta.Namespace {
+			continue
 		}
+
+		k, sl := p.SelfLink().Parent()
+		if k != types.KindDeployment {
+			continue
+		}
+
+		if sl.String() != d.Meta.SelfLink {
+			continue
+		}
+		d.Pods[p.SelfLink().String()] = new(PodView).New(p)
 	}
-	return pods
 }
 
-func (di *Deployment) ToJson() ([]byte, error) {
-	return json.Marshal(di)
+func (d *Deployment) ToJson() ([]byte, error) {
+	return json.Marshal(d)
 }
 
 func (dv *DeploymentView) NewList(obj *types.DeploymentList, pods *types.PodList) *DeploymentList {
