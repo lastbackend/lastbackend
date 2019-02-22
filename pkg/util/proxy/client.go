@@ -26,11 +26,13 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"io"
 	"net"
+	"sync"
 	"time"
 )
 
 type Client struct {
 	io.Writer
+	sync    sync.Mutex
 	name    string
 	conn    net.Conn
 	addr    string
@@ -58,9 +60,11 @@ func (p *Client) Connect() error {
 		return err
 	}
 
+	p.sync.Lock()
 	p.conn = conn
 	p.writer = protoio.NewUint32DelimitedWriter(p.conn, binary.BigEndian)
 	p.active = true
+	p.sync.Unlock()
 
 	defer func() {
 		log.Debugf("closing connection to %v", conn.RemoteAddr())
@@ -126,6 +130,8 @@ func (p *Client) Write(msg []byte) error {
 }
 
 func (p *Client) Send(data []byte) error {
+	p.sync.Lock()
+	defer p.sync.Unlock()
 
 	if !p.active {
 		return nil

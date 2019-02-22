@@ -39,6 +39,7 @@ type Monitor struct {
 }
 
 func (m *Monitor) Subscribe(subscriber chan *types.Event, done chan bool) {
+
 	m.sync.Lock()
 	m.watchers[subscriber] = true
 	m.sync.Unlock()
@@ -244,9 +245,11 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 
 func (m *Monitor) dispatch(ctx context.Context, event *types.Event) error {
 
+	m.sync.Lock()
 	for c := range m.watchers {
 		c <- event
 	}
+	m.sync.Unlock()
 
 	return nil
 }
