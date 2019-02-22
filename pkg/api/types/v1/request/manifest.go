@@ -1100,14 +1100,16 @@ func (m ManifestSpecRuntime) SetManifestSpecRuntime(sr *types.ManifestSpecRuntim
 				env := types.ManifestSpecTemplateContainerEnv{
 					Name:  e.Name,
 					Value: e.Value,
-					Config: types.ManifestSpecTemplateContainerEnvConfig{
-						Name: e.Config.Name,
-						Key:  e.Config.Key,
-					},
-					Secret: types.ManifestSpecTemplateContainerEnvSecret{
-						Name: e.Secret.Name,
-						Key:  e.Secret.Key,
-					},
+				}
+
+				if e.Secret != nil {
+					env.Secret.Name = e.Secret.Name
+					env.Secret.Key = e.Secret.Key
+				}
+
+				if e.Config != nil {
+					env.Config.Name = e.Config.Name
+					env.Config.Key = e.Config.Key
 				}
 
 				task.Env = append(task.Env, env)
