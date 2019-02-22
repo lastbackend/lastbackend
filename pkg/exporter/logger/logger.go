@@ -22,12 +22,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/spf13/viper"
 
-	"github.com/lastbackend/lastbackend/pkg/util/proxy"
 	"net/http"
+
+	"github.com/lastbackend/lastbackend/pkg/util/proxy"
 )
 
 const (
@@ -39,6 +41,11 @@ type Logger struct {
 	server      *proxy.Server
 	connections map[string]map[http.ResponseWriter]bool
 	storage     *Storage
+}
+
+type StreamOpts struct {
+	Follow bool
+	Lines  int
 }
 
 func (l *Logger) Listen() error {
@@ -82,32 +89,50 @@ func (l *Logger) Handle(msg types.ProxyMessage) error {
 	return nil
 }
 
-func (l *Logger) Stream(ctx context.Context, kind, selflink string, writer http.ResponseWriter) error {
+func (l *Logger) Stream(ctx context.Context, kind, selflink string, opts StreamOpts, writer http.ResponseWriter) error {
 
 	var (
-		lch = make(chan string)
+		done = make(chan bool)
+		lch  = make(chan string)
 	)
 
-	err := l.storage.GetStream(kind, selflink, false).Read(ctx, 0, true, lch)
-	if err != nil {
-		return err
-	}
+	defer func() {
+		close(done)
+		close(lch)
+	}()
 
-	for {
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-done:
+				return
+			case l := <-lch:
 
-		select {
-		case <-ctx.Done():
-			return nil
-		case l := <-lch:
-			if _, err := writer.Write([]byte(l)); err != nil {
-				return err
-			}
+				if writer == nil {
+					return
+				}
 
-			if f, ok := writer.(http.Flusher); ok {
-				f.Flush()
+				if _, err := writer.Write([]byte(l)); err != nil {
+					return
+				}
+
+				if f, ok := writer.(http.Flusher); ok {
+					if f != nil {
+						f.Flush()
+					}
+				}
 			}
 		}
+	}()
+
+	err := l.storage.GetStream(kind, selflink, false).Read(ctx, opts.Lines, opts.Follow, lch)
+	if err != nil {
+		log.Errorf("%s:> get stream err: %s", logPrefix, err.Error())
+		return err
 	}
+	return nil
 
 }
 

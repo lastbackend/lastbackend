@@ -563,13 +563,15 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/logs?kind=%s&selflink=%s", exp.Status.Http.IP, exp.Status.Http.Port, types.KindService, svc.SelfLink().String()), nil)
+	cx, cancel := context.WithCancel(context.Background())
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/logs?kind=%s&selflink=%s&follow=true", exp.Status.Http.IP, exp.Status.Http.Port, types.KindService, svc.SelfLink().String()), nil)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> create http client err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
+	req.WithContext(cx)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> get pod logs err: %s", logPrefix, err.Error())
@@ -577,6 +579,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	defer cancel()
 	var buffer = make([]byte, BUFFER_SIZE)
 
 	for {

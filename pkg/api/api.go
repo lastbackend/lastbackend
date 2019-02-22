@@ -63,6 +63,14 @@ func Daemon() bool {
 
 	runtime.New().Run()
 
+	vault := &types.Vault{
+		Name:     viper.GetString("vault.name"),
+		Endpoint: viper.GetString("vault.endpoint"),
+		Token:    viper.GetString("vault.token"),
+	}
+
+	envs.Get().SetVault(vault)
+
 	go func() {
 		opts := new(http.HttpOpts)
 		opts.Insecure = viper.GetBool("api.tls.insecure")

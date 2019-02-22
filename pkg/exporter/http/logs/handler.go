@@ -19,9 +19,12 @@
 package logs
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/exporter/envs"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
+
+	"github.com/lastbackend/lastbackend/pkg/exporter/envs"
+	"github.com/lastbackend/lastbackend/pkg/exporter/logger"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const (
@@ -73,23 +76,28 @@ func LogsH(w http.ResponseWriter, r *http.Request) {
 	//   '500':
 	//     description: Internal server error
 
-	kind := r.URL.Query().Get("kind")
-	selflink := r.URL.Query().Get("selflink")
+	kind := utils.QueryString(r, "kind")
+	selflink := utils.QueryString(r, "selflink")
+	follow := utils.QueryBool(r, "follow")
+	lines := utils.QueryInt(r, "lines")
 
 	log.V(logLevel).Debugf("%s:logs:> get by selflink `%s`", logPrefix, selflink)
 
 	var (
-		logger = envs.Get().GetLogger()
+		l = envs.Get().GetLogger()
 	)
 
-	if logger == nil {
+	if l == nil {
 		return
 	}
 
-	if err := logger.Stream(r.Context(), kind, selflink, w); err != nil {
+	opts := logger.StreamOpts{
+		Lines:  int(lines),
+		Follow: follow,
+	}
+
+	if err := l.Stream(r.Context(), kind, selflink, opts, w); err != nil {
 		log.Errorf("%s", err.Error())
 		return
 	}
-
-	<-r.Context().Done()
 }

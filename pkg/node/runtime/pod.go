@@ -294,7 +294,7 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 		for _, e := range s.EnvVars {
 			if e.Secret.Name != types.EmptyString {
 				log.V(logLevel).Debugf("%s get secret info from api", logPodPrefix)
-				if err := SecretCreate(ctx, fmt.Sprintf("%s:%s", namespace, e.Secret.Name)); err != nil {
+				if err := SecretCreate(ctx, namespace, e.Secret.Name); err != nil {
 					log.Errorf("%s can not fetch secret from api", logPodPrefix)
 				}
 			}

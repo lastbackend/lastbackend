@@ -258,35 +258,45 @@ func (m ManifestSpecRuntimeTask) GetSpec() types.SpecRuntimeTask {
 }
 
 func (m ManifestSpecTemplateVolume) GetSpec() types.SpecTemplateVolume {
+
 	s := types.SpecTemplateVolume{
 		Name: m.Name,
 		Type: m.Type,
-		Volume: types.SpecTemplateVolumeClaim{
+	}
+
+	if m.Volume != nil {
+		s.Volume = types.SpecTemplateVolumeClaim{
 			Name:    m.Volume.Name,
 			Subpath: m.Volume.Subpath,
-		},
-		Secret: types.SpecTemplateSecretVolume{
+		}
+	}
+
+	if m.Secret != nil {
+		s.Secret = types.SpecTemplateSecretVolume{
 			Name:  m.Secret.Name,
 			Binds: make([]types.SpecTemplateSecretVolumeBind, 0),
-		},
-		Config: types.SpecTemplateConfigVolume{
+		}
+
+		for _, b := range m.Secret.Binds {
+			s.Secret.Binds = append(s.Secret.Binds, types.SpecTemplateSecretVolumeBind{
+				Key:  b.Key,
+				File: b.File,
+			})
+		}
+	}
+
+	if m.Config != nil {
+		s.Config = types.SpecTemplateConfigVolume{
 			Name:  m.Config.Name,
 			Binds: make([]types.SpecTemplateConfigVolumeBind, 0),
-		},
-	}
+		}
 
-	for _, b := range m.Secret.Binds {
-		s.Secret.Binds = append(s.Secret.Binds, types.SpecTemplateSecretVolumeBind{
-			Key:  b.Key,
-			File: b.File,
-		})
-	}
-
-	for _, b := range m.Config.Binds {
-		s.Config.Binds = append(s.Config.Binds, types.SpecTemplateConfigVolumeBind{
-			Key:  b.Key,
-			File: b.File,
-		})
+		for _, b := range m.Config.Binds {
+			s.Config.Binds = append(s.Config.Binds, types.SpecTemplateConfigVolumeBind{
+				Key:  b.Key,
+				File: b.File,
+			})
+		}
 	}
 
 	return s
@@ -296,8 +306,12 @@ func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
 	s := types.SpecTemplateContainer{}
 	s.Name = m.Name
 
-	s.RestartPolicy.Policy = m.RestartPolicy.Policy
-	s.RestartPolicy.Attempt = m.RestartPolicy.Attempt
+	s.RestartPolicy.Policy = "always"
+
+	if m.RestartPolicy != nil {
+		s.RestartPolicy.Policy = m.RestartPolicy.Policy
+		s.RestartPolicy.Attempt = m.RestartPolicy.Attempt
+	}
 
 	if m.Command != types.EmptyString {
 		s.Exec.Command = strings.Split(m.Command, " ")
@@ -316,39 +330,55 @@ func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
 	}
 
 	for _, e := range m.Env {
-		s.EnvVars = append(s.EnvVars, &types.SpecTemplateContainerEnv{
+		env := &types.SpecTemplateContainerEnv{
 			Name:  e.Name,
 			Value: e.Value,
-			Secret: types.SpecTemplateContainerEnvSecret{
+		}
+
+		if e.Secret != nil {
+			env.Secret = types.SpecTemplateContainerEnvSecret{
 				Name: e.Secret.Name,
 				Key:  e.Secret.Key,
-			},
-			Config: types.SpecTemplateContainerEnvConfig{
+			}
+		}
+
+		if e.Config != nil {
+			env.Config = types.SpecTemplateContainerEnvConfig{
 				Name: e.Config.Name,
 				Key:  e.Config.Key,
-			},
-		})
+			}
+		}
+
+		s.EnvVars = append(s.EnvVars, env)
 	}
 
 	s.Image.Name = m.Image.Name
 	s.Image.Secret = m.Image.Secret
 
-	s.Security.Privileged = m.Security.Privileged
-
-	if m.Resources.Request.RAM != types.EmptyString {
-		s.Resources.Request.RAM, _ = resource.DecodeMemoryResource(m.Resources.Request.RAM)
+	if m.Security != nil {
+		s.Security.Privileged = m.Security.Privileged
 	}
 
-	if m.Resources.Request.CPU != types.EmptyString {
-		s.Resources.Request.CPU, _ = resource.DecodeCpuResource(m.Resources.Request.CPU)
-	}
+	if m.Resources != nil {
+		if m.Resources.Request != nil {
+			if m.Resources.Request.RAM != types.EmptyString {
+				s.Resources.Request.RAM, _ = resource.DecodeMemoryResource(m.Resources.Request.RAM)
+			}
 
-	if m.Resources.Limits.RAM != types.EmptyString {
-		s.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(m.Resources.Limits.RAM)
-	}
+			if m.Resources.Request.CPU != types.EmptyString {
+				s.Resources.Request.CPU, _ = resource.DecodeCpuResource(m.Resources.Request.CPU)
+			}
+		}
 
-	if m.Resources.Limits.CPU != types.EmptyString {
-		s.Resources.Limits.CPU, _ = resource.DecodeCpuResource(m.Resources.Limits.CPU)
+		if m.Resources.Limits != nil {
+			if m.Resources.Limits.RAM != types.EmptyString {
+				s.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(m.Resources.Limits.RAM)
+			}
+
+			if m.Resources.Limits.CPU != types.EmptyString {
+				s.Resources.Limits.CPU, _ = resource.DecodeCpuResource(m.Resources.Limits.CPU)
+			}
+		}
 	}
 
 	for _, v := range m.Volumes {

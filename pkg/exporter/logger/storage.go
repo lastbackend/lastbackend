@@ -60,6 +60,7 @@ func (f *File) Read(ctx context.Context, lines int, follow bool, l chan string) 
 		seek *tail.SeekInfo
 		done bool
 	)
+
 	if lines > 0 {
 		offset, err := filesystem.LineSeek(lines, f.file)
 		if err != nil {
@@ -76,21 +77,28 @@ func (f *File) Read(ctx context.Context, lines int, follow bool, l chan string) 
 		return err
 	}
 
+	defer t.Cleanup()
+
 	go func() {
-		for line := range t.Lines {
+		<-ctx.Done()
 
-			if done {
-				return
-			}
-
-			l <- line.Text
+		fmt.Println("ctx done")
+		if err := t.Stop(); err != nil {
+			log.Errorf("%s:> stop tailing err: %s", logPrefix, err.Error())
 		}
+		done = true
 	}()
 
-	<-ctx.Done()
-	t.Cleanup()
-	done = true
+	for line := range t.Lines {
 
+		if done {
+			break
+		}
+
+		l <- line.Text
+	}
+
+	fmt.Println("read exit")
 	return nil
 }
 

@@ -442,10 +442,7 @@ func JobLogsH(w http.ResponseWriter, r *http.Request) {
 
 	nid := utils.Vars(r)["namespace"]
 	jid := utils.Vars(r)["job"]
-	tid := r.URL.Query().Get("task")
-
-	//pid := r.URL.Query().Get("pod")
-	//cid := r.URL.Query().Get("container")
+	tid := utils.QueryString(r, "task")
 
 	log.V(logLevel).Debugf("%s:logs:> get logs for job `%s` in namespace `%s`", logPrefix, jid, nid)
 
@@ -482,17 +479,79 @@ func JobLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tsl := types.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, tid)
-	task, err := tm.Get(tsl.String())
-	if err != nil {
-		log.V(logLevel).Errorf("%s:logs:> get task by name `%s` err: %s", logPrefix, tsl.String(), err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if task == nil {
-		log.V(logLevel).Warnf("%s:logs:> task name `%s` in namespace `%s` not found", logPrefix, tsl.String(), ns.Meta.Name)
-		errors.New("task").NotFound().Http(w)
-		return
+	var task *types.Task
+	if tid == types.EmptyString {
+		tl, err := tm.ListByNamespace(ns.SelfLink().String())
+		if err != nil {
+			log.V(logLevel).Errorf("%s:logs:> get task list `%s` err: %s", logPrefix, err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+
+		for _, t := range tl.Items {
+			if t.Status.State == types.StateRunning || t.Status.State == types.StateProvision {
+				if task == nil {
+					task = t
+					continue
+				}
+
+				if task.Meta.Created.Before(t.Meta.Created) {
+					task = t
+				}
+			}
+		}
+
+		if task == nil {
+			for _, t := range tl.Items {
+
+				if t.Status.State == types.StateWaiting {
+					if task == nil {
+						task = t
+						continue
+					}
+
+					if task.Meta.Created.Before(t.Meta.Created) {
+						task = t
+					}
+				}
+			}
+		}
+
+		if task == nil {
+			for _, t := range tl.Items {
+
+				if t.Status.State == types.StateExited {
+					if task == nil {
+						task = t
+						continue
+					}
+
+					if task.Meta.Created.Before(t.Meta.Created) {
+						task = t
+					}
+				}
+			}
+		}
+
+		if task == nil {
+			errors.New("task").NotFound().Http(w)
+			return
+		}
+
+	} else {
+		tsl := types.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, tid)
+		task, err = tm.Get(tsl.String())
+		if err != nil {
+			log.V(logLevel).Errorf("%s:logs:> get task by name `%s` err: %s", logPrefix, tsl.String(), err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+		if task == nil {
+			log.V(logLevel).Warnf("%s:logs:> task name `%s` in namespace `%s` not found", logPrefix, tsl.String(), ns.Meta.Name)
+			errors.New("task").NotFound().Http(w)
+			return
+		}
+
 	}
 
 	el, err := em.List()
@@ -522,19 +581,28 @@ func JobLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/logs?kind=%s&selflink=%s", exp.Status.Http.IP, exp.Status.Http.Port, types.KindTask, task.SelfLink().String()), nil)
+	follow := "false"
+	if task.Status.State != types.StateExited {
+		follow = "true"
+	}
+
+	cx, cancel := context.WithCancel(context.Background())
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/logs?kind=%s&selflink=%s&follow=%s", exp.Status.Http.IP, exp.Status.Http.Port, types.KindTask, task.SelfLink().String(), follow), nil)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> create http client err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
+	req.WithContext(cx)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> get pod logs err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
+
+	defer cancel()
 
 	var buffer = make([]byte, BUFFER_SIZE)
 

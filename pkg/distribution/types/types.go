@@ -21,6 +21,9 @@ package types
 const logLevel = 3
 
 const (
+	DEFAULT_NAMESPACE = "default"
+	SYSTEM_NAMESPACE  = "system"
+
 	DEFAULT_RESOURCE_LIMITS_RAM = "128mib"
 	DEFAULT_RESOURCE_LIMITS_CPU = "0.1"
 
@@ -40,3 +43,9 @@ const (
 	KindConfig     = "config"
 	KindVolume     = "volume"
 )
+
+type Vault struct {
+	Name     string `yaml:"name"`
+	Endpoint string `yaml:"endpoint"`
+	Token    string `yaml:"token"`
+}
