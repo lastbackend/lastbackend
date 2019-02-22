@@ -19,7 +19,6 @@
 package runtime
 
 import (
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
@@ -35,8 +34,7 @@ func ImagePull(ctx context.Context, namespace string, image *types.SpecTemplateC
 	mf.Name = image.Name
 	if image.Secret != types.EmptyString {
 
-		secretSelfLink := fmt.Sprintf("%s:%s", namespace, image.Secret)
-		secret, err := SecretGet(ctx, secretSelfLink)
+		secret, err := SecretGet(ctx, namespace, image.Secret)
 		if err != nil {
 			log.Errorf("can not get secret for image. err: %s", err.Error())
 			return err

@@ -27,3 +27,9 @@ dns:
   host: 0.0.0.0
   port: 53
   default_ip: "127.0.0.1"
+
+
+vault:
+  name: lastbackend
+  endpoint: http://127.0.0.1:8080
+  token: lstbknd

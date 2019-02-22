@@ -50,6 +50,27 @@ func (r *Runtime) Run() {
 
 	c := envs.Get().GetCache()
 
+	nm := distribution.NewNamespaceModel(ctx, envs.Get().GetStorage())
+	for _, n := range []string{types.SYSTEM_NAMESPACE, types.DEFAULT_NAMESPACE} {
+		ns, err := nm.Get(n)
+		if err != nil {
+			return
+		}
+
+		if ns == nil {
+			ns = new(types.Namespace)
+			ns.Meta.SetDefault()
+			ns.Meta.Name = n
+			ns.Meta.SelfLink = types.NamespaceSelfLink{}
+			_ = ns.Meta.SelfLink.Parse(n)
+
+			if _, err := nm.Create(ns); err != nil {
+				return
+			}
+		}
+
+	}
+
 	cm := distribution.NewConfigModel(ctx, envs.Get().GetStorage())
 	cl, err := cm.List(types.EmptyString)
 	if err != nil {

@@ -26,14 +26,12 @@ import (
 	"strings"
 )
 
-func SecretGet(ctx context.Context, selflink string) (*types.Secret, error) {
+func SecretGet(ctx context.Context, namespace, name string) (*types.Secret, error) {
 
-	secret := envs.Get().GetState().Secrets().GetSecret(selflink)
+	secret := envs.Get().GetState().Secrets().GetSecret(types.NewSecretSelfLink(namespace, name).String())
 	if secret != nil {
 		return secret, nil
 	}
-
-	namespace, name := parseSecretSelflink(selflink)
 
 	sr, err := envs.Get().GetRestClient().Namespace(namespace).Secret(name).Get(ctx)
 	if err != nil {
@@ -44,14 +42,13 @@ func SecretGet(ctx context.Context, selflink string) (*types.Secret, error) {
 	return sr.Decode(), nil
 }
 
-func SecretCreate(ctx context.Context, selflink string) error {
+func SecretCreate(ctx context.Context, namespace, name string) error {
 
-	ok := envs.Get().GetState().Secrets().GetSecret(selflink)
+	ok := envs.Get().GetState().Secrets().GetSecret(types.NewSecretSelfLink(namespace, name).String())
 	if ok != nil {
 		return nil
 	}
 
-	namespace, name := parseSecretSelflink(selflink)
 	secret, err := envs.Get().GetRestClient().Namespace(namespace).Secret(name).Get(ctx)
 	if err != nil {
 		log.Errorf("get secret err: %s", err.Error())
@@ -76,23 +73,21 @@ func SecretUpdate(ctx context.Context, selflink string) error {
 
 }
 
-
 func SecretRemove(ctx context.Context, selflink string) {
 	envs.Get().GetState().Secrets().DelSecret(selflink)
 }
 
-
 func parseSecretSelflink(selflink string) (string, string) {
 	var namespace, name string
 
-	parts := strings.Split(selflink, ":")
+	parts := strings.SplitN(selflink, ":", 1)
 
 	if len(parts) == 1 {
 		namespace = types.DEFAULT_NAMESPACE
 		name = parts[0]
 	}
 
-	if len(parts) >1 {
+	if len(parts) > 1 {
 		namespace = parts[0]
 		name = parts[1]
 	}

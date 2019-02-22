@@ -23,10 +23,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-const (
-	DEFAULT_NAMESPACE string = "default"
-)
-
 // swagger:ignore
 type NamespaceMap struct {
 	System

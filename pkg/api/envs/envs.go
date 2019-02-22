@@ -31,7 +31,7 @@ type Env struct {
 	storage storage.Storage
 	cache   *cache.Cache
 	monitor *monitor.Monitor
-	vaults  map[string]*types.Vault
+	vault   *types.Vault
 }
 
 func Get() *Env {
@@ -46,12 +46,12 @@ func (c *Env) GetStorage() storage.Storage {
 	return c.storage
 }
 
-func (c *Env) SetVault(name, endpoint, token string) {
-
+func (c *Env) SetVault(vault *types.Vault) {
+	c.vault = vault
 }
 
-func (c *Env) GetVault(name string) *types.Vault {
-	return c.vaults[name]
+func (c *Env) GetVault() *types.Vault {
+	return c.vault
 }
 
 func (c *Env) SetCache(ch *cache.Cache) {

@@ -93,11 +93,18 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case 2:
+
+		if parts[0] != "vault" {
+			log.V(logLevel).Errorf("%s:get:> invalid secret name: %s", logPrefix, sid)
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+
 		cx, cancel := context.WithCancel(context.Background())
 
-		vault := envs.Get().GetVault(parts[0])
+		vault := envs.Get().GetVault()
 		if vault == nil {
-			log.V(logLevel).Warnf("%s:get:> secret `%s` not found", logPrefix, sid)
+			log.V(logLevel).Warnf("%s:get:> vault not found", logPrefix)
 			errors.New("vault").NotFound().Http(w)
 			return
 		}
