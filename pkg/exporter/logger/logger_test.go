@@ -32,7 +32,7 @@ import (
 
 func TestNewLogger(t *testing.T) {
 
-	viper.Set("exporter.dir", "/var/log/lastbackend")
+	viper.Set("exporter.dir", "/tmp/log/lastbackend")
 
 	t.Log("start logger")
 	logger, err := NewLogger()

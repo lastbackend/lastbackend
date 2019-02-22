@@ -244,6 +244,7 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 }
 
 func (m *Monitor) dispatch(ctx context.Context, event *types.Event) error {
+
 	m.sync.Lock()
 	for c := range m.watchers {
 		c <- event
