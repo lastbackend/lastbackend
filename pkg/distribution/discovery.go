@@ -76,6 +76,8 @@ func (n *Discovery) Get(name string) (*types.Discovery, error) {
 	log.V(logLevel).Debugf("%s:get:> get by name %s", logDiscoveryPrefix, name)
 
 	discovery := new(types.Discovery)
+	discovery.Meta.SelfLink = *types.NewDiscoverySelfLink(name)
+
 	err := n.storage.Get(n.context, n.storage.Collection().Discovery().Info(), discovery.SelfLink().String(), discovery, nil)
 	if err != nil {
 
