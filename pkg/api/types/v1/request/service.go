@@ -166,6 +166,7 @@ type ServiceRemoveOptions struct {
 // swagger:ignore
 // swagger:model request_service_logs
 type ServiceLogsOptions struct {
+	Tail       int    `json:"tail"`
 	Deployment string `json:"deployment"`
 	Pod        string `json:"pod"`
 	Container  string `json:"container"`

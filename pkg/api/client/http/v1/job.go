@@ -202,6 +202,8 @@ func (sc *JobClient) Logs(ctx context.Context, opts *rv1.JobLogsOptions) (io.Rea
 		res.Param("pod", opts.Pod)
 		res.Param("container", opts.Container)
 
+		res.Param("tail", fmt.Sprintf("%d", opts.Tail))
+
 		if opts.Follow {
 			res.Param("follow", strconv.FormatBool(opts.Follow))
 		}
