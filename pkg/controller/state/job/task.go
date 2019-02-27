@@ -100,22 +100,6 @@ func handleTaskStateCreated(js *JobState, task *types.Task) error {
 
 	log.V(logLevel).Debugf("%s:> handleTaskStateCreated: %s > %s", logTaskPrefix, task.SelfLink(), task.Status.State)
 
-	check, err := taskCheckDependencies(js, task)
-	if err != nil {
-		log.Errorf("%s:> handle task check deps: %s, err: %s", logTaskPrefix, task.SelfLink(), err.Error())
-		return err
-	}
-
-	if !check {
-		task.Status.State = types.StateWaiting
-		tm := distribution.NewTaskModel(context.Background(), envs.Get().GetStorage())
-		if err := tm.Set(task); err != nil {
-			log.Errorf("%s:> handle task create, deps update: %s, err: %s", logTaskPrefix, task.SelfLink(), err.Error())
-			return err
-		}
-		return nil
-	}
-
 	if err := taskCheckSelectors(js, task); err != nil {
 		task.Status.State = types.StateError
 		task.Status.Message = err.Error()
@@ -160,7 +144,7 @@ func handleTaskStateProvision(js *JobState, task *types.Task) error {
 	return nil
 }
 
-func handleTaskStateRunning(js *JobState, task *types.Task) error {
+func handleTaskStateRunning(_ *JobState, task *types.Task) error {
 
 	log.V(logLevel).Debugf("%s:> handleTaskStateRunning: %s > %s", logTaskPrefix, task.SelfLink(), task.Status.State)
 	// there nothing need to be done
@@ -238,156 +222,8 @@ func handleTaskStateDestroyed(js *JobState, task *types.Task) error {
 	return nil
 }
 
-// jobCheckDependencies function - check if job can provisioned or should wait for dependencies
-func taskCheckDependencies(ss *JobState, d *types.Task) (bool, error) {
-
-	var (
-		ctx  = context.Background()
-		stg  = envs.Get().GetStorage()
-		vm   = distribution.NewVolumeModel(ctx, stg)
-		sm   = distribution.NewSecretModel(ctx, stg)
-		cm   = distribution.NewConfigModel(ctx, stg)
-		deps = types.StatusDependencies{
-			Volumes: make(map[string]types.StatusDependency, 0),
-			Secrets: make(map[string]types.StatusDependency, 0),
-			Configs: make(map[string]types.StatusDependency, 0),
-		}
-	)
-
-	volumesRequiredList := make(map[string]bool, 0)
-	secretsRequiredList := make(map[string]bool, 0)
-	configsRequiredList := make(map[string]bool, 0)
-	for _, v := range d.Spec.Template.Volumes {
-		if v.Volume.Name != types.EmptyString {
-			volumesRequiredList[v.Volume.Name] = true
-		}
-		if v.Secret.Name != types.EmptyString {
-			secretsRequiredList[v.Secret.Name] = true
-		}
-		if v.Config.Name != types.EmptyString {
-			configsRequiredList[v.Config.Name] = true
-		}
-	}
-
-	for _, c := range d.Spec.Template.Containers {
-		for _, e := range c.EnvVars {
-			if e.Secret.Name != types.EmptyString {
-				secretsRequiredList[e.Secret.Name] = true
-			}
-
-			if e.Config.Name != types.EmptyString {
-				configsRequiredList[e.Config.Name] = true
-			}
-		}
-	}
-
-	if len(volumesRequiredList) != 0 {
-
-		vl, err := vm.ListByNamespace(d.Meta.Namespace)
-		if err != nil {
-			log.Errorf("%s:> job check deps err: %s", logJobPrefix, err.Error())
-			return false, err
-		}
-
-		for vr := range volumesRequiredList {
-			var f = false
-
-			for _, v := range vl.Items {
-				if vr == v.Meta.Name {
-					f = true
-					deps.Volumes[vr] = types.StatusDependency{
-						Name:   vr,
-						Type:   types.KindVolume,
-						Status: v.Status.State,
-					}
-				}
-			}
-
-			if !f {
-				deps.Volumes[vr] = types.StatusDependency{
-					Name:   vr,
-					Type:   types.KindVolume,
-					Status: types.StateNotReady,
-				}
-			}
-		}
-	}
-
-	if len(secretsRequiredList) != 0 {
-
-		sl, err := sm.List(d.Meta.Namespace)
-		if err != nil {
-			log.Errorf("%s:> job check deps err: %s", logJobPrefix, err.Error())
-			return false, err
-		}
-
-		for sr := range secretsRequiredList {
-			var f = false
-
-			for _, s := range sl.Items {
-				if sr == s.Meta.Name {
-					f = true
-					deps.Secrets[sr] = types.StatusDependency{
-						Name:   sr,
-						Type:   types.KindSecret,
-						Status: types.StateReady,
-					}
-				}
-			}
-
-			if !f {
-				deps.Secrets[sr] = types.StatusDependency{
-					Name:   sr,
-					Type:   types.KindSecret,
-					Status: types.StateNotReady,
-				}
-			}
-		}
-	}
-
-	if len(configsRequiredList) != 0 {
-
-		cl, err := cm.List(d.Meta.Namespace)
-		if err != nil {
-			log.Errorf("%s:> job check deps err: %s", logJobPrefix, err.Error())
-			return false, err
-		}
-
-		for cr := range configsRequiredList {
-			var f = false
-
-			for _, c := range cl.Items {
-				if cr == c.Meta.Name {
-					f = true
-					deps.Configs[cr] = types.StatusDependency{
-						Name:   cr,
-						Type:   types.KindConfig,
-						Status: types.StateReady,
-					}
-				}
-			}
-
-			if !f {
-				deps.Configs[cr] = types.StatusDependency{
-					Name:   cr,
-					Type:   types.KindConfig,
-					Status: types.StateNotReady,
-				}
-			}
-		}
-	}
-
-	d.Status.Dependencies = deps
-	if !d.Status.CheckDeps() {
-		d.Status.State = types.StateWaiting
-		return false, nil
-	}
-
-	return true, nil
-}
-
 // taskCheckSelectors function - handles provided selectors to match nodes
-func taskCheckSelectors(ss *JobState, d *types.Task) (err error) {
+func taskCheckSelectors(_ *JobState, d *types.Task) (err error) {
 
 	var (
 		ctx = context.Background()
