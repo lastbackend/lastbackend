@@ -194,9 +194,15 @@ type SpecTemplateContainer struct {
 
 // swagger:model types_spec_template_container_image
 type SpecTemplateContainerImage struct {
-	Name   string `json:"name" yaml:"name"`
-	Secret string `json:"secret" yaml:"secret"`
-	Policy string `json:"policy" yaml:"policy"`
+	Name   string                           `json:"name" yaml:"name"`
+	Secret SpecTemplateContainerImageSecret `json:"secret,omitempty" yaml:"secret"`
+	Policy string                           `json:"policy,omitempty" yaml:"policy"`
+}
+
+// swagger:model types_spec_template_container_image
+type SpecTemplateContainerImageSecret struct {
+	Name string `json:"name" yaml:"name"`
+	Key  string `json:"key" yaml:"key"`
 }
 
 // swagger:ignore

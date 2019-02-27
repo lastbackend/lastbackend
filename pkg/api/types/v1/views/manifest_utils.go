@@ -65,7 +65,8 @@ func (mv *ManifestView) NewManifestSpecTemplate(obj types.SpecTemplate) Manifest
 
 		c.Image = new(ManifestSpecTemplateContainerImage)
 		c.Image.Name = s.Image.Name
-		c.Image.Secret = s.Image.Secret
+		c.Image.Secret.Name = s.Image.Secret.Name
+		c.Image.Secret.Key = s.Image.Secret.Key
 
 		for _, volume := range s.Volumes {
 			c.Volumes = append(c.Volumes, ManifestSpecTemplateContainerVolume{

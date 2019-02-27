@@ -285,8 +285,9 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 				pod.Spec.Template.Updated = time.Now()
 			}
 
-			if spec.Image.Secret != c.Image.Secret {
-				spec.Image.Secret = c.Image.Secret
+			if spec.Image.Secret.Name != c.Image.Secret.Name || spec.Image.Secret.Key != c.Image.Secret.Key {
+				spec.Image.Secret.Name = c.Image.Secret.Name
+				spec.Image.Secret.Key = c.Image.Secret.Key
 				pod.Spec.Template.Updated = time.Now()
 			}
 

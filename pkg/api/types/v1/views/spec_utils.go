@@ -53,8 +53,11 @@ func (sv *SpecView) NewContainer(c *types.SpecTemplateContainer) *SpecTemplateCo
 	s.AutoRemove = c.AutoRemove
 	s.Labels = c.Labels
 	s.Image = SpecTemplateContainerImage{
-		Name:   c.Image.Name,
-		Secret: c.Image.Secret,
+		Name: c.Image.Name,
+		Secret: SpecTemplateContainerImageSecret{
+			Name: c.Image.Secret.Name,
+			Key:  c.Image.Secret.Key,
+		},
 		Policy: c.Image.Policy,
 	}
 

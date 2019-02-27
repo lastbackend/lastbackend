@@ -91,8 +91,13 @@ type ManifestSpecTemplateContainerEnvConfig struct {
 }
 
 type ManifestSpecTemplateContainerImage struct {
-	Name   string `json:"name,omitempty" yaml:"name,omitempty"`
-	Secret string `json:"secret,omitempty" yaml:"secret,omitempty"`
+	Name   string                                   `json:"name,omitempty" yaml:"name,omitempty"`
+	Secret ManifestSpecTemplateContainerImageSecret `json:"secret,omitempty" yaml:"secret,omitempty"`
+}
+
+type ManifestSpecTemplateContainerImageSecret struct {
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	Key  string `json:"key,omitempty" yaml:"key,omitempty"`
 }
 
 type ManifestSpecTemplateContainerResources struct {

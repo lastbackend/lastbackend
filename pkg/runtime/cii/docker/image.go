@@ -20,7 +20,6 @@ package docker
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -34,21 +33,6 @@ import (
 const (
 	logLevel = 3
 )
-
-func (r *Runtime) Auth(ctx context.Context, secret *types.SecretAuthData) (string, error) {
-
-	config := types.AuthConfig{
-		Username: secret.Username,
-		Password: secret.Password,
-	}
-
-	js, err := json.Marshal(config)
-	if err != nil {
-		return types.EmptyString, err
-	}
-
-	return base64.URLEncoding.EncodeToString(js), nil
-}
 
 func (r *Runtime) Pull(ctx context.Context, spec *types.ImageManifest, out io.Writer) (*types.Image, error) {
 
@@ -323,11 +307,11 @@ func (r *Runtime) Inspect(ctx context.Context, id string) (*types.Image, error) 
 	image.Status.Size = info.Size
 	image.Status.VirtualSize = info.VirtualSize
 
-	if info.ContainerConfig!= nil {
+	if info.ContainerConfig != nil {
 		image.Status.Container.Envs = info.ContainerConfig.Env
 	}
 
-	if info.Config!= nil {
+	if info.Config != nil {
 		image.Status.Container.Exec.Command = info.Config.Cmd
 		image.Status.Container.Exec.Entrypoint = info.Config.Entrypoint
 		image.Status.Container.Exec.Workdir = info.Config.WorkingDir
