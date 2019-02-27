@@ -128,6 +128,7 @@ func (t *TaskCancelOptions) ToJson() ([]byte, error) {
 }
 
 type TaskLogsOptions struct {
+	Tail      int    `json:"tail"`
 	Pod       string `json:"pod"`
 	Container string `json:"container"`
 	Follow    bool   `json:"follow"`

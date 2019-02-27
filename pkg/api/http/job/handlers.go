@@ -30,6 +30,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
+	"github.com/spf13/viper"
 	"net/http"
 )
 
@@ -444,6 +445,9 @@ func JobLogsH(w http.ResponseWriter, r *http.Request) {
 	jid := utils.Vars(r)["job"]
 	tid := utils.QueryString(r, "task")
 
+	tail := utils.QueryInt(r, "tail")
+	flw := utils.QueryBool(r, "follow")
+
 	log.V(logLevel).Debugf("%s:logs:> get logs for job `%s` in namespace `%s`", logPrefix, jid, nid)
 
 	var (
@@ -582,12 +586,13 @@ func JobLogsH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	follow := "false"
-	if task.Status.State != types.StateExited {
+	if flw && task.Status.State != types.StateExited {
 		follow = "true"
 	}
 
 	cx, cancel := context.WithCancel(context.Background())
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/logs?kind=%s&selflink=%s&follow=%s", exp.Status.Http.IP, exp.Status.Http.Port, types.KindTask, task.SelfLink().String(), follow), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/logs?kind=%s&selflink=%s&lines=%d&follow=%s",
+		exp.Status.Http.IP, exp.Status.Http.Port, types.KindTask, task.SelfLink().String(), tail, follow), nil)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> create http client err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -595,6 +600,8 @@ func JobLogsH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req.WithContext(cx)
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", viper.GetString("token")))
+
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> get pod logs err: %s", logPrefix, err.Error())

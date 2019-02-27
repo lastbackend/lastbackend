@@ -29,8 +29,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
-	"github.com/shirou/gopsutil/mem"
 	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/mem"
 	"github.com/spf13/viper"
 )
 
@@ -94,22 +94,16 @@ func NodeCapacity() types.NodeResources {
 
 	var stat syscall.Statfs_t
 
-	wd, err := os.Getwd()
-	if err != nil {
-		_ = fmt.Errorf("get storage err: %s", err)
-	}
-
-	syscall.Statfs(wd, &stat)
+	syscall.Statfs(viper.GetString("runtime.csi.dir.root"), &stat)
 
 	// Available blocks * size per block = available space in bytes
-	storage := stat.Bfree * uint64(stat.Bsize)
-
+	storage := stat.Blocks * uint64(stat.Bsize)
 	m := vmStat.Total
 
 	return types.NodeResources{
 		Storage:    int64(storage),
 		RAM:        int64(m),
-		CPU:        int64(cpuStat[0].Mhz)*int64(1e6)*int64(cpuStat[0].Cores),
+		CPU:        int64(cpuStat[0].Mhz) * int64(1e6) * int64(cpuStat[0].Cores),
 		Pods:       int(m / (MinContainerMemory * 1024 * 1024)),
 		Containers: int(m / (MinContainerMemory * 1024 * 1024)),
 	}
@@ -117,16 +111,10 @@ func NodeCapacity() types.NodeResources {
 
 func NodeAllocation() types.NodeResources {
 
-	vmStat, err := mem.VirtualMemory()
-	if err != nil {
-		_ = fmt.Errorf("get memory err: %s", err)
-	}
-
-	m := vmStat.Free
 	s := envs.Get().GetState().Pods()
 
 	return types.NodeResources{
-		RAM:        int64(m),
+		RAM:        0,
 		CPU:        0, // TODO: need get cpu resource value
 		Pods:       s.GetPodsCount(),
 		Containers: s.GetContainersCount(),

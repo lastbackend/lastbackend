@@ -30,6 +30,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
+	"github.com/spf13/viper"
 	"net/http"
 )
 
@@ -498,6 +499,8 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 
 	nid := utils.Vars(r)["namespace"]
 	sid := utils.Vars(r)["service"]
+	tail := utils.QueryInt(r, "tail")
+	follow := utils.QueryBool(r, "follow")
 
 	//did := r.URL.Query().Get("deployment")
 	//pid := r.URL.Query().Get("pod")
@@ -564,7 +567,16 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cx, cancel := context.WithCancel(context.Background())
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/logs?kind=%s&selflink=%s&follow=true", exp.Status.Http.IP, exp.Status.Http.Port, types.KindService, svc.SelfLink().String()), nil)
+
+	flw := "true"
+	if !follow {
+		flw = "false"
+	}
+
+	url := fmt.Sprintf("http://%s:%d/logs?kind=%s&selflink=%s&lines=%d&follow=%s",
+		exp.Status.Http.IP, exp.Status.Http.Port, types.KindService, svc.SelfLink().String(), tail, flw)
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> create http client err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -572,6 +584,8 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req.WithContext(cx)
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", viper.GetString("token")))
+
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> get pod logs err: %s", logPrefix, err.Error())

@@ -13,11 +13,11 @@ ENV GOROOT /usr/local/go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
 COPY . /go/src/github.com/lastbackend/lastbackend
-WORKDIR /go/src/github.com/lastbackend/lastbackend/cmd/plugins/logger
+WORKDIR /go/src/github.com/lastbackend/lastbackend/cmd/plugins/docker
 
 RUN go get -u github.com/golang/dep/cmd/dep
 RUN dep ensure
-RUN go build --ldflags '-extldflags "-static"' -o /usr/bin/docker-lastbackend-log-driver
+RUN go build --ldflags '-extldflags "-static"' -o /usr/bin/lastbackend
 
 WORKDIR /go/bin
 RUN rm -rf /go/pkg \
@@ -27,4 +27,4 @@ RUN rm -rf /go/pkg \
 
 # Production manifest
 FROM alpine:3.8 as production
-COPY --from=build /usr/bin/docker-lastbackend-log-driver /usr/bin/docker-lastbackend-log-driver
+COPY --from=build /usr/bin/lastbackend /usr/bin/lastbackend

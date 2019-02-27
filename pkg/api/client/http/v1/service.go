@@ -174,6 +174,9 @@ func (sc *ServiceClient) Logs(ctx context.Context, opts *rv1.ServiceLogsOptions)
 	res := sc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/logs", sc.namespace, sc.name))
 
 	if opts != nil {
+
+		res.Param("tail", fmt.Sprintf("%d", opts.Tail))
+
 		if opts.Follow {
 			res.Param("follow", strconv.FormatBool(opts.Follow))
 		}

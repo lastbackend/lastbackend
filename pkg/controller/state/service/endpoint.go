@@ -75,6 +75,9 @@ func endpointRestore(ss *ServiceState) error {
 			return err
 		}
 	}
+	if ss.endpoint.endpoint == nil {
+		return nil
+	}
 
 	ss.endpoint.manifest, err = em.ManifestGet(ss.endpoint.endpoint.SelfLink().String())
 	if err != nil {

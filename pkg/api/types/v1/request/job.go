@@ -237,6 +237,7 @@ type JobRemoveOptions struct {
 }
 
 type JobLogsOptions struct {
+	Tail      int    `json:"tail"`
 	Task      string `json:"task"`
 	Pod       string `json:"pod"`
 	Container string `json:"container"`
