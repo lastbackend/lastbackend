@@ -87,6 +87,7 @@ func (d *Deployment) JoinPods(obj *types.PodList) {
 		if sl.String() != d.Meta.SelfLink {
 			continue
 		}
+
 		d.Pods[p.SelfLink().String()] = new(PodView).New(p)
 	}
 }

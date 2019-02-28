@@ -129,9 +129,14 @@ type SpecTemplateContainer struct {
 }
 
 type SpecTemplateContainerImage struct {
-	Name   string `json:"name" yaml:"name"`
-	Secret string `json:"secret" yaml:"secret"`
-	Policy string `json:"policy" yaml:"policy"`
+	Name   string                           `json:"name" yaml:"name"`
+	Secret SpecTemplateContainerImageSecret `json:"secret" yaml:"secret"`
+	Policy string                           `json:"policy" yaml:"policy"`
+}
+
+type SpecTemplateContainerImageSecret struct {
+	Name string `json:"name" yaml:"name"`
+	Key  string `json:"key" yaml:"key"`
 }
 
 type SpecTemplateContainerPorts []*SpecTemplateContainerPort

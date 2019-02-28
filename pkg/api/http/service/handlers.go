@@ -502,10 +502,6 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 	tail := utils.QueryInt(r, "tail")
 	follow := utils.QueryBool(r, "follow")
 
-	//did := r.URL.Query().Get("deployment")
-	//pid := r.URL.Query().Get("pod")
-	//cid := r.URL.Query().Get("container")
-
 	log.V(logLevel).Debugf("%s:logs:> get logs for service `%s` in namespace `%s`", logPrefix, sid, nid)
 
 	var (

@@ -32,26 +32,21 @@ func ImagePull(ctx context.Context, namespace string, image *types.SpecTemplateC
 	)
 
 	mf.Name = image.Name
-	if image.Secret != types.EmptyString {
+	if image.Secret.Name != types.EmptyString {
 
-		secret, err := SecretGet(ctx, namespace, image.Secret)
+		secret, err := SecretGet(ctx, namespace, image.Secret.Name)
 		if err != nil {
 			log.Errorf("can not get secret for image. err: %s", err.Error())
 			return err
 		}
-		data, err := secret.DecodeSecretAuthData()
+
+		token, err := secret.DecodeSecretTextData(image.Secret.Key)
 		if err != nil {
 			log.Errorf("can not get parse secret auth data. err: %s", err.Error())
 			return err
 		}
 
-		auth, err := envs.Get().GetCII().Auth(ctx, data)
-		if err != nil {
-			log.Errorf("can not create secret string. err: %s", err.Error())
-			return err
-		}
-
-		mf.Auth = auth
+		mf.Auth = token
 	}
 
 	img, err := envs.Get().GetCII().Pull(ctx, mf, nil)
