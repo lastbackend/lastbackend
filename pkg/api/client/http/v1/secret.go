@@ -30,7 +30,7 @@ import (
 )
 
 type SecretClient struct {
-	client *request.RESTClient
+	client    *request.RESTClient
 	namespace string
 	name      string
 }
@@ -65,7 +65,9 @@ func (sc *SecretClient) Get(ctx context.Context) (*vv1.Secret, error) {
 	var s *vv1.Secret
 	var e *errors.Http
 
-	err := sc.client.Get(fmt.Sprintf("/namespace/%s/secret/%s", sc.namespace, sc.name)).
+	var url = fmt.Sprintf("/namespace/%s/secret/%s", sc.namespace, sc.name)
+
+	err := sc.client.Get(url).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
@@ -156,5 +158,5 @@ func (sc *SecretClient) Remove(ctx context.Context, opts *rv1.SecretRemoveOption
 }
 
 func newSecretClient(client *request.RESTClient, namespace, name string) *SecretClient {
-	return &SecretClient{client: client, namespace:namespace, name: name}
+	return &SecretClient{client: client, namespace: namespace, name: name}
 }

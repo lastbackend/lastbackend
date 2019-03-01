@@ -136,10 +136,14 @@ func (s *Secret) DecodeSecretTextData(key string) (string, error) {
 		return EmptyString, errors.New("secret key not found")
 	}
 
+	fmt.Println("key:", key)
+
 	d, err := base64.StdEncoding.DecodeString(string(s.Spec.Data[key]))
 	if err != nil {
 		return EmptyString, err
 	}
+
+	fmt.Println("data", string(d))
 
 	return string(d), nil
 

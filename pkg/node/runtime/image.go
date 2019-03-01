@@ -42,7 +42,7 @@ func ImagePull(ctx context.Context, namespace string, image *types.SpecTemplateC
 
 		token, err := secret.DecodeSecretTextData(image.Secret.Key)
 		if err != nil {
-			log.Errorf("can not get parse secret auth data. err: %s", err.Error())
+			log.Errorf("can not get parse secret text data. err: %s", err.Error())
 			return err
 		}
 

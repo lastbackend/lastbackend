@@ -229,18 +229,26 @@ func (m ManifestSpecRuntimeTask) GetSpec() types.SpecRuntimeTask {
 	s.Container = m.Container
 
 	for _, e := range m.Env {
-		s.EnvVars = append(s.EnvVars, &types.SpecTemplateContainerEnv{
+		env := types.SpecTemplateContainerEnv{
 			Name:  e.Name,
 			Value: e.Value,
-			Secret: types.SpecTemplateContainerEnvSecret{
+		}
+
+		if e.Secret != nil {
+			env.Secret = types.SpecTemplateContainerEnvSecret{
 				Name: e.Secret.Name,
 				Key:  e.Secret.Key,
-			},
-			Config: types.SpecTemplateContainerEnvConfig{
+			}
+		}
+
+		if e.Config != nil {
+			env.Config = types.SpecTemplateContainerEnvConfig{
 				Name: e.Config.Name,
 				Key:  e.Config.Key,
-			},
-		})
+			}
+		}
+
+		s.EnvVars = append(s.EnvVars, &env)
 	}
 
 	for _, c := range m.Commands {

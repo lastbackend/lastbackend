@@ -81,7 +81,7 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	parts := strings.Split(sid, ":")
+	parts := strings.SplitN(sid, ":", 2)
 
 	switch len(parts) {
 	case 1:
@@ -109,7 +109,7 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		url := fmt.Sprintf("%s/vault/?secret=%s&namespace=%s", vault.Endpoint, parts[1], ns.SelfLink().String())
+		url := fmt.Sprintf("%s/vault?secret=%s&namespace=%s", vault.Endpoint, parts[1], ns.SelfLink().String())
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			log.V(logLevel).Errorf("%s:secret:> create http client err: %s", logPrefix, err.Error())

@@ -141,11 +141,13 @@ func NewLogger() (*Logger, error) {
 	var (
 		err  error
 		root = viper.GetString("exporter.dir")
+		host = viper.GetString("exporter.listener.host")
+		port = viper.GetInt("exporter.listener.port")
 	)
 
 	l := new(Logger)
 	l.connections = make(map[string]map[http.ResponseWriter]bool, 0)
-	l.server, err = proxy.NewServer(proxy.DefaultServer)
+	l.server, err = proxy.NewServer(fmt.Sprintf("%s:%d", host, port))
 	l.storage = NewStorage(root)
 	if err != nil {
 		return nil, err

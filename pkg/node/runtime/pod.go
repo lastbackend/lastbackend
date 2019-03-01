@@ -186,9 +186,11 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 	var (
 		status    = types.NewPodStatus()
 		namespace = getPodNamespace(key)
-		setError  = func(err error) (*types.PodStatus, error) {
+
+		setError = func(err error) (*types.PodStatus, error) {
 			log.Errorf("%s can not pull image: %s", logPodPrefix, err)
 			status.SetError(err)
+			envs.Get().GetState().Pods().SetPod(key, status)
 			PodClean(ctx, status)
 			return status, err
 		}
@@ -364,56 +366,59 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 	envs.Get().GetState().Pods().SetPod(key, status)
 
 	// run tasks
-	go func() {
-		for _, t := range manifest.Runtime.Tasks {
-			for _, s := range manifest.Template.Containers {
 
-				if s.Name != t.Container {
-					continue
-				}
+	for _, t := range manifest.Runtime.Tasks {
 
-				spec := *s
+		log.V(logLevel).Debugf("%s start task %s", logPodPrefix, t.Name)
 
-				if len(t.EnvVars) > 0 {
-					for _, te := range t.EnvVars {
-						var f = false
-						for _, se := range spec.EnvVars {
-							if te.Name == se.Name {
-								se.Value = te.Value
-								se.Secret = te.Secret
-								se.Config = te.Config
-								f = true
-							}
-						}
-						if !f {
-							spec.EnvVars = append(spec.EnvVars, te)
+		for _, s := range manifest.Template.Containers {
+
+			if s.Name != t.Container {
+				continue
+			}
+
+			spec := *s
+
+			if len(t.EnvVars) > 0 {
+				for _, te := range t.EnvVars {
+					var f = false
+					for _, se := range spec.EnvVars {
+						if te.Name == se.Name {
+							se.Value = te.Value
+							se.Secret = te.Secret
+							se.Config = te.Config
+							f = true
 						}
 					}
+					if !f {
+						spec.EnvVars = append(spec.EnvVars, te)
+					}
 				}
+			}
 
-				m, err := containerManifestCreate(ctx, key, &spec)
-				if primary != types.EmptyString {
-					m.Network.Mode = fmt.Sprintf("container:%s", primary)
-				}
+			m, err := containerManifestCreate(ctx, key, &spec)
+			if err != nil {
+				log.Errorf("%s can not create container manifest from spec: %s", logPodPrefix, err.Error())
+				return setError(err)
+			}
 
-				if err != nil {
-					log.Errorf("%s can not create container manifest from spec: %s", logPodPrefix, err.Error())
-					setError(err)
-				}
+			if primary != types.EmptyString {
+				m.Network.Mode = fmt.Sprintf("container:%s", primary)
+			}
 
-				m.Name = ""
-				if err := taskExecute(ctx, key, t, *m, status); err != nil {
-					log.Errorf("%s can not execute task: %s", logPodPrefix, err.Error())
-					setError(err)
-				}
+			m.Name = ""
+			if err := taskExecute(ctx, key, t, *m, status); err != nil {
+				log.Errorf("%s can not execute task: %s", logPodPrefix, err.Error())
+				return setError(err)
 
 			}
-		}
 
-		if len(manifest.Runtime.Tasks) > 0 {
-			PodExit(ctx, key, status, true)
 		}
-	}()
+	}
+
+	if len(manifest.Runtime.Tasks) > 0 {
+		PodExit(ctx, key, status, true)
+	}
 
 	return status, nil
 }
