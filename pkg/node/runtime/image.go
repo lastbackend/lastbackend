@@ -19,10 +19,13 @@
 package runtime
 
 import (
+	"encoding/base64"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"golang.org/x/net/context"
+	"strings"
 )
 
 func ImagePull(ctx context.Context, namespace string, image *types.SpecTemplateContainerImage) error {
@@ -46,7 +49,26 @@ func ImagePull(ctx context.Context, namespace string, image *types.SpecTemplateC
 			return err
 		}
 
-		mf.Auth = token
+		payload, _ := base64.StdEncoding.DecodeString(token)
+		pair := strings.SplitN(string(payload), ":", 2)
+
+		if len(pair) != 2 {
+			log.Error("can not parse docker auth secret: invalid format")
+			return errors.New("docker auth secret format is invalid")
+		}
+
+		data := types.SecretAuthData{
+			Username: pair[0],
+			Password: pair[1],
+		}
+
+		auth, err := envs.Get().GetCII().Auth(ctx, &data)
+		if err != nil {
+			log.Errorf("can not create secret string. err: %s", err.Error())
+			return err
+		}
+
+		mf.Auth = auth
 	}
 
 	img, err := envs.Get().GetCII().Pull(ctx, mf, nil)

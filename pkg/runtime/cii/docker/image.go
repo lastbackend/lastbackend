@@ -20,6 +20,7 @@ package docker
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -34,6 +35,21 @@ const (
 	logLevel = 3
 )
 
+func (r *Runtime) Auth(ctx context.Context, secret *types.SecretAuthData) (string, error) {
+
+	config := types.AuthConfig{
+		Username: secret.Username,
+		Password: secret.Password,
+	}
+
+	js, err := json.Marshal(config)
+	if err != nil {
+		return types.EmptyString, err
+	}
+
+	return base64.URLEncoding.EncodeToString(js), nil
+}
+
 func (r *Runtime) Pull(ctx context.Context, spec *types.ImageManifest, out io.Writer) (*types.Image, error) {
 
 	log.V(logLevel).Debugf("Docker: Name pull: %s", spec.Name)
@@ -42,7 +58,10 @@ func (r *Runtime) Pull(ctx context.Context, spec *types.ImageManifest, out io.Wr
 		PrivilegeFunc: func() (string, error) {
 			return "", errors.New("access denied")
 		},
-		RegistryAuth: spec.Auth,
+	}
+
+	if spec.Auth != types.EmptyString {
+		options.RegistryAuth = spec.Auth
 	}
 
 	res, err := r.client.ImagePull(ctx, spec.Name, options)

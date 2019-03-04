@@ -94,6 +94,8 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 		}
 	case 2:
 
+		fmt.Println("get vault secret:", sid)
+
 		if parts[0] != "vault" {
 			log.V(logLevel).Errorf("%s:get:> invalid secret name: %s", logPrefix, sid)
 			errors.HTTP.InternalServerError(w)
@@ -132,6 +134,8 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 			errors.HTTP.InternalServerError(w)
 			return
 		}
+
+		fmt.Println(string(body))
 
 		sv := views.SecretView{}
 		item, err = sv.Parse(body)

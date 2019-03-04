@@ -78,7 +78,7 @@ func GetHostConfig(manifest *types.ContainerManifest) *container.HostConfig {
 	}
 
 	logC := container.LogConfig{
-		//Type: "lastbackend",
+		Type: "lastbackend",
 	}
 	ports = make(nat.PortMap)
 

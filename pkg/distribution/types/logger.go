@@ -20,8 +20,9 @@ package types
 
 import (
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"time"
+
+	"github.com/golang/protobuf/proto"
 )
 
 type ProxyMessage struct {
@@ -43,6 +44,7 @@ type LogMessage struct {
 	Data             string            `json:"message"`
 	ContainerId      string            `json:"container_id"`
 	ContainerName    string            `json:"container_name"`
+	ContainerType    string            `json:"container_type"`
 	Selflink         string            `json:"selflink"`
 	ContainerCreated JsonTime          `json:"container_created"`
 	Tag              string            `json:"tag"`

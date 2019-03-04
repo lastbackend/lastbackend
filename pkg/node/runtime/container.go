@@ -21,11 +21,12 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
-	"strings"
-	"time"
 )
 
 func containerInspect(ctx context.Context, container *types.PodContainer) error {
@@ -134,8 +135,21 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 
 	mf := types.NewContainerManifest(spec)
 
-	name := strings.Split(pod, ":")
-	mf.Name = fmt.Sprintf("%s-%s", name[len(name)-1], spec.Name)
+	var namespace, name string
+
+	parts := strings.Split(pod, ":")
+
+	if len(parts) == 1 {
+		namespace = types.SYSTEM_NAMESPACE
+		name = parts[0]
+	}
+
+	if len(parts) >= 2 {
+		namespace = parts[0]
+		name = parts[1]
+	}
+
+	mf.Name = fmt.Sprintf("%s-%s", name, spec.Name)
 
 	mf.Labels = make(map[string]string, 0)
 	for n, v := range spec.Labels {
@@ -143,6 +157,7 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 	}
 
 	mf.Labels[types.ContainerTypeLBC] = pod
+	mf.Labels[types.ContainerTypeRuntime] = types.ContainerTypeRuntimeService
 
 	for _, s := range spec.EnvVars {
 
@@ -150,7 +165,7 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 
 		case s.Secret.Name != types.EmptyString && s.Secret.Key != types.EmptyString:
 
-			secret, err := SecretGet(ctx, name[0], s.Secret.Name)
+			secret, err := SecretGet(ctx, namespace, s.Secret.Name)
 			if err != nil {
 				log.Errorf("Can not get secret for container: %s", err.Error())
 				return nil, err
@@ -171,10 +186,9 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 
 			env := fmt.Sprintf("%s=%s", s.Name, val)
 			mf.Envs = append(mf.Envs, env)
-			break
 
 		case s.Config.Name != types.EmptyString && s.Config.Key != types.EmptyString:
-			configSelfLink := fmt.Sprintf("%s:%s", name[0], s.Config.Name)
+			configSelfLink := fmt.Sprintf("%s:%s", namespace, s.Config.Name)
 			config := envs.Get().GetState().Configs().GetConfig(configSelfLink)
 			if config == nil {
 				log.Errorf("Can not get config for container: %s", configSelfLink)
@@ -188,7 +202,6 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 
 			env := fmt.Sprintf("%s=%s", s.Name, value)
 			mf.Envs = append(mf.Envs, env)
-			break
 		default:
 			continue
 		}

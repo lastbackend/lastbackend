@@ -28,8 +28,10 @@ import (
 )
 
 const (
-	ContainerTypeLBC = "LBC"
-	ContainerTypeLBR = "LBR"
+	ContainerTypeLBC            = "LBC"
+	ContainerTypeRuntime        = "LBC:Runtime"
+	ContainerTypeRuntimeService = "service"
+	ContainerTypeRuntimeTask    = "task"
 )
 
 type Container struct {

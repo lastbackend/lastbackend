@@ -153,13 +153,16 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 	ctx, cancel := context.WithCancel(context.Background())
 	envs.Get().GetState().Tasks().AddTask(key, &types.NodeTask{Cancel: cancel})
 
-	status, err := PodCreate(ctx, key, manifest)
-	if err != nil {
-		log.Errorf("%s can not create pod: %s err: %s", logPodPrefix, key, err.Error())
-		status.SetError(err)
-	}
+	go func() {
+		status, err := PodCreate(ctx, key, manifest)
+		if err != nil {
+			log.Errorf("%s can not create pod: %s err: %s", logPodPrefix, key, err.Error())
+			status.SetError(err)
+		}
 
-	envs.Get().GetState().Pods().SetPod(key, status)
+		envs.Get().GetState().Pods().SetPod(key, status)
+	}()
+
 	return nil
 }
 

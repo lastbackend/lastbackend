@@ -119,7 +119,7 @@ func (l *Logger) Stream(ctx context.Context, kind, selflink string, opts StreamO
 				}
 
 				if f, ok := writer.(http.Flusher); ok {
-					if f != nil {
+					if writer != nil {
 						f.Flush()
 					}
 				}

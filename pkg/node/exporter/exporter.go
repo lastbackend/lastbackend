@@ -19,10 +19,11 @@
 package exporter
 
 import (
+	"time"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/proxy"
-	"time"
 )
 
 type Exporter struct {

@@ -257,6 +257,7 @@ func (m ManifestSpecRuntimeTask) GetSpec() types.SpecRuntimeTask {
 		if c.Command != types.EmptyString {
 			cmd.Command = strings.Split(c.Command, " ")
 		}
+
 		cmd.Args = c.Args
 		cmd.Workdir = c.Workdir
 
