@@ -21,13 +21,14 @@ package proxy
 import (
 	"encoding/binary"
 	"fmt"
-	protoio "github.com/gogo/protobuf/io"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"io"
 	"net"
 	"sync"
 	"time"
+
+	protoio "github.com/gogo/protobuf/io"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type Client struct {
@@ -199,6 +200,7 @@ func NewClient(name, addr string, handler Handler) *Client {
 	go func() {
 		for {
 			if p.addr != types.EmptyString {
+				fmt.Println("connecto to exporter:", p.addr)
 				_ = p.Connect()
 			}
 			<-time.NewTimer(time.Second).C

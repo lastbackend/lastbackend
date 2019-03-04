@@ -23,6 +23,12 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"io"
+	"path"
+	"sync"
+	"syscall"
+	"time"
+
 	"github.com/docker/docker/api/types/plugins/logdriver"
 	"github.com/docker/docker/daemon/logger"
 	"github.com/docker/docker/daemon/logger/loggerutils"
@@ -32,11 +38,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/proxy"
 	"github.com/pkg/errors"
 	"github.com/tonistiigi/fifo"
-	"io"
-	"path"
-	"sync"
-	"syscall"
-	"time"
 )
 
 type driver struct {
@@ -99,6 +100,7 @@ func (d *driver) StartLogging(file string, logCtx logger.Info) error {
 	msg := types.LogMessage{
 		ContainerId:      logCtx.FullID(),
 		ContainerName:    logCtx.Name(),
+		ContainerType:    logCtx.ContainerLabels[types.ContainerTypeRuntime],
 		Selflink:         logCtx.ContainerLabels[types.ContainerTypeLBC],
 		ContainerCreated: types.JsonTime{logCtx.ContainerCreated},
 		Tag:              tag,

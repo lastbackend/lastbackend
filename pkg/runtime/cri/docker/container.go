@@ -20,14 +20,15 @@ package docker
 
 import (
 	"context"
-	docker "github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"io"
 	"strconv"
 	"strings"
 	"time"
+
+	docker "github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 func (r *Runtime) List(ctx context.Context, all bool) ([]*types.Container, error) {
@@ -186,10 +187,7 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 	meta, ok := info.Config.Labels[types.ContainerTypeLBC]
 	if ok {
 		container.Pod = meta
-	} else if _, ok := info.Config.Labels[types.ContainerTypeLBR]; !ok {
-		log.V(logLevel).Debug("Docker: Container Meta not found")
 	}
-
 	container.Labels = info.Config.Labels
 
 	return container, nil

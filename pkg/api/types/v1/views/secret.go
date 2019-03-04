@@ -19,6 +19,7 @@
 package views
 
 import (
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"time"
 )
@@ -62,6 +63,7 @@ func (s *Secret) Decode() *types.Secret {
 
 	o.Spec.Data = make(map[string][]byte, 0)
 	for k, v := range s.Spec.Data {
+		fmt.Println(v)
 		o.Spec.Data[k] = []byte(v)
 	}
 

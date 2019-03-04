@@ -221,7 +221,6 @@ func (js *JobState) DelPod(p *types.Pod) {
 func (js *JobState) CheckJobDeps(dep types.StatusDependency) {
 
 	log.Debugf("%s:> check job dependency: %s", logPrefix, dep.Name)
-
 }
 
 func (js *JobState) CheckTaskDeps(task *types.Task, dep types.StatusDependency) {
@@ -318,7 +317,7 @@ func (js *JobState) Provider() {
 
 	for {
 
-		if js.provider == nil {
+		if js.provider == nil || js.job == nil {
 			return
 		}
 

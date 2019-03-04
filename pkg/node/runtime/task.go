@@ -20,10 +20,11 @@ package runtime
 
 import (
 	"context"
+	"time"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
-	"time"
 )
 
 const (
@@ -36,8 +37,9 @@ func taskExecute(ctx context.Context, pod string, task types.SpecRuntimeTask, m 
 	status.SetStarted()
 
 	envs.Get().GetState().Pods().SetPod(pod, ps)
-
 	log.V(logLevel).Debugf("%s task %s start", logTaskPrefix, task.Name)
+
+	m.Labels[types.ContainerTypeRuntime] = types.ContainerTypeRuntimeTask
 
 	for _, cmd := range task.Commands {
 
@@ -46,7 +48,20 @@ func taskExecute(ctx context.Context, pod string, task types.SpecRuntimeTask, m 
 			err error
 		)
 
-		m.Exec = cmd
+		if len(cmd.Command) > 0 {
+			m.Exec.Command = cmd.Command
+			m.Exec.Args = cmd.Args
+		}
+
+		if len(cmd.Entrypoint) > 0 {
+			m.Exec.Entrypoint = cmd.Entrypoint
+		}
+
+		if cmd.Workdir != types.EmptyString {
+			m.Exec.Workdir = cmd.Workdir
+		}
+
+		m.RestartPolicy.Policy = "no"
 		status.AddTaskCommandContainer(&c)
 		envs.Get().GetState().Pods().SetPod(pod, ps)
 

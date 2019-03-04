@@ -81,7 +81,7 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	parts := strings.Split(sid, ":")
+	parts := strings.SplitN(sid, ":", 2)
 
 	switch len(parts) {
 	case 1:
@@ -93,6 +93,8 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case 2:
+
+		fmt.Println("get vault secret:", sid)
 
 		if parts[0] != "vault" {
 			log.V(logLevel).Errorf("%s:get:> invalid secret name: %s", logPrefix, sid)
@@ -109,7 +111,7 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		url := fmt.Sprintf("%s/vault/?secret=%s&namespace=%s", vault.Endpoint, parts[1], ns.SelfLink().String())
+		url := fmt.Sprintf("%s/vault?secret=%s&namespace=%s", vault.Endpoint, parts[1], ns.SelfLink().String())
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			log.V(logLevel).Errorf("%s:secret:> create http client err: %s", logPrefix, err.Error())
@@ -132,6 +134,8 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 			errors.HTTP.InternalServerError(w)
 			return
 		}
+
+		fmt.Println(string(body))
 
 		sv := views.SecretView{}
 		item, err = sv.Parse(body)
