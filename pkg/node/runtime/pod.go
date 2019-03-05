@@ -374,12 +374,15 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 
 		log.V(logLevel).Debugf("%s start task %s", logPodPrefix, t.Name)
 
+		var f, e bool
+
 		for _, s := range manifest.Template.Containers {
 
 			if s.Name != t.Container {
 				continue
 			}
 
+			f = true
 			spec := *s
 
 			if len(t.EnvVars) > 0 {
@@ -413,9 +416,20 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 			if err := taskExecute(ctx, key, t, *m, status); err != nil {
 				log.Errorf("%s can not execute task: %s", logPodPrefix, err.Error())
 				return setError(err)
-
 			}
 
+			for _, s := range status.Runtime.Pipeline {
+				if s.Error {
+					e = true
+				}
+
+				break
+			}
+
+		}
+
+		if e || !f {
+			break
 		}
 	}
 
