@@ -13,7 +13,7 @@ install:
 before_install:
   - curl -L  https://github.com/coreos/etcd/releases/download/v3.2.9/etcd-v3.2.9-linux-amd64.tar.gz -o etcd-v3.2.9-linux-amd64.tar.gz
   - tar xzvf etcd-v3.2.9-linux-amd64.tar.gz
-  - ./etcd-v3.2.9-linux-amd64/etcd > /dev/null
+  - ./etcd-v3.2.9-linux-amd64/etcd >> /dev/null &
 
 before_script:
   - make test
