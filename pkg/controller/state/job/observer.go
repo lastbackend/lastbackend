@@ -152,13 +152,17 @@ func (js *JobState) Observe() {
 
 			log.V(logLevel).Debugf("%s:observe:task:> %s", logPrefix, task.SelfLink())
 
+			status := task.Status
 			if err := taskObserve(js, task); err != nil {
 				log.Errorf("%s:observe:task err:> %s", logPrefix, err.Error())
 			}
 
-			if err := js.Hook(task); err != nil {
-				log.Errorf("%s:observe:task send state err:> %s", logPrefix, err.Error())
+			if task.Status.State != status.State || task.Status.Status != status.Status {
+				if err := js.Hook(task); err != nil {
+					log.Errorf("%s:observe:task send state err:> %s", logPrefix, err.Error())
+				}
 			}
+
 			break
 
 		case s := <-js.observers.job:
