@@ -369,7 +369,6 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 	envs.Get().GetState().Pods().SetPod(key, status)
 
 	// run tasks
-
 	for _, t := range manifest.Runtime.Tasks {
 
 		log.V(logLevel).Debugf("%s start task %s", logPodPrefix, t.Name)
