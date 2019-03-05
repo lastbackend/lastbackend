@@ -82,7 +82,6 @@ func (f *File) Read(ctx context.Context, lines int, follow bool, l chan string) 
 	go func() {
 		<-ctx.Done()
 
-		fmt.Println("ctx done")
 		if err := t.Stop(); err != nil {
 			log.Errorf("%s:> stop tailing err: %s", logPrefix, err.Error())
 		}
