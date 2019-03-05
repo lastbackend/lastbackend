@@ -272,6 +272,8 @@ func jobTaskProvision(js *JobState) error {
 	}
 
 	t.Status.State = types.StateProvision
+	t.Status.Status = types.StateProvision
+
 	tm := distribution.NewTaskModel(context.Background(), envs.Get().GetStorage())
 	if err := tm.Set(t); err != nil {
 		log.Errorf("%s", err.Error())
