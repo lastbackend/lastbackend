@@ -87,10 +87,6 @@ func taskObserve(js *JobState, task *types.Task) error {
 		js.task.list[task.SelfLink().String()] = task
 	}
 
-	if err := jobTaskProvision(js); err != nil {
-		log.Errorf("%s:> job task queue pop err: %s", logTaskPrefix, err.Error())
-		return err
-	}
 	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logTaskPrefix, task.SelfLink(), task.Status.State)
 
 	return nil
@@ -349,6 +345,12 @@ func taskQueue(js *JobState, task *types.Task) error {
 			log.Errorf("%s", err.Error())
 			return err
 		}
+		return nil
+	}
+
+	if err := jobTaskProvision(js); err != nil {
+		log.Errorf("%s:> job task queue pop err: %s", logTaskPrefix, err.Error())
+		return err
 	}
 
 	return nil
