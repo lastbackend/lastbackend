@@ -64,7 +64,7 @@ func ExporterStatus() types.ExporterStatus {
 		_ = fmt.Errorf("get ip err: %s", err)
 	}
 
-	lp := uint16(viper.GetInt("exporter.port"))
+	lp := uint16(viper.GetInt("exporter.listener.port"))
 	if lp == 0 {
 		lp = proxy.DefaultPort
 	}
