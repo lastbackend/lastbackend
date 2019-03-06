@@ -20,7 +20,6 @@ package job
 
 import (
 	"context"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/job/hook"
 	jh "github.com/lastbackend/lastbackend/pkg/controller/state/job/hook/hook"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/job/provider"
@@ -308,8 +307,6 @@ func (js *JobState) Provider() {
 				if manifest != nil && manifest.Spec.Template == nil && manifest.Spec.Runtime == nil {
 					continue
 				}
-
-				fmt.Println(manifest)
 
 				if _, err := taskCreate(js.job, manifest); err != nil {
 					log.Error(err.Error())

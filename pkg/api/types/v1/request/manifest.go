@@ -666,6 +666,12 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 			st.Updated = time.Now()
 		}
 
+		if c.RestartPolicy != nil && (spec.RestartPolicy.Policy != c.RestartPolicy.Policy || spec.RestartPolicy.Attempt != c.RestartPolicy.Attempt) {
+			spec.RestartPolicy.Policy = c.RestartPolicy.Policy
+			spec.RestartPolicy.Attempt = c.RestartPolicy.Attempt
+			st.Updated = time.Now()
+		}
+
 		// Environments check
 		for _, ce := range c.Env {
 			var f = false
@@ -1223,6 +1229,11 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 
 		if c.Security != nil && spec.Security.Privileged != c.Security.Privileged {
 			spec.Security.Privileged = c.Security.Privileged
+		}
+
+		if c.RestartPolicy != nil && (spec.RestartPolicy.Policy != c.RestartPolicy.Policy || spec.RestartPolicy.Attempt != c.RestartPolicy.Attempt) {
+			spec.RestartPolicy.Policy = c.RestartPolicy.Policy
+			spec.RestartPolicy.Attempt = c.RestartPolicy.Attempt
 		}
 
 		// Environments check
