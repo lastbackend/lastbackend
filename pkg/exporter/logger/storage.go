@@ -112,7 +112,7 @@ func (f *File) Clear() error {
 	return nil
 }
 
-func (s Storage) GetStream(kind, selflink string, clear bool) *File {
+func (s Storage) GetStream(kind, selflink string, clear bool) (*File, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -124,11 +124,11 @@ func (s Storage) GetStream(kind, selflink string, clear bool) *File {
 		f, err := newFile(s.root, kind, selflink, clear)
 		if err != nil {
 			log.Errorf("can not create storage file: %s", err.Error())
-			return nil
+			return nil, err
 		}
 		s.Collection[kind][selflink] = f
 	}
-	return s.Collection[kind][selflink]
+	return s.Collection[kind][selflink], nil
 }
 
 func NewStorage(root string) *Storage {
