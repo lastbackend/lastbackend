@@ -87,10 +87,6 @@ func taskObserve(js *JobState, task *types.Task) error {
 		js.task.list[task.SelfLink().String()] = task
 	}
 
-	if err := jobTaskProvision(js); err != nil {
-		log.Errorf("%s:> job task queue pop err: %s", logTaskPrefix, err.Error())
-		return err
-	}
 	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logTaskPrefix, task.SelfLink(), task.Status.State)
 
 	return nil
@@ -102,6 +98,7 @@ func handleTaskStateCreated(js *JobState, task *types.Task) error {
 
 	if err := taskCheckSelectors(js, task); err != nil {
 		task.Status.State = types.StateError
+		task.Status.Status = types.StateError
 		task.Status.Message = err.Error()
 		tm := distribution.NewTaskModel(context.Background(), envs.Get().GetStorage())
 		if err := tm.Set(task); err != nil {
@@ -187,10 +184,6 @@ func handleTaskStateDestroy(js *JobState, task *types.Task) error {
 		return err
 	}
 
-	if task.Status.State == types.StateDestroyed {
-		return handleTaskStateDestroyed(js, task)
-	}
-
 	return nil
 }
 
@@ -206,10 +199,7 @@ func handleTaskStateDestroyed(js *JobState, task *types.Task) error {
 			log.Errorf("%s", err.Error())
 			return err
 		}
-
-		task.Status.State = types.StateDestroy
-		tm := distribution.NewTaskModel(context.Background(), envs.Get().GetStorage())
-		return tm.Set(task)
+		return nil
 	}
 
 	if err := taskRemove(task); err != nil {
@@ -355,6 +345,12 @@ func taskQueue(js *JobState, task *types.Task) error {
 			log.Errorf("%s", err.Error())
 			return err
 		}
+		return nil
+	}
+
+	if err := jobTaskProvision(js); err != nil {
+		log.Errorf("%s:> job task queue pop err: %s", logTaskPrefix, err.Error())
+		return err
 	}
 
 	return nil
@@ -551,19 +547,21 @@ func taskStatusState(t *types.Task, p *types.Pod) (err error) {
 		Runtime:  p.Status.Runtime,
 	}
 
-	t.Meta.Updated = time.Now()
-
 	switch true {
 	case p.Status.State == types.StateError:
-		t.Status.State = types.StateExited
-		t.Status.Status = types.StateError
-		t.Status.Message = p.Status.Message
+		if t.Status.State != types.StateExited {
+			t.Status.State = types.StateExited
+			t.Status.Status = types.StateError
+			t.Status.Message = p.Status.Message
+			t.Meta.Updated = time.Now()
+		}
 		return nil
 	case p.Status.Status == types.StateError:
 		if t.Status.State != types.StateExited {
 			t.Status.State = types.StateExited
 			t.Status.Status = types.StateReady
 			t.Status.Message = p.Status.Message
+			t.Meta.Updated = time.Now()
 		}
 		return nil
 	case p.Status.Status == types.StateRunning:
@@ -571,6 +569,7 @@ func taskStatusState(t *types.Task, p *types.Pod) (err error) {
 			t.Status.State = types.StateRunning
 			t.Status.Status = types.StateRunning
 			t.Status.Message = types.EmptyString
+			t.Meta.Updated = time.Now()
 		}
 		return nil
 	case p.Status.Status == types.StateExited:
@@ -578,6 +577,7 @@ func taskStatusState(t *types.Task, p *types.Pod) (err error) {
 			t.Status.State = types.StateExited
 			t.Status.Status = types.StateReady
 			t.Status.Message = types.EmptyString
+			t.Meta.Updated = time.Now()
 		}
 		return nil
 	}

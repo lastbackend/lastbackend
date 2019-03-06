@@ -482,6 +482,7 @@ func (m ManifestSpecRuntime) SetSpecRuntime(sr *SpecRuntime) {
 	}
 
 	for _, mt := range m.Tasks {
+
 		var f = false
 
 		for _, st := range sr.Tasks {
@@ -616,12 +617,19 @@ func (m ManifestSpecRuntime) SetSpecRuntime(sr *SpecRuntime) {
 			}
 
 			for _, c := range t.Commands {
-				cmd := SpecTemplateContainerExec{
-					Command:    strings.Split(c.Command, " "),
-					Workdir:    c.Workdir,
-					Args:       c.Args,
-					Entrypoint: strings.Split(c.Entrypoint, " "),
+				cmd := SpecTemplateContainerExec{}
+
+				if len(c.Command) > 0 {
+					cmd.Command = strings.Split(c.Command, " ")
 				}
+
+				if len(c.Entrypoint) > 0 {
+					cmd.Entrypoint = strings.Split(c.Entrypoint, " ")
+				}
+
+				cmd.Workdir = c.Workdir
+				cmd.Args = c.Args
+
 				task.Commands = append(task.Commands, cmd)
 			}
 
@@ -722,6 +730,12 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *SpecTemplate) error {
 
 		if spec.Security.Privileged != c.Security.Privileged {
 			spec.Security.Privileged = c.Security.Privileged
+			st.Updated = time.Now()
+		}
+
+		if spec.RestartPolicy.Policy != c.RestartPolicy.Policy || spec.RestartPolicy.Attempt != c.RestartPolicy.Attempt {
+			spec.RestartPolicy.Policy = c.RestartPolicy.Policy
+			spec.RestartPolicy.Attempt = c.RestartPolicy.Attempt
 			st.Updated = time.Now()
 		}
 

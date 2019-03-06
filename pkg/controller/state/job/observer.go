@@ -20,7 +20,6 @@ package job
 
 import (
 	"context"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/job/hook"
 	jh "github.com/lastbackend/lastbackend/pkg/controller/state/job/hook/hook"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/job/provider"
@@ -152,13 +151,17 @@ func (js *JobState) Observe() {
 
 			log.V(logLevel).Debugf("%s:observe:task:> %s", logPrefix, task.SelfLink())
 
+			status := task.Status
 			if err := taskObserve(js, task); err != nil {
 				log.Errorf("%s:observe:task err:> %s", logPrefix, err.Error())
 			}
 
-			if err := js.Hook(task); err != nil {
-				log.Errorf("%s:observe:task send state err:> %s", logPrefix, err.Error())
+			if task.Status.State != status.State || task.Status.Status != status.Status {
+				if err := js.Hook(task); err != nil {
+					log.Errorf("%s:observe:task send state err:> %s", logPrefix, err.Error())
+				}
 			}
+
 			break
 
 		case s := <-js.observers.job:
@@ -304,8 +307,6 @@ func (js *JobState) Provider() {
 				if manifest != nil && manifest.Spec.Template == nil && manifest.Spec.Runtime == nil {
 					continue
 				}
-
-				fmt.Println(manifest)
 
 				if _, err := taskCreate(js.job, manifest); err != nil {
 					log.Error(err.Error())

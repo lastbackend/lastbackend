@@ -97,7 +97,11 @@ func TestNewLogger(t *testing.T) {
 		var stream *File
 
 		for {
-			stream = logger.storage.GetStream(types.KindTask, sl, false)
+			stream, err = logger.storage.GetStream(types.KindTask, sl, false)
+			if err != nil {
+				t.Error(err.Error())
+				break
+			}
 			if stream != nil {
 				break
 			}

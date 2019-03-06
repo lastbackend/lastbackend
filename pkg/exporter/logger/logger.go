@@ -22,7 +22,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/spf13/viper"
@@ -54,6 +53,11 @@ func (l *Logger) Listen() error {
 
 func (l *Logger) Handle(msg types.ProxyMessage) error {
 
+	var (
+		stream *File
+		err    error
+	)
+
 	m := types.LogMessage{}
 	if err := json.Unmarshal(msg.Line, &m); err != nil {
 		_ = fmt.Errorf("%s:>unmarshal json: %s", logPrefix, err.Error())
@@ -67,19 +71,16 @@ func (l *Logger) Handle(msg types.ProxyMessage) error {
 
 	k, parent := pod.Parent()
 
-	var stream *File
-
 	switch k {
 	case types.KindDeployment:
 		kind, p := parent.Parent()
-		stream = l.storage.GetStream(kind, p.String(), false)
+		stream, err = l.storage.GetStream(kind, p.String(), false)
 	case types.KindTask:
-		stream = l.storage.GetStream(k, parent.String(), false)
+		stream, err = l.storage.GetStream(k, parent.String(), false)
 	}
-
-	if stream == nil {
-		log.Errorf("stream is nil")
-		return nil
+	if err != nil {
+		log.Errorf("get stream err: %s", err.Error())
+		return err
 	}
 
 	if _, err := stream.Write(msg.Line); err != nil {
@@ -127,9 +128,14 @@ func (l *Logger) Stream(ctx context.Context, kind, selflink string, opts StreamO
 		}
 	}()
 
-	err := l.storage.GetStream(kind, selflink, false).Read(ctx, opts.Lines, opts.Follow, lch)
+	f, err := l.storage.GetStream(kind, selflink, false)
 	if err != nil {
 		log.Errorf("%s:> get stream err: %s", logPrefix, err.Error())
+		return err
+	}
+
+	if err := f.Read(ctx, opts.Lines, opts.Follow, lch); err != nil {
+		log.Errorf("%s:> read stream err: %s", logPrefix, err.Error())
 		return err
 	}
 	return nil
