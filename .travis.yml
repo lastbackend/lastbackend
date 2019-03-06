@@ -11,17 +11,9 @@ install:
   - make deps
 
 before_install:
-  - "docker run -d -p 4001:4001 -p 2380:2380 -p 2379:2379
-    --name etcd quay.io/coreos/etcd:v3.2.9 /usr/local/bin/etcd
-    -name etcd0
-    --net host
-    -advertise-client-urls http://127.0.0.1:2379,http://127.0.0.1:4001
-    -listen-client-urls http://0.0.0.0:2379,http://0.0.0.0:4001
-    -initial-advertise-peer-urls http://127.0.0.1:2380
-    -listen-peer-urls http://0.0.0.0:2380
-    -initial-cluster-token etcd-cluster-1
-    -initial-cluster etcd0=http://127.0.0.1:2380
-    -initial-cluster-state new"
+  - curl -L  https://github.com/coreos/etcd/releases/download/v3.2.9/etcd-v3.2.9-linux-amd64.tar.gz -o etcd-v3.2.9-linux-amd64.tar.gz
+  - tar xzvf etcd-v3.2.9-linux-amd64.tar.gz
+  - ./etcd-v3.2.9-linux-amd64/etcd >> /dev/null&
 
 before_script:
   - make test
