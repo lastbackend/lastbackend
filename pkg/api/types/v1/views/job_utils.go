@@ -137,11 +137,11 @@ func (j *Job) JoinTasks(tasks *types.TaskList, pods *types.PodList) {
 
 	for _, t := range tasks.Items {
 
-		if t.Meta.Namespace != j.Meta.Namespace {
+		if t.Meta.Namespace != t.Meta.Namespace {
 			continue
 		}
 
-		if t.Meta.Job != j.Meta.Name {
+		if t.Meta.Job != j.Meta.SelfLink {
 			continue
 		}
 

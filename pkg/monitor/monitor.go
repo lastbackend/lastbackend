@@ -247,7 +247,9 @@ func (m *Monitor) dispatch(ctx context.Context, event *types.Event) error {
 
 	m.sync.Lock()
 	for c := range m.watchers {
-		c <- event
+		go func() {
+			c <- event
+		}()
 	}
 	m.sync.Unlock()
 

@@ -200,7 +200,6 @@ func NewClient(name, addr string, handler Handler) *Client {
 	go func() {
 		for {
 			if p.addr != types.EmptyString {
-				fmt.Println("connecto to exporter:", p.addr)
 				_ = p.Connect()
 			}
 			<-time.NewTimer(time.Second).C

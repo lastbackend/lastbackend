@@ -33,6 +33,8 @@ import (
 func TestNewLogger(t *testing.T) {
 
 	viper.Set("exporter.dir", "/tmp/log/lastbackend")
+	viper.Set("exporter.listener.host", "127.0.0.1")
+	viper.Set("exporter.listener.port", 2963)
 
 	t.Log("start logger")
 	logger, err := NewLogger()
