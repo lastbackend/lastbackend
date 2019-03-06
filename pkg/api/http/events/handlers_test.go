@@ -616,7 +616,7 @@ func TestEventsSubscribe(t *testing.T) {
 
 			}
 
-			<-time.NewTimer(10 * time.Millisecond).C
+			<-time.NewTimer(50 * time.Millisecond).C
 
 			// Create test server with the echo handler.
 			s := httptest.NewServer(http.HandlerFunc(middleware.Authenticate(events.EventSubscribeH)))
@@ -637,7 +637,7 @@ func TestEventsSubscribe(t *testing.T) {
 				_ = ws.Close()
 			}()
 
-			timer := time.NewTimer(time.Second)
+			timer := time.NewTimer(50 * time.Millisecond)
 
 			var cl = false
 
