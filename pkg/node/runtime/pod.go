@@ -420,8 +420,8 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 			for _, s := range status.Runtime.Pipeline {
 				if s.Error {
 					e = true
+					status.SetError(errors.New(s.Message))
 				}
-
 				break
 			}
 
@@ -489,7 +489,10 @@ func PodExit(ctx context.Context, pod string, status *types.PodStatus, clean boo
 		Timestamp: time.Now(),
 	}
 
-	status.SetExited()
+	if status.Status != types.StateError {
+		status.SetExited()
+	}
+
 	envs.Get().GetState().Pods().SetPod(pod, status)
 
 	if clean {

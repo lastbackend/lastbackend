@@ -140,41 +140,62 @@ func (js *JobState) Observe() {
 	for {
 		select {
 
-		case p := <-js.observers.pod:
-			log.V(logLevel).Debugf("%s:observe:pod:> %s", logPrefix, p.SelfLink())
-			if err := PodObserve(js, p); err != nil {
-				log.Errorf("%s:observe:pod err:> %s", logPrefix, err.Error())
+		case pod := <-js.observers.pod:
+			log.V(logLevel).Debugf("%s:observe:pod:> %s", logPrefix, pod.SelfLink())
+			if err := PodObserve(js, pod); err != nil {
+				log.Errorf("%s:observe:pod:> err: %s", logPrefix, err.Error())
 			}
 			break
 
 		case task := <-js.observers.task:
 
-			log.V(logLevel).Debugf("%s:observe:task:> %s", logPrefix, task.SelfLink())
+			log.V(logLevel).Debugf("%s:observe:task:> %s (%s)", logPrefix, task.SelfLink(), task.Status.State)
 
 			status := task.Status
+
 			if err := taskObserve(js, task); err != nil {
 				log.Errorf("%s:observe:task err:> %s", logPrefix, err.Error())
+
+				attempt := 0
+				for {
+					attempt++
+
+					log.V(logLevel).Debugf("%s:observe:task:> repeat task %s attempt %в", logPrefix, task.Meta.Name, attempt)
+					if err := taskObserve(js, task); err == nil {
+						log.Errorf("%s:observe:task err:> %s", logPrefix, err.Error())
+						break
+					}
+
+					delay := time.Duration(attempt * 1)
+					if delay > 10 {
+						delay = 10
+					}
+
+					<-time.After(delay * time.Second)
+				}
 			}
+
+			log.V(logLevel).Debugf("%s:observe:task:> check task %s status (%s) <-> (%s)", logPrefix, task.SelfLink(), status.Status, task.Status.State)
 
 			if task.Status.State != status.State || task.Status.Status != status.Status {
 				if err := js.Hook(task); err != nil {
-					log.Errorf("%s:observe:task send state err:> %s", logPrefix, err.Error())
+					log.Errorf("%s:observe:task> send state err: %s", logPrefix, err.Error())
 				}
 			}
 
 			break
 
-		case s := <-js.observers.job:
-			log.V(logLevel).Debugf("%s:observe:job:> %s", logPrefix, s.SelfLink())
+		case job := <-js.observers.job:
+			log.V(logLevel).Debugf("%s:observe:job:> %s", logPrefix, job.SelfLink())
 
-			js.job = s
+			js.job = job
 
-			if err := jobObserve(js, s); err != nil {
-				log.Errorf("%s:observe:job err:> %s", logPrefix, err.Error())
+			if err := jobObserve(js, job); err != nil {
+				log.Errorf("%s:observe:job:> err: %s", logPrefix, err.Error())
 			}
 
-			js.provider, _ = jp.New(s.Spec.Provider)
-			js.hook, _ = jh.New(s.Spec.Hook)
+			js.provider, _ = jp.New(job.Spec.Provider)
+			js.hook, _ = jh.New(job.Spec.Hook)
 
 			break
 		}
@@ -182,12 +203,12 @@ func (js *JobState) Observe() {
 	}
 }
 
-func (js *JobState) SetJob(s *types.Job) {
-	js.observers.job <- s
+func (js *JobState) SetJob(job *types.Job) {
+	js.observers.job <- job
 }
 
-func (js *JobState) SetTask(d *types.Task) {
-	js.observers.task <- d
+func (js *JobState) SetTask(task *types.Task) {
+	js.observers.task <- task
 }
 
 func (js *JobState) DelTask(d *types.Task) {
@@ -207,13 +228,13 @@ func (js *JobState) DelTask(d *types.Task) {
 
 }
 
-func (js *JobState) SetPod(p *types.Pod) {
-	js.observers.pod <- p
+func (js *JobState) SetPod(pod *types.Pod) {
+	js.observers.pod <- pod
 }
 
-func (js *JobState) DelPod(p *types.Pod) {
+func (js *JobState) DelPod(pod *types.Pod) {
 
-	_, sl := p.SelfLink().Parent()
+	_, sl := pod.SelfLink().Parent()
 	if _, ok := js.pod.list[sl.String()]; !ok {
 		return
 	}
@@ -337,6 +358,7 @@ func (js *JobState) Provider() {
 		}
 
 		<-time.NewTimer(t).C
+
 		log.Debugf("%s:> provider timeout", logPrefix)
 	}
 

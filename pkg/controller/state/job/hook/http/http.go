@@ -37,11 +37,7 @@ type JobHttpHook struct {
 	config  *types.JobSpecHookHTTP
 }
 
-func (h *JobHttpHook) Execute(task *types.Task) error {
-
-	var (
-		err error
-	)
+func (h *JobHttpHook) Execute(task *types.Task) (err error) {
 
 	response, err := v1.View().Task().New(task).ToJson()
 
@@ -66,21 +62,14 @@ func (h *JobHttpHook) Execute(task *types.Task) error {
 		return err
 	}
 
-	log.V(logLevel).Debugf("response Status: %s", resp.Status)
+	log.V(logLevel).Debugf("http:job:hook:> response Status: %s", resp.Status)
 
 	return nil
 }
 
-func New(cfg *types.JobSpecHookHTTP) (*JobHttpHook, error) {
-
+func New(cfg *types.JobSpecHookHTTP) (hook *JobHttpHook, err error) {
 	log.V(logLevel).Debug("Use http hook")
-
-	var (
-		hook *JobHttpHook
-	)
-
 	hook = new(JobHttpHook)
 	hook.config = cfg
-
-	return hook, nil
+	return hook, err
 }
