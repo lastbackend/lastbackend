@@ -322,7 +322,7 @@ func taskQueue(js *JobState, task *types.Task) error {
 		task.Status.Status = types.StateQueued
 		tm := distribution.NewTaskModel(context.Background(), envs.Get().GetStorage())
 		if err := tm.Set(task); err != nil {
-			log.Errorf("%s:taskQueue:> set task err: %s", err.Error())
+			log.Errorf("%s:taskQueue:> set task err: %s", logTaskPrefix, err.Error())
 			return err
 		}
 		return nil
