@@ -185,6 +185,7 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 			}
 
 			env := fmt.Sprintf("%s=%s", s.Name, val)
+
 			mf.Envs = append(mf.Envs, env)
 
 		case s.Config.Name != types.EmptyString && s.Config.Key != types.EmptyString:

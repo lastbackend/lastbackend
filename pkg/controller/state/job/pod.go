@@ -34,50 +34,30 @@ import (
 const logPodPrefix = "state:observer:pod"
 
 // PodObserve function manages pod handlers based on pod state
-func PodObserve(js *JobState, p *types.Pod) error {
+func PodObserve(js *JobState, p *types.Pod) (err error) {
 
 	log.V(logLevel).Debugf("%s:> observe start: %s > state %s", logPodPrefix, p.SelfLink(), p.Status.State)
+
 	// Call pod state manager methods
 	switch p.Status.State {
 	case types.StateCreated:
-		if err := handlePodStateCreated(js, p); err != nil {
-			log.Errorf("%s:> handle pod state created err: %s", logPodPrefix, err.Error())
-			return err
-		}
+		err = handlePodStateCreated(js, p)
 	case types.StateProvision:
-		if err := handlePodStateProvision(js, p); err != nil {
-			log.Errorf("%s:> handle pod state provision err: %s", logPodPrefix, err.Error())
-			return err
-		}
+		err = handlePodStateProvision(js, p)
 	case types.StateReady:
-		if err := handlePodStateReady(js, p); err != nil {
-			log.Errorf("%s:> handle pod state ready err: %s", logPodPrefix, err.Error())
-			return err
-		}
+		err = handlePodStateReady(js, p)
 	case types.StateError:
-		if err := handlePodStateError(js, p); err != nil {
-			log.Errorf("%s:> handle pod state error err: %s", logPodPrefix, err.Error())
-			return err
-		}
-		break
+		err = handlePodStateError(js, p)
 	case types.StateDegradation:
-		if err := handlePodStateDegradation(js, p); err != nil {
-			log.Errorf("%s:> handle pod state degradation err: %s", logPodPrefix, err.Error())
-			return err
-		}
-		break
+		err = handlePodStateDegradation(js, p)
 	case types.StateDestroy:
-		if err := handlePodStateDestroy(js, p); err != nil {
-			log.Errorf("%s:> handle pod state destroy err: %s", logPodPrefix, err.Error())
-			return err
-		}
-		break
+		err = handlePodStateDestroy(js, p)
 	case types.StateDestroyed:
-		if err := handlePodStateDestroyed(js, p); err != nil {
-			log.Errorf("%s:> handle pod state destroyed err: %s", logPodPrefix, err.Error())
-			return err
-		}
-		break
+		err = handlePodStateDestroyed(js, p)
+	}
+	if err != nil {
+		log.Errorf("%s:> handle pod state %s err: %s", logPodPrefix, p.Status.State, err.Error())
+		return err
 	}
 
 	log.V(logLevel).Debugf("%s:> observe state finish: %s", logPodPrefix, p.SelfLink())
@@ -94,7 +74,7 @@ func PodObserve(js *JobState, p *types.Pod) error {
 	}
 
 	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
-	if err := taskStatusState(d, p); err != nil {
+	if err := taskStatusState(js, d, p); err != nil {
 		return err
 	}
 

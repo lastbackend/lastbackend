@@ -315,6 +315,7 @@ func (s *PodStatus) SetStopped() {
 
 func (s *PodStatus) SetError(err error) {
 	s.State = StateError
+	s.Status = StateError
 	s.Message = err.Error()
 }
 
