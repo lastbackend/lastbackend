@@ -20,15 +20,15 @@ package job
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/controller/state/job/hook"
-	jh "github.com/lastbackend/lastbackend/pkg/controller/state/job/hook/hook"
-	"github.com/lastbackend/lastbackend/pkg/controller/state/job/provider"
-	jp "github.com/lastbackend/lastbackend/pkg/controller/state/job/provider/provider"
 	"sync"
 	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/cluster"
+	"github.com/lastbackend/lastbackend/pkg/controller/state/job/hook"
+	jh "github.com/lastbackend/lastbackend/pkg/controller/state/job/hook/hook"
+	"github.com/lastbackend/lastbackend/pkg/controller/state/job/provider"
+	jp "github.com/lastbackend/lastbackend/pkg/controller/state/job/provider/provider"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -83,7 +83,7 @@ func (js *JobState) Restore() error {
 	pm := distribution.NewPodModel(context.Background(), stg)
 	pl, err := pm.ListByJob(js.job.Meta.Namespace, js.job.Meta.Name)
 	if err != nil {
-		log.Errorf("%s:restore:> get pod map error: %v", logPrefix, err)
+		log.V(5).Errorf("%s:restore:> get pod map error: %v", logPrefix, err)
 		return err
 	}
 
@@ -101,7 +101,7 @@ func (js *JobState) Restore() error {
 	tm := distribution.NewTaskModel(context.Background(), stg)
 	tl, err := tm.ListByJob(js.job.Meta.Namespace, js.job.Meta.Name)
 	if err != nil {
-		log.Errorf("%s:restore:> get task map error: %v", logPrefix, err)
+		log.V(5).Errorf("%s:restore:> get task map error: %v", logPrefix, err)
 		return err
 	}
 
@@ -128,7 +128,7 @@ func (js *JobState) Restore() error {
 	}
 
 	if err := jobTaskProvision(js); err != nil {
-		log.Errorf("%s:> job task provision err: %s", logPrefix, err.Error())
+		log.V(5).Errorf("%s:> job task provision err: %s", logPrefix, err.Error())
 		return err
 	}
 
@@ -143,7 +143,7 @@ func (js *JobState) Observe() {
 		case pod := <-js.observers.pod:
 			log.V(logLevel).Debugf("%s:observe:pod:> %s", logPrefix, pod.SelfLink())
 			if err := PodObserve(js, pod); err != nil {
-				log.Errorf("%s:observe:pod:> err: %s", logPrefix, err.Error())
+				log.V(5).Errorf("%s:observe:pod:> err: %s", logPrefix, err.Error())
 			}
 			break
 
@@ -154,15 +154,15 @@ func (js *JobState) Observe() {
 			status := task.Status
 
 			if err := taskObserve(js, task); err != nil {
-				log.Errorf("%s:observe:task err:> %s", logPrefix, err.Error())
+				log.V(5).Errorf("%s:observe:task err:> %s", logPrefix, err.Error())
 
 				attempt := 0
 				for {
 					attempt++
 
-					log.V(logLevel).Debugf("%s:observe:task:> repeat task %s attempt %в", logPrefix, task.Meta.Name, attempt)
+					log.V(logLevel).Debugf("%s:observe:task:> repeat task %s attempt %d", logPrefix, task.Meta.Name, attempt)
 					if err := taskObserve(js, task); err == nil {
-						log.Errorf("%s:observe:task err:> %s", logPrefix, err.Error())
+						log.V(5).Errorf("%s:observe:task err:> %s", logPrefix, err.Error())
 						break
 					}
 
@@ -179,7 +179,7 @@ func (js *JobState) Observe() {
 
 			if task.Status.State != status.State || task.Status.Status != status.Status {
 				if err := js.Hook(task); err != nil {
-					log.Errorf("%s:observe:task> send state err: %s", logPrefix, err.Error())
+					log.V(5).Errorf("%s:observe:task> send state err: %s", logPrefix, err.Error())
 				}
 			}
 
@@ -191,7 +191,7 @@ func (js *JobState) Observe() {
 			js.job = job
 
 			if err := jobObserve(js, job); err != nil {
-				log.Errorf("%s:observe:job:> err: %s", logPrefix, err.Error())
+				log.V(5).Errorf("%s:observe:job:> err: %s", logPrefix, err.Error())
 			}
 
 			js.provider, _ = jp.New(job.Spec.Provider)
@@ -244,15 +244,15 @@ func (js *JobState) DelPod(pod *types.Pod) {
 
 func (js *JobState) CheckJobDeps(dep types.StatusDependency) {
 
-	log.Debugf("%s:> check job dependency: %s", logPrefix, dep.Name)
+	log.V(logLevel).Debugf("%s:> check job dependency: %s", logPrefix, dep.Name)
 }
 
 func (js *JobState) CheckTaskDeps(task *types.Task, dep types.StatusDependency) {
 
-	log.Debugf("%s:> check dependency: %s", logPrefix, dep.Name)
+	log.V(logLevel).Debugf("%s:> check dependency: %s", logPrefix, dep.Name)
 
 	if task == nil {
-		log.Debugf("%s:> check dependency: %s: provision task not found", logPrefix, dep.Name)
+		log.V(logLevel).Debugf("%s:> check dependency: %s: provision task not found", logPrefix, dep.Name)
 		return
 	}
 
@@ -316,21 +316,26 @@ func (js *JobState) Provider() {
 			case _ = <-fetch:
 
 				if js.provider == nil {
+					log.V(logLevel).Debugf("%s:> provider not set", logPrefix)
 					return
 				}
 
-				manifest, err := js.provider.Fetch()
+				log.V(logLevel).Debugf("%s:> attempt to get a new task", logPrefix)
 
+				manifest, err := js.provider.Fetch()
 				if err != nil {
-					log.Errorf("%s:> provider fetch err: %s", logPrefix, err.Error())
+					log.V(logLevel).Errorf("%s:> provider fetch err: %s", logPrefix, err.Error())
+					continue
 				}
 
 				if manifest != nil && manifest.Spec.Template == nil && manifest.Spec.Runtime == nil {
+					log.V(logLevel).Debugf("%s:> manifest is empty", logPrefix)
 					continue
 				}
 
 				if _, err := taskCreate(js.job, manifest); err != nil {
-					log.Error(err.Error())
+					log.V(logLevel).Errorf("%s:> create task err: %s", logPrefix, err.Error())
+					continue
 				}
 
 			}
@@ -343,6 +348,7 @@ func (js *JobState) Provider() {
 			return
 		}
 
+		log.V(logLevel).Debugf("%s:> active tasks %d / %d", logPrefix, len(js.task.active), limit)
 		if len(js.task.active) < limit {
 			fetch <- true
 		}
@@ -359,7 +365,7 @@ func (js *JobState) Provider() {
 
 		<-time.NewTimer(t).C
 
-		log.Debugf("%s:> provider timeout", logPrefix)
+		log.V(logLevel).Debugf("%s:> provider timeout", logPrefix)
 	}
 
 }
@@ -368,7 +374,7 @@ func (js *JobState) Hook(task *types.Task) error {
 
 	if js.hook != nil {
 		if err := js.hook.Execute(task); err != nil {
-			log.Errorf("%s:hook> execute err: %s", logPrefix, err.Error())
+			log.V(5).Errorf("%s:hook> execute err: %s", logPrefix, err.Error())
 			return err
 		}
 	}
@@ -387,12 +393,12 @@ func NewJobState(cs *cluster.ClusterState, job *types.Job) *JobState {
 	js.observers.task = make(chan *types.Task)
 	js.observers.pod = make(chan *types.Pod)
 
-	js.task.list = make(map[string]*types.Task)
-	js.task.queue = make(map[string]*types.Task)
-	js.task.active = make(map[string]*types.Task)
+	js.task.list = make(map[string]*types.Task, 0)
+	js.task.queue = make(map[string]*types.Task, 0)
+	js.task.active = make(map[string]*types.Task, 0)
 	js.task.finished = make([]*types.Task, 0)
 
-	js.pod.list = make(map[string]*types.Pod)
+	js.pod.list = make(map[string]*types.Pod, 0)
 	js.provider, _ = jp.New(job.Spec.Provider)
 	js.hook, _ = jh.New(job.Spec.Hook)
 
