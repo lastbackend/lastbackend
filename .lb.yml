@@ -1,0 +1,60 @@
+workspace:
+  base: /go/src/github.com/lastbackend/
+  path: /lastbackend/
+
+services:
+  - name: etcd
+    image: quay.io/coreos/etcd:latest
+    environment:
+      ENDPOINT: 127.0.0.1
+    ports:
+      - 2379:2379
+      - 2380:2380
+    commands:
+      - /usr/local/bin/etcd --data-dir=/etcd-data --name node1 --initial-advertise-peer-urls http://${ENDPOINT}:2380 --listen-peer-urls http://${ENDPOINT}:2380 --advertise-client-urls http://${ENDPOINT}:2379 --listen-client-urls http://${ENDPOINT}:2379 --initial-cluster node1=http://${ENDPOINT}:2380
+    restart:
+      policy: "always"
+
+pipeline:
+  - image: index.lstbknd.net/lastbackend/golang
+    commands:
+      - dep ensure
+      - go test ./...
+    when:
+      event:
+        - push
+        - pull_request
+        - tag
+
+registry:
+  - name: lastbackend
+    settings:
+      auto_tag: true
+      dockerfile: "./images/lastbackend/Dockerfile"
+    when:
+      event:
+        - push
+        - tag
+  - name: discovery
+    settings:
+      auto_tag: true
+      dockerfile: "./images/discovery/Dockerfile"
+    when:
+      event:
+        - push
+        - tag
+  - name: ingress
+    settings:
+      auto_tag: true
+      dockerfile: "./images/ingress/Dockerfile"
+    when:
+      event:
+        - push
+        - tag
+  - name: exporter
+    settings:
+      auto_tag: true
+      dockerfile: "./images/exporter/Dockerfile"
+    when:
+      event:
+        - push
