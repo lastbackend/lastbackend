@@ -1,30 +1,54 @@
 workspace:
-  base: /go/src/github.com/lastbackend/
-  path: /lastbackend/
+  base: /data/
+  path: /
 
 services:
   - name: etcd
     image: quay.io/coreos/etcd:latest
-    environment:
-      ENDPOINT: 127.0.0.1
     ports:
       - 2379:2379
       - 2380:2380
-    commands:
-      - /usr/local/bin/etcd --data-dir=/etcd-data --name node1 --initial-advertise-peer-urls http://${ENDPOINT}:2380 --listen-peer-urls http://${ENDPOINT}:2380 --advertise-client-urls http://${ENDPOINT}:2379 --listen-client-urls http://${ENDPOINT}:2379 --initial-cluster node1=http://${ENDPOINT}:2380
+    command: "/usr/local/bin/etcd --data-dir=/etcd-data --name node --initial-advertise-peer-urls
+        http://127.0.0.1:2380 --listen-peer-urls http://127.0.0.1:2380 --advertise-client-urls
+        http://127.0.0.1:2379 --listen-client-urls http://127.0.0.1:2379 --initial-cluster
+        node=http://127.0.0.1:2380"
     restart:
       policy: "always"
 
 pipeline:
-  - image: index.lstbknd.net/lastbackend/golang
+  - image: golang:stretch
     commands:
-      - dep ensure
-      - go test ./...
+      - apt-get -y install openssl
+      - cp /data ${GOAPTH}/src/github.com/unloop/lastbackend
+      - cd ${GOAPTH}/src/github.com/unloop/lastbackend
+      - make deps
+      - make test
     when:
-      event:
-        - push
-        - pull_request
-        - tag
+      event: [push, pull_request, tag]
+  - image: build:hub.lstbknd.net/unloop/lastbackend:master
+    commands:
+      - entrypoint build -i hub.lstbknd.net/unloop/lastbackend:master -f ./images/lastbackend/Dockerfile .
+      - entrypoint push hub.lstbknd.net/unloop/lastbackend:master
+    when:
+      event: [push, pull_request, tag]
+  - image: build:hub.lstbknd.net/unloop/lastbackend:master
+    commands:
+      - entrypoint build -i hub.lstbknd.net/unloop/discovery:master -f ./images/discovery/Dockerfile .
+      - entrypoint push hub.lstbknd.net/unloop/discovery:master
+    when:
+      event: [push, pull_request, tag]
+  - image: build:hub.lstbknd.net/unloop/lastbackend:master
+    commands:
+      - entrypoint build -i hub.lstbknd.net/unloop/ingress:master -f ./images/ingress/Dockerfile .
+      - entrypoint push hub.lstbknd.net/unloop/ingress:master
+    when:
+      event: [push, pull_request, tag]
+  - image: build:hub.lstbknd.net/unloop/lastbackend:master
+      commands:
+        - entrypoint build -i hub.lstbknd.net/unloop/exporter:master -f ./images/exporter/Dockerfile .
+        - entrypoint push hub.lstbknd.net/unloop/exporter:master
+    when:
+      event: [push, pull_request, tag]
 
 registry:
   - name: lastbackend

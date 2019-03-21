@@ -51,14 +51,7 @@ type ManifestSpecRuntimeTask struct {
 	Name      string                             `json:"name"`
 	Container string                             `json:"container" yaml:"container"`
 	Env       []ManifestSpecTemplateContainerEnv `json:"env,omitempty" yaml:"env,omitempty"`
-	Commands  []ManifestSpecRuntimeTaskCommand   `json:"commands,omitempty" yaml:"commands,omitempty"`
-}
-
-type ManifestSpecRuntimeTaskCommand struct {
-	Command    string   `json:"command,omitempty" yaml:"command,omitempty"`
-	Workdir    string   `json:"workdir,omitempty" yaml:"workdir,omitempty"`
-	Entrypoint string   `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
-	Args       []string `json:"args,omitempty" yaml:"args,omitempty"`
+	Commands  []string                           `json:"commands,omitempty" yaml:"commands,omitempty"`
 }
 
 type ManifestSpecTemplate struct {
@@ -121,7 +114,9 @@ type ManifestSpecTemplateContainerVolume struct {
 	// Volume mount mode
 	Mode string `json:"mode,omitempty" yaml:"mode,omitempty"`
 	// Volume mount path
-	Path string `json:"path,omitempty" yaml:"path,omitempty"`
+	MountPath string `json:"path,omitempty" yaml:"path,omitempty"`
+	// Volume mount sub path
+	SubPath string `json:"sub_path,omitempty" yaml:"sub_path,omitempty"`
 }
 
 type ManifestSpecTemplateContainerResource struct {
@@ -251,21 +246,9 @@ func (m ManifestSpecRuntimeTask) GetSpec() types.SpecRuntimeTask {
 		s.EnvVars = append(s.EnvVars, &env)
 	}
 
-	for _, c := range m.Commands {
-		cmd := types.SpecTemplateContainerExec{}
-
-		if c.Command != types.EmptyString {
-			cmd.Command = strings.Split(c.Command, " ")
-		}
-
-		cmd.Args = c.Args
-		cmd.Workdir = c.Workdir
-
-		if c.Entrypoint != types.EmptyString {
-			cmd.Entrypoint = strings.Split(c.Entrypoint, " ")
-		}
-
-		s.Commands = append(s.Commands, cmd)
+	s.Commands = make([]string, 0)
+	if m.Commands != nil {
+		s.Commands = m.Commands
 	}
 
 	return s
@@ -399,9 +382,10 @@ func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
 	for _, v := range m.Volumes {
 
 		s.Volumes = append(s.Volumes, &types.SpecTemplateContainerVolume{
-			Name: v.Name,
-			Mode: v.Mode,
-			Path: v.Path,
+			Name:      v.Name,
+			Mode:      v.Mode,
+			MountPath: v.MountPath,
+			SubPath:   v.SubPath,
 		})
 	}
 
@@ -489,19 +473,7 @@ func (m ManifestSpecRuntime) SetSpecRuntime(sr *types.SpecRuntime) {
 
 				for _, sc := range st.Commands {
 
-					if mc.Workdir != sc.Workdir {
-						continue
-					}
-
-					if !compare.SliceOfString(strings.Split(mc.Command, " "), sc.Command) {
-						continue
-					}
-
-					if !compare.SliceOfString(strings.Split(mc.Entrypoint, " "), sc.Entrypoint) {
-						continue
-					}
-
-					if !compare.SliceOfString(mc.Args, sc.Args) {
+					if mc != sc {
 						continue
 					}
 
@@ -536,7 +508,7 @@ func (m ManifestSpecRuntime) SetSpecRuntime(sr *types.SpecRuntime) {
 				Name:      t.Name,
 				Container: t.Container,
 				EnvVars:   make(types.SpecTemplateContainerEnvs, 0),
-				Commands:  make([]types.SpecTemplateContainerExec, 0),
+				Commands:  make([]string, 0),
 			}
 
 			for _, e := range t.Env {
@@ -556,14 +528,9 @@ func (m ManifestSpecRuntime) SetSpecRuntime(sr *types.SpecRuntime) {
 				task.EnvVars = append(task.EnvVars, &env)
 			}
 
-			for _, c := range t.Commands {
-				cmd := types.SpecTemplateContainerExec{
-					Command:    strings.Split(c.Command, " "),
-					Workdir:    c.Workdir,
-					Args:       c.Args,
-					Entrypoint: strings.Split(c.Entrypoint, " "),
-				}
-				task.Commands = append(task.Commands, cmd)
+			task.Commands = make([]string, 0)
+			if t.Commands != nil {
+				task.Commands = t.Commands
 			}
 
 			sr.Tasks = append(sr.Tasks, task)
@@ -800,9 +767,10 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 
 				if v.Name == sv.Name {
 					f = true
-					if sv.Mode != v.Mode || sv.Path != v.Path {
+					if sv.Mode != v.Mode || sv.MountPath != v.MountPath || sv.SubPath != v.SubPath {
 						sv.Mode = v.Mode
-						sv.Path = v.Path
+						sv.MountPath = v.MountPath
+						sv.SubPath = v.SubPath
 						st.Updated = time.Now()
 					}
 
@@ -810,9 +778,10 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 			}
 			if !f {
 				spec.Volumes = append(spec.Volumes, &types.SpecTemplateContainerVolume{
-					Name: v.Name,
-					Mode: v.Mode,
-					Path: v.Path,
+					Name:      v.Name,
+					Mode:      v.Mode,
+					MountPath: v.MountPath,
+					SubPath:   v.SubPath,
 				})
 			}
 		}
@@ -1068,19 +1037,7 @@ func (m ManifestSpecRuntime) SetManifestSpecRuntime(sr *types.ManifestSpecRuntim
 
 				for _, sc := range st.Commands {
 
-					if mc.Workdir != sc.Workdir {
-						continue
-					}
-
-					if mc.Command != sc.Command {
-						continue
-					}
-
-					if mc.Entrypoint != sc.Entrypoint {
-						continue
-					}
-
-					if !compare.SliceOfString(mc.Args, sc.Args) {
+					if mc != sc {
 						continue
 					}
 
@@ -1115,7 +1072,7 @@ func (m ManifestSpecRuntime) SetManifestSpecRuntime(sr *types.ManifestSpecRuntim
 				Name:      t.Name,
 				Container: t.Container,
 				Env:       make([]types.ManifestSpecTemplateContainerEnv, 0),
-				Commands:  make([]types.ManifestSpecRuntimeTaskCommand, 0),
+				Commands:  make([]string, 0),
 			}
 
 			for _, e := range t.Env {
@@ -1137,14 +1094,9 @@ func (m ManifestSpecRuntime) SetManifestSpecRuntime(sr *types.ManifestSpecRuntim
 				task.Env = append(task.Env, env)
 			}
 
-			for _, c := range t.Commands {
-				cmd := types.ManifestSpecRuntimeTaskCommand{
-					Command:    c.Command,
-					Workdir:    c.Workdir,
-					Args:       c.Args,
-					Entrypoint: c.Entrypoint,
-				}
-				task.Commands = append(task.Commands, cmd)
+			task.Commands = make([]string, 0)
+			if t.Commands != nil {
+				task.Commands = t.Commands
 			}
 
 			sr.Tasks = append(sr.Tasks, task)
@@ -1314,18 +1266,20 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 
 				if v.Name == sv.Name {
 					f = true
-					if sv.Mode != v.Mode || sv.Path != v.Path {
+					if sv.Mode != v.Mode || sv.MountPath != v.MountPath || sv.SubPath != v.SubPath {
 						sv.Mode = v.Mode
-						sv.Path = v.Path
+						sv.MountPath = v.MountPath
+						sv.SubPath = v.SubPath
 					}
 
 				}
 			}
 			if !f {
 				spec.Volumes = append(spec.Volumes, types.ManifestSpecTemplateContainerVolume{
-					Name: v.Name,
-					Mode: v.Mode,
-					Path: v.Path,
+					Name:      v.Name,
+					Mode:      v.Mode,
+					MountPath: v.MountPath,
+					SubPath:   v.SubPath,
 				})
 			}
 		}

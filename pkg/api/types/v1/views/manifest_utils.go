@@ -70,9 +70,10 @@ func (mv *ManifestView) NewManifestSpecTemplate(obj types.SpecTemplate) Manifest
 
 		for _, volume := range s.Volumes {
 			c.Volumes = append(c.Volumes, ManifestSpecTemplateContainerVolume{
-				Name: volume.Name,
-				Mode: volume.Mode,
-				Path: volume.Path,
+				Name:      volume.Name,
+				Mode:      volume.Mode,
+				MountPath: volume.MountPath,
+				SubPath:   volume.SubPath,
 			})
 		}
 
@@ -142,7 +143,7 @@ func (mv *ManifestView) NewManifestSpecRuntime(obj types.SpecRuntime) ManifestSp
 			Name:      task.Name,
 			Container: task.Container,
 			Env:       make([]ManifestSpecTemplateContainerEnv, 0),
-			Commands:  make([]ManifestSpecRuntimeTaskCommand, 0),
+			Commands:  make([]string, 0),
 		}
 
 		for _, e := range task.EnvVars {
@@ -161,14 +162,9 @@ func (mv *ManifestView) NewManifestSpecRuntime(obj types.SpecRuntime) ManifestSp
 			mft.Env = append(mft.Env, env)
 		}
 
-		for _, c := range task.Commands {
-			cmd := ManifestSpecRuntimeTaskCommand{
-				Command:    strings.Join(c.Command, " "),
-				Entrypoint: strings.Join(c.Entrypoint, " "),
-				Workdir:    c.Workdir,
-				Args:       c.Args,
-			}
-			mft.Commands = append(mft.Commands, cmd)
+		mft.Commands = make([]string, 0)
+		if task.Commands != nil {
+			mft.Commands = task.Commands
 		}
 
 		mfr.Tasks = append(mfr.Tasks, mft)

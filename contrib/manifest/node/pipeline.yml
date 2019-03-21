@@ -1,42 +1,99 @@
 kind: Pod
 version: v1
 meta:
-  name: api
+  name: test
   labels:
     app: lastbackend
     type: job
 spec:
   runtime:
-    services: [dind]
+    services:
+      - etcd
+      - dind
     tasks:
-      - name: "auth"
-        container: "git"
+      - name: clone:be23163d-d4d1-4a82-b34c-e7263d5897e1
+        container: builder
         commands:
-          - command: "docker auth -u x-lastbackend-token -p $TOKEN"
-      - name: "build"
-        container: "git"
+          - entrypoint clone -v github -o unloop -n lastbackend -b master /data/
+      - name: pipeline:874d7431-a371-44dc-ac18-92deb244fac6
+        container: pipeline:874d7431-a371-44dc-ac18-92deb244fac6
         commands:
-          - command: "docker build -t index.lstbknd.net/undassa/alpine github.com/undassa/alpine"
-      - name: "push"
-        container: "git"
+          - apt-get -y install openssl
+          - make deps
+          - make test
+      - name: build:hub.lstbknd.net/unloop/lastbackend:master
+        container: builder
         commands:
-          - command: "docker push index.lstbknd.net/undassa/alpine"
+          - entrypoint build -i hub.lstbknd.net/unloop/lastbackend:master -f ./images/lastbackend/Dockerfile .
+          - entrypoint push hub.lstbknd.net/unloop/lastbackend:master
+      - name: build:hub.lstbknd.net/unloop/discovery:master
+        container: builder
+        commands:
+          - entrypoint build -i hub.lstbknd.net/unloop/discovery:master -f ./images/discovery/Dockerfile .
+          - entrypoint push hub.lstbknd.net/unloop/discovery:master
+      - name: build:hub.lstbknd.net/unloop/ingress:master
+        container: builder
+        commands:
+          - entrypoint build -i hub.lstbknd.net/unloop/ingress:master -f ./images/ingress/Dockerfile .
+          - entrypoint push hub.lstbknd.net/unloop/ingress:master
+      - name: build:hub.lstbknd.net/unloop/exporter:master
+        container: builder
+        commands:
+          - entrypoint build -i hub.lstbknd.net/unloop/exporter:master -f ./images/exporter/Dockerfile .
+          - entrypoint push hub.lstbknd.net/unloop/exporter:master
   template:
     containers:
+      - name: etcd
+        command: "/usr/local/bin/etcd --data-dir=/etcd-data --name node --initial-advertise-peer-urls
+              http://127.0.0.1:2380 --listen-peer-urls http://127.0.0.1:2380 --advertise-client-urls
+              http://127.0.0.1:2379 --listen-client-urls http://127.0.0.1:2379 --initial-cluster
+              node=http://127.0.0.1:2380"
+        image:
+          name: quay.io/coreos/etcd:latest
+        restart:
+          policy: always
+      - name: pipeline:874d7431-a371-44dc-ac18-92deb244fac6
+        volumes:
+          - name: data
+            path: /go/src/github.com/lastbackend/lastbackend
+        workdir: /go/src/github.com/lastbackend/lastbackend
+        env:
+          - name: DOCKER_HOST
+            value: tcp://127.0.0.1:2375
+          - name: ENV_GIT_TOKEN
+            secret:
+              name: vault:unloop:token
+              key: github
+          - name: ENV_DOCKER_TOKEN
+            secret:
+              name: vault:unloop:token
+              key: docker
+        image:
+          name: golang:stretch
       - name: dind
         image:
-          name: docker:18.09.1-dind
+          name: docker:dind
         restart:
           policy: always
         security:
           privileged: true
-      - name: git
-        image:
-          name: docker:18.09.1-git
+      - name: builder
+        volumes:
+          - name: data
+            path: /data/
+        workdir: /data/
         env:
-          - name: TOKEN
+          - name: ENV_GIT_TOKEN
             secret:
-              name: "vault:token"
-              key: "docker"
+              name: vault:unloop:token
+              key: github
+          - name: ENV_DOCKER_TOKEN
+            secret:
+              name: vault:unloop:token
+              key: docker
           - name: DOCKER_HOST
-            value: "tcp://127.0.0.1:2375"
+            value: tcp://127.0.0.1:2375
+        image:
+          name: index.lstbknd.net/lastbackend/builder
+    volumes:
+      - name: data

@@ -108,9 +108,10 @@ func (sv *SpecView) NewContainer(c *types.SpecTemplateContainer) *SpecTemplateCo
 	s.Volumes = SpecTemplateContainerVolumes{}
 	for _, v := range c.Volumes {
 		s.Volumes = append(s.Volumes, &SpecTemplateContainerVolume{
-			Name: v.Name,
-			Path: v.Path,
-			Mode: v.Mode,
+			Name:      v.Name,
+			MountPath: v.MountPath,
+			SubPath:   v.SubPath,
+			Mode:      v.Mode,
 		})
 	}
 

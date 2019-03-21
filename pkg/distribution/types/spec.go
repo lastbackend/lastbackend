@@ -48,10 +48,10 @@ type SpecRuntime struct {
 // SpecRuntimeTask is a runtime task to execute in runtime
 // swagger:model types_spec_runtime_task
 type SpecRuntimeTask struct {
-	Name      string                      `json:"name"`
-	Container string                      `json:"container" yaml:"container"`
-	EnvVars   SpecTemplateContainerEnvs   `json:"env" yaml:"env"`
-	Commands  []SpecTemplateContainerExec `json:"commands" yaml:"commands"`
+	Name      string                    `json:"name"`
+	Container string                    `json:"container" yaml:"container"`
+	EnvVars   SpecTemplateContainerEnvs `json:"env" yaml:"env"`
+	Commands  []string                  `json:"commands" yaml:"commands"`
 }
 
 // SpecTemplate is a template of the spec
@@ -328,7 +328,9 @@ type SpecTemplateContainerVolume struct {
 	// Volume mount mode
 	Mode string `json:"mode"`
 	// Volume mount path
-	Path string `json:"path"`
+	MountPath string `json:"path"`
+	// Volume sub path
+	SubPath string `json:"sub_path"`
 }
 
 // swagger:model types_spec_template_container_probes

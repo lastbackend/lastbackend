@@ -170,19 +170,7 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 
 						for _, sc := range pt.Commands {
 
-							if strings.Join(sc.Command, " ") != cc.Command {
-								continue
-							}
-
-							if strings.Join(sc.Args, "") != strings.Join(cc.Args, "") {
-								continue
-							}
-
-							if strings.Join(sc.Entrypoint, " ") != cc.Entrypoint {
-								continue
-							}
-
-							if sc.Workdir != cc.Workdir {
+							if sc != cc {
 								continue
 							}
 
@@ -212,7 +200,7 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 					Name:      t.Name,
 					Container: t.Container,
 					EnvVars:   make(types.SpecTemplateContainerEnvs, 0),
-					Commands:  make([]types.SpecTemplateContainerExec, 0),
+					Commands:  make([]string, 0),
 				}
 
 				for _, env := range t.Env {
@@ -230,21 +218,9 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 					})
 				}
 
-				for _, cmd := range t.Commands {
-					c := types.SpecTemplateContainerExec{}
-
-					if cmd.Command != types.EmptyString {
-						c.Command = strings.Split(cmd.Command, " ")
-					}
-
-					if cmd.Entrypoint != types.EmptyString {
-						c.Entrypoint = strings.Split(cmd.Entrypoint, " ")
-					}
-
-					c.Args = cmd.Args
-					c.Workdir = cmd.Workdir
-
-					task.Commands = append(task.Commands, c)
+				task.Commands = make([]string, 0)
+				if t.Commands != nil {
+					task.Commands = t.Commands
 				}
 
 				pod.Spec.Runtime.Tasks = append(pod.Spec.Runtime.Tasks, task)
@@ -399,9 +375,10 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 
 					if v.Name == sv.Name {
 						f = true
-						if sv.Mode != v.Mode || sv.Path != v.Path {
+						if sv.Mode != v.Mode || sv.MountPath != v.MountPath || sv.SubPath != v.SubPath {
 							sv.Mode = v.Mode
-							sv.Path = v.Path
+							sv.MountPath = v.MountPath
+							sv.SubPath = v.SubPath
 							pod.Spec.Template.Updated = time.Now()
 						}
 
@@ -409,9 +386,10 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 				}
 				if !f {
 					spec.Volumes = append(spec.Volumes, &types.SpecTemplateContainerVolume{
-						Name: v.Name,
-						Mode: v.Mode,
-						Path: v.Path,
+						Name:      v.Name,
+						Mode:      v.Mode,
+						MountPath: v.MountPath,
+						SubPath:   v.SubPath,
 					})
 				}
 			}

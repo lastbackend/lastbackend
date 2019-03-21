@@ -122,28 +122,29 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 		return nil, err
 	}
 
-	container := &types.Container{
+	c := &types.Container{
 		ID:       info.ID,
 		Name:     strings.Replace(info.Name, "/", "", 1),
 		Image:    info.Config.Image,
 		Status:   info.State.Status,
+		Error:    info.State.Error,
 		ExitCode: info.State.ExitCode,
 		Labels:   info.Config.Labels,
 		Envs:     info.Config.Env,
 		Binds:    info.HostConfig.Binds,
 	}
 
-	container.Exec.Command = info.Config.Cmd
-	container.Exec.Entrypoint = info.Config.Entrypoint
-	container.Exec.Workdir = info.Config.WorkingDir
+	c.Exec.Command = info.Config.Cmd
+	c.Exec.Entrypoint = info.Config.Entrypoint
+	c.Exec.Workdir = info.Config.WorkingDir
 
-	container.Restart.Policy = info.HostConfig.RestartPolicy.Name
-	container.Restart.Retry = info.HostConfig.RestartPolicy.MaximumRetryCount
+	c.Restart.Policy = info.HostConfig.RestartPolicy.Name
+	c.Restart.Retry = info.HostConfig.RestartPolicy.MaximumRetryCount
 
-	container.Network.Gateway = info.NetworkSettings.Gateway
-	container.Network.IPAddress = info.NetworkSettings.IPAddress
+	c.Network.Gateway = info.NetworkSettings.Gateway
+	c.Network.IPAddress = info.NetworkSettings.IPAddress
 
-	container.Network.Ports = make([]*types.SpecTemplateContainerPort, 0)
+	c.Network.Ports = make([]*types.SpecTemplateContainerPort, 0)
 	for key, val := range info.HostConfig.PortBindings {
 
 		for _, port := range val {
@@ -162,35 +163,35 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 			}
 
 			p.HostPort = uint16(pt)
-			container.Network.Ports = append(container.Network.Ports, p)
+			c.Network.Ports = append(c.Network.Ports, p)
 		}
 	}
 
 	switch info.State.Status {
 	case types.StateCreated:
-		container.State = types.StateCreated
+		c.State = types.StateCreated
 	case types.StateStarted:
-		container.State = types.StateStarted
+		c.State = types.StateStarted
 	case types.StatusRunning:
-		container.State = types.StateStarted
+		c.State = types.StateStarted
 	case types.StatusStopped:
-		container.State = types.StatusStopped
+		c.State = types.StatusStopped
 	case types.StateExited:
-		container.State = types.StatusStopped
+		c.State = types.StatusStopped
 	case types.StateError:
-		container.State = types.StateError
+		c.State = types.StateError
 	}
 
-	container.Created, _ = time.Parse(time.RFC3339Nano, info.Created)
-	container.Started, _ = time.Parse(time.RFC3339Nano, info.State.StartedAt)
+	c.Created, _ = time.Parse(time.RFC3339Nano, info.Created)
+	c.Started, _ = time.Parse(time.RFC3339Nano, info.State.StartedAt)
 
 	meta, ok := info.Config.Labels[types.ContainerTypeLBC]
 	if ok {
-		container.Pod = meta
+		c.Pod = meta
 	}
-	container.Labels = info.Config.Labels
+	c.Labels = info.Config.Labels
 
-	return container, nil
+	return c, nil
 }
 
 func (r *Runtime) Wait(ctx context.Context, ID string) error {

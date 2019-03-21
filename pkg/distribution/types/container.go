@@ -53,6 +53,8 @@ type Container struct {
 	Image string `json:"image"`
 	// Container current state
 	State string `json:"state"`
+	// Container error message
+	Error string `json:"state"`
 	// ExitCode of the container
 	ExitCode int `json:"exit_code"`
 	// Container current state
