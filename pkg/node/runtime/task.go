@@ -41,150 +41,134 @@ func taskExecute(ctx context.Context, pod string, task types.SpecRuntimeTask, m 
 
 	m.Labels[types.ContainerTypeRuntime] = types.ContainerTypeRuntimeTask
 
-	for _, cmd := range task.Commands {
+	var (
+		c   types.PodContainer
+		err error
+	)
 
-		var (
-			c   types.PodContainer
-			err error
-		)
+	m.RestartPolicy.Policy = "no"
+	status.AddTaskCommandContainer(&c)
+	envs.Get().GetState().Pods().SetPod(pod, ps)
 
-		if len(cmd.Command) > 0 {
-			m.Exec.Command = cmd.Command
-			m.Exec.Args = cmd.Args
+	//========================================================================================
+	// create container ======================================================================
+	//========================================================================================
+
+	c.ID, err = envs.Get().GetCRI().Create(ctx, &m)
+	if err != nil {
+		switch err {
+		case context.Canceled:
+			log.Errorf("%s stop creating container: %s", logTaskPrefix, err.Error())
 		}
 
-		if len(cmd.Entrypoint) > 0 {
-			m.Exec.Entrypoint = cmd.Entrypoint
-		}
-
-		if cmd.Workdir != types.EmptyString {
-			m.Exec.Workdir = cmd.Workdir
-		}
-
-		m.RestartPolicy.Policy = "no"
-		status.AddTaskCommandContainer(&c)
+		log.Errorf("%s can-not create container: %s", logTaskPrefix, err)
+		status.SetExited(true, err.Error())
 		envs.Get().GetState().Pods().SetPod(pod, ps)
+		return err
 
-		//==========================================================================
-		// create container =========================================================
-		//==========================================================================
+	}
 
-		c.ID, err = envs.Get().GetCRI().Create(ctx, &m)
-		if err != nil {
-			switch err {
-			case context.Canceled:
-				log.Errorf("%s stop creating container: %s", logTaskPrefix, err.Error())
-			}
+	c.State.Created = types.PodContainerStateCreated{
+		Created: time.Now().UTC(),
+	}
 
-			log.Errorf("%s can-not create container: %s", logTaskPrefix, err)
-			status.SetExited(true, err.Error())
-			envs.Get().GetState().Pods().SetPod(pod, ps)
-			return err
+	//========================================================================================
+	// start container =======================================================================
+	//========================================================================================
+	log.V(logLevel).Debugf("%s container created: %s", logTaskPrefix, c.ID)
 
+	if err := envs.Get().GetCRI().Start(ctx, c.ID); err != nil {
+
+		log.Errorf("%s can-not start container: %s", logTaskPrefix, err)
+		switch err {
+		case context.Canceled:
+			log.Errorf("%s stop starting container err: %s", logTaskPrefix, err.Error())
 		}
 
-		c.State.Created = types.PodContainerStateCreated{
-			Created: time.Now().UTC(),
-		}
-
-		//==========================================================================
-		// start container =========================================================
-		//==========================================================================
-		log.V(logLevel).Debugf("%s container created: %s", logTaskPrefix, c.ID)
-
-		if err := envs.Get().GetCRI().Start(ctx, c.ID); err != nil {
-
-			log.Errorf("%s can-not start container: %s", logTaskPrefix, err)
-			switch err {
-			case context.Canceled:
-				log.Errorf("%s stop starting container err: %s", logTaskPrefix, err.Error())
-			}
-
-			log.Errorf("%s can-not start container: %s", logTaskPrefix, err)
-			c.State.Error = types.PodContainerStateError{
-				Error:   true,
-				Message: err.Error(),
-				Exit: types.PodContainerStateExit{
-					Timestamp: time.Now().UTC(),
-				},
-			}
-			status.SetExited(true, err.Error())
-			envs.Get().GetState().Pods().SetPod(pod, ps)
-
-			return taskCommandFinish(ctx, &c)
-		}
-
-		c.Ready = true
-		c.State.Started = types.PodContainerStateStarted{
-			Started:   true,
-			Timestamp: time.Now().UTC(),
-		}
-
-		//==========================================================================
-		// wait container =========================================================
-		//==========================================================================
-
-		//req, err := envs.Get().GetCRI().Logs(ctx, c.ID, true, true, true)
-		//if err != nil {
-		//	log.Errorf("%s error get logs stream %s", logPodPrefix, err)
-		//	return err
-		//}
-		//
-		//io.Copy(os.Stdout, req)
-
-		log.V(logLevel).Debugf("%s container wait: %s", logTaskPrefix, c.ID)
-		if err := envs.Get().GetCRI().Wait(ctx, c.ID); err != nil {
-			log.Errorf("%s error: %s", logTaskPrefix, err.Error())
-			c.State.Error = types.PodContainerStateError{
-				Error:   true,
-				Message: err.Error(),
-				Exit: types.PodContainerStateExit{
-					Timestamp: time.Now().UTC(),
-				},
-			}
-			status.SetExited(true, err.Error())
-			envs.Get().GetState().Pods().SetPod(pod, ps)
-			return taskCommandFinish(ctx, &c)
-		}
-
-		container, err := envs.Get().GetCRI().Inspect(ctx, c.ID)
-		if err != nil {
-			log.Errorf("%s error: %s", logTaskPrefix, err.Error())
-			c.State.Error = types.PodContainerStateError{
-				Error:   true,
-				Message: err.Error(),
-				Exit: types.PodContainerStateExit{
-					Timestamp: time.Now().UTC(),
-				},
-			}
-			status.SetExited(true, err.Error())
-			envs.Get().GetState().Pods().SetPod(pod, ps)
-			return taskCommandFinish(ctx, &c)
-		}
-
-		if err := containerInspect(context.Background(), &c); err != nil {
-			log.Errorf("%s inspect container after create: err %s", logServicePrefix, err.Error())
-			return err
-		}
-
-		c.Ready = true
-		c.State.Stopped = types.PodContainerStateStopped{
-			Stopped: true,
+		log.Errorf("%s can-not start container: %s", logTaskPrefix, err)
+		c.State.Error = types.PodContainerStateError{
+			Error:   true,
+			Message: err.Error(),
 			Exit: types.PodContainerStateExit{
-				Code:      container.ExitCode,
 				Timestamp: time.Now().UTC(),
 			},
 		}
+		status.SetExited(true, err.Error())
+		envs.Get().GetState().Pods().SetPod(pod, ps)
 
-		if container.ExitCode != 0 {
-			status.SetExited(true, types.EmptyString)
-			envs.Get().GetState().Pods().SetPod(pod, ps)
-			return taskCommandFinish(ctx, &c)
-		}
+		return taskCommandFinish(ctx, &c)
+	}
 
-		if err := taskCommandFinish(ctx, &c); err != nil {
-			log.Errorf("%s task %s cleanup failed: %s", logTaskPrefix, task.Name, err.Error())
+	c.Ready = true
+	c.State.Started = types.PodContainerStateStarted{
+		Started:   true,
+		Timestamp: time.Now().UTC(),
+	}
+
+	//========================================================================================
+	// wait container ========================================================================
+	//========================================================================================
+
+	//req, err := envs.Get().GetCRI().Logs(ctx, c.ID, true, true, true)
+	//if err != nil {
+	//	log.Errorf("%s error get logs stream %s", logPodPrefix, err)
+	//	return err
+	//}
+	//
+	//io.Copy(os.Stdout, req)
+
+	log.V(logLevel).Debugf("%s container wait: %s", logTaskPrefix, c.ID)
+	if err := envs.Get().GetCRI().Wait(ctx, c.ID); err != nil {
+		log.Errorf("%s error: %s", logTaskPrefix, err.Error())
+		c.State.Error = types.PodContainerStateError{
+			Error:   true,
+			Message: err.Error(),
+			Exit: types.PodContainerStateExit{
+				Timestamp: time.Now().UTC(),
+			},
 		}
+		status.SetExited(true, err.Error())
+		envs.Get().GetState().Pods().SetPod(pod, ps)
+		return taskCommandFinish(ctx, &c)
+	}
+
+	info, err := envs.Get().GetCRI().Inspect(ctx, c.ID)
+	if err != nil {
+		log.Errorf("%s error: %s", logTaskPrefix, err.Error())
+		c.State.Error = types.PodContainerStateError{
+			Error:   true,
+			Message: err.Error(),
+			Exit: types.PodContainerStateExit{
+				Timestamp: time.Now().UTC(),
+			},
+		}
+		status.SetExited(true, err.Error())
+		envs.Get().GetState().Pods().SetPod(pod, ps)
+		return taskCommandFinish(ctx, &c)
+	}
+
+	if err := containerInspect(context.Background(), &c); err != nil {
+		log.Errorf("%s inspect container after create: err %s", logServicePrefix, err.Error())
+		return err
+	}
+
+	c.Ready = true
+	c.State.Stopped = types.PodContainerStateStopped{
+		Stopped: true,
+		Exit: types.PodContainerStateExit{
+			Code:      info.ExitCode,
+			Timestamp: time.Now().UTC(),
+		},
+	}
+
+	if info.ExitCode != 0 {
+		status.SetExited(true, info.Error)
+		envs.Get().GetState().Pods().SetPod(pod, ps)
+		return taskCommandFinish(ctx, &c)
+	}
+
+	if err := taskCommandFinish(ctx, &c); err != nil {
+		log.Errorf("%s task %s cleanup failed: %s", logTaskPrefix, task.Name, err.Error())
 	}
 
 	status.SetExited(false, types.EmptyString)

@@ -223,9 +223,10 @@ func (sv Service) ToRequestManifest() *request.ServiceManifest {
 			if v.Volumes != nil {
 				for _, v := range v.Volumes {
 					item := request.ManifestSpecTemplateContainerVolume{
-						Name: v.Name,
-						Mode: v.Mode,
-						Path: v.Path,
+						Name:      v.Name,
+						Mode:      v.Mode,
+						MountPath: v.MountPath,
+						SubPath:   v.SubPath,
 					}
 					data.Volumes = append(data.Volumes, item)
 				}

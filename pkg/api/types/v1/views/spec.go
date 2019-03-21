@@ -201,9 +201,10 @@ type SpecTemplateContainerExec struct {
 type SpecTemplateContainerVolumes []*SpecTemplateContainerVolume
 
 type SpecTemplateContainerVolume struct {
-	Name string `json:"name"`
-	Mode string `json:"mode"`
-	Path string `json:"path"`
+	Name      string `json:"name"`
+	Mode      string `json:"mode"`
+	MountPath string `json:"path"`
+	SubPath   string `json:"sub_path"`
 }
 
 type SpecTemplateContainerProbes struct {

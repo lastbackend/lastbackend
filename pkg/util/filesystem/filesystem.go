@@ -21,7 +21,9 @@ package filesystem
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"os"
+	"path"
 )
 
 const (
@@ -104,4 +106,43 @@ func LineSeek(lines int, f *os.File) (int64, error) {
 		pos = lpos + rf - 1
 	}
 
+}
+
+// MkDir is used to create directory
+func MkDir(path string, mode os.FileMode) (err error) {
+	err = os.MkdirAll(path, mode)
+	return err
+}
+
+// CreateFile is used to create file
+func CreateFile(path string, mode os.FileMode) (err error) {
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	err = file.Close()
+	if err != nil {
+		return err
+	}
+	err = os.Chmod(path, mode)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func WriteStrToFile(filepath, value string, mode os.FileMode) (err error) {
+	err = ioutil.WriteFile(filepath, []byte(value), mode)
+	switch true {
+	case err == nil:
+		return nil
+	case os.IsNotExist(err):
+		if _, err := os.Stat(filepath); os.IsNotExist(err) {
+			if err := os.MkdirAll(path.Dir(filepath), os.ModePerm); err != nil {
+				return err
+			}
+			return CreateFile(filepath, os.ModePerm)
+		}
+	}
+	return err
 }

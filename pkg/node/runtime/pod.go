@@ -19,15 +19,19 @@
 package runtime
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/filesystem"
+	"github.com/spf13/viper"
 	"io"
+	"net/http"
+	"os"
+	"path"
 	"strings"
 	"time"
 
-	"net/http"
-
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
@@ -35,9 +39,29 @@ import (
 )
 
 const (
-	BUFFER_SIZE  = 1024
-	logPodPrefix = "node:runtime:pod:>"
+	logPodPrefix               = "node:runtime:pod:>"
+	defaultRootLocalStorgePath = "/private/var/lib/lastbackend/runtime/"
+
+	BUFFER_SIZE = 1024
 )
+
+// tplScript is a helper script this is added to the template the commands.
+const logScript = `
+echo "============================================================================="
+echo "task: %s"
+echo "============================================================================="
+echo ""
+
+set -eux;
+
+%s
+`
+
+// logScript is a helper script that is added to
+// the build script to logging run a command.
+const tplScript = `
+%s
+`
 
 func PodManage(ctx context.Context, key string, manifest *types.PodManifest) error {
 	log.V(logLevel).Debugf("%s provision pod: %s", logPodPrefix, key)
@@ -154,6 +178,7 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 	envs.Get().GetState().Tasks().AddTask(key, &types.NodeTask{Cancel: cancel})
 
 	go func() {
+
 		status, err := PodCreate(ctx, key, manifest)
 		if err != nil {
 			log.Errorf("%s can not create pod: %s err: %s", logPodPrefix, key, err.Error())
@@ -275,8 +300,9 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 	}
 
 	log.V(logLevel).Debugf("%s have %d images", logPodPrefix, len(manifest.Template.Containers))
+
 	for _, c := range manifest.Template.Containers {
-		log.V(logLevel).Debugf("%s pull images for pod if needed", logPodPrefix)
+		log.V(logLevel).Debugf("%s pull image %s for pod if needed", logPodPrefix, c.Image.Name)
 		if err := ImagePull(ctx, namespace, &c.Image); err != nil {
 			log.Errorf("%s can not pull image: %s", logPodPrefix, err.Error())
 			return setError(err)
@@ -401,6 +427,28 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 				}
 			}
 
+			var buf bytes.Buffer
+			for _, command := range t.Commands {
+				buf.WriteString(fmt.Sprintf(tplScript, command))
+			}
+
+			escaped := fmt.Sprintf("%q", t.Name)
+			escaped = strings.Replace(escaped, "$", `\$`, -1)
+			script := fmt.Sprintf(logScript, escaped, buf.String())
+
+			rootPath := defaultRootLocalStorgePath
+			if viper.IsSet("node.storage") {
+				rootPath = viper.GetString("node.storage")
+			}
+
+			filepath := strings.Join([]string{path.Dir(rootPath), key, "init"}, string(os.PathSeparator))
+
+			err := podLocalFileCreate(filepath, script)
+			if err != nil {
+				log.Errorf("%s can not create local storage for pod err: %s", logPodPrefix, err.Error())
+				return setError(err)
+			}
+
 			m, err := containerManifestCreate(ctx, key, &spec)
 			if err != nil {
 				log.Errorf("%s can not create container manifest from spec: %s", logPodPrefix, err.Error())
@@ -412,6 +460,11 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 			}
 
 			m.Name = ""
+
+			m.Exec.Command = []string{"/usr/lastbackend/bin/init"}
+			m.Exec.Entrypoint = []string{"/bin/sh"}
+			m.Binds = append(m.Binds, fmt.Sprintf("%s:%s:ro", filepath, "/usr/lastbackend/bin/init"))
+
 			if err := taskExecute(ctx, key, t, *m, status); err != nil {
 				log.Errorf("%s can not execute task: %s", logPodPrefix, err.Error())
 				return setError(err)
@@ -421,8 +474,8 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 				if s.Error {
 					e = true
 					status.SetError(errors.New(s.Message))
+					break
 				}
-				break
 			}
 
 		}
@@ -509,6 +562,16 @@ func PodDestroy(ctx context.Context, pod string, status *types.PodStatus) {
 		if err := PodVolumeDestroy(ctx, pod, v.Name); err != nil {
 			log.Errorf("%s can not destroy pod: %s", logPodPrefix, err.Error())
 		}
+	}
+
+	rootPath := defaultRootLocalStorgePath
+	if viper.IsSet("node.storage") {
+		rootPath = viper.GetString("node.storage")
+	}
+
+	filepath := strings.Join([]string{path.Dir(rootPath), pod, "init"}, string(os.PathSeparator))
+	if err := podLocalFileDertroy(filepath); err != nil {
+		log.Errorf("%s can not destroy local pod storage: %s", logPodPrefix, err.Error())
 	}
 }
 
@@ -1021,13 +1084,13 @@ func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 
 	log.V(logLevel).Debugf("%s create pod volume: %s:%s", logPodPrefix, pod, spec.Name)
 
-	path := strings.Replace(pod, ":", "-", -1)
-	path = fmt.Sprintf("%s-%s", path, spec.Name)
+	hostPath := strings.Replace(pod, ":", "-", -1)
+	hostPath = fmt.Sprintf("%s-%s", hostPath, spec.Name)
 
 	var (
 		name = podVolumeKeyCreate(pod, spec.Name)
 		vm   = types.VolumeManifest{
-			HostPath: path,
+			HostPath: hostPath,
 			Type:     types.KindVolumeHostDir,
 		}
 	)
@@ -1105,6 +1168,14 @@ func podVolumeKeyCreate(pod, volume string) string {
 
 func podVolumeClaimNameCreate(pod, volume string) string {
 	return fmt.Sprintf("%s:%s", pod, volume)
+}
+
+func podLocalFileCreate(path, data string) error {
+	return filesystem.WriteStrToFile(path, data, 0777)
+}
+
+func podLocalFileDertroy(path string) error {
+	return os.Remove(path)
 }
 
 // TODO: move to distribution

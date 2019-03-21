@@ -21,6 +21,7 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"path"
 	"strings"
 	"time"
 
@@ -211,7 +212,7 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 
 	for _, v := range spec.Volumes {
 
-		if v.Name == types.EmptyString || v.Path == types.EmptyString {
+		if v.Name == types.EmptyString || v.MountPath == types.EmptyString {
 			continue
 		}
 
@@ -231,9 +232,15 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 			v.Mode = "rw"
 		}
 
-		log.Debugf("attach volume: %s to %s:%s", v.Name, vol.Status.Path, v.Path)
+		hostPath := vol.Status.Path
 
-		mf.Binds = append(mf.Binds, fmt.Sprintf("%s:%s:%s", vol.Status.Path, v.Path, v.Mode))
+		if v.SubPath != types.EmptyString {
+			hostPath = path.Join(hostPath, v.SubPath)
+		}
+
+		log.Debugf("attach volume: %s to %s:%s", v.Name, hostPath, v.MountPath)
+
+		mf.Binds = append(mf.Binds, fmt.Sprintf("%s:%s:%s", hostPath, v.MountPath, v.Mode))
 	}
 
 	// TODO: Add dns search option only for LB domains

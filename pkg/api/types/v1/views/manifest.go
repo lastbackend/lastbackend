@@ -44,14 +44,7 @@ type ManifestSpecRuntimeTask struct {
 	Name      string                             `json:"name,omitempty" yaml:"name,omitempty"`
 	Container string                             `json:"container,omitempty" yaml:"container,omitempty"`
 	Env       []ManifestSpecTemplateContainerEnv `json:"env,omitempty" yaml:"env,omitempty"`
-	Commands  []ManifestSpecRuntimeTaskCommand   `json:"commands,omitempty" yaml:"commands,omitempty"`
-}
-
-type ManifestSpecRuntimeTaskCommand struct {
-	Command    string   `json:"command,omitempty" yaml:"command,omitempty"`
-	Workdir    string   `json:"workdir,omitempty" yaml:"workdir,omitempty"`
-	Entrypoint string   `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
-	Args       []string `json:"args,omitempty" yaml:"args,omitempty"`
+	Commands  []string                           `json:"commands,omitempty" yaml:"commands,omitempty"`
 }
 
 type ManifestSpecTemplate struct {
@@ -113,7 +106,9 @@ type ManifestSpecTemplateContainerVolume struct {
 	// Volume mount mode
 	Mode string `json:"mode,omitempty" yaml:"mode,omitempty"`
 	// Volume mount path
-	Path string `json:"path,omitempty" yaml:"path,omitempty"`
+	MountPath string `json:"path,omitempty" yaml:"path,omitempty"`
+	// Volume mount sub path
+	SubPath string `json:"sub_path,omitempty" yaml:"sub_path,omitempty"`
 }
 
 type ManifestSpecTemplateRestartPolicy struct {

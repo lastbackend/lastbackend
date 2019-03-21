@@ -149,7 +149,7 @@ type ManifestSpecRuntimeTask struct {
 	Name      string                             `json:"name"`
 	Container string                             `json:"container" yaml:"container"`
 	Env       []ManifestSpecTemplateContainerEnv `json:"env,omitempty" yaml:"env,omitempty"`
-	Commands  []ManifestSpecRuntimeTaskCommand   `json:"commands" yaml:"commands"`
+	Commands  []string                           `json:"commands" yaml:"commands"`
 }
 
 type ManifestSpecRuntimeTaskCommand struct {
@@ -219,7 +219,9 @@ type ManifestSpecTemplateContainerVolume struct {
 	// Volume mount mode
 	Mode string `json:"mode,omitempty" yaml:"mode,omitempty"`
 	// Volume mount path
-	Path string `json:"path,omitempty" yaml:"path,omitempty"`
+	MountPath string `json:"path,omitempty" yaml:"path,omitempty"`
+	// Volume mount sub path
+	SubPath string `json:"sub_path,omitempty" yaml:"sub_path,omitempty"`
 }
 
 type ManifestSpecTemplateContainerResource struct {
@@ -341,20 +343,9 @@ func (m ManifestSpecRuntimeTask) GetSpec() SpecRuntimeTask {
 		})
 	}
 
-	for _, c := range m.Commands {
-		cmd := SpecTemplateContainerExec{}
-
-		if c.Command != EmptyString {
-			cmd.Command = strings.Split(c.Command, " ")
-		}
-		cmd.Args = c.Args
-		cmd.Workdir = c.Workdir
-
-		if c.Entrypoint != EmptyString {
-			cmd.Entrypoint = strings.Split(c.Entrypoint, " ")
-		}
-
-		s.Commands = append(s.Commands, cmd)
+	s.Commands = make([]string, 0)
+	if m.Commands != nil {
+		s.Commands = m.Commands
 	}
 
 	return s
@@ -458,9 +449,10 @@ func (m ManifestSpecTemplateContainer) GetSpec() SpecTemplateContainer {
 	for _, v := range m.Volumes {
 
 		s.Volumes = append(s.Volumes, &SpecTemplateContainerVolume{
-			Name: v.Name,
-			Mode: v.Mode,
-			Path: v.Path,
+			Name:      v.Name,
+			Mode:      v.Mode,
+			MountPath: v.MountPath,
+			SubPath:   v.SubPath,
 		})
 	}
 
@@ -549,19 +541,7 @@ func (m ManifestSpecRuntime) SetSpecRuntime(sr *SpecRuntime) {
 
 				for _, sc := range st.Commands {
 
-					if mc.Workdir != sc.Workdir {
-						continue
-					}
-
-					if !compare.SliceOfString(strings.Split(mc.Command, " "), sc.Command) {
-						continue
-					}
-
-					if !compare.SliceOfString(strings.Split(mc.Entrypoint, " "), sc.Entrypoint) {
-						continue
-					}
-
-					if !compare.SliceOfString(mc.Args, sc.Args) {
+					if mc != sc {
 						continue
 					}
 
@@ -596,7 +576,7 @@ func (m ManifestSpecRuntime) SetSpecRuntime(sr *SpecRuntime) {
 				Name:      t.Name,
 				Container: t.Container,
 				EnvVars:   make(SpecTemplateContainerEnvs, 0),
-				Commands:  make([]SpecTemplateContainerExec, 0),
+				Commands:  make([]string, 0),
 			}
 
 			for _, e := range t.Env {
@@ -616,21 +596,9 @@ func (m ManifestSpecRuntime) SetSpecRuntime(sr *SpecRuntime) {
 				task.EnvVars = append(task.EnvVars, &env)
 			}
 
-			for _, c := range t.Commands {
-				cmd := SpecTemplateContainerExec{}
-
-				if len(c.Command) > 0 {
-					cmd.Command = strings.Split(c.Command, " ")
-				}
-
-				if len(c.Entrypoint) > 0 {
-					cmd.Entrypoint = strings.Split(c.Entrypoint, " ")
-				}
-
-				cmd.Workdir = c.Workdir
-				cmd.Args = c.Args
-
-				task.Commands = append(task.Commands, cmd)
+			task.Commands = make([]string, 0)
+			if t.Commands != nil {
+				task.Commands = t.Commands
 			}
 
 			sr.Tasks = append(sr.Tasks, task)
@@ -855,9 +823,10 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *SpecTemplate) error {
 
 				if v.Name == sv.Name {
 					f = true
-					if sv.Mode != v.Mode || sv.Path != v.Path {
+					if sv.Mode != v.Mode || sv.MountPath != v.MountPath || sv.SubPath != v.SubPath {
 						sv.Mode = v.Mode
-						sv.Path = v.Path
+						sv.MountPath = v.MountPath
+						sv.SubPath = v.SubPath
 						st.Updated = time.Now()
 					}
 
@@ -865,9 +834,10 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *SpecTemplate) error {
 			}
 			if !f {
 				spec.Volumes = append(spec.Volumes, &SpecTemplateContainerVolume{
-					Name: v.Name,
-					Mode: v.Mode,
-					Path: v.Path,
+					Name:      v.Name,
+					Mode:      v.Mode,
+					MountPath: v.MountPath,
+					SubPath:   v.SubPath,
 				})
 			}
 		}

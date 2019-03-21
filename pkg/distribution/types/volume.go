@@ -24,6 +24,7 @@ import (
 
 const (
 	KindVolumeHostDir = "dir"
+	KindVolumeLocal   = "local"
 )
 
 // swagger:ignore
