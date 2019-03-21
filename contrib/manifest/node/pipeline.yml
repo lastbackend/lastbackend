@@ -19,6 +19,9 @@ spec:
         container: pipeline:874d7431-a371-44dc-ac18-92deb244fac6
         commands:
           - apt-get -y install openssl
+          - mkdir -p ${GOPATH}/src/github.com/lastbackend/lastbackend
+          - cp -r /data/* ${GOPATH}/src/github.com/lastbackend/lastbackend
+          - cd ${GOPATH}/src/github.com/lastbackend/lastbackend
           - make deps
           - make test
       - name: build:hub.lstbknd.net/unloop/lastbackend:master
@@ -55,8 +58,8 @@ spec:
       - name: pipeline:874d7431-a371-44dc-ac18-92deb244fac6
         volumes:
           - name: data
-            path: /go/src/github.com/lastbackend/lastbackend
-        workdir: /go/src/github.com/lastbackend/lastbackend
+            path: /data/
+        workdir: /data/
         env:
           - name: DOCKER_HOST
             value: tcp://127.0.0.1:2375

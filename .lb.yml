@@ -19,8 +19,9 @@ pipeline:
   - image: golang:stretch
     commands:
       - apt-get -y install openssl
-      - cp /data ${GOAPTH}/src/github.com/unloop/lastbackend
-      - cd ${GOAPTH}/src/github.com/unloop/lastbackend
+      - mkdir -p ${GOPATH}/src/github.com/lastbackend/lastbackend
+      - cp -r /data/* ${GOPATH}/src/github.com/lastbackend/lastbackend
+      - cd ${GOPATH}/src/github.com/lastbackend/lastbackend
       - make deps
       - make test
     when:
