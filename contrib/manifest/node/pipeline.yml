@@ -14,7 +14,7 @@ spec:
       - name: clone:be23163d-d4d1-4a82-b34c-e7263d5897e1
         container: builder
         commands:
-          - entrypoint clone -v github -o unloop -n lastbackend -b master /data/
+          - lb clone -v github -o unloop -n lastbackend -b master /data/
       - name: pipeline:874d7431-a371-44dc-ac18-92deb244fac6
         container: pipeline:874d7431-a371-44dc-ac18-92deb244fac6
         commands:
@@ -27,23 +27,23 @@ spec:
       - name: build:hub.lstbknd.net/unloop/lastbackend:master
         container: builder
         commands:
-          - entrypoint build -i hub.lstbknd.net/unloop/lastbackend:master -f ./images/lastbackend/Dockerfile .
-          - entrypoint push hub.lstbknd.net/unloop/lastbackend:master
+          - lb build -i hub.lstbknd.net/unloop/lastbackend:master -f ./images/lastbackend/Dockerfile .
+          - lb push hub.lstbknd.net/unloop/lastbackend:master
       - name: build:hub.lstbknd.net/unloop/discovery:master
         container: builder
         commands:
-          - entrypoint build -i hub.lstbknd.net/unloop/discovery:master -f ./images/discovery/Dockerfile .
-          - entrypoint push hub.lstbknd.net/unloop/discovery:master
+          - lb build -i hub.lstbknd.net/unloop/discovery:master -f ./images/discovery/Dockerfile .
+          - lb push hub.lstbknd.net/unloop/discovery:master
       - name: build:hub.lstbknd.net/unloop/ingress:master
         container: builder
         commands:
-          - entrypoint build -i hub.lstbknd.net/unloop/ingress:master -f ./images/ingress/Dockerfile .
-          - entrypoint push hub.lstbknd.net/unloop/ingress:master
+          - lb build -i hub.lstbknd.net/unloop/ingress:master -f ./images/ingress/Dockerfile .
+          - lb push hub.lstbknd.net/unloop/ingress:master
       - name: build:hub.lstbknd.net/unloop/exporter:master
         container: builder
         commands:
-          - entrypoint build -i hub.lstbknd.net/unloop/exporter:master -f ./images/exporter/Dockerfile .
-          - entrypoint push hub.lstbknd.net/unloop/exporter:master
+          - lb build -i hub.lstbknd.net/unloop/exporter:master -f ./images/exporter/Dockerfile .
+          - lb push hub.lstbknd.net/unloop/exporter:master
   template:
     containers:
       - name: etcd
