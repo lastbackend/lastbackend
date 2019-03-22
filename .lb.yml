@@ -26,30 +26,6 @@ pipeline:
       - make test
     when:
       event: [push, pull_request, tag]
-  - image: build:hub.lstbknd.net/unloop/lastbackend:master
-    commands:
-      - entrypoint build -i hub.lstbknd.net/unloop/lastbackend:master -f ./images/lastbackend/Dockerfile .
-      - entrypoint push hub.lstbknd.net/unloop/lastbackend:master
-    when:
-      event: [push, pull_request, tag]
-  - image: build:hub.lstbknd.net/unloop/lastbackend:master
-    commands:
-      - entrypoint build -i hub.lstbknd.net/unloop/discovery:master -f ./images/discovery/Dockerfile .
-      - entrypoint push hub.lstbknd.net/unloop/discovery:master
-    when:
-      event: [push, pull_request, tag]
-  - image: build:hub.lstbknd.net/unloop/lastbackend:master
-    commands:
-      - entrypoint build -i hub.lstbknd.net/unloop/ingress:master -f ./images/ingress/Dockerfile .
-      - entrypoint push hub.lstbknd.net/unloop/ingress:master
-    when:
-      event: [push, pull_request, tag]
-  - image: build:hub.lstbknd.net/unloop/lastbackend:master
-      commands:
-        - entrypoint build -i hub.lstbknd.net/unloop/exporter:master -f ./images/exporter/Dockerfile .
-        - entrypoint push hub.lstbknd.net/unloop/exporter:master
-    when:
-      event: [push, pull_request, tag]
 
 registry:
   - name: lastbackend
