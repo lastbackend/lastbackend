@@ -13,6 +13,8 @@ node:
   port: 2969
   tls:
     insecure: true
+  dir:
+    root: "/var/lib/lastbackend/runtime/"
 
 # Runtime
 runtime:
@@ -24,4 +26,4 @@ runtime:
     type: "docker"
   csi:
     dir:
-      root: "/var/lib/lastbackend/"
+      root: "/var/lib/lastbackend/volumes/"

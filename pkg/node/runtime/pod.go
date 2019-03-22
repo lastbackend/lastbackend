@@ -437,8 +437,8 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 			script := fmt.Sprintf(logScript, escaped, buf.String())
 
 			rootPath := defaultRootLocalStorgePath
-			if viper.IsSet("node.storage") {
-				rootPath = viper.GetString("node.storage")
+			if viper.IsSet("node.dir.root") {
+				rootPath = viper.GetString("node.dir.root")
 			}
 
 			filepath := strings.Join([]string{path.Dir(rootPath), key, "init"}, string(os.PathSeparator))
@@ -565,8 +565,8 @@ func PodDestroy(ctx context.Context, pod string, status *types.PodStatus) {
 	}
 
 	rootPath := defaultRootLocalStorgePath
-	if viper.IsSet("node.storage") {
-		rootPath = viper.GetString("node.storage")
+	if viper.IsSet("node.dir.root") {
+		rootPath = viper.GetString("node.dir.root")
 	}
 
 	filepath := strings.Join([]string{path.Dir(rootPath), pod, "init"}, string(os.PathSeparator))
