@@ -131,18 +131,24 @@ func CreateFile(path string, mode os.FileMode) (err error) {
 	return nil
 }
 
-func WriteStrToFile(filepath, value string, mode os.FileMode) (err error) {
-	err = ioutil.WriteFile(filepath, []byte(value), mode)
-	switch true {
-	case err == nil:
-		return nil
-	case os.IsNotExist(err):
-		if _, err := os.Stat(filepath); os.IsNotExist(err) {
-			if err := os.MkdirAll(path.Dir(filepath), os.ModePerm); err != nil {
-				return err
-			}
-			return CreateFile(filepath, os.ModePerm)
+func WriteStrToFile(filepath, value string, mode os.FileMode) error {
+	dirPath := path.Dir(filepath)
+
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+		if err := os.MkdirAll(dirPath, mode); err != nil {
+			return err
 		}
+	} else if err != nil {
+		return err
 	}
-	return err
+
+	if _, err := os.Stat(filepath); os.IsNotExist(err) {
+		if err := CreateFile(filepath, os.ModePerm); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(filepath, []byte(value), mode)
 }

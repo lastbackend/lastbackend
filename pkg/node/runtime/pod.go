@@ -22,8 +22,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/util/filesystem"
-	"github.com/spf13/viper"
 	"io"
 	"net/http"
 	"os"
@@ -36,6 +34,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/util/cleaner"
+	"github.com/lastbackend/lastbackend/pkg/util/filesystem"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -51,9 +51,7 @@ echo "==========================================================================
 echo "task: %s"
 echo "============================================================================="
 echo ""
-
-set -eux;
-
+set -eux
 %s
 `
 
@@ -441,13 +439,17 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 				rootPath = viper.GetString("node.dir.root")
 			}
 
-			filepath := strings.Join([]string{path.Dir(rootPath), key, "init"}, string(os.PathSeparator))
+			filepath := path.Join(rootPath, strings.Replace(key, ":", "-", -1), "init")
+
+			log.Debugf("%s runtime volume create: %s", logPodPrefix, filepath)
 
 			err := podLocalFileCreate(filepath, script)
 			if err != nil {
-				log.Errorf("%s can not create local storage for pod err: %s", logPodPrefix, err.Error())
+				log.Errorf("%s can not create runtime volume err: %s", logPodPrefix, err.Error())
 				return setError(err)
 			}
+
+			log.Debugf("%s container manifest create", logPodPrefix)
 
 			m, err := containerManifestCreate(ctx, key, &spec)
 			if err != nil {
@@ -461,9 +463,9 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 
 			m.Name = ""
 
-			m.Exec.Command = []string{"/usr/lastbackend/bin/init"}
+			m.Exec.Command = []string{"/usr/local/bin/lb_entrypoint"}
 			m.Exec.Entrypoint = []string{"/bin/sh"}
-			m.Binds = append(m.Binds, fmt.Sprintf("%s:%s:ro", filepath, "/usr/lastbackend/bin/init"))
+			m.Binds = append(m.Binds, fmt.Sprintf("%s:%s:ro", filepath, "/usr/local/bin/lb_entrypoint"))
 
 			if err := taskExecute(ctx, key, t, *m, status); err != nil {
 				log.Errorf("%s can not execute task: %s", logPodPrefix, err.Error())
@@ -569,9 +571,12 @@ func PodDestroy(ctx context.Context, pod string, status *types.PodStatus) {
 		rootPath = viper.GetString("node.dir.root")
 	}
 
-	filepath := strings.Join([]string{path.Dir(rootPath), pod, "init"}, string(os.PathSeparator))
-	if err := podLocalFileDertroy(filepath); err != nil {
-		log.Errorf("%s can not destroy local pod storage: %s", logPodPrefix, err.Error())
+	dirPath := path.Join(rootPath, strings.Replace(pod, ":", "-", -1), "init")
+
+	log.Debugf("%s runtime volume remove: %s", logPodPrefix, dirPath)
+
+	if err := podLocalFileDestroy(dirPath); err != nil {
+		log.Errorf("%s can not destroy runtime volume path: %s", logPodPrefix, err.Error())
 	}
 }
 
@@ -1174,8 +1179,8 @@ func podLocalFileCreate(path, data string) error {
 	return filesystem.WriteStrToFile(path, data, 0777)
 }
 
-func podLocalFileDertroy(path string) error {
-	return os.Remove(path)
+func podLocalFileDestroy(path string) error {
+	return os.RemoveAll(path)
 }
 
 // TODO: move to distribution
