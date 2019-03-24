@@ -135,8 +135,6 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fmt.Println(string(body))
-
 		sv := views.SecretView{}
 		item, err = sv.Parse(body)
 		if err != nil {

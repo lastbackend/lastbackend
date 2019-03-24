@@ -1,7 +1,7 @@
 kind: Pod
 version: v1
 meta:
-  name: test
+  name: lastbackend
   labels:
     app: lastbackend
     type: job
@@ -11,16 +11,16 @@ spec:
       - etcd
       - dind
     tasks:
-      - name: clone:be23163d-d4d1-4a82-b34c-e7263d5897e1
+      - name: clone:github.com/lastbackend/lastbackend
         container: builder
         commands:
-          - lb clone -v github -o unloop -n lastbackend -b master /data/
-      - name: pipeline:874d7431-a371-44dc-ac18-92deb244fac6
-        container: pipeline:874d7431-a371-44dc-ac18-92deb244fac6
+          - lb clone -v github -o lastbackend -n lastbackend -b master /data/
+      - name: pipeline:test
+        container: tests
         commands:
           - apt-get -y install openssl
           - mkdir -p ${GOPATH}/src/github.com/lastbackend/lastbackend
-          - cp -r /data/* ${GOPATH}/src/github.com/lastbackend/lastbackend
+          - cp -r /data/. ${GOPATH}/src/github.com/lastbackend/lastbackend
           - cd ${GOPATH}/src/github.com/lastbackend/lastbackend
           - make deps
           - make test
@@ -55,7 +55,7 @@ spec:
           name: quay.io/coreos/etcd:latest
         restart:
           policy: always
-      - name: pipeline:874d7431-a371-44dc-ac18-92deb244fac6
+      - name: test
         volumes:
           - name: data
             path: /data/
