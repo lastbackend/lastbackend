@@ -87,6 +87,7 @@ func (js *JobState) Restore() error {
 		return err
 	}
 
+	js.lock.Lock()
 	for _, p := range pl.Items {
 		log.Infof("%s: restore: restore pod: %s", logPrefix, p.SelfLink())
 
@@ -95,9 +96,9 @@ func (js *JobState) Restore() error {
 		// put pod into map by task name and pod name
 		js.pod.list[sl.String()] = p
 	}
+	js.lock.Unlock()
 
 	// Get all tasks
-
 	tm := distribution.NewTaskModel(context.Background(), stg)
 	tl, err := tm.ListByJob(js.job.Meta.Namespace, js.job.Meta.Name)
 	if err != nil {
@@ -105,10 +106,12 @@ func (js *JobState) Restore() error {
 		return err
 	}
 
+	js.lock.Lock()
 	for _, t := range tl.Items {
 		log.Infof("%s: restore task: %s", logPrefix, t.SelfLink())
 		js.task.list[t.SelfLink().String()] = t
 	}
+	js.lock.Unlock()
 
 	// Range over pods to sync pod status
 	for _, p := range js.pod.list {
@@ -216,16 +219,20 @@ func (js *JobState) DelTask(d *types.Task) {
 	if _, ok := js.pod.list[d.SelfLink().String()]; !ok {
 		return
 	}
+
+	js.lock.Lock()
 	delete(js.pod.list, d.SelfLink().String())
+	js.lock.Unlock()
 
 	if _, ok := js.task.list[d.SelfLink().String()]; !ok {
 		return
 	}
 
+	js.lock.Lock()
 	delete(js.task.list, d.SelfLink().String())
 	delete(js.task.queue, d.SelfLink().String())
 	delete(js.task.active, d.SelfLink().String())
-
+	js.lock.Unlock()
 }
 
 func (js *JobState) SetPod(pod *types.Pod) {
@@ -239,11 +246,12 @@ func (js *JobState) DelPod(pod *types.Pod) {
 		return
 	}
 
+	js.lock.Lock()
 	delete(js.pod.list, sl.String())
+	js.lock.Unlock()
 }
 
 func (js *JobState) CheckJobDeps(dep types.StatusDependency) {
-
 	log.Debugf("%s:> check job dependency: %s", logPrefix, dep.Name)
 }
 

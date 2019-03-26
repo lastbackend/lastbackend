@@ -16,7 +16,7 @@ spec:
         commands:
           - lb clone -v github -o lastbackend -n lastbackend -b master /data/
       - name: pipeline:test
-        container: tests
+        container: test
         commands:
           - apt-get -y install openssl
           - mkdir -p ${GOPATH}/src/github.com/lastbackend/lastbackend
