@@ -109,13 +109,15 @@ func taskExecute(ctx context.Context, pod string, task types.SpecRuntimeTask, m 
 	// wait container ========================================================================
 	//========================================================================================
 
-	//req, err := envs.Get().GetCRI().Logs(ctx, c.ID, true, true, true)
-	//if err != nil {
-	//	log.Errorf("%s error get logs stream %s", logPodPrefix, err)
-	//	return err
-	//}
+	//go func() {
+	//	req, err := envs.Get().GetCRI().Logs(ctx, c.ID, true, true, true)
+	//	if err != nil {
+	//		log.Errorf("%s error get logs stream %s", logPodPrefix, err)
+	//		return
+	//	}
 	//
-	//io.Copy(os.Stdout, req)
+	//	io.Copy(os.Stdout, req)
+	//}()
 
 	log.V(logLevel).Debugf("%s container wait: %s", logTaskPrefix, c.ID)
 	if err := envs.Get().GetCRI().Wait(ctx, c.ID); err != nil {
