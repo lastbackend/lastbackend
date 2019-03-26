@@ -401,7 +401,6 @@ func convertSliceToString(slice []string) (string, error) {
 func NewContainerManifest(spec *SpecTemplateContainer) *ContainerManifest {
 
 	mf := new(ContainerManifest)
-	mf.Name = spec.Name
 	mf.Resources = spec.Resources
 	mf.Image = spec.Image.Name
 	mf.Labels = spec.Labels
