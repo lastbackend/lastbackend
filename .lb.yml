@@ -3,8 +3,7 @@ workspace:
   path: /
 
 services:
-  - name: etcd
-    image: quay.io/coreos/etcd:latest
+  - image: quay.io/coreos/etcd:latest
     command: "/usr/local/bin/etcd --data-dir=/etcd-data --name node --initial-advertise-peer-urls
         http://127.0.0.1:2380 --listen-peer-urls http://127.0.0.1:2380 --advertise-client-urls
         http://127.0.0.1:2379 --listen-client-urls http://127.0.0.1:2379 --initial-cluster
