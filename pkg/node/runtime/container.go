@@ -138,22 +138,17 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 
 	var (
 		namespace string
-		//name string
 	)
 
 	parts := strings.Split(pod, ":")
 
 	if len(parts) == 1 {
 		namespace = types.SYSTEM_NAMESPACE
-		//name = parts[0]
 	}
 
 	if len(parts) >= 2 {
 		namespace = parts[0]
-		//name = parts[1]
 	}
-
-	//mf.Name = fmt.Sprintf("%s-%s", name, spec.Name)
 
 	mf.Labels = make(map[string]string, 0)
 	for n, v := range spec.Labels {
