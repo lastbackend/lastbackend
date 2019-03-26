@@ -3,7 +3,8 @@ workspace:
   path: /
 
 services:
-  - image: quay.io/coreos/etcd:latest
+  - name: etcd
+    image: quay.io/coreos/etcd:latest
     command: "/usr/local/bin/etcd --data-dir=/etcd-data --name node --initial-advertise-peer-urls
         http://127.0.0.1:2380 --listen-peer-urls http://127.0.0.1:2380 --advertise-client-urls
         http://127.0.0.1:2379 --listen-client-urls http://127.0.0.1:2379 --initial-cluster
@@ -12,7 +13,8 @@ services:
       policy: "always"
 
 pipeline:
-  - image: golang:stretch
+  - name: test
+    image: golang:stretch
     commands:
       - apt-get -y install openssl
       - mkdir -p ${GOPATH}/src/github.com/lastbackend/lastbackend
