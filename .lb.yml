@@ -1,6 +1,5 @@
 workspace:
-  base: /data/
-  path: /
+  path: /data
 
 services:
   - name: etcd
