@@ -565,7 +565,7 @@ func JobLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(el.Items) == 0 {
-		log.V(logLevel).Errorf("%s:logs:>exporters not found", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:logs:>exporters not found", logPrefix)
 		errors.HTTP.NotFound(w)
 		return
 	}
