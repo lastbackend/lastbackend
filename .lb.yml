@@ -8,8 +8,6 @@ services:
         http://127.0.0.1:2380 --listen-peer-urls http://127.0.0.1:2380 --advertise-client-urls
         http://127.0.0.1:2379 --listen-client-urls http://127.0.0.1:2379 --initial-cluster
         node=http://127.0.0.1:2380"
-    restart:
-      policy: "always"
 
 pipeline:
   - name: test
