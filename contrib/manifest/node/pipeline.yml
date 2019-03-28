@@ -53,8 +53,6 @@ spec:
               node=http://127.0.0.1:2380"
         image:
           name: quay.io/coreos/etcd:latest
-        restart:
-          policy: always
       - name: test
         volumes:
           - name: data
@@ -76,8 +74,6 @@ spec:
       - name: dind
         image:
           name: docker:dind
-        restart:
-          policy: always
         security:
           privileged: true
       - name: builder
