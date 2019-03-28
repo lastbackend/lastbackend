@@ -9,7 +9,7 @@ services:
         http://127.0.0.1:2379 --listen-client-urls http://127.0.0.1:2379 --initial-cluster
         node=http://127.0.0.1:2380"
 
-pipeline:
+steps:
   - name: test
     image: golang:stretch
     commands:

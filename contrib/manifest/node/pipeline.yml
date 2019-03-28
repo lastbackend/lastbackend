@@ -15,7 +15,7 @@ spec:
         container: builder
         commands:
           - lb clone -v github -o lastbackend -n lastbackend -b master /data/
-      - name: pipeline:test
+      - name: step:test
         container: test
         commands:
           - apt-get -y install openssl
