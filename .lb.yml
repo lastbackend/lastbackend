@@ -9,13 +9,13 @@ services:
         http://127.0.0.1:2379 --listen-client-urls http://127.0.0.1:2379 --initial-cluster
         node=http://127.0.0.1:2380"
 
-pipeline:
+steps:
   - name: test
     image: golang:stretch
     commands:
       - apt-get -y install openssl
       - mkdir -p ${GOPATH}/src/github.com/lastbackend/lastbackend
-      - cp -r /data/* ${GOPATH}/src/github.com/lastbackend/lastbackend
+      - cp -r /data/. ${GOPATH}/src/github.com/lastbackend/lastbackend
       - cd ${GOPATH}/src/github.com/lastbackend/lastbackend
       - make deps
       - make test
