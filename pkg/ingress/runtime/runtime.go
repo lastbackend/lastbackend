@@ -167,6 +167,10 @@ func (r *Runtime) Loop(ctx context.Context) {
 
 						for r := range upd {
 							st := envs.Get().GetState().Routes().GetRouteStatus(r)
+							if st == nil {
+								continue
+							}
+
 							if st.State == types.StateProvision {
 								st.State = types.StateReady
 								envs.Get().GetState().Routes().SetRouteStatus(r, st)

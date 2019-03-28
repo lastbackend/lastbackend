@@ -47,9 +47,8 @@ const (
 
 // tplScript is a helper script this is added to the template the commands.
 const logScript = `
-echo "============================================================================="
-echo "task: %s"
-echo "============================================================================="
+echo ""
+echo "[task: %s]"
 echo ""
 set -eux
 %s

@@ -925,7 +925,7 @@ func (sl *SubnetSelfLink) Parse(selflink string) {
 }
 
 func (sl *SubnetSelfLink) String() string {
-	return sl.string
+	return strings.Replace(sl.string, "/", ":", -1)
 }
 
 func (sl *SubnetSelfLink) Hostname() string {
@@ -955,7 +955,7 @@ func NewSubnetSelfLink(cidr string) *SubnetSelfLink {
 
 	link := fmt.Sprintf("%s", cidr)
 
-	sl.string = link
+	sl.string = strings.Replace(link, "/", ":", -1)
 	sl.cidr = cidr
 
 	return sl

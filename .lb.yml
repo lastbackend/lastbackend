@@ -15,7 +15,7 @@ steps:
     commands:
       - apt-get -y install openssl
       - mkdir -p ${GOPATH}/src/github.com/lastbackend/lastbackend
-      - cp -r /data/* ${GOPATH}/src/github.com/lastbackend/lastbackend
+      - cp -r /data/. ${GOPATH}/src/github.com/lastbackend/lastbackend
       - cd ${GOPATH}/src/github.com/lastbackend/lastbackend
       - make deps
       - make test

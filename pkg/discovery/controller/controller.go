@@ -85,7 +85,7 @@ func (c *Controller) Sync(ctx context.Context) error {
 	var (
 		err    error
 		ip     = net.IP{}
-		iiface = viper.GetString("runtime.cpi.interface.internal")
+		iiface = viper.GetString("runtime.interface")
 	)
 
 	if iiface == types.EmptyString {

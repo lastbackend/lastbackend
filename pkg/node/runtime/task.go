@@ -39,6 +39,7 @@ func taskExecute(ctx context.Context, pod string, task types.SpecRuntimeTask, m 
 	envs.Get().GetState().Pods().SetPod(pod, ps)
 	log.V(logLevel).Debugf("%s task %s start", logTaskPrefix, task.Name)
 
+	m.Name = ""
 	m.Labels[types.ContainerTypeRuntime] = types.ContainerTypeRuntimeTask
 
 	var (
