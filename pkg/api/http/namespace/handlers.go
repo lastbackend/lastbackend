@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/http/secret/secret"
 	"github.com/lastbackend/lastbackend/pkg/api/http/service/service"
 	"github.com/lastbackend/lastbackend/pkg/api/http/volume/volume"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"net/http"
 
@@ -321,6 +322,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 	//     description: Internal server error
 
 	nid := utils.Vars(r)["namespace"]
+	redeploy := utils.QueryBool(r, "redeploy")
 
 	log.V(logLevel).Debugf("%s:apply:> apply namespace %s", logPrefix, nid)
 
@@ -468,7 +470,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, m := range opts.Services {
-		s, e := service.Apply(r.Context(), ns, m)
+		s, e := service.Apply(r.Context(), ns, m, &request.ServiceUpdateOptions{Redeploy: redeploy})
 		if e != nil {
 			e.Http(w)
 			return

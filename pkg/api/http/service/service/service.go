@@ -30,6 +30,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const (
@@ -56,7 +57,7 @@ func Fetch(ctx context.Context, namespace, name string) (*types.Service, *errors
 	return svc, nil
 }
 
-func Apply(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifest) (*types.Service, *errors.Err) {
+func Apply(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifest, opts *request.ServiceUpdateOptions) (*types.Service, *errors.Err) {
 
 	if mf.Meta.Name == nil {
 		return nil, errors.New("service").BadParameter("meta.name")
@@ -73,7 +74,7 @@ func Apply(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifest
 		return Create(ctx, ns, mf)
 	}
 
-	return Update(ctx, ns, svc, mf)
+	return Update(ctx, ns, svc, mf, opts)
 }
 
 func Create(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifest) (*types.Service, *errors.Err) {
@@ -138,7 +139,7 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifes
 	return svc, nil
 }
 
-func Update(ctx context.Context, ns *types.Namespace, svc *types.Service, mf *request.ServiceManifest) (*types.Service, *errors.Err) {
+func Update(ctx context.Context, ns *types.Namespace, svc *types.Service, mf *request.ServiceManifest, opts *request.ServiceUpdateOptions) (*types.Service, *errors.Err) {
 
 	nm := distribution.NewNamespaceModel(ctx, envs.Get().GetStorage())
 	sm := distribution.NewServiceModel(ctx, envs.Get().GetStorage())
@@ -148,8 +149,13 @@ func Update(ctx context.Context, ns *types.Namespace, svc *types.Service, mf *re
 	mf.SetServiceMeta(svc)
 
 	svc.Meta.Endpoint = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
+
 	if err := mf.SetServiceSpec(svc); err != nil {
 		return nil, errors.New("service").BadRequest(err.Error())
+	}
+
+	if opts.Redeploy {
+		svc.Spec.Template.Updated = time.Now()
 	}
 
 	requestedResources := svc.Spec.GetResourceRequest()
