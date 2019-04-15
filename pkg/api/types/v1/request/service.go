@@ -158,6 +158,12 @@ func (s *ServiceManifest) GetManifest() *types.ServiceManifest {
 }
 
 // swagger:ignore
+// swagger:model request_service_update_options
+type ServiceUpdateOptions struct {
+	Redeploy bool `json:"redeploy"`
+}
+
+// swagger:ignore
 // swagger:model request_service_remove
 type ServiceRemoveOptions struct {
 	Force bool `json:"force"`

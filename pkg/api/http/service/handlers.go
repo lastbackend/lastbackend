@@ -25,6 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/http/service/service"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
@@ -316,6 +317,8 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	nid := utils.Vars(r)["namespace"]
 	sid := utils.Vars(r)["service"]
 
+	redeploy := utils.QueryBool(r, "redeploy")
+
 	log.V(logLevel).Debugf("%s:update:> update service `%s` in namespace `%s`", logPrefix, sid, nid)
 
 	// request body struct
@@ -338,7 +341,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	svc, e = service.Update(r.Context(), ns, svc, opts)
+	svc, e = service.Update(r.Context(), ns, svc, opts, &request.ServiceUpdateOptions{Redeploy: redeploy})
 	if e != nil {
 		e.Http(w)
 		return
