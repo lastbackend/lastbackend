@@ -15,7 +15,7 @@ Last.Backend container management platform is the new and modern open-source con
 ## Table of contents
 
 1. [About](#about-container-platform)
-2. [Key Features](#a-namekey_featuresakey-features)
+2. [Key Features](#key-features)
 3. [Runtime design principles](#runtime-design-principles)
 4. [Endpoint Interface](#endpoint-interface)
 5. [Current State](#current-state)
@@ -54,7 +54,7 @@ Platform structure:
 
 ___
 
-## <a name="key_features"></a>Key features
+## Key features
 
 1. Fast application deploying to any server
 2. Easy application sharing
