@@ -18,7 +18,6 @@
 
 package resource
 
-
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -76,14 +75,14 @@ func TestParseMemoryResource(t *testing.T) {
 		err     string
 	}{
 		{
-			name: "parse int",
-			args: "1024",
-			want: 1024,
+			name: "parse 50B",
+			args: "50B",
+			want: 50,
 		},
 		{
 			name: "parse 1mb",
 			args: "1mb",
-			want: 1024*1024,
+			want: 1000*1000,
 		},
 		{
 			name: "parse 1mib",
@@ -91,34 +90,14 @@ func TestParseMemoryResource(t *testing.T) {
 			want: 1024*1024,
 		},
 		{
-			name: "parse 1gb",
-			args: "1gb",
-			want: 1024*1024*1024,
+			name: "parse 10gb",
+			args: "10gb",
+			want: 10*1000*1000*1000,
 		},
 		{
-			name: "parse 1gib",
-			args: "1gib",
-			want: 1024*1024*1024,
-		},
-		{
-			name: "parse 12gb",
-			args: "12gb",
-			want: 12*1024*1024*1024,
-		},
-		{
-			name: "parse 12000mib",
-			args: "12000mib",
-			want: 12*1000*1024*1024,
-		},
-		{
-			name: "parse mib",
-			args: "1mib",
-			want: 1024*1024,
-		},
-		{
-			name: "parse 0.5GB",
-			args: "0.5GB",
-			want: (1024*1024*1024)/2,
+			name: "parse 10gib",
+			args: "10gib",
+			want: 10*1024*1024*1024,
 		},
 	}
 
@@ -126,7 +105,7 @@ func TestParseMemoryResource(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 
-			got, err := DecodeMemoryResource(tc.args)
+			got, err := ToBytes(tc.args)
 
 			if tc.wantErr {
 				if !assert.Error(t, err, "error should be not nil") {
