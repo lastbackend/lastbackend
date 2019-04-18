@@ -437,7 +437,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	for _, r := range rl.Items {
 		for _, rule := range r.Spec.Rules {
 			if rule.Service == svc.Meta.Name {
-				log.V(logLevel).Errorf("%s:remove:> service used in route `%s` err: %s", logPrefix, r.Meta.Name, err.Error())
+				log.V(logLevel).Errorf("%s:remove:> service used in route `%s`", logPrefix, r.Meta.Name)
 				errors.HTTP.BadRequest(w, errors.New(r.Meta.Name).Service().RouteBinded(r.Meta.Name).Error())
 				return
 			}
@@ -545,7 +545,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(el.Items) == 0 {
-		log.V(logLevel).Errorf("%s:logs:>exporters not found", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:logs:> exporters not found", logPrefix)
 		errors.HTTP.NotFound(w)
 		return
 	}
@@ -560,7 +560,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if exp == nil {
-		log.V(logLevel).Errorf("%s:logs:> active exporters not found", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:logs:> active exporters not found", logPrefix)
 		errors.HTTP.NotFound(w)
 		return
 	}

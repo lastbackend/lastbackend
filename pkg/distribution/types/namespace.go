@@ -205,7 +205,7 @@ func (n *Namespace) AllocateResources(resources ResourceRequest) error {
 			return errors.New(errors.ResourcesRamLimitIsRequired)
 		}
 
-		if (availableRam - allocatedRam - requestedRam) <= 0 {
+		if (availableRam - allocatedRam - requestedRam) < 0 {
 			return errors.New(errors.ResourcesRamLimitExceeded)
 		}
 	}
@@ -215,7 +215,7 @@ func (n *Namespace) AllocateResources(resources ResourceRequest) error {
 			return errors.New(errors.ResourcesCpuLimitIsRequired)
 		}
 
-		if (availableCpu - allocatedCpu - requestedCpu) <= 0 {
+		if (availableCpu - allocatedCpu - requestedCpu) < 0 {
 			return errors.New(errors.ResourcesCpuLimitExceeded)
 		}
 	}

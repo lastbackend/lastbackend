@@ -99,11 +99,11 @@ type NodeSecurity struct {
 // NodeResources - node resources structure
 // swagger:model views_node_resources
 type NodeResources struct {
-	Containers int   `json:"containers"`
-	Pods       int   `json:"pods"`
-	Memory     int64 `json:"ram"`
-	CPU        int64 `json:"cpu"`
-	Storage    int64 `json:"storage"`
+	Containers int    `json:"containers"`
+	Pods       int    `json:"pods"`
+	Memory     string `json:"ram"`
+	CPU        string `json:"cpu"`
+	Storage    string `json:"storage"`
 }
 
 // swagger:model views_node_spec

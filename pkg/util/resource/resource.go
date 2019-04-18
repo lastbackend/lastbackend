@@ -121,7 +121,7 @@ func ToBytes(s string) (int64, error) {
 
 	bytesString, unit := s[:i], s[i:]
 	bytes, err := strconv.ParseFloat(bytesString, 64)
-	if err != nil || bytes <= 0 {
+	if err != nil || bytes < 0 {
 		return 0, invalidByteQuantityError
 	}
 
