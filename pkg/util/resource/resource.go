@@ -27,17 +27,7 @@ import (
 	"unicode"
 )
 
-const (
-	KiB = 1024 << (10 * iota)
-	MiB
-	GiB
-	TiB
-	PiB
-	EiB
-	ZiB
-	YiB
-)
-
+// decimal unit
 const (
 	KB = 1000
 	MB = 1000 * KB
@@ -47,6 +37,18 @@ const (
 	EB = 1000 * PB
 	ZB = 1000 * EB
 	YB = 1000 * ZB
+)
+
+// binary unit
+const (
+	KiB = 1024 << (10 * iota)
+	MiB
+	GiB
+	TiB
+	PiB
+	EiB
+	ZiB
+	YiB
 )
 
 type unitMap map[string]float64
@@ -117,30 +119,29 @@ func ToBytes(s string) (int64, error) {
 		return 0, invalidByteQuantityError
 	}
 
-	bytesString, multiple := s[:i], s[i:]
+	bytesString, unit := s[:i], s[i:]
 	bytes, err := strconv.ParseFloat(bytesString, 64)
 	if err != nil || bytes <= 0 {
 		return 0, invalidByteQuantityError
 	}
 
-	if multiple == "b" {
+	if unit == "b" {
 		return int64(bytes), nil
 	}
 
-	if len(multiple) == 3 {
-		if v, ok := binaryMapSize[multiple]; ok {
+	if unit[1:2] == "i" {
+		// ki,mi,gi,ti,pi,ei,zi,yi
+		if len(unit) == 2 {
+			unit += "b"
+		}
+		if v, ok := binaryMapSize[unit]; ok {
 			return int64(bytes * v), nil
 		}
-
 		return 0, invalidByteQuantityError
 	}
 
-	if len(multiple) == 2 {
-		if v, ok := decimalMapSize[multiple]; ok {
-			return int64(bytes * v), nil
-		}
-
-		return 0, invalidByteQuantityError
+	if v, ok := decimalMapSize[unit]; ok {
+		return int64(bytes * v), nil
 	}
 
 	return 0, invalidByteQuantityError
@@ -155,5 +156,3 @@ func getSizeAndUnit(size float64, base float64, dictionary []string) (float64, s
 	}
 	return size, dictionary[i]
 }
-
-

@@ -99,6 +99,11 @@ func TestParseMemoryResource(t *testing.T) {
 			args: "10gib",
 			want: 10*1024*1024*1024,
 		},
+		{
+			name: "parse 0.5Gi",
+			args: "0.5Gi",
+			want: 0.5*1024*1024*1024,
+		},
 	}
 
 	for _, tc := range tests {
