@@ -110,7 +110,7 @@ func BytesSize(size float64) string {
 }
 
 func ToBytes(s string) (int64, error) {
-	s = strings.TrimSpace(s)
+	s = strings.Replace(s, " ", "", -1)
 	s = strings.ToLower(s)
 
 	i := strings.IndexFunc(s, unicode.IsLetter)
