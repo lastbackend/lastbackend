@@ -27,8 +27,8 @@
 //     Schemes: https
 //     Host: api.lastbackend.com
 //     BasePath: /
-//     Version: 0.9.4
-//     License: MIT http://opensource.org/licenses/MIT
+//     Version: 0.1.0-beta2
+//     License: Apache2.0
 //     Contact: Last.Backend Teams <team@lastbackend.com> https://lastbackend.com
 //
 //     Consumes:

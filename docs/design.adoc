@@ -1,8 +1,8 @@
-==== Last.Backend platform design
+== Design manifest
 
 The Design section described the parts of the Last.Backend platform and the abstractions to helps you obtain a deeper understanding of how it works.
 
-===== Overview
+=== Overview
 
 Last.Backend platform is a set of processes of 2 types: master processes and minion processes. Master processes operates with cluster state, non-master applying state on physical machines.
 In the core of design principles of Last.Backend there are runtime objects(manifests). Using manifest, you can change Last.Backend cluster state.
@@ -10,7 +10,7 @@ Manifests can be 2 types:
 - external - to pass changes into cluster
 - internal - intercommunication system manifests
 
-===== Manifests
+=== Manifests
 
 There is only 1 endpoint to handle manifests - the REST API. Manifests can be several types:
 - Namespace manifest
@@ -37,7 +37,7 @@ In the internal communication process Last.Backend also uses manifests:
 
 More about manifests you can read in particular object section in this docs. For example service manifest is described in Serices section.
 
-===== Processes
+=== Processes
 
 We can separate all Last.Backend processes in to types:
 - master processes
@@ -64,7 +64,7 @@ Last.Backend Ingress - is the entry point for external traffics to internal netw
 Last.Backend minion node - is a minion process that perform all operations with containers, volumes and networks on physical machine.
 Node communicates with REST API. It pull state changes and send current state information about pods, volumes, endpoint, system info and more.
 
-===== Storage
+=== Storage
 
 Last.Backend uses storage package to store information about cluster state.
 

@@ -701,10 +701,11 @@ To remove route use remove command:
 $lb route remove <namespace name> <route name>
 ----
 
-==== Cluster runtime
+=== Cluster runtime
 
 Cluster runtime is physical resources runtime, contains:
 - Cluster management
 - Node management
 - Discovery management
 - Ingress management
+

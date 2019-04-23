@@ -52,7 +52,6 @@ Platform structure:
 - Container runtime
 - Container images runtime
 
-___
 
 ## Key features
 
@@ -105,7 +104,6 @@ Join us in Gitter [![Gitter](https://badges.gitter.im/lastbackend/lastbackend.sv
 This project has [Roadmap](ROADMAP.md), feel free to offer your features. 
 
 We are actively searching for contributors! If you want to help our project and to make developers life easier, please read our **[Contibuting guideliness](http://docs.lastbackend.com/#_contributing)**.
-
 
 
 ## How to get started

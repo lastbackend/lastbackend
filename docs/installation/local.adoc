@@ -1,0 +1,69 @@
+
+use docker-machine to create nodes for cluster
+
+[source,bash]
+----
+# create master node
+docker-machine create --driver virtualbox master
+
+# create minion nodes
+docker-machine create --driver virtualbox minion-00
+
+# run etcd on master machine
+eval (docker-machine env master)
+export MASTER_IP=$(docker-machine ip master)
+docker run -d -p 4001:4001 -p 2380:2380 -p 2379:2379 \
+ --name etcd quay.io/coreos/etcd:v3.2.9 /usr/local/bin/etcd \
+ -name etcd0 \
+ -advertise-client-urls http://${MASTER_IP}:2379,http://${MASTER_IP}:4001 \
+ -listen-client-urls http://0.0.0.0:2379,http://0.0.0.0:4001 \
+ -initial-advertise-peer-urls http://${MASTER_IP}:2380 \
+ -listen-peer-urls http://0.0.0.0:2380 \
+ -initial-cluster-token etcd-cluster-1 \
+ -initial-cluster etcd0=http://${MASTER_IP}:2380 \
+ -initial-cluster-state new
+
+# run Last.Backend Cluster API:
+docker run -d -it --restart=always \
+      --net=host \
+      --name=api \
+      index.lstbknd.net/lastbackend/lastbackend api
+
+# run Last.Backend Cluster CTL:
+docker run -d -it --restart=always \
+      --name=controller \
+      index.lstbknd.net/lastbackend/lastbackend ctl
+
+# run Last.Backend Cluster DNS:
+docker run -d -it --restart=always \
+      --name=discovery \
+      index.lstbknd.net/lastbackend/discovery
+
+# run Last.Backend Cluster Exporter:
+docker run -d -it --restart=always \
+      --name=exporter \
+      index.lstbknd.net/lastbackend/exporter
+
+# run node on minion host
+# enable modprobe ip_vs for internal load balancing
+# this is required for boot2docker iso image
+docker-machine ssh minion-00 "sudo modprobe ip_vs"
+
+# run Last.Backend Cluster Node:
+docker run -d -it --restart=always \
+-v /var/run/docker.sock:/var/run/docker.sock \
+-v /var/run/lastbackend:/var/run/lastbackend \
+-v /lib/modules:/lib/modules:rw \
+-e LB_API_URI="$MASTER_IP:2967" \
+--privileged \
+--name=node \
+--net=host \
+index.lstbknd.net/lastbackend/lastbackend node
+
+# run Last.Backend Cluster Ingress:
+docker run -d -it --restart=always \
+--name=ingress \
+--net=host \
+index.lstbknd.net/lastbackend/ingress
+
+----
