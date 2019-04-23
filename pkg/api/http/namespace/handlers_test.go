@@ -543,7 +543,11 @@ func TestNamespaceUpdate(t *testing.T) {
 
 				assert.Equal(t, tc.want.Meta.Name, n.Meta.Name, "name not equal")
 				assert.Equal(t, tc.want.Meta.Description, n.Meta.Description, "description not equal")
-				assert.Equal(t, tc.want.Spec.Resources.Request.RAM, n.Spec.Resources.Request.RAM, "ram not equal")
+
+				if tc.want.Spec.Resources.Request != nil && n.Spec.Resources.Request != nil {
+					assert.Equal(t, tc.want.Spec.Resources.Request.RAM, n.Spec.Resources.Request.RAM, "ram not equal")
+				}
+
 			}
 
 		})

@@ -126,8 +126,13 @@ func (r *Namespace) ToEnv(obj types.NamespaceEnvs) NamespaceEnvs {
 	return envs
 }
 
-func (r *Namespace) ToResources(obj types.ResourceItem) NamespaceResource {
-	return NamespaceResource{
+func (r *Namespace) ToResources(obj types.ResourceItem) *NamespaceResource {
+
+	if obj.RAM == 0 || obj.CPU == 0 || obj.Storage == 0 {
+		return nil
+	}
+
+	return &NamespaceResource{
 		RAM:     resource.EncodeMemoryResource(obj.RAM),
 		CPU:     resource.EncodeCpuResource(obj.CPU),
 		Storage: resource.EncodeMemoryResource(obj.Storage),
