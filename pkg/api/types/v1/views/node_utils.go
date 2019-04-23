@@ -20,6 +20,7 @@ package views
 
 import (
 	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
@@ -57,15 +58,15 @@ func (nv *NodeView) ToNodeStatus(status types.NodeStatus) NodeStatus {
 
 	ns.Capacity.Containers = status.Capacity.Containers
 	ns.Capacity.Pods = status.Capacity.Pods
-	ns.Capacity.Memory = status.Capacity.RAM
-	ns.Capacity.CPU = status.Capacity.CPU
-	ns.Capacity.Storage = status.Capacity.Storage
+	ns.Capacity.Memory = resource.EncodeMemoryResource(status.Capacity.RAM)
+	ns.Capacity.CPU = resource.EncodeCpuResource(status.Capacity.CPU)
+	ns.Capacity.Storage = resource.EncodeMemoryResource(status.Capacity.Storage)
 
 	ns.Allocated.Containers = status.Allocated.Containers
 	ns.Allocated.Pods = status.Allocated.Pods
-	ns.Allocated.Memory = status.Allocated.RAM
-	ns.Allocated.CPU = status.Allocated.CPU
-	ns.Allocated.Storage = status.Allocated.Storage
+	ns.Allocated.Memory = resource.EncodeMemoryResource(status.Allocated.RAM)
+	ns.Allocated.CPU = resource.EncodeCpuResource(status.Allocated.CPU)
+	ns.Allocated.Storage = resource.EncodeMemoryResource(status.Allocated.Storage)
 
 	ns.State.CNI.Type = status.State.CNI.Type
 	ns.State.CNI.State = status.State.CNI.State

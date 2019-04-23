@@ -53,15 +53,15 @@ type NamespaceStatus struct {
 }
 
 type NamespaceStatusResources struct {
-	Allocated NamespaceResource `json:"allocated"`
+	Allocated *NamespaceResource `json:"allocated"`
 }
 
 // swagger:model views_namespace_envs
 type NamespaceEnvs []string
 
 type NamespaceResources struct {
-	Request NamespaceResource `json:"request"`
-	Limits  NamespaceResource `json:"limits"`
+	Request *NamespaceResource `json:"request,omitempty"`
+	Limits  *NamespaceResource `json:"limits,omitempty"`
 }
 
 // swagger:model views_namespace_resource
