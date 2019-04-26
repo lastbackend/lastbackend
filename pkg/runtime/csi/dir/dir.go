@@ -26,7 +26,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
-	"github.com/spf13/viper"
 	"io"
 	"io/ioutil"
 	"os"
@@ -192,13 +191,13 @@ func (s *Storage) Remove(ctx context.Context, state *types.VolumeState) error {
 	return nil
 }
 
-func Get() (*Storage, error) {
+func Get(path string) (*Storage, error) {
 
 	log.Debug("Initialize dir storage interface")
 	var s = new(Storage)
 
-	if viper.GetString("runtime.csi.dir.root") != "" {
-		s.root = viper.GetString("runtime.csi.dir.root")
+	if path != "" {
+		s.root = path
 		log.Debugf("Initialize dir storage interface root: %s", s.root)
 	}
 

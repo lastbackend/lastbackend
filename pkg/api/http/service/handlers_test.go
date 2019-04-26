@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/util/resource"
+	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -46,7 +47,10 @@ func TestServiceInfo(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -177,7 +181,10 @@ func TestServiceList(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -310,7 +317,10 @@ func TestServiceCreate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -574,7 +584,10 @@ func TestServiceUpdate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -967,7 +980,10 @@ func TestServiceRemove(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")

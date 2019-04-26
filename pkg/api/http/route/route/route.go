@@ -109,13 +109,12 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.RouteManifest)
 	route.Meta.Namespace = ns.Meta.Name
 
 	mf.SetRouteMeta(route)
-	mf.SetRouteSpec(route, svc)
+	mf.SetRouteSpec(route, ns, svc)
 
 	if len(route.Spec.Rules) == 0 {
 		err := errors.New("route rules are incorrect")
 		log.V(logLevel).Errorf("%s:create:> route rules empty", logPrefix, err.Error())
 		return nil, errors.New("route").BadParameter("rules", err)
-
 	}
 
 	if _, err := rm.Add(ns, route); err != nil {
@@ -158,7 +157,7 @@ func Update(ctx context.Context, ns *types.Namespace, rt *types.Route, mf *reque
 	}
 
 	mf.SetRouteMeta(rt)
-	mf.SetRouteSpec(rt, svc)
+	mf.SetRouteSpec(rt, ns, svc)
 
 	if len(rt.Spec.Rules) == 0 {
 		err := errors.New("route rules are incorrect")

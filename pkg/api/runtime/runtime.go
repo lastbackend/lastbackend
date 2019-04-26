@@ -20,6 +20,8 @@ package runtime
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
@@ -61,6 +63,8 @@ func (r *Runtime) Run() {
 			ns = new(types.Namespace)
 			ns.Meta.SetDefault()
 			ns.Meta.Name = n
+			internal, _ := envs.Get().GetDomain()
+			ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", ns.Meta.Name, internal))
 			ns.Meta.SelfLink = types.NamespaceSelfLink{}
 			_ = ns.Meta.SelfLink.Parse(n)
 

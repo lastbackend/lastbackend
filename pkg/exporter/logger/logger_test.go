@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/proxy"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -32,18 +31,20 @@ import (
 
 func TestNewLogger(t *testing.T) {
 
-	viper.Set("exporter.dir", "/tmp/log/lastbackend")
-	viper.Set("exporter.listener.host", "127.0.0.1")
-	viper.Set("exporter.listener.port", 2963)
-
 	t.Log("start logger")
-	logger, err := NewLogger()
+
+	opts := new(LoggerOpts)
+	opts.Workdir = "/tmp/log/lastbackend"
+	opts.Host = "127.0.0.1"
+	opts.Port = 2963
+
+	l, err := New(opts)
 	if !assert.NoError(t, err, "can not create logger") {
 		return
 	}
 
 	go func() {
-		if err := logger.Listen(); err != nil {
+		if err := l.Listen(); err != nil {
 			assert.NoError(t, err, "logger listen error")
 			return
 		}
@@ -99,7 +100,7 @@ func TestNewLogger(t *testing.T) {
 		var stream *File
 
 		for {
-			stream, err = logger.storage.GetStream(types.KindTask, sl, false)
+			stream, err = l.storage.GetStream(types.KindTask, sl, false)
 			if err != nil {
 				t.Error(err.Error())
 				break

@@ -43,36 +43,36 @@ type Network struct {
 	}
 }
 
-func New() (*Network, error) {
+func New(v *viper.Viper) (*Network, error) {
 
 	var err error
 
 	net := new(Network)
 
-	if viper.GetString("runtime.cni.type") == types.EmptyString &&
-		viper.GetString("runtime.cpi.type") == types.EmptyString {
+	if v.GetString("runtime.cni.type") == types.EmptyString &&
+		v.GetString("runtime.cpi.type") == types.EmptyString {
 		log.Debug("run without network management")
 		return nil, nil
 	}
 
 	net.state = state.New()
-	if net.cni, err = ni.New(); err != nil {
+	if net.cni, err = ni.New(v); err != nil {
 		log.Errorf("Cannot initialize cni: %v", err)
 		return nil, err
 	}
 
-	if net.cpi, err = pi.New(); err != nil {
+	if net.cpi, err = pi.New(v); err != nil {
 		log.Errorf("Cannot initialize cni: %v", err)
 		return nil, err
 	}
 
-	rip := viper.GetString("network.resolver.ip")
+	rip := v.GetString("network.resolver.ip")
 	if rip == types.EmptyString {
 		rip = DefaultResolverIP
 	}
 
 	net.resolver.ip = rip
-	net.resolver.external = viper.GetStringSlice("network.resolver.external")
+	net.resolver.external = v.GetStringSlice("network.resolver.servers")
 	if len(net.resolver.external) == 0 {
 		net.resolver.external = []string{"8.8.8.8", "8.8.4.4"}
 	}

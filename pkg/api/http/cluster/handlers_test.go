@@ -21,6 +21,7 @@ package cluster_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -41,7 +42,10 @@ func TestClusterInfo(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	c := getClusterAsset(4096)

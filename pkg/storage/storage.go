@@ -20,10 +20,13 @@ package storage
 
 import (
 	"context"
-
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
+	v3 "github.com/lastbackend/lastbackend/pkg/storage/etcd/v3"
 	"github.com/lastbackend/lastbackend/pkg/storage/mock"
 	"github.com/lastbackend/lastbackend/pkg/storage/types"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -63,12 +66,21 @@ type Storage interface {
 	Filter() types.Filter
 }
 
-func Get(driver string) (Storage, error) {
-	switch driver {
+func Get(v *viper.Viper) (Storage, error) {
+
+	if !v.IsSet("storage.driver") {
+		return nil, errors.New("storage driver not set")
+	}
+
+	switch v.GetString("storage.driver") {
 	case "mock":
 		return mock.New()
 	default:
-		return etcd.New()
+		config := new(v3.Config)
+		if err := v.UnmarshalKey("storage.etcd", config); err != nil {
+			return nil, errors.New(fmt.Sprintf("parse etcd config err: %v", err))
+		}
+		return etcd.New(config)
 	}
 }
 

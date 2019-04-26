@@ -19,10 +19,11 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 )
 
-func Context(h http.HandlerFunc) http.HandlerFunc {
+func Context(_ context.Context, h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.ServeHTTP(w, r)
 	}

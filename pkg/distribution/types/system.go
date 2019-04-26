@@ -18,10 +18,6 @@
 
 package types
 
-var (
-	SecretAccessToken = ""
-)
-
 const KindCluster = "cluster"
 const KindAPIServer = "api"
 const KindController = "controller"

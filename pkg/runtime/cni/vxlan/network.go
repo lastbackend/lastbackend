@@ -25,7 +25,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
-	"github.com/spf13/viper"
 	"net"
 	"syscall"
 
@@ -53,7 +52,7 @@ type NetworkInterface struct {
 	IfaceAddr net.IP
 }
 
-func New() (*Network, error) {
+func New(iface string) (*Network, error) {
 
 	var (
 		nt  = new(Network)
@@ -61,8 +60,6 @@ func New() (*Network, error) {
 	)
 
 	nt.ExtIface = new(NetworkInterface)
-
-	iface := viper.GetString("runtime.interface")
 
 	if iface == types.EmptyString {
 		log.Debug("Add network to default interface")

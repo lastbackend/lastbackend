@@ -27,7 +27,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -62,12 +61,12 @@ func ClusterInfoH(w http.ResponseWriter, r *http.Request) {
 		errors.HTTP.InternalServerError(w)
 		return
 	}
+
 	if cl == nil {
 		cl = new(types.Cluster)
 		cl.Meta.SetDefault()
-		cl.Meta.Name = viper.GetString("name")
+		cl.Meta.Name, cl.Meta.Description = envs.Get().GetClusterInfo()
 		cl.Meta.SelfLink = *types.NewClusterSelfLink(cl.Meta.Name)
-		cl.Meta.Description = viper.GetString("description")
 	}
 
 	response, err := v1.View().Cluster().New(cl).ToJson()

@@ -31,30 +31,43 @@ const (
 )
 
 type Runtime struct {
+	ctx     context.Context
 	spec    chan *types.IngressManifest
 	process *Process
+	config  *conf
+	iface string
+}
+
+func New(iface string, cfg *conf) *Runtime {
+	r := new(Runtime)
+	r.ctx = context.Background()
+	r.spec = make(chan *types.IngressManifest)
+	r.process = new(Process)
+	r.iface = iface
+	r.config = cfg
+	return r
 }
 
 // Restore node runtime state
-func (r *Runtime) Restore(ctx context.Context) {
+func (r *Runtime) Restore() {
 	log.V(logLevel).Debugf("%s:restore:> restore init", logRuntimePrefix)
 	var network = envs.Get().GetNet()
 
 	if network != nil {
-		if err := envs.Get().GetNet().EndpointRestore(ctx); err != nil {
+		if err := envs.Get().GetNet().EndpointRestore(r.ctx); err != nil {
 			log.Errorf("%s:> can not restore endpoins: %s", logRuntimePrefix, err.Error())
 		}
 
-		if err := envs.Get().GetNet().SubnetRestore(ctx); err != nil {
+		if err := envs.Get().GetNet().SubnetRestore(r.ctx); err != nil {
 			log.Errorf("%s:> can not restore network: %s", logRuntimePrefix, err.Error())
 		}
 
-		if err := envs.Get().GetNet().ResolverManage(ctx); err != nil {
+		if err := envs.Get().GetNet().ResolverManage(r.ctx); err != nil {
 			log.Errorf("%s:> can not manage resolver:%s", logRuntimePrefix, err.Error())
 		}
 	}
 
-	if err := configCheck(); err != nil {
+	if err := r.config.Check(); err != nil {
 		log.Errorf("can no sync config: %s", err.Error())
 		return
 	}
@@ -66,13 +79,13 @@ func (r *Runtime) Restore(ctx context.Context) {
 }
 
 // Sync node runtime with new spec
-func (r *Runtime) Sync(ctx context.Context, spec *types.IngressManifest) error {
+func (r *Runtime) Sync(spec *types.IngressManifest) error {
 	log.V(logLevel).Debugf("%s:sync:> sync runtime state", logRuntimePrefix)
 	r.spec <- spec
 	return nil
 }
 
-func (r *Runtime) Loop(ctx context.Context) {
+func (r *Runtime) Loop() {
 
 	var network = envs.Get().GetNet()
 
@@ -152,7 +165,7 @@ func (r *Runtime) Loop(ctx context.Context) {
 				log.V(logLevel).Debugf("%s> provision routes", logRuntimePrefix)
 				var upd = make(map[string]bool, 0)
 				for e, spec := range spec.Routes {
-					if err := RouteManage(ctx, e, spec); err != nil {
+					if err := r.RouteManage(e, spec); err != nil {
 						log.Errorf("Route [%s] manage err: %s", e, err.Error())
 						continue
 					}
@@ -181,12 +194,5 @@ func (r *Runtime) Loop(ctx context.Context) {
 
 			}
 		}
-	}(ctx)
-}
-
-func NewRuntime() *Runtime {
-	r := new(Runtime)
-	r.spec = make(chan *types.IngressManifest)
-	r.process = new(Process)
-	return r
+	}(r.ctx)
 }

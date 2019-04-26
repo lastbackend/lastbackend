@@ -39,42 +39,52 @@ const (
 
 // System main node process
 type Runtime struct {
-	spec chan *types.NodeManifest
+	ctx    context.Context
+	cancel context.CancelFunc
+	spec   chan *types.NodeManifest
+}
+
+// NewRuntime method return new runtime pointer
+func New() (*Runtime, error) {
+	r := new(Runtime)
+	r.ctx, r.cancel = context.WithCancel(context.Background())
+	r.spec = make(chan *types.NodeManifest)
+	return r, nil
 }
 
 // Restore node runtime state
-func (r *Runtime) Restore(ctx context.Context) error {
+func (r *Runtime) Restore() error {
 	log.V(logLevel).Debugf("%s:restore:> restore init", logNodeRuntimePrefix)
 
 	var network = envs.Get().GetNet()
 
 	if network != nil {
-		if err := network.SubnetRestore(ctx); err != nil {
+		if err := network.SubnetRestore(r.ctx); err != nil {
 			log.Errorf("can not restore subnets: %s", err.Error())
 			return err
 		}
 
-		if err := network.EndpointRestore(ctx); err != nil {
+		if err := network.EndpointRestore(r.ctx); err != nil {
 			log.Errorf("can not restore endpoint: %s", err.Error())
 			return err
 		}
 
-		if err := network.ResolverManage(ctx); err != nil {
+		if err := network.ResolverManage(r.ctx); err != nil {
 			log.Errorf("%s:> can not manage resolver:%s", logNodeRuntimePrefix, err.Error())
 		}
 	}
 
-	if err := VolumeRestore(ctx); err != nil {
+	if err := VolumeRestore(r.ctx); err != nil {
 		log.Errorf("can not restore volumes: %s", err.Error())
 		return err
 	}
 
-	if err := ImageRestore(ctx); err != nil {
+	if err := ImageRestore(r.ctx); err != nil {
 		log.Errorf("Can not restore images: %s", err.Error())
 		return err
 	}
 
-	if err := PodRestore(ctx); err != nil {
+	if err := PodRestore(r.ctx); err != nil {
 		log.Errorf("Can not restore pods: %s", err.Error())
 		return err
 	}
@@ -84,7 +94,7 @@ func (r *Runtime) Restore(ctx context.Context) error {
 }
 
 // Provision node manifest
-func (r *Runtime) Provision(ctx context.Context, dir string) error {
+func (r *Runtime) Provision(dir string) error {
 
 	log.V(logLevel).Debugf("%s:provision:> local init", logNodeRuntimePrefix)
 
@@ -172,19 +182,19 @@ func (r *Runtime) Provision(ctx context.Context, dir string) error {
 		}
 	}
 
-	r.Sync(ctx, mf)
+	r.Sync(mf)
 	return nil
 }
 
 // Sync node runtime with new spec
-func (r *Runtime) Sync(ctx context.Context, spec *types.NodeManifest) error {
+func (r *Runtime) Sync(spec *types.NodeManifest) error {
 	log.V(logLevel).Debugf("%s:sync:> sync runtime state", logNodeRuntimePrefix)
 	r.spec <- spec
 	return nil
 }
 
 // Loop runtime method defines single runtime loop
-func (r *Runtime) Loop(ctx context.Context) {
+func (r *Runtime) Loop() {
 
 	log.V(logLevel).Debugf("%s:loop:> start runtime loop", logNodeRuntimePrefix)
 
@@ -318,27 +328,20 @@ func (r *Runtime) Loop(ctx context.Context) {
 				}
 			}
 		}
-	}(ctx)
+	}(r.ctx)
 }
 
 // Subscribe runtime for container events
-func (r *Runtime) Subscribe(ctx context.Context) {
+func (r *Runtime) Subscribe() {
 
 	log.V(logLevel).Debugf("%s:subscribe:> subscribe init", logNodeRuntimePrefix)
 	go func() {
-		if err := containerSubscribe(ctx); err != nil {
+		if err := containerSubscribe(r.ctx); err != nil {
 			log.Errorf("container subscribe err: %v", err)
 		}
 	}()
 }
 
-// NewRuntime method return new runtime pointer
-func NewRuntime() (*Runtime, error) {
-
-	var (
-		r = new(Runtime)
-	)
-
-	r.spec = make(chan *types.NodeManifest)
-	return r, nil
+func (r *Runtime) Stop() {
+	r.cancel()
 }

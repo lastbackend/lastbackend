@@ -26,7 +26,7 @@ import (
 
 const logLevel = 3
 
-func Listen(port int) (*dns.DNS, error) {
+func Listen(host string, port int) (*dns.DNS, error) {
 
 	var d = dns.DNS{}
 
@@ -38,7 +38,7 @@ func Listen(port int) (*dns.DNS, error) {
 
 	go func() {
 		log.V(logLevel).Debugf(`Start discovery %s service on %d port`, dns.TCP, port)
-		if err := d.Start(dns.TCP, port, nil); err != nil {
+		if err := d.Start(dns.TCP, host, port, nil); err != nil {
 			log.Errorf(`Start discovery %s service on %d port error: %s`, dns.TCP, port, err)
 			return
 		}
@@ -46,7 +46,7 @@ func Listen(port int) (*dns.DNS, error) {
 
 	go func() {
 		log.V(logLevel).Debugf(`Start discovery %s service on %d port`, dns.UDP, port)
-		if err := d.Start(dns.UDP, port, nil); err != nil {
+		if err := d.Start(dns.UDP, host, port, nil); err != nil {
 			log.Errorf(`Start discovery %s service on %d port error: %s`, dns.TCP, port, err)
 			return
 		}

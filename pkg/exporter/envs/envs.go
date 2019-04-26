@@ -22,28 +22,19 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 	"github.com/lastbackend/lastbackend/pkg/exporter/logger"
 	"github.com/lastbackend/lastbackend/pkg/exporter/state"
-	"github.com/lastbackend/lastbackend/pkg/network"
 )
 
 var _env Env
 
 type Env struct {
-	net    *network.Network
-	state  *state.State
-	client types.ExporterClientV1
-	logger *logger.Logger
+	state       *state.State
+	logger      *logger.Logger
+	client      types.ExporterClientV1
+	accessToken string
 }
 
 func Get() *Env {
 	return &_env
-}
-
-func (c *Env) SetNet(n *network.Network) {
-	c.net = n
-}
-
-func (c *Env) GetNet() *network.Network {
-	return c.net
 }
 
 func (c *Env) SetState(state *state.State) {
@@ -68,4 +59,12 @@ func (c *Env) SetClient(client types.ExporterClientV1) {
 
 func (c *Env) GetClient() types.ExporterClientV1 {
 	return c.client
+}
+
+func (c *Env) SetAccessToken(token string) {
+	c.accessToken = token
+}
+
+func (c *Env) GetAccessToken() string {
+	return c.accessToken
 }

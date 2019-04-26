@@ -19,20 +19,19 @@
 package runtime
 
 import (
-	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/ingress/envs"
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-func RouteManage(_ context.Context, name string, route *types.RouteManifest) (err error) {
+func (r Runtime) RouteManage(name string, route *types.RouteManifest) (err error) {
 
 	log.Debugf("route manage: %s", name)
 
 	var status = new(types.RouteStatus)
 
 	defer func() {
-		if err = configSync(); err != nil {
+		if err = r.config.Sync(); err != nil {
 			status.State = types.StateError
 			status.Message = err.Error()
 			envs.Get().GetState().Routes().SetRouteStatus(name, status)

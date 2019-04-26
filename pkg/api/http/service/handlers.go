@@ -31,7 +31,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
-	"github.com/spf13/viper"
 	"net/http"
 )
 
@@ -583,7 +582,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req.WithContext(cx)
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", viper.GetString("token")))
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", envs.Get().GetAccessToken()))
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

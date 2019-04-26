@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## declare an array of components variable
-declare -a arr=("kit" "node" "ingress" "discovery")
+declare -a arr=("api" "controller" "node" "ingress" "discovery")
 
 if [[ $1 != "" ]]; then
   arr=($1)

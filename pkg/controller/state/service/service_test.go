@@ -20,6 +20,7 @@ package service
 
 import (
 	"context"
+	"github.com/spf13/viper"
 	"testing"
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
@@ -33,7 +34,10 @@ import (
 )
 
 func init() {
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ipm, _ := ipam.New("")

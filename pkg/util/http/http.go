@@ -19,6 +19,7 @@
 package http
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -60,7 +61,7 @@ func (MethodNotAllowedHandler) ServeHTTP(w http.ResponseWriter, req *http.Reques
 	w.Write([]byte(`{"code": 405, "status": "Method Not Allowed", "message": "Method Not Allowed"}`))
 }
 
-func Handle(h http.HandlerFunc, middleware ...Middleware) http.HandlerFunc {
+func Handle(ctx context.Context, h http.HandlerFunc, middleware ...Middleware) http.HandlerFunc {
 	headers := func(h http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			cors.Headers(w, r)
@@ -70,7 +71,7 @@ func Handle(h http.HandlerFunc, middleware ...Middleware) http.HandlerFunc {
 
 	h = headers(h)
 	for _, m := range middleware {
-		h = m(h)
+		h = m(ctx, h)
 	}
 
 	return h

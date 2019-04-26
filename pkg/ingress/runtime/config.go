@@ -21,7 +21,6 @@ package runtime
 import (
 	"bytes"
 	"fmt"
-	"github.com/spf13/viper"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -44,8 +43,7 @@ const (
 
 type conf struct {
 	Stats struct {
-		Enable   bool
-		Port     int
+		Port     uint16
 		Username string
 		Password string
 	}
@@ -66,7 +64,18 @@ type confBackend struct {
 	Port     uint16
 }
 
-func configCheck() error {
+func NewHAProxyConfig(port uint16, username, password string) *conf {
+	c := new(conf)
+	c.Stats.Port = port
+	c.Stats.Username = username
+	c.Stats.Password = password
+	c.Resolvers = make(map[string]uint16, 0)
+	c.Frontend = make(map[uint16]*confFrontend, 0)
+	c.Backend = make(map[string]*confBackend, 0)
+	return c
+}
+
+func (c conf) Check() error {
 
 	log.Debug("config check")
 	var (
@@ -76,13 +85,13 @@ func configCheck() error {
 	cfgPath := filepath.Join(path, name)
 	if _, err := os.Stat(cfgPath); os.IsNotExist(err) {
 		log.Debug("config not found: create new")
-		return configSync()
+		return c.Sync()
 	}
 
 	return nil
 }
 
-func configSync() error {
+func (c conf) Sync() error {
 
 	log.Debug("config sync")
 
@@ -94,12 +103,11 @@ func configSync() error {
 	log.Debugf("Update routes: %d", len(routes))
 
 	var cfg = conf{}
-	cfg.Stats.Username = viper.GetString("haproxy.stats.username")
-	cfg.Stats.Password = viper.GetString("haproxy.stats.password")
-	cfg.Stats.Port = viper.GetInt("haproxy.stats.port")
+	cfg.Stats.Username = c.Stats.Username
+	cfg.Stats.Password = c.Stats.Password
+	cfg.Stats.Port = c.Stats.Port
 
 	if cfg.Stats.Username != types.EmptyString && cfg.Stats.Password != types.EmptyString {
-		cfg.Stats.Enable = true
 		if cfg.Stats.Port == 0 {
 			cfg.Stats.Port = 9000
 		}
@@ -200,7 +208,7 @@ func configSync() error {
 		return err
 	}
 
-	if err := configValidate(testPath); err != nil {
+	if err := c.Validate(testPath); err != nil {
 		log.Errorf("config is not working (%s)", err.Error())
 		return err
 	}
@@ -218,7 +226,7 @@ func configSync() error {
 	return ioutil.WriteFile(cfgPath, buf.Bytes(), 0644)
 }
 
-func configValidate(path string) error {
+func (conf) Validate(path string) error {
 
 	log.Debugf("%s:> config validate", logConfigPrefix)
 

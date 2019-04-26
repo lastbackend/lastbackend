@@ -21,11 +21,12 @@ package csi
 import (
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi/dir"
+	"github.com/spf13/viper"
 )
 
-func New(kind string) (csi.CSI, error) {
+func New(kind string, v *viper.Viper) (csi.CSI, error) {
 	switch kind {
 	default:
-		return dir.Get()
+		return dir.Get(v.GetString("runtime.csi.dir.root"))
 	}
 }

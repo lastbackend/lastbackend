@@ -31,11 +31,12 @@ import (
 )
 
 const (
-	logPrefix = "controller:>"
+	logPrefix = "controller"
 	logLevel  = 3
 )
 
 type Controller struct {
+	ctx     context.Context
 	runtime *runtime.Runtime
 	cache   struct {
 		lock      sync.RWMutex
@@ -46,6 +47,7 @@ type Controller struct {
 
 func New(r *runtime.Runtime) *Controller {
 	var c = new(Controller)
+	c.ctx = context.Background()
 	c.runtime = r
 	c.cache.routes = make(map[string]*types.RouteStatus, 0)
 	return c
@@ -78,7 +80,7 @@ func (c *Controller) Connect(ctx context.Context) error {
 	return nil
 }
 
-func (c *Controller) Sync(ctx context.Context) error {
+func (c *Controller) Sync() {
 
 	log.Debugf("Start ingress sync")
 
@@ -103,7 +105,7 @@ func (c *Controller) Sync(ctx context.Context) error {
 			}
 		}
 
-		spec, err := envs.Get().GetClient().SetStatus(ctx, opts)
+		spec, err := envs.Get().GetClient().SetStatus(c.ctx, opts)
 		if err != nil {
 			log.Errorf("ingress:exporter:dispatch err: %s", err.Error())
 		}
@@ -114,13 +116,12 @@ func (c *Controller) Sync(ctx context.Context) error {
 
 		c.cache.lock.Unlock()
 		if spec != nil {
-			c.runtime.Sync(ctx, spec.Decode())
+			c.runtime.Sync(spec.Decode())
 		} else {
 			log.Debug("received spec is nil, skip apply changes")
 		}
 	}
 
-	return nil
 }
 
 func (c *Controller) Subscribe() {

@@ -19,6 +19,7 @@
 package http
 
 import (
+	"context"
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/http/node"
@@ -37,6 +38,8 @@ var Routes = make([]http.Route, 0)
 
 type HttpOpts struct {
 	Insecure bool
+
+	BearerToken string
 
 	CertFile string
 	KeyFile  string
@@ -62,6 +65,9 @@ func Listen(host string, port int, opts *HttpOpts) error {
 
 	log.V(logLevel).Debugf("%s:> listen HTTP server on %s:%d", logPrefix, host, port)
 
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, "access_token", opts.BearerToken)
+
 	r := mux.NewRouter()
 	r.Methods("OPTIONS").HandlerFunc(cors.Headers)
 
@@ -73,7 +79,7 @@ func Listen(host string, port int, opts *HttpOpts) error {
 
 	for _, route := range Routes {
 		log.V(logLevel).Debugf("%s:> init route: %s", logPrefix, route.Path)
-		r.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
+		r.Handle(route.Path, http.Handle(ctx, route.Handler, route.Middleware...)).Methods(route.Method)
 	}
 
 	if opts.Insecure {

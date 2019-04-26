@@ -30,58 +30,63 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/discovery/envs"
 	"github.com/lastbackend/lastbackend/pkg/discovery/runtime"
 	"github.com/lastbackend/lastbackend/pkg/discovery/state"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/network"
+	l "github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
 )
 
-func Daemon() bool {
+func Daemon(v *viper.Viper) bool {
 
 	var (
+		env  = envs.Get()
 		sigs = make(chan os.Signal)
 		done = make(chan bool, 1)
 	)
 
-	log.New(viper.GetInt("verbose"))
+	log := l.New(v.GetInt("verbose"))
+
 	log.Info("Start service discovery")
 
-	net, err := network.New()
-	if err != nil {
-		log.Errorf("can not initialize network: %s", err.Error())
-		os.Exit(1)
+	if !v.IsSet("storage") {
+		log.Fatalf("Storage not configured")
 	}
-	envs.Get().SetNet(net)
+
+	port := uint(53)
+	if v.IsSet("dns.port") {
+		port = uint(v.GetInt("dns.port"))
+	}
+
+	ro := &runtime.RuntimeOpts{
+		Iface: v.GetString("runtime.interface"),
+		Port:  uint16(port),
+	}
+	r := runtime.New(ro)
 
 	st := state.New()
-	envs.Get().SetState(st)
-	st.Discovery().Info = runtime.DiscoveryInfo()
-	st.Discovery().Status = runtime.DiscoveryStatus()
+	env.SetState(st)
+	st.Discovery().Info = r.DiscoveryInfo()
+	st.Discovery().Status = r.DiscoveryStatus()
 
-	stg, err := storage.Get(viper.GetString("etcd"))
+	stg, err := storage.Get(v)
 	if err != nil {
-		log.Fatalf("Cannot initialize storage: %v", err)
+		log.Fatalf("Cannot initialize storage: %s", err.Error())
 	}
-	envs.Get().SetStorage(stg)
-	envs.Get().SetCache(cache.New())
+	env.SetStorage(stg)
+	env.SetCache(cache.New(v.GetDuration("dns.ttl")))
 
-	r := runtime.NewRuntime(context.Background())
-	if viper.IsSet("api") || viper.IsSet("api_uri") {
+	if v.IsSet("api") {
 
 		cfg := client.NewConfig()
-		cfg.BearerToken = viper.GetString("token")
+		cfg.BearerToken = v.GetString("token")
 
-		if viper.IsSet("api.tls") && !viper.GetBool("api.tls.insecure") {
+		if v.IsSet("api.tls") && !v.GetBool("api.tls.insecure") {
 			cfg.TLS = client.NewTLSConfig()
-			cfg.TLS.CertFile = viper.GetString("api.tls.cert")
-			cfg.TLS.KeyFile = viper.GetString("api.tls.key")
-			cfg.TLS.CAFile = viper.GetString("api.tls.ca")
+			cfg.TLS.CertFile = v.GetString("api.tls.cert")
+			cfg.TLS.KeyFile = v.GetString("api.tls.key")
+			cfg.TLS.CAFile = v.GetString("api.tls.ca")
 		}
 
-		endpoint := viper.GetString("api.uri")
-		if viper.IsSet("api_uri") {
-			endpoint = viper.GetString("api_uri")
-		}
+		endpoint := v.GetString("api.uri")
 
 		rest, err := client.New(client.ClientHTTP, endpoint, cfg)
 		if err != nil {
@@ -89,20 +94,17 @@ func Daemon() bool {
 		}
 
 		c := rest.V1().Cluster().Discovery(st.Discovery().Info.Hostname)
-		envs.Get().SetClient(c)
+		env.SetClient(c)
+
 		ctl := controller.New(r)
 
 		if err := ctl.Connect(context.Background()); err != nil {
 			log.Errorf("ingress:initialize: connect err %s", err.Error())
 		}
 
-		go ctl.Sync(context.Background())
 	}
 
-	r.Restore(context.Background())
-	r.Loop(context.Background())
-
-	sd, err := Listen(viper.GetInt("dns.port"))
+	sd, err := Listen(v.GetString( "dns.host"), v.GetInt( "dns.port"))
 	if err != nil {
 		log.Fatalf("Start discovery server error: %v", err)
 	}

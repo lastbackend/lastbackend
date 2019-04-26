@@ -6,7 +6,7 @@ dep ensure
 mkdir -p build/linux && mkdir -p build/darwin  && mkdir -p build/windows
 
 ## declare an array of components variable
-declare -a arr=("kit" "node" "ingress" "discovery" "exporter")
+declare -a arr=("api" "controller" "node" "ingress" "discovery" "exporter")
 
 if [[ $1 != "" ]]; then
   arr=($1)

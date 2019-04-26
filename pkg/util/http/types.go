@@ -18,7 +18,10 @@
 
 package http
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+)
 
 type Route struct {
 	Path       string
@@ -31,4 +34,4 @@ type Route struct {
 //	Handler(func(w http.ResponseWriter, r *http.Request) error) func(w http.ResponseWriter, r *http.Request) error
 //}
 
-type Middleware func(http.HandlerFunc) http.HandlerFunc
+type Middleware func(context.Context, http.HandlerFunc) http.HandlerFunc

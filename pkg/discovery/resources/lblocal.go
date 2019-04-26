@@ -29,7 +29,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util"
 	"github.com/miekg/dns"
-	"github.com/spf13/viper"
 )
 
 func lbLocal(w dns.ResponseWriter, r *dns.Msg) {
@@ -116,15 +115,6 @@ func lbLocal(w dns.ResponseWriter, r *dns.Msg) {
 						}
 					}
 
-				}
-
-				if len(ips) == 0 {
-					defaultIPs := viper.GetStringSlice("discovery.default_ips")
-					ips, err = util.ConvertStringIPToNetIP(defaultIPs)
-					if err != nil {
-						log.Error(err)
-						return
-					}
 				}
 
 				log.V(logLevel).Debugf("%s:lb.local:> ips list: %s for %s", logPrefix, ips, q.Name)

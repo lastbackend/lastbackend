@@ -458,7 +458,7 @@ func (p *Proxy) delIpBindToLink(ip string) error {
 	return nil
 }
 
-func New() (*Proxy, error) {
+func New(v *viper.Viper) (*Proxy, error) {
 
 	prx := new(Proxy)
 	handler, err := libipvs.New("")
@@ -512,8 +512,8 @@ func New() (*Proxy, error) {
 	}
 
 	var (
-		eiface = viper.GetString("runtime.cpi.interface.external")
-		iiface = viper.GetString("runtime.cpi.interface.internal")
+		eiface = v.GetString("runtime.cpi.interface.external")
+		iiface = v.GetString("runtime.cpi.interface.internal")
 	)
 
 	if eiface == types.EmptyString {

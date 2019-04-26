@@ -26,10 +26,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-func New() (cpi.CPI, error) {
-	switch viper.GetString("runtime.cpi.type") {
+func New(v *viper.Viper) (cpi.CPI, error) {
+	switch v.GetString("runtime.cpi.type") {
 	case "ipvs":
-		return ipvs.New()
+		return ipvs.New(v)
 	default:
 		return local.New()
 	}

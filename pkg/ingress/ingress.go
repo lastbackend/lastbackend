@@ -20,75 +20,83 @@ package ingress
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/api/client"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/ingress/controller"
-	"github.com/lastbackend/lastbackend/pkg/ingress/envs"
-	"github.com/lastbackend/lastbackend/pkg/ingress/runtime"
-	"github.com/lastbackend/lastbackend/pkg/ingress/state"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/network"
-	"github.com/spf13/viper"
 	"os"
 	"os/signal"
 	"syscall"
 	"text/template"
+
+	"github.com/lastbackend/lastbackend/pkg/api/client"
+	"github.com/lastbackend/lastbackend/pkg/ingress/controller"
+	"github.com/lastbackend/lastbackend/pkg/ingress/envs"
+	"github.com/lastbackend/lastbackend/pkg/ingress/runtime"
+	"github.com/lastbackend/lastbackend/pkg/ingress/state"
+	l "github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/network"
+	"github.com/spf13/viper"
 )
 
-func Daemon() bool {
+func Daemon(v *viper.Viper) bool {
 
 	var (
 		sigs = make(chan os.Signal)
 		done = make(chan bool, 1)
 	)
 
-	log.New(viper.GetInt("verbose"))
+	log := l.New(v.GetInt("verbose"))
 	log.Info("Start Ingress server")
 
-	net, err := network.New()
-	if err != nil {
-		log.Errorf("can not initialize network: %s", err.Error())
-		os.Exit(1)
+	if !v.IsSet("haproxy") {
+		log.Fatalf("Haproxy not configured")
 	}
-	envs.Get().SetNet(net)
+
+	if v.IsSet("network") {
+		net, err := network.New(v)
+		if err != nil {
+			log.Errorf("can not initialize network: %s", err.Error())
+			os.Exit(1)
+		}
+		envs.Get().SetNet(net)
+	}
 
 	st := state.New()
 
-	st.Ingress().Info = runtime.IngressInfo()
-	st.Ingress().Status = runtime.IngressStatus()
-
 	envs.Get().SetState(st)
 	envs.Get().SetTemplate(template.Must(template.New("").Parse(runtime.HaproxyTemplate)),
-		viper.GetString("haproxy.path"),
-		viper.GetString("haproxy.name"),
-		viper.GetString("haproxy.pid"))
+		v.GetString("haproxy.path"),
+		v.GetString("haproxy.name"),
+		v.GetString("haproxy.pid"))
 
-	envs.Get().SetHaproxy(viper.GetString("haproxy.exec"))
+	envs.Get().SetHaproxy(v.GetString("haproxy.exec"))
 
-	r := runtime.NewRuntime()
+	conf := runtime.NewHAProxyConfig(
+		uint16(v.GetInt("haproxy.port")),
+		v.GetString("haproxy.username"),
+		v.GetString("haproxy.password"),
+	)
+	iface := v.GetString("runtime.interface")
+	r := runtime.New(iface, conf)
+
+	st.Ingress().Info = r.IngressInfo()
+	st.Ingress().Status = r.IngressStatus()
+
 	go func() {
-		types.SecretAccessToken = viper.GetString("token")
-		r.Restore(context.Background())
-		r.Loop(context.Background())
+		r.Restore()
+		r.Loop()
 	}()
 
-	if viper.IsSet("api") || viper.IsSet("api_uri") {
+	if v.IsSet("api") {
 
 		cfg := client.NewConfig()
-		cfg.BearerToken = viper.GetString("token")
+		cfg.BearerToken = v.GetString("token")
 
-		if viper.IsSet("api.tls") && !viper.GetBool("api.tls.insecure") {
+		if v.IsSet("api.tls") && !v.GetBool("api.tls.insecure") {
 			cfg.TLS = client.NewTLSConfig()
-			cfg.TLS.CertFile = viper.GetString("api.tls.cert")
-			cfg.TLS.KeyFile = viper.GetString("api.tls.key")
-			cfg.TLS.CAFile = viper.GetString("api.tls.ca")
+			cfg.TLS.CertFile = v.GetString("api.tls.cert")
+			cfg.TLS.KeyFile = v.GetString("api.tls.key")
+			cfg.TLS.CAFile = v.GetString("api.tls.ca")
 		}
 
-		endpoint := viper.GetString("api.uri")
-		if viper.IsSet("api_uri") {
-			endpoint = viper.GetString("api_uri")
-		}
-
+		endpoint := v.GetString("api.uri")
 		rest, err := client.New(client.ClientHTTP, endpoint, cfg)
 		if err != nil {
 			log.Errorf("Init client err: %s", err)
@@ -96,14 +104,14 @@ func Daemon() bool {
 
 		c := rest.V1().Cluster().Ingress(st.Ingress().Info.Hostname)
 		envs.Get().SetClient(c)
-		ctl := controller.New(r)
 
+		ctl := controller.New(r)
 		if err := ctl.Connect(context.Background()); err != nil {
 			log.Errorf("ingress:initialize: connect err %s", err.Error())
 		}
 
 		go ctl.Subscribe()
-		go ctl.Sync(context.Background())
+		go ctl.Sync()
 	}
 
 	// Handle SIGINT and SIGTERM.

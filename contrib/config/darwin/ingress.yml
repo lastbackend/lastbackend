@@ -2,10 +2,6 @@
 # Runtime
 verbose: 3
 token: lstbknd
-api:
-  uri: "127.0.0.1:2967"
-  tls:
-    insecure: true
 
 haproxy:
   stats:
@@ -15,4 +11,7 @@ haproxy:
   exec: "/usr/sbin/haproxy"
   pid: "/var/run/lastbackend/ingress/haproxy.pid"
 
-# Runtime
+api:
+  uri: "127.0.0.1:2967"
+  tls:
+    insecure: true

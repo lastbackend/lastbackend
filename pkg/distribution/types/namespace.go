@@ -270,3 +270,4 @@ func NewNamespaceMap() *NamespaceMap {
 	dm.Items = make(map[string]*Namespace)
 	return dm
 }
+

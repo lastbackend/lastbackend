@@ -20,7 +20,6 @@ package api
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/monitor"
 	"os"
 	"os/signal"
 	"syscall"
@@ -30,29 +29,36 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/http"
 	"github.com/lastbackend/lastbackend/pkg/api/runtime"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	l "github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/monitor"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
 )
 
-func Daemon() bool {
+func Daemon(v *viper.Viper) {
 
 	var (
 		sigs = make(chan os.Signal)
 		done = make(chan bool, 1)
 	)
 
+	log := l.New(v.GetInt("verbose"))
+
 	log.Info("Start API server")
 
-	stg, err := storage.Get(viper.GetString("etcd"))
+	if !v.IsSet("storage") {
+		log.Fatalf("Storage not configured")
+	}
+
+	stg, err := storage.Get(v)
 	if err != nil {
 		log.Fatalf("Cannot initialize storage: %s", err.Error())
 	}
+	envs.Get().SetStorage(stg)
+
+	envs.Get().SetCache(cache.NewCache())
 
 	mnt := monitor.New()
-
-	envs.Get().SetStorage(stg)
-	envs.Get().SetCache(cache.NewCache())
 	envs.Get().SetMonitor(mnt)
 
 	go func() {
@@ -63,26 +69,34 @@ func Daemon() bool {
 
 	runtime.New().Run()
 
-	vault := &types.Vault{
-		Name:     viper.GetString("vault.name"),
-		Endpoint: viper.GetString("vault.endpoint"),
-		Token:    viper.GetString("vault.token"),
+	if v.IsSet("vault") {
+		vault := &types.Vault{
+			Endpoint: v.GetString("vault.endpoint"),
+			Token:    v.GetString("vault.token"),
+		}
+		envs.Get().SetVault(vault)
 	}
 
-	envs.Get().SetVault(vault)
-
 	go func() {
+
 		opts := new(http.HttpOpts)
-		opts.Insecure = viper.GetBool("api.tls.insecure")
-		opts.CertFile = viper.GetString("api.tls.cert")
-		opts.KeyFile = viper.GetString("api.tls.key")
-		opts.CaFile = viper.GetString("api.tls.ca")
+		opts.BearerToken = v.GetString("token")
+		if v.IsSet("server.tls") {
+			opts.Insecure = v.GetBool("server.tls.insecure")
+			opts.CertFile = v.GetString("server.tls.cert")
+			opts.KeyFile = v.GetString("server.tls.key")
+			opts.CaFile = v.GetString("server.tls.ca")
+		} else {
+			opts.Insecure = true
+		}
 
-		types.SecretAccessToken = viper.GetString("token")
+		host := v.GetString("server.host")
+		port := v.GetInt("server.port")
 
-		if err := http.Listen(viper.GetString("api.host"), viper.GetInt("api.port"), opts); err != nil {
+		if err := http.Listen(host, port, opts); err != nil {
 			log.Fatalf("Http server start error: %v", err)
 		}
+
 	}()
 
 	// Handle SIGINT and SIGTERM.
@@ -101,6 +115,4 @@ func Daemon() bool {
 	<-done
 
 	log.Info("Handle SIGINT and SIGTERM.")
-
-	return true
 }
