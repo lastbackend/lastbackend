@@ -36,7 +36,7 @@ func New(cfg config) (*Runtime, error) {
 	var (
 		err           error
 		r             = new(Runtime)
-		clientOptions = make([]func(*client.Client) error, 0)
+		clientOptions = make([]client.Opt, 0)
 	)
 
 	log.V(logLevel).Debug("Use docker runtime interface")
