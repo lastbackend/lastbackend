@@ -1,4 +1,4 @@
-=== Last.Backend Network Design
+== Network Design
 
 Last.Backend approaches networking by default installation. There are 3 types of network communications:
 

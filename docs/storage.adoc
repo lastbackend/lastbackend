@@ -1,6 +1,6 @@
-== Last.Backend Storage
+== Database
 
-===== Default work-flow
+=== Interface
 
 .Ordered Object management (object selfline should be unique per cluster)
 
@@ -24,7 +24,7 @@ Mock driver is designed to perform tests without database usage. It is in-memory
 
 This version of Last.Backend uses ETCDv3 as default.
 
-==== storage tree
+*Storage tree*
 
 [source,generic]
 ----
