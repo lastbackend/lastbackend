@@ -21,7 +21,7 @@
 
 [[constraint]]
   name = "github.com/docker/go-connections"
-  revision = "master"
+  revision = "7395e3f8aa162843a74ed6d48e79627d9792ac55"
 
 [[constraint]]
   name = "github.com/gorilla/mux"

@@ -152,7 +152,7 @@
   revision = "51f27b1defad7418675567cba6aa6c95efebf739"
 
 [[projects]]
-  digest = "1:02f8f4889e53a6adbc7bf3f2b9007ce8aecb0b79686fc9f99265246c88063f10"
+  digest = "1:811c86996b1ca46729bad2724d4499014c4b9effd05ef8c71b852aad90deb0ce"
   name = "github.com/docker/go-connections"
   packages = [
     "nat",
@@ -160,7 +160,7 @@
     "tlsconfig",
   ]
   pruneopts = "UT"
-  revision = "master"
+  revision = "7395e3f8aa162843a74ed6d48e79627d9792ac55"
 
 [[projects]]
   branch = "master"
