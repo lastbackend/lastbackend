@@ -32,7 +32,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
 	"github.com/shirou/gopsutil/mem"
-	"github.com/spf13/viper"
 )
 
 const MinContainerMemory = 32
@@ -49,8 +48,7 @@ func NodeInfo() types.NodeInfo {
 		_ = fmt.Errorf("get hostname err: %s", err)
 	}
 
-	link := viper.GetString("runtime.interface")
-	ip, err := system.GetHostIP(link)
+	ip, err := system.GetHostIP(envs.Get().GetConfig().Network.Interface)
 	if err != nil {
 		_ = fmt.Errorf("get ip err: %s", err)
 	}

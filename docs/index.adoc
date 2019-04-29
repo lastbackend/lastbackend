@@ -13,10 +13,9 @@ This reference for version: _{revnumber}_
 
 image:assets/preview.png[Last.Backend]
 
-*Last.Backend: open source platform for containerized apps management across cluster of nodes: deploy, manage, scale*
+*Last.Backend container management platform is the new and modern open-source container management system with service discovery, overlay networks and more..*
 
 Source code available at https://github.com/lastbackend/lastbackend[lastbackend/lastbackend] GitHub repository.
-
 
 include::overview.adoc[]
 include::getting-started.adoc[]

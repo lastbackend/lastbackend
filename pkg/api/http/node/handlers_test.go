@@ -41,9 +41,12 @@ import (
 // Testing NodeList handler
 func TestNodeListH(t *testing.T) {
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
+	v.Set("verbose", 0)
 
 	var (
 		n1 = getNodeAsset("test1", "", true)
@@ -54,7 +57,7 @@ func TestNodeListH(t *testing.T) {
 	nl.Items = append(nl.Items, &n1)
 	nl.Items = append(nl.Items, &n2)
 
-	v, err := v1.View().Node().NewList(nl).ToJson()
+	view, err := v1.View().Node().NewList(nl).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -67,7 +70,7 @@ func TestNodeListH(t *testing.T) {
 		{
 			name:         "checking get node list successfully",
 			handler:      node.NodeListH,
-			expectedBody: string(v),
+			expectedBody: string(view),
 			expectedCode: http.StatusOK,
 		},
 	}
@@ -114,7 +117,7 @@ func TestNodeListH(t *testing.T) {
 			assert.NoError(t, err)
 
 			if res.Code == http.StatusOK {
-				assert.Equal(t, tc.expectedBody, string(v), "status code not error")
+				assert.Equal(t, tc.expectedBody, string(view), "status code not error")
 			} else {
 				assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 			}
@@ -124,16 +127,20 @@ func TestNodeListH(t *testing.T) {
 }
 
 func TestNodeGetH(t *testing.T) {
-	stg, _ := storage.Get("mock")
+
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
+	v.Set("verbose", 0)
 
 	var (
 		n1 = getNodeAsset("test1", "", true)
 		n2 = getNodeAsset("test2", "", true)
 	)
 
-	v, err := v1.View().Node().New(&n1).ToJson()
+	view, err := v1.View().Node().New(&n1).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -155,7 +162,7 @@ func TestNodeGetH(t *testing.T) {
 			name:         "checking get node successfully",
 			url:          fmt.Sprintf("/cluster/node/%s", n1.Meta.Name),
 			handler:      node.NodeInfoH,
-			expectedBody: string(v),
+			expectedBody: string(view),
 			expectedCode: http.StatusOK,
 		},
 	}
@@ -205,13 +212,16 @@ func TestNodeGetH(t *testing.T) {
 }
 
 func TestNodeGetManifestH(t *testing.T) {
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	cg := cache.NewCache()
 
 	envs.Get().SetStorage(stg)
 	envs.Get().SetCache(cg)
 
-	viper.Set("verbose", 0)
+	v.Set("verbose", 0)
 
 	var (
 		n1 = getNodeAsset("test1", "", true)
@@ -232,7 +242,7 @@ func TestNodeGetManifestH(t *testing.T) {
 	nm.Volumes = make(map[string]*types.VolumeManifest, 0)
 	nm.Endpoints = make(map[string]*types.EndpointManifest, 0)
 
-	v, err := v1.View().Node().NewManifest(nm).ToJson()
+	view, err := v1.View().Node().NewManifest(nm).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -254,7 +264,7 @@ func TestNodeGetManifestH(t *testing.T) {
 			name:         "node spec successfully",
 			url:          fmt.Sprintf("/cluster/node/%s/spec", n1.Meta.Name),
 			handler:      node.NodeGetSpecH,
-			expectedBody: string(v),
+			expectedBody: string(view),
 			expectedCode: http.StatusOK,
 		},
 	}
@@ -317,9 +327,12 @@ func TestNodeGetManifestH(t *testing.T) {
 }
 
 func TestNodeRemoveH(t *testing.T) {
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
+	v.Set("verbose", 0)
 
 	var (
 		err error
@@ -396,9 +409,12 @@ func TestNodeRemoveH(t *testing.T) {
 }
 
 func TestNodeSetMetaH(t *testing.T) {
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
+	v.Set("verbose", 0)
 	strPointer := func(s string) *string { return &s }
 
 	var (
@@ -414,7 +430,7 @@ func TestNodeSetMetaH(t *testing.T) {
 	uo.Meta = &types.NodeUpdateMetaOptions{}
 	uo.Meta.Architecture = strPointer("test")
 
-	v, err := v1.View().Node().New(&n1).ToJson()
+	view, err := v1.View().Node().New(&n1).ToJson()
 	assert.NoError(t, err)
 
 	type args struct {
@@ -444,7 +460,7 @@ func TestNodeSetMetaH(t *testing.T) {
 			args:         args{ctx, n1.Meta.Name},
 			handler:      node.NodeSetMetaH,
 			data:         uo.ToJson(),
-			expectedBody: string(v),
+			expectedBody: string(view),
 			expectedCode: http.StatusOK,
 		},
 	}
@@ -504,9 +520,12 @@ func TestNodeSetMetaH(t *testing.T) {
 }
 
 func TestNodeConnectH(t *testing.T) {
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
+	v.Set("verbose", 0)
 
 	var (
 		err error
@@ -608,13 +627,16 @@ func TestNodeConnectH(t *testing.T) {
 
 func TestNodeSetStatusH(t *testing.T) {
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	cg := cache.NewCache()
 
 	envs.Get().SetStorage(stg)
 	envs.Get().SetCache(cg)
 
-	viper.Set("verbose", 0)
+	v.Set("verbose", 0)
 
 	var (
 		err error
@@ -636,7 +658,7 @@ func TestNodeSetStatusH(t *testing.T) {
 		node string
 	}
 
-	v, err := v1.View().Node().NewManifest(nm).ToJson()
+	view, err := v1.View().Node().NewManifest(nm).ToJson()
 	assert.NoError(t, err)
 	tests := []struct {
 		name         string
@@ -660,7 +682,7 @@ func TestNodeSetStatusH(t *testing.T) {
 			args:         args{ctx, n1.Meta.Name},
 			handler:      node.NodeSetStatusH,
 			data:         uo.ToJson(),
-			expectedBody: string(v),
+			expectedBody: string(view),
 			expectedCode: http.StatusOK,
 		},
 	}

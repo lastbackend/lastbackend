@@ -29,7 +29,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/store"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3"
 	"github.com/lastbackend/lastbackend/pkg/storage/types"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -46,20 +45,14 @@ type client struct {
 	dfunc store.DestroyFunc
 }
 
-func New() (*Storage, error) {
+func New(config *v3.Config) (*Storage, error) {
 
 	log.V(logLevel).Debug("Etcd: define storage")
 
 	var (
 		err    error
 		s      = new(Storage)
-		config = new(v3.Config)
 	)
-
-	if err := viper.UnmarshalKey("etcd", config); err != nil {
-		log.Errorf("%s: error parsing etcd config: %v", logPrefix, err)
-		return nil, err
-	}
 
 	s.client = new(client)
 

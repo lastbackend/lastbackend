@@ -32,6 +32,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/resource"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
@@ -45,7 +46,10 @@ func TestTaskInfo(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -196,7 +200,10 @@ func TestTaskList(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("ns1", "")
@@ -348,7 +355,10 @@ func TestTaskCreate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -603,7 +613,10 @@ func TestTaskCancel(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("exists", "")

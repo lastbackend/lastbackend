@@ -1,0 +1,11 @@
+---
+
+# Runtime
+verbose: 3
+
+# Etcd database
+etcd:
+  prefix: lastbackend
+  endpoints:
+    "127.0.0.1:2379"
+

@@ -22,8 +22,9 @@ package cpi
 import (
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi/local"
+	"github.com/spf13/viper"
 )
 
-func New() (cpi.CPI, error) {
+func New(_ *viper.Viper) (cpi.CPI, error) {
 	return local.New()
 }

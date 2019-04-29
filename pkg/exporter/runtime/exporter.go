@@ -23,11 +23,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/proxy"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
-	"github.com/spf13/viper"
 	"os"
 )
 
-func ExporterInfo() types.ExporterInfo {
+func (r *Runtime) ExporterInfo() types.ExporterInfo {
 
 	var (
 		info = types.ExporterInfo{}
@@ -39,8 +38,7 @@ func ExporterInfo() types.ExporterInfo {
 		_ = fmt.Errorf("get hostname err: %s", err)
 	}
 
-	iface := viper.GetString("runtime.interface")
-	ip, err := system.GetHostIP(iface)
+	ip, err := system.GetHostIP(r.iface)
 	if err != nil {
 		_ = fmt.Errorf("get ip err: %s", err)
 	}
@@ -54,32 +52,32 @@ func ExporterInfo() types.ExporterInfo {
 	return info
 }
 
-func ExporterStatus() types.ExporterStatus {
+func (r *Runtime) ExporterStatus() types.ExporterStatus {
 
 	var state = types.ExporterStatus{}
 
-	iface := viper.GetString("runtime.interface")
-	ip, err := system.GetHostIP(iface)
+	ip, err := system.GetHostIP(r.iface)
 	if err != nil {
 		_ = fmt.Errorf("get ip err: %s", err)
 	}
 
-	lp := uint16(viper.GetInt("exporter.listener.port"))
-	if lp == 0 {
-		lp = proxy.DefaultPort
-	}
-
-	hp := uint16(viper.GetInt("exporter.http.port"))
+	hp := r.port
 	if hp == 0 {
 		hp = proxy.DefaultPort
 	}
 
 	state.Ready = true
-	state.Listener.Port = lp
 	state.Listener.IP = ip
-
 	state.Http.IP = ip
 	state.Http.Port = hp
+
+	if r.logger != nil {
+		lp := r.logger.GetPort()
+		if lp == 0 {
+			lp = proxy.DefaultPort
+		}
+		state.Listener.Port = lp
+	}
 
 	return state
 }

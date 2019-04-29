@@ -24,12 +24,11 @@ const (
 )
 
 type Config struct {
-	Endpoints []string `yaml:"endpoint"`
+	Endpoints []string `json:"endpoints",yaml:"endpoints"`
 	TLS       struct {
-		Key  string `yaml:"key"`
-		Cert string `yaml:"cert"`
-		CA   string `yaml:"ca"`
-	} `yaml:"tls"`
-	Quorum bool   `yaml:"quorum"`
-	Prefix string `yaml:"prefix"`
+		Key  string `json:"key",yaml:"key"`
+		Cert string `json:"cert",yaml:"cert"`
+		CA   string `json:"ca",yaml:"ca"`
+	} `json:"tls",yaml:"tls"`
+	Prefix string `json:"prefix",yaml:"prefix"`
 }

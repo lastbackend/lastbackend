@@ -192,7 +192,12 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	ns := new(types.Namespace)
 	opts.SetNamespaceMeta(ns)
-	opts.SetNamespaceSpec(ns)
+
+	if err:= opts.SetNamespaceSpec(ns); err != nil {
+		log.V(logLevel).Errorf("%s:create:> set namespace spec err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
 
 	ns, err = nsm.Create(ns)
 	if err != nil {

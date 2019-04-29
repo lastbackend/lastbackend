@@ -192,7 +192,6 @@ func (e *Endpoint) Watch(ch chan types.EndpointEvent, rev *int64) error {
 	if err := e.storage.Watch(e.context, e.storage.Collection().Endpoint(), watcher, opts); err != nil {
 		return err
 	}
-
 	return nil
 }
 

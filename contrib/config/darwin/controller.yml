@@ -1,12 +1,7 @@
 ---
+
 # Runtime
 verbose: 3
-token: lstbknd
-
-api:
-  uri: "127.0.0.1:2967"
-  tls:
-    insecure: true
 
 # Etcd database
 storage:
@@ -16,7 +11,7 @@ storage:
     endpoints:
       "127.0.0.1:2379"
 
-dns:
-  host: 0.0.0.0
-  port: 5354
-  ttl: 24h
+# Last.Backend vault service settings
+vault:
+  endpoint: http://127.0.0.1:2965
+  token: fca7678528b749db863d04cd9ec27d89

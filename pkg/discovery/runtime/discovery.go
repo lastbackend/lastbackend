@@ -24,10 +24,9 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
-	"github.com/spf13/viper"
 )
 
-func DiscoveryInfo() types.DiscoveryInfo {
+func (r *Runtime) DiscoveryInfo() types.DiscoveryInfo {
 
 	var (
 		info = types.DiscoveryInfo{}
@@ -39,8 +38,7 @@ func DiscoveryInfo() types.DiscoveryInfo {
 		_ = fmt.Errorf("get hostname err: %s", err)
 	}
 
-	iface := viper.GetString("runtime.interface")
-	ip, err := system.GetHostIP(iface)
+	ip, err := system.GetHostIP(r.opts.Iface)
 	if err != nil {
 		_ = fmt.Errorf("get ip err: %s", err)
 	}
@@ -54,17 +52,16 @@ func DiscoveryInfo() types.DiscoveryInfo {
 	return info
 }
 
-func DiscoveryStatus() types.DiscoveryStatus {
+func (r *Runtime) DiscoveryStatus() types.DiscoveryStatus {
 
 	var state = types.DiscoveryStatus{}
 
-	iface := viper.GetString("runtime.interface")
-	ip, err := system.GetHostIP(iface)
+	ip, err := system.GetHostIP(r.opts.Iface)
 	if err != nil {
 		_ = fmt.Errorf("get ip err: %s", err)
 	}
 
-	state.Port = uint16(viper.GetInt("dns.port"))
+	state.Port = r.opts.Port
 	state.IP = ip
 
 	return state

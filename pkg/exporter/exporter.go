@@ -20,76 +20,85 @@ package exporter
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/api/client"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/exporter/controller"
-	"github.com/lastbackend/lastbackend/pkg/exporter/envs"
-	"github.com/lastbackend/lastbackend/pkg/exporter/http"
-	"github.com/lastbackend/lastbackend/pkg/exporter/runtime"
-	"github.com/lastbackend/lastbackend/pkg/exporter/state"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/network"
-	"github.com/spf13/viper"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/lastbackend/lastbackend/pkg/api/client"
+	"github.com/lastbackend/lastbackend/pkg/exporter/controller"
+	"github.com/lastbackend/lastbackend/pkg/exporter/envs"
+	"github.com/lastbackend/lastbackend/pkg/exporter/http"
+	"github.com/lastbackend/lastbackend/pkg/exporter/logger"
+	"github.com/lastbackend/lastbackend/pkg/exporter/runtime"
+	"github.com/lastbackend/lastbackend/pkg/exporter/state"
+	l "github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/spf13/viper"
 )
 
-func Daemon() bool {
+const (
+	defaultIface = "eth0"
+)
+
+func Daemon(v *viper.Viper) bool {
 
 	var (
 		sigs = make(chan os.Signal)
 		done = make(chan bool, 1)
 	)
 
-	log.New(viper.GetInt("verbose"))
+	log := l.New(v.GetInt("verbose"))
 	log.Info("Start Exporter server")
 
-	net, err := network.New()
-	if err != nil {
-		log.Errorf("can not initialize network: %s", err.Error())
-		os.Exit(1)
+	iface := defaultIface
+	if v.IsSet("network") {
+		iface = v.GetString("network.interface")
 	}
-	envs.Get().SetNet(net)
 
-	st := state.New()
+	ro := &runtime.RuntimeOpts{
+		Port:  uint16(v.GetInt("server.port")),
+		Iface: iface,
+	}
 
-	st.Exporter().Info = runtime.ExporterInfo()
-	st.Exporter().Status = runtime.ExporterStatus()
+	if v.IsSet("logger") {
+		ro.Logger = &logger.LoggerOpts{
+			Host:    v.GetString("logger.host"),
+			Port:    uint16(v.GetInt("logger.port")),
+			Workdir: v.GetString("logger.workdir"),
+		}
+	}
 
-	envs.Get().SetState(st)
-
-	r, err := runtime.NewRuntime()
+	r, err := runtime.New(ro)
 	if err != nil {
 		log.Errorf("can not start runtime: %s", err.Error())
 		os.Exit(1)
 	}
 
+	st := state.New()
+	st.Exporter().Info = r.ExporterInfo()
+	st.Exporter().Status = r.ExporterStatus()
+
+	envs.Get().SetState(st)
+
 	go func() {
-		if err := r.Logger(context.Background()); err != nil {
-			log.Errorf("can not start logger listener: %s", err.Error())
+		if err := r.Start(); err != nil {
+			log.Errorf("can not start runtime listener: %s", err.Error())
 			os.Exit(1)
 		}
 	}()
 
-	types.SecretAccessToken = viper.GetString("token")
-
-	if viper.IsSet("api") || viper.IsSet("api_uri") {
+	if v.IsSet("api") {
 
 		cfg := client.NewConfig()
-		cfg.BearerToken = viper.GetString("token")
+		cfg.BearerToken = v.GetString("token")
 
-		if viper.IsSet("api.tls") && !viper.GetBool("api.tls.insecure") {
+		if v.IsSet("api.tls") && !v.GetBool("api.tls.insecure") {
 			cfg.TLS = client.NewTLSConfig()
-			cfg.TLS.CertFile = viper.GetString("api.tls.cert")
-			cfg.TLS.KeyFile = viper.GetString("api.tls.key")
-			cfg.TLS.CAFile = viper.GetString("api.tls.ca")
+			cfg.TLS.CertFile = v.GetString("api.tls.cert")
+			cfg.TLS.KeyFile = v.GetString("api.tls.key")
+			cfg.TLS.CAFile = v.GetString("api.tls.ca")
 		}
 
-		endpoint := viper.GetString("api.uri")
-		if viper.IsSet("api_uri") {
-			endpoint = viper.GetString("api_uri")
-		}
+		endpoint := v.GetString("api.uri")
 
 		rest, err := client.New(client.ClientHTTP, endpoint, cfg)
 		if err != nil {
@@ -104,21 +113,30 @@ func Daemon() bool {
 			log.Errorf("ingress:initialize: connect err %s", err.Error())
 		}
 
-		go ctl.Sync(context.Background())
+		go ctl.Sync()
 	}
 
 	go func() {
+
 		opts := new(http.HttpOpts)
-		opts.Insecure = viper.GetBool("exporter.http.tls.insecure")
-		opts.CertFile = viper.GetString("exporter.http.tls.cert")
-		opts.KeyFile = viper.GetString("exporter.http.tls.key")
-		opts.CaFile = viper.GetString("exporter.http.tls.ca")
+		if v.IsSet("server.tls") {
+			opts.Insecure = v.GetBool("server.tls.insecure")
+			opts.CertFile = v.GetString("server.tls.cert")
+			opts.KeyFile = v.GetString("server.tls.key")
+			opts.CaFile = v.GetString("server.tls.ca")
+		} else {
+			opts.Insecure = true
+		}
 
-		types.SecretAccessToken = viper.GetString("token")
+		envs.Get().SetAccessToken(v.GetString("token"))
 
-		if err := http.Listen(viper.GetString("exporter.http.host"), viper.GetInt("exporter.http.port"), opts); err != nil {
+		host := v.GetString("server.host")
+		port := v.GetInt("server.port")
+
+		if err := http.Listen(host, port, opts); err != nil {
 			log.Fatalf("Http server start error: %v", err)
 		}
+
 	}()
 
 	// Handle SIGINT and SIGTERM.

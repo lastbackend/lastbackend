@@ -31,7 +31,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/system"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
-	"github.com/spf13/viper"
 )
 
 const MinContainerMemory uint64 = 32
@@ -48,8 +47,7 @@ func NodeInfo() types.NodeInfo {
 		_ = fmt.Errorf("get hostname err: %s", err)
 	}
 
-	link := viper.GetString("runtime.interface")
-	ip, err := system.GetHostIP(link)
+	ip, err := system.GetHostIP(envs.Get().GetConfig().Network.Interface)
 	if err != nil {
 		_ = fmt.Errorf("get ip err: %s", err)
 	}
@@ -94,7 +92,7 @@ func NodeCapacity() types.NodeResources {
 
 	var stat syscall.Statfs_t
 
-	syscall.Statfs(viper.GetString("runtime.csi.dir.root"), &stat)
+	syscall.Statfs(envs.Get().GetConfig().Runtime.Csi.Dir.Root, &stat)
 
 	// Available blocks * size per block = available space in bytes
 	storage := stat.Blocks * uint64(stat.Bsize)

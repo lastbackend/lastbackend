@@ -37,8 +37,8 @@ type Tsig struct {
 	Secret string
 }
 
-func (d *DNS) Start(net string, port int, tsig *Tsig) error {
-	var server = &dns.Server{Addr: fmt.Sprintf(":%d", port), Net: net}
+func (d *DNS) Start(net, host string, port int, tsig *Tsig) error {
+	var server = &dns.Server{Addr: fmt.Sprintf("%s:%d", host, port), Net: net}
 
 	if tsig != nil {
 		server.TsigSecret = map[string]string{tsig.Name: tsig.Secret}

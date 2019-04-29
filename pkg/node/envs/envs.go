@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/runtime/cii"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
+	"github.com/spf13/viper"
 )
 
 var e Env
@@ -35,7 +36,69 @@ func Get() *Env {
 	return &e
 }
 
+type config struct {
+	Verbose  string `yaml:"verbose"`
+	Token    string `yaml:"token"`
+	Workdir  string `yaml:"workdir"`
+	Manifest struct {
+		Dir string `yaml:"dir"`
+	} `yaml:"manifest"`
+	Network struct {
+		Interface string `yaml:"interface"`
+		Cpi       struct {
+			Type      string `yaml:"type"`
+			Interface struct {
+				External interface{} `yaml:"external"`
+				Internal interface{} `yaml:"internal"`
+			} `yaml:"interface"`
+		} `yaml:"cpi"`
+		Cni struct {
+			Type string `yaml:"type"`
+		} `yaml:"cni"`
+	} `yaml:"network"`
+	Runtime struct {
+		Cri struct {
+			Type   string `yaml:"type"`
+			Docker struct {
+				Version string `yaml:"version"`
+			} `yaml:"docker"`
+		} `yaml:"cri"`
+		Csi struct {
+			Dir struct {
+				Root string `yaml:"root"`
+			} `yaml:"dir"`
+		} `yaml:"csi"`
+		Iri struct {
+			Type   string `yaml:"type"`
+			Docker struct {
+				Version string `yaml:"version"`
+			} `yaml:"docker"`
+		} `yaml:"iri"`
+	} `yaml:"runtime"`
+	Server struct {
+		Host string `yaml:"host"`
+		Port string `yaml:"port"`
+		TLS  struct {
+			Insecure string `yaml:"insecure"`
+		} `yaml:"tls"`
+		Cert string `yaml:"cert"`
+		Key  string `yaml:"key"`
+		Ca   string `yaml:"ca"`
+	} `yaml:"server"`
+	API struct {
+		URI interface{} `yaml:"uri"`
+		TLS struct {
+			Insecure string `yaml:"insecure"`
+			Cert     string `yaml:"cert"`
+			Key      string `yaml:"key"`
+			Ca       string `yaml:"ca"`
+		} `yaml:"tls"`
+	} `yaml:"api"`
+}
+
 type Env struct {
+	config config
+
 	cri cri.CRI
 	cii cii.CII
 	csi map[string]csi.CSI
@@ -52,6 +115,20 @@ type Env struct {
 	mode     struct {
 		provision bool
 	}
+}
+
+func (c *Env) SetConfig(v *viper.Viper) error {
+	cfg := new(config)
+
+	if err := v.Unmarshal(cfg); err != nil {
+		return err
+	}
+	c.config = *cfg
+	return nil
+}
+
+func (c *Env) GetConfig() config {
+	return c.config
 }
 
 func (c *Env) SetCRI(cri cri.CRI) {

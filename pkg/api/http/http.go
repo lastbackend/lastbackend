@@ -19,6 +19,7 @@
 package http
 
 import (
+	"context"
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/http/cluster"
 	"github.com/lastbackend/lastbackend/pkg/api/http/config"
@@ -54,6 +55,8 @@ type HttpOpts struct {
 	CertFile string
 	KeyFile  string
 	CaFile   string
+
+	BearerToken string
 }
 
 func AddRoutes(r ...[]http.Route) {
@@ -93,6 +96,9 @@ func Listen(host string, port int, opts *HttpOpts) error {
 		opts = new(HttpOpts)
 	}
 
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, "access_token", opts.BearerToken)
+
 	log.V(logLevel).Debugf("%s:> listen HTTP server on %s:%d", logPrefix, host, port)
 
 	r := mux.NewRouter()
@@ -104,16 +110,16 @@ func Listen(host string, port int, opts *HttpOpts) error {
 	var notAllowed http.MethodNotAllowedHandler
 	r.MethodNotAllowedHandler = notAllowed
 
-	for _, route := range Routes {
-		log.V(logLevel).Debugf("%s:> init route: %s", logPrefix, route.Path)
-		r.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
+	for _, rt := range Routes {
+		log.V(logLevel).Debugf("%s:> init route: %s", logPrefix, rt.Path)
+		r.Handle(rt.Path, http.Handle(ctx, rt.Handler, rt.Middleware...)).Methods(rt.Method)
 	}
 
 	if opts.Insecure {
-		log.V(logLevel).Debugf("%s:> run insecure http server", logPrefix)
+		log.V(logLevel).Debugf("%s:> run insecure http server on %d port", logPrefix, port)
 		return http.Listen(host, port, r)
 	}
 
-	log.V(logLevel).Debugf("%s:> run http server with tls", logPrefix)
+	log.V(logLevel).Debugf("%s:> run http server with tls on %d port", logPrefix, port)
 	return http.ListenWithTLS(host, port, opts.CaFile, opts.CertFile, opts.KeyFile, r)
 }

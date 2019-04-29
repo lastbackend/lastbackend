@@ -19,23 +19,23 @@
 package controller
 
 import (
+	"context"
+	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
-	"github.com/lastbackend/lastbackend/pkg/log"
-
-	"context"
-	"os"
-
 	"github.com/lastbackend/lastbackend/pkg/controller/ipam"
 	"github.com/lastbackend/lastbackend/pkg/controller/runtime"
+	l "github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
 )
 
+const defaultCIDR = "172.0.0.0/24"
+
 // Daemon - controller entrypoint
-func Daemon() bool {
+func Daemon(v *viper.Viper) bool {
 
 	var (
 		env  = envs.Get()
@@ -43,15 +43,26 @@ func Daemon() bool {
 		done = make(chan bool, 1)
 	)
 
-	log.Info("Start State Controller")
+	log := l.New(v.GetInt("verbose"))
 
-	stg, err := storage.Get(viper.GetString("etcd"))
+	log.Info("Start Controller")
+
+	if !v.IsSet("storage") {
+		log.Fatalf("Storage not configured")
+	}
+
+	stg, err := storage.Get(v)
 	if err != nil {
 		log.Fatalf("Cannot initialize storage: %s", err.Error())
 	}
 	env.SetStorage(stg)
 
-	ipm, err := ipam.New(viper.GetString("service.cidr"))
+	cidr := defaultCIDR
+	if v.IsSet("service") && v.IsSet("service.cidr") {
+		cidr = v.GetString("service.cidr")
+	}
+
+	ipm, err := ipam.New(cidr)
 	if err != nil {
 		log.Fatalf("Cannot initialize ipam service: %s", err.Error())
 	}

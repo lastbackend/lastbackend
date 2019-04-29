@@ -22,6 +22,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -45,7 +46,10 @@ func TestConfigList(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -167,7 +171,10 @@ func TestConfigCreate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -296,7 +303,10 @@ func TestConfigUpdate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -418,7 +428,10 @@ func TestConfigRemove(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")

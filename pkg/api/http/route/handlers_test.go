@@ -22,6 +22,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -45,7 +46,10 @@ func TestRouteInfo(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -172,7 +176,10 @@ func TestRouteList(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -303,7 +310,10 @@ func TestRouteCreate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -319,13 +329,13 @@ func TestRouteCreate(t *testing.T) {
 	mf0 := getRouteManifest(r0.Meta.Name, sv1.Meta.Name)
 	mf0.Spec.Port = 1080
 	mf0.Spec.Endpoint = "lastbackend.com"
-	mf0.SetRouteSpec(r0, sl)
+	mf0.SetRouteSpec(r0, ns1, sl)
 	mf0s, _ := mf0.ToJson()
 
 	// check unknown namespace
 	r1 := getRouteAsset(ns2.Meta.Name, "route-1")
 	mf1 := getRouteManifest(r1.Meta.Name, sv1.Meta.Name)
-	mf1.SetRouteSpec(r1, sl)
+	mf1.SetRouteSpec(r1, ns1, sl)
 	mf1s, _ := mf1.ToJson()
 
 	// check service not exists
@@ -336,14 +346,14 @@ func TestRouteCreate(t *testing.T) {
 	r3 := getRouteAsset(ns1.Meta.Name, "route-3")
 	mf3 := getRouteManifest(r3.Meta.Name, sv1.Meta.Name)
 	mf3.Spec.Port = mf0.Spec.Port
-	mf3.SetRouteSpec(r3, sl)
+	mf3.SetRouteSpec(r3, ns1, sl)
 	mf3s, _ := mf3.ToJson()
 
 	// check endpoint is reserved
 	r4 := getRouteAsset(ns1.Meta.Name, "route-4")
 	mf4 := getRouteManifest(r4.Meta.Name, sv1.Meta.Name)
 	mf4.Spec.Endpoint = mf0.Spec.Endpoint
-	mf4.SetRouteSpec(r4, sl)
+	mf4.SetRouteSpec(r4, ns1, sl)
 	mf4s, _ := mf4.ToJson()
 
 	// check successful creation
@@ -351,7 +361,7 @@ func TestRouteCreate(t *testing.T) {
 	mf5 := getRouteManifest(r5.Meta.Name, sv1.Meta.Name)
 	mf5.Spec.Endpoint = "lstbknd.net"
 	mf5.Spec.Port = 2080
-	mf5.SetRouteSpec(r5, sl)
+	mf5.SetRouteSpec(r5, ns1, sl)
 	mf5s, _ := mf5.ToJson()
 
 	type fields struct {
@@ -544,7 +554,10 @@ func TestRouteUpdate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -567,13 +580,13 @@ func TestRouteUpdate(t *testing.T) {
 	// route not exists
 	r2 := getRouteAsset(ns1.Meta.Name, "demo")
 	mf2 := getRouteManifest(r2.Meta.Name, sv1.Meta.Name)
-	mf2.SetRouteSpec(r2, sl)
+	mf2.SetRouteSpec(r2, ns1, sl)
 	mf2s, _ := mf2.ToJson()
 
 	// invalid namespace
 	r3 := getRouteAsset(ns2.Meta.Name, r1.Meta.Name)
 	mf3 := getRouteManifest(r3.Meta.Name, sv1.Meta.Name)
-	mf3.SetRouteSpec(r1, sl)
+	mf3.SetRouteSpec(r1, ns1, sl)
 	mf3s, _ := mf3.ToJson()
 
 	// invalid service
@@ -584,14 +597,14 @@ func TestRouteUpdate(t *testing.T) {
 	r5 := getRouteAsset(ns1.Meta.Name, r1.Meta.Name)
 	mf5 := getRouteManifest(r1.Meta.Name, sv1.Meta.Name)
 	mf5.Spec.Port = r0.Spec.Port
-	mf5.SetRouteSpec(r5, sl)
+	mf5.SetRouteSpec(r5, ns1, sl)
 	mf5s, _ := mf5.ToJson()
 
 	// endpoint in use
 	r6 := getRouteAsset(ns1.Meta.Name, r1.Meta.Name)
 	mf6 := getRouteManifest(r1.Meta.Name, sv1.Meta.Name)
 	mf6.Spec.Endpoint = r0.Spec.Endpoint
-	mf6.SetRouteSpec(r6, sl)
+	mf6.SetRouteSpec(r6, ns1, sl)
 	mf6s, _ := mf5.ToJson()
 
 	// successful update
@@ -599,7 +612,7 @@ func TestRouteUpdate(t *testing.T) {
 	mf7 := getRouteManifest(r1.Meta.Name, sv1.Meta.Name)
 	mf7.Spec.Endpoint = "lbdp.io"
 	mf7.Spec.Port = 8080
-	mf7.SetRouteSpec(r7, sl)
+	mf7.SetRouteSpec(r7, ns1, sl)
 	mf7s, _ := mf7.ToJson()
 
 	type fields struct {
@@ -782,7 +795,10 @@ func TestRouteRemove(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.Get("mock")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")

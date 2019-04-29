@@ -24,8 +24,6 @@ import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/spf13/viper"
-
 	"net/http"
 
 	"github.com/lastbackend/lastbackend/pkg/util/proxy"
@@ -40,11 +38,44 @@ type Logger struct {
 	server      *proxy.Server
 	connections map[string]map[http.ResponseWriter]bool
 	storage     *Storage
+	port        uint16
+	host        string
+	workdir     string
+}
+
+type LoggerOpts struct {
+	Workdir string
+	Host    string
+	Port    uint16
 }
 
 type StreamOpts struct {
 	Follow bool
 	Lines  int
+}
+
+func New(opts *LoggerOpts) (*Logger, error) {
+
+	var (
+		err     error
+		workdir = opts.Workdir
+		host    = opts.Host
+		port    = opts.Port
+	)
+
+	l := new(Logger)
+	l.connections = make(map[string]map[http.ResponseWriter]bool, 0)
+	l.server, err = proxy.NewServer(fmt.Sprintf("%s:%d", host, port))
+	if err != nil {
+		return nil, err
+	}
+
+	l.storage = NewStorage(workdir)
+	l.host = host
+	l.port = port
+	l.workdir = workdir
+
+	return l, nil
 }
 
 func (l *Logger) Listen() error {
@@ -142,22 +173,14 @@ func (l *Logger) Stream(ctx context.Context, kind, selflink string, opts StreamO
 
 }
 
-func NewLogger() (*Logger, error) {
+func (l Logger) GetPort() uint16 {
+	return l.port
+}
 
-	var (
-		err  error
-		root = viper.GetString("exporter.dir")
-		host = viper.GetString("exporter.listener.host")
-		port = viper.GetInt("exporter.listener.port")
-	)
+func (l Logger) GetHost() string {
+	return l.host
+}
 
-	l := new(Logger)
-	l.connections = make(map[string]map[http.ResponseWriter]bool, 0)
-	l.server, err = proxy.NewServer(fmt.Sprintf("%s:%d", host, port))
-	l.storage = NewStorage(root)
-	if err != nil {
-		return nil, err
-	}
-
-	return l, nil
+func (l Logger) GetWorkdir() string {
+	return l.host
 }

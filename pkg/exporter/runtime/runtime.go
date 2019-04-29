@@ -19,32 +19,46 @@
 package runtime
 
 import (
-	"context"
 	"github.com/lastbackend/lastbackend/pkg/exporter/envs"
 	"github.com/lastbackend/lastbackend/pkg/exporter/logger"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"os"
 )
 
 type Runtime struct {
 	logger *logger.Logger
+	port   uint16
+	iface  string
 }
 
-func (r *Runtime) Logger(ctx context.Context) error {
-	return r.logger.Listen()
+type RuntimeOpts struct {
+	Port   uint16
+	Iface  string
+	Logger *logger.LoggerOpts
 }
 
-func NewRuntime() (*Runtime, error) {
+func New(opts *RuntimeOpts) (r *Runtime, err error) {
+	r = new(Runtime)
+	r.port = opts.Port
 
-	var (
-		err error
-	)
-
-	r := new(Runtime)
-	r.logger, err = logger.NewLogger()
-	if err != nil {
-		return nil, err
+	if opts.Logger != nil {
+		lg, err := logger.New(opts.Logger)
+		if err != nil {
+			log.Errorf("can not init logger: %s", err.Error())
+			os.Exit(1)
+			return nil, err
+		}
+		envs.Get().SetLogger(lg)
 	}
-
-	envs.Get().SetLogger(r.logger)
-
 	return r, nil
+}
+
+func (r Runtime) Start() error {
+	if r.logger != nil {
+		if err := r.logger.Listen(); err != nil {
+			log.Errorf("can not start logger listener: %s", err.Error())
+			return err
+		}
+	}
+	return nil
 }

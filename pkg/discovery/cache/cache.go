@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -34,10 +33,10 @@ type Cache struct {
 	endpoints *EndpointCache
 }
 
-func New() *Cache {
+func New(ttl time.Duration) *Cache {
 	log.V(logLevel).Debug("Cache: initialization cache storage")
 
-	var duration = viper.GetDuration("discovery.cache.duration")
+	var duration = ttl
 	if duration == 0 {
 		duration = defaultExpireTime
 	}

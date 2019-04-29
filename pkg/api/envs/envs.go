@@ -32,6 +32,14 @@ type Env struct {
 	cache   *cache.Cache
 	monitor *monitor.Monitor
 	vault   *types.Vault
+
+	clusterName string
+	clusterDesc string
+
+	internalDomain string
+	externalDomain string
+
+	accessToken string
 }
 
 func Get() *Env {
@@ -68,4 +76,30 @@ func (c *Env) SetMonitor(monitor *monitor.Monitor) {
 
 func (c *Env) GetMonitor() *monitor.Monitor {
 	return c.monitor
+}
+
+func (c *Env) SetClusterInfo(name, desc string) {
+	c.clusterName = name
+	c.clusterDesc = desc
+}
+
+func (c *Env) GetClusterInfo() (string, string) {
+	return c.clusterName, c.clusterDesc
+}
+
+func (c *Env) SetDomain(internal, external string) {
+	c.internalDomain = internal
+	c.externalDomain = external
+}
+
+func (c *Env) GetDomain() (string, string) {
+	return c.internalDomain, c.externalDomain
+}
+
+func (c *Env) SetAccessToken(token string) {
+	c.accessToken = token
+}
+
+func (c *Env) GetAccessToken() string {
+	return c.accessToken
 }

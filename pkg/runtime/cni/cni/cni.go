@@ -25,8 +25,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-func New() (cni.CNI, error) {
-	switch viper.GetString("runtime.cni.type") {
+func New(v *viper.Viper) (cni.CNI, error) {
+	switch v.GetString("network.cni.type")  {
 	default:
 		return local.New()
 	}

@@ -57,11 +57,6 @@ func (c *Controller) Connect(ctx context.Context) error {
 	opts.Info = envs.Get().GetState().Exporter().Info
 	opts.Status = envs.Get().GetState().Exporter().Status
 
-	var net = envs.Get().GetNet()
-	if net != nil {
-		opts.Network = *net.Info(ctx)
-	}
-
 	for {
 		err := envs.Get().GetClient().Connect(ctx, opts)
 		if err == nil {
@@ -75,7 +70,7 @@ func (c *Controller) Connect(ctx context.Context) error {
 
 }
 
-func (c *Controller) Sync(ctx context.Context) error {
+func (c *Controller) Sync() error {
 
 	log.Debugf("Start exporter sync")
 
@@ -92,7 +87,7 @@ func (c *Controller) Sync(ctx context.Context) error {
 
 		c.cache.lock.Lock()
 
-		spec, err := envs.Get().GetClient().SetStatus(ctx, opts)
+		spec, err := envs.Get().GetClient().SetStatus(context.Background(), opts)
 		if err != nil {
 			log.Errorf("exporter:exporter:dispatch err: %s", err.Error())
 		}

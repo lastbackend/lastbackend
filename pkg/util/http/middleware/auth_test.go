@@ -20,9 +20,9 @@ package middleware_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
@@ -43,7 +43,8 @@ func TestAuthenticateMiddleware(t *testing.T) {
 
 	const token = "demotoken"
 
-	viper.Set("token", token)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, "access_token", token)
 
 	tests := []struct {
 		description  string
@@ -68,7 +69,7 @@ func TestAuthenticateMiddleware(t *testing.T) {
 		},
 	}
 
-	handler := middleware.Authenticate(GetTestHandler())
+	handler := middleware.Authenticate(ctx, GetTestHandler())
 	ts := httptest.NewServer(handler)
 	defer ts.Close()
 

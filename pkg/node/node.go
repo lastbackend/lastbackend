@@ -19,64 +19,77 @@
 package node
 
 import (
-	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/network"
-	"github.com/lastbackend/lastbackend/pkg/node/controller"
-	"github.com/lastbackend/lastbackend/pkg/node/exporter"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cii/cii"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/lastbackend/lastbackend/pkg/api/client"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	l "github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/network"
+	"github.com/lastbackend/lastbackend/pkg/node/controller"
+	"github.com/lastbackend/lastbackend/pkg/node/envs"
+	"github.com/lastbackend/lastbackend/pkg/node/exporter"
+	"github.com/lastbackend/lastbackend/pkg/node/http"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
-
-	"github.com/lastbackend/lastbackend/pkg/api/client"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/node/envs"
-	"github.com/lastbackend/lastbackend/pkg/node/http"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cii/cii"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri/cri"
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi/csi"
 	"github.com/spf13/viper"
 )
 
 // Daemon - run node daemon
-func Daemon() {
+func Daemon(v *viper.Viper) {
 
 	var (
-		sigs        = make(chan os.Signal)
-		done        = make(chan bool, 1)
-		ctx, cancel = context.WithCancel(context.Background())
+		sigs = make(chan os.Signal)
+		done = make(chan bool, 1)
 	)
 
-	log.New(viper.GetInt("verbose"))
+	log := l.New(v.GetInt("verbose"))
 	log.Info("Start Node")
 
-	criDriver := viper.GetString("runtime.cri.type")
-	_cri, err := cri.New(criDriver, viper.GetStringMap(fmt.Sprintf("runtime.%s", criDriver)))
+	if !v.IsSet("runtime") {
+		log.Fatalf("Runtime not configured")
+	}
+	if !v.IsSet("runtime.cri") {
+		log.Fatalf("CRI not configured")
+	}
+	if !v.IsSet("runtime.iri") {
+		log.Fatalf("IRI not configured")
+	}
+	if !v.IsSet("runtime.csi") {
+		log.Fatalf("CSI not configured")
+	}
+
+	if err := envs.Get().SetConfig(v); err != nil {
+		log.Fatalf("Parse config err: %v", err)
+	}
+
+	criDriver := v.GetString("runtime.cri.type")
+	_cri, err := cri.New(criDriver, v.GetStringMap(fmt.Sprintf("runtime.%s", criDriver)))
 	if err != nil {
 		log.Errorf("Cannot initialize cri: %v", err)
 	}
 
-	iriDriver := viper.GetString("runtime.iri.type")
-	_cii, err := cii.New(iriDriver, viper.GetStringMap(fmt.Sprintf("runtime.%s", iriDriver)))
+	iriDriver := v.GetString("runtime.iri.type")
+	_cii, err := cii.New(iriDriver, v.GetStringMap(fmt.Sprintf("runtime.%s", iriDriver)))
 	if err != nil {
 		log.Errorf("Cannot initialize iri: %v", err)
 	}
 
-	csis := viper.GetStringMap("runtime.csi")
+	csis := v.GetStringMap("runtime.csi")
 	if csis != nil {
 		for kind := range csis {
-			si, err := csi.New(kind)
+			si, err := csi.New(kind, v)
 			if err != nil {
-				log.Errorf("Cannot initialize sni: %s > %v", kind, err)
+				log.Errorf("Cannot initialize csi: %s > %v", kind, err)
 				return
 			}
 			envs.Get().SetCSI(kind, si)
 		}
-
 	}
 
 	st := state.New()
@@ -84,26 +97,30 @@ func Daemon() {
 	envs.Get().SetCRI(_cri)
 	envs.Get().SetCII(_cii)
 
-	net, err := network.New()
-	if err != nil {
-		log.Errorf("can not initialize network: %s", err.Error())
-		os.Exit(1)
+	if v.IsSet("network") {
+		net, err := network.New(v)
+		if err != nil {
+			log.Errorf("can not initialize network: %s", err.Error())
+			os.Exit(1)
+		}
+		envs.Get().SetNet(net)
 	}
 
-	envs.Get().SetNet(net)
-
-	st.Node().Info = runtime.NodeInfo()
-	st.Node().Status = runtime.NodeStatus()
-
-	r, err := runtime.NewRuntime()
+	r, err := runtime.New()
 	if err != nil {
 		log.Errorf("can not initialize runtime: %s", err.Error())
 		os.Exit(1)
 	}
 
-	r.Restore(ctx)
-	r.Subscribe(ctx)
-	r.Loop(ctx)
+	st.Node().Info = runtime.NodeInfo()
+	st.Node().Status = runtime.NodeStatus()
+
+	if err := r.Restore(); err != nil {
+		log.Errorf("restore err: %v", err)
+		os.Exit(1)
+	}
+	r.Subscribe()
+	r.Loop()
 
 	c, err := exporter.NewExporter(st.Node().Info.Hostname, types.EmptyString)
 	if err != nil {
@@ -113,33 +130,26 @@ func Daemon() {
 	envs.Get().SetExporter(c)
 	go c.Listen()
 
-	if viper.IsSet("node.manifest.dir") || viper.IsSet("dir") {
-
-		dir := viper.GetString("node.manifest.dir")
-		if viper.IsSet("dir") {
-			dir = viper.GetString("dir")
-		}
+	if v.IsSet("manifest.dir") {
+		dir := v.GetString("manifest.dir")
 		if dir != types.EmptyString {
-			r.Provision(context.Background(), dir)
+			r.Provision(dir)
 		}
 	}
 
-	if viper.IsSet("api") || viper.IsSet("api_uri") {
+	if v.IsSet("api") {
 
 		cfg := client.NewConfig()
-		cfg.BearerToken = viper.GetString("token")
+		cfg.BearerToken = v.GetString("token")
 
-		if viper.IsSet("api.tls") && !viper.GetBool("api.tls.insecure") {
+		if v.IsSet("api.tls") && !v.GetBool("api.tls.insecure") {
 			cfg.TLS = client.NewTLSConfig()
-			cfg.TLS.CertFile = viper.GetString("api.tls.cert")
-			cfg.TLS.KeyFile = viper.GetString("api.tls.key")
-			cfg.TLS.CAFile = viper.GetString("api.tls.ca")
+			cfg.TLS.CertFile = v.GetString("api.tls.cert")
+			cfg.TLS.KeyFile = v.GetString("api.tls.key")
+			cfg.TLS.CAFile = v.GetString("api.tls.ca")
 		}
 
-		endpoint := viper.GetString("api.uri")
-		if viper.IsSet("api_uri") {
-			endpoint = viper.GetString("api_uri")
-		}
+		endpoint := v.GetString("api.uri")
 
 		rest, err := client.New(client.ClientHTTP, endpoint, cfg)
 		if err != nil {
@@ -152,21 +162,22 @@ func Daemon() {
 
 		ctl := controller.New(r)
 
-		if err := ctl.Connect(context.Background()); err != nil {
+		if err := ctl.Connect(v); err != nil {
 			log.Errorf("node:initialize: connect err %s", err.Error())
 		}
 		go ctl.Subscribe()
-		go ctl.Sync(context.Background())
+		go ctl.Sync()
 	}
 
 	go func() {
 		opts := new(http.HttpOpts)
-		opts.Insecure = viper.GetBool("node.tls.insecure")
-		opts.CertFile = viper.GetString("node.tls.server_cert")
-		opts.KeyFile = viper.GetString("node.tls.server_key")
-		opts.CaFile = viper.GetString("node.tls.ca")
+		opts.BearerToken = v.GetString("token")
+		opts.Insecure = v.GetBool("server.tls.insecure")
+		opts.CertFile = v.GetString("server.tls.server_cert")
+		opts.KeyFile = v.GetString("server.tls.server_key")
+		opts.CaFile = v.GetString("server.tls.ca")
 
-		if err := http.Listen(viper.GetString("node.host"), viper.GetInt("node.port"), opts); err != nil {
+		if err := http.Listen(v.GetString("server.host"), v.GetInt("server.port"), opts); err != nil {
 			log.Fatalf("Http server start error: %v", err)
 		}
 	}()
@@ -178,6 +189,7 @@ func Daemon() {
 		for {
 			select {
 			case <-sigs:
+				r.Stop()
 				done <- true
 				return
 			}
@@ -185,7 +197,6 @@ func Daemon() {
 	}()
 
 	<-done
-	cancel()
 	log.Info("Handle SIGINT and SIGTERM.")
 
 	return

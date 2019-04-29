@@ -20,8 +20,11 @@ package request
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"gopkg.in/yaml.v2"
+	"strings"
 )
 
 type RouteManifest struct {
@@ -83,10 +86,9 @@ func (r *RouteManifest) SetRouteMeta(route *types.Route) {
 	if r.Meta.Labels != nil {
 		route.Meta.Labels = r.Meta.Labels
 	}
-
 }
 
-func (r *RouteManifest) SetRouteSpec(route *types.Route, svc *types.ServiceList) {
+func (r *RouteManifest) SetRouteSpec(route *types.Route, ns *types.Namespace, svc *types.ServiceList) {
 
 	var sl = make(map[string]*types.Service)
 	for _, s := range svc.Items {
@@ -99,6 +101,11 @@ func (r *RouteManifest) SetRouteSpec(route *types.Route, svc *types.ServiceList)
 
 	if r.Spec.Port != route.Spec.Port {
 		route.Spec.Port = r.Spec.Port
+	}
+
+	if route.Spec.Endpoint == types.EmptyString {
+		_, external := envs.Get().GetDomain()
+		route.Spec.Endpoint = fmt.Sprintf("%s.%s.%s", strings.ToLower(route.Meta.Name), strings.ToLower(ns.Meta.Name), external)
 	}
 
 	route.Spec.Rules = make([]types.RouteRule, 0)

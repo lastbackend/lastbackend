@@ -21,14 +21,10 @@ package distribution
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"strings"
-
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -100,7 +96,6 @@ func (n *Namespace) Create(ns *types.Namespace) (*types.Namespace, error) {
 	log.V(logLevel).Debugf("%s:create:> create Namespace %#v", logNamespacePrefix, ns.Meta.Name)
 
 	ns.Meta.SetDefault()
-	ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", ns.Meta.Name, viper.GetString("domain.internal")))
 	ns.Meta.SelfLink = *types.NewNamespaceSelfLink(ns.Meta.Name)
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Namespace(), ns.SelfLink().String(), ns, nil); err != nil {

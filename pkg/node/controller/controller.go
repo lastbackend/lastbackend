@@ -38,6 +38,7 @@ const (
 )
 
 type Controller struct {
+	ctx     context.Context
 	runtime *runtime.Runtime
 	cache   struct {
 		lock      sync.RWMutex
@@ -49,6 +50,7 @@ type Controller struct {
 
 func New(r *runtime.Runtime) *Controller {
 	var c = new(Controller)
+	c.ctx = context.Background()
 	c.runtime = r
 	c.cache.pods = make(map[string]*types.PodStatus)
 	c.cache.volumes = make(map[string]*types.VolumeStatus)
@@ -59,7 +61,7 @@ func New(r *runtime.Runtime) *Controller {
 	return c
 }
 
-func (c *Controller) Connect(ctx context.Context) error {
+func (c *Controller) Connect(v *viper.Viper) error {
 
 	log.V(logLevel).Debugf("%s:connect:> connect init", logPrefix)
 
@@ -71,26 +73,25 @@ func (c *Controller) Connect(ctx context.Context) error {
 	opts.Status = envs.Get().GetState().Node().Status
 	var network = envs.Get().GetNet()
 	if network != nil {
-		opts.Network = *envs.Get().GetNet().Info(ctx)
+		opts.Network = *envs.Get().GetNet().Info(c.ctx)
 	}
-
-	if viper.IsSet("node.tls") {
-		opts.TLS = !viper.GetBool("node.tls.insecure")
+	if v.IsSet("node.tls") {
+		opts.TLS = !v.GetBool("node.tls.insecure")
 
 		if opts.TLS {
-			caData, err := ioutil.ReadFile(viper.GetString("node.tls.ca"))
+			caData, err := ioutil.ReadFile(v.GetString("node.tls.ca"))
 			if err != nil {
 				log.Errorf("%s:connect_event:> read ca cert file err: %v", logPrefix, err)
 				return err
 			}
 
-			certData, err := ioutil.ReadFile(viper.GetString("node.tls.client_cert"))
+			certData, err := ioutil.ReadFile(v.GetString("node.tls.client_cert"))
 			if err != nil {
 				log.Errorf("%s:connect_event:> read client cert file err: %v", logPrefix, err)
 				return err
 			}
 
-			keyData, err := ioutil.ReadFile(viper.GetString("node.tls.client_key"))
+			keyData, err := ioutil.ReadFile(v.GetString("node.tls.client_key"))
 			if err != nil {
 				log.Errorf("%s:connect_event:> read client key file err: %v", logPrefix, err)
 				return err
@@ -104,14 +105,14 @@ func (c *Controller) Connect(ctx context.Context) error {
 	}
 
 	for {
-		if err := envs.Get().GetNodeClient().Connect(ctx, opts); err == nil {
+		if err := envs.Get().GetNodeClient().Connect(c.ctx, opts); err == nil {
 			return nil
 		}
 		time.Sleep(3 * time.Second)
 	}
 }
 
-func (c *Controller) Sync(ctx context.Context) error {
+func (c *Controller) Sync() error {
 
 	log.Debugf("%s start node sync", logPrefix)
 
@@ -164,13 +165,13 @@ func (c *Controller) Sync(ctx context.Context) error {
 
 		c.cache.lock.Unlock()
 
-		spec, err := envs.Get().GetNodeClient().SetStatus(ctx, opts)
+		spec, err := envs.Get().GetNodeClient().SetStatus(c.ctx, opts)
 		if err != nil {
 			log.Errorf("%s node:exporter:dispatch err: %s", logPrefix, err.Error())
 		}
 
 		if spec != nil {
-			if err := c.runtime.Sync(ctx, spec.Decode()); err != nil {
+			if err := c.runtime.Sync(spec.Decode()); err != nil {
 				log.Errorf("%s runtime sync err: %s", logPrefix, err.Error())
 			}
 		} else {

@@ -50,7 +50,7 @@ spec:
       volumes:
       - name: config
         path: "/etc/lastbackend"
-      command: "kit api -c /etc/lastbackend/config.yml"
+      command: "api -c /etc/lastbackend/config.yml"
       env:
       - name: demo
         value: demo
@@ -80,7 +80,7 @@ spec:
       volumes:
       - name: config
         path: "/etc/lastbackend"
-      command: "kit ctl -c /etc/lastbackend/config.yml"
+      command: "controller -c /etc/lastbackend/config.yml"
       restart:
         policy: always
     volumes:
@@ -111,7 +111,7 @@ spec:
       volumes:
       - name: config
         path: "/etc/lastbackend"
-      command: "kit dns -c /etc/lastbackend/config.yml"
+      command: "dns -c /etc/lastbackend/config.yml"
       restart:
         policy: always
     config:

@@ -63,7 +63,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lastbackend/lastbackend/pkg/exporter"
+	"github.com/lastbackend/lastbackend/pkg/controller"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -85,22 +85,15 @@ var (
 		// viper name for binding from flag
 		Bind string
 	}{
-		{Name: "access-token", Short: "", Value: "", Desc: "Access token to API server", Bind: "token"},
-		{Name: "bind-listener-address", Short: "", Value: "0.0.0.0", Desc: "Exporter bind address", Bind: "logger.host"},
-		{Name: "bind-listener-port", Short: "", Value: 2963, Desc: "Exporter bind port", Bind: "logger.port"},
-		{Name: "bind-rest-address", Short: "", Value: "0.0.0.0", Desc: "Exporter REST listener address", Bind: "server.tls.host"},
-		{Name: "bind-rest-port", Short: "", Value: 2964, Desc: "Exporter REST listener port", Bind: "server.tls.port"},
-		{Name: "tls-cert-file", Short: "", Value: "", Desc: "Exporter REST TLS cert file path", Bind: "server.tls.cert"},
-		{Name: "tls-private-key-file", Short: "", Value: "", Desc: "Exportter REST TLS private key path", Bind: "server.tls.key"},
-		{Name: "tls-ca-file", Short: "", Value: "", Desc: "Exporter REST TLS certificate authority file path", Bind: "server.tls.ca"},
-		{Name: "api-uri", Short: "", Value: "", Desc: "REST API endpoint", Bind: "api.uri"},
-		{Name: "api-cert-file", Short: "", Value: "", Desc: "REST API TLS certificate file path", Bind: "api.tls.cert"},
-		{Name: "api-private-key-file", Short: "", Value: "", Desc: "REST API TLS private key file path", Bind: "api.tls.key"},
-		{Name: "api-ca-file", Short: "", Value: "", Desc: "REST API TSL certificate authority file path", Bind: "api.tls.ca"},
-		{Name: "bind-interface", Short: "", Value: "eth0", Desc: "Exporter bind network interface", Bind: "network.interface"},
-		{Name: "log-workdir", Short: "", Value: "/var/run/lastbackend", Desc: "Set directory on host for logs storage", Bind: "logger.workdir"},
-		{Name: "verbose", Short: "v", Value: 0, Desc: "Set log level from 0 to 7", Bind: "verbose"},
-		{Name: "config", Short: "c", Value: "", Desc: "Path for the configuration file", Bind: "config"},
+		{Name: "services-cidr", Short: "", Value: "172.0.0.0/24", Desc: "Services IP CIDR for internal IPAM service", Bind: "service.cidr"},
+		{Name: "storage", Short: "", Value: "etcd", Desc: "Set storage driver (Allow: etcd, mock)", Bind: "storage.driver"},
+		{Name: "etcd-cert-file", Short: "", Value: "", Desc: "ETCD database cert file path", Bind: "storage.etcd.tls.cert"},
+		{Name: "etcd-private-key-file", Short: "", Value: "", Desc: "ETCD database private key file path", Bind: "storage.etcd.tls.key"},
+		{Name: "etcd-ca-file", Short: "", Value: "", Desc: "ETCD database certificate authority file", Bind: "storage.etcd.tls.ca"},
+		{Name: "etcd-endpoints", Short: "", Value: []string{"127.0.0.1:2379"}, Desc: "ETCD database endpoints list", Bind: "storage.etcd.endpoints"},
+		{Name: "etcd-prefix", Short: "", Value: "lastbackend", Desc: "ETCD database storage prefix", Bind: "storage.etcd.prefix"},
+		{Name: "verbose", Short: "", Value: 0, Desc: "Set log level from 0 to 7", Bind: "verbose"},
+		{Name: "config", Short: "", Value: "", Desc: "Path for the configuration file", Bind: "config"},
 	}
 )
 
@@ -148,5 +141,5 @@ func main() {
 		}
 	}
 
-	exporter.Daemon(v)
+	controller.Daemon(v)
 }

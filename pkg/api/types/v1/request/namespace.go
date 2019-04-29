@@ -20,10 +20,12 @@ package request
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/resource"
-	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
+	"strings"
 )
 
 type NamespaceManifest struct {
@@ -70,15 +72,20 @@ func (s *NamespaceManifest) SetNamespaceMeta(ns *types.Namespace) {
 		ns.Meta.Labels = s.Meta.Labels
 	}
 
+	internal, _ := envs.Get().GetDomain()
+	ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", ns.Meta.Name, internal))
+
 }
 
 func (s *NamespaceManifest) SetNamespaceSpec(ns *types.Namespace) error {
 
-	ns.Spec.Domain.Internal = viper.GetString("domain.internal")
+	internal, external := envs.Get().GetDomain()
+
+	ns.Spec.Domain.Internal = internal
 
 	if s.Spec.Domain != nil {
 		if len(*s.Spec.Domain) == 0 {
-			ns.Spec.Domain.External = viper.GetString("domain.external")
+			ns.Spec.Domain.External = external
 		} else {
 			ns.Spec.Domain.External = *s.Spec.Domain
 		}

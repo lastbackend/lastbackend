@@ -19,20 +19,26 @@
 package middleware
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
-	"github.com/spf13/viper"
 	"net/http"
 	"strings"
 )
 
 // Auth - authentication middleware
-func Authenticate(h http.HandlerFunc) http.HandlerFunc {
+func Authenticate(ctx context.Context, h http.HandlerFunc) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		t := viper.GetString("token")
-		if t == "" {
+		if ctx.Value("access_token") == nil {
+			h.ServeHTTP(w, r)
+			return
+		}
+
+		t := ctx.Value("access_token").(string)
+
+		if len(t) == 0 {
 			h.ServeHTTP(w, r)
 			return
 		}
@@ -46,7 +52,6 @@ func Authenticate(h http.HandlerFunc) http.HandlerFunc {
 		} else if r.Header.Get("Authorization") != "" {
 			// Parse authorization header
 			var auth = strings.SplitN(r.Header.Get("Authorization"), " ", 2)
-
 			// Check authorization header parts length and authorization header format
 			if len(auth) != 2 || auth[0] != "Bearer" {
 				errors.HTTP.Unauthorized(w)

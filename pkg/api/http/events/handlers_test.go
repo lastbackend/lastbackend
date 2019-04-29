@@ -44,9 +44,11 @@ func TestEventsSubscribe(t *testing.T) {
 
 	var ctx = context.Background()
 
-	viper.Set("token", "lstbknd")
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+	v.SetDefault("token", "mock")
 
-	stg, _ := storage.Get("mock")
+	stg, _ := storage.Get(v)
 	envs.Get().SetStorage(stg)
 
 	mnt := monitor.New()
@@ -149,7 +151,7 @@ func TestEventsSubscribe(t *testing.T) {
 		obj    interface{}
 	}
 
-	var token = viper.GetString("token")
+	var token = v.GetString("token")
 
 	tests := []struct {
 		name         string
@@ -619,7 +621,7 @@ func TestEventsSubscribe(t *testing.T) {
 			<-time.NewTimer(50 * time.Millisecond).C
 
 			// Create test server with the echo handler.
-			s := httptest.NewServer(http.HandlerFunc(middleware.Authenticate(events.EventSubscribeH)))
+			s := httptest.NewServer(http.HandlerFunc(middleware.Authenticate(context.Background(), events.EventSubscribeH)))
 			defer s.Close()
 
 			// Convert http://127.0.0.1 to ws://127.0.0.

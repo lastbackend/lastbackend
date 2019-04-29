@@ -35,7 +35,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/util/cleaner"
 	"github.com/lastbackend/lastbackend/pkg/util/filesystem"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -434,8 +433,8 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 			script := fmt.Sprintf(logScript, escaped, buf.String())
 
 			rootPath := defaultRootLocalStorgePath
-			if viper.IsSet("node.dir.root") {
-				rootPath = viper.GetString("node.dir.root")
+			if len(envs.Get().GetConfig().Workdir) != 0 {
+				rootPath = envs.Get().GetConfig().Workdir
 			}
 
 			filepath := path.Join(rootPath, strings.Replace(key, ":", "-", -1), "init")
@@ -566,8 +565,8 @@ func PodDestroy(ctx context.Context, pod string, status *types.PodStatus) {
 	}
 
 	rootPath := defaultRootLocalStorgePath
-	if viper.IsSet("node.dir.root") {
-		rootPath = viper.GetString("node.dir.root")
+	if len(envs.Get().GetConfig().Workdir) != 0 {
+		rootPath = envs.Get().GetConfig().Workdir
 	}
 
 	dirPath := path.Join(rootPath, strings.Replace(pod, ":", "-", -1), "init")

@@ -17,16 +17,10 @@ domain:
   internal: "lb.local"
   external: "undassa.lbdp.io"
 
-api:
+server:
   host: 0.0.0.0
-  port: 2967
   tls:
     insecure: true
     ca: "/opt/cert/lastbackend/ca.pem"
     cert: "/opt/cert/lastbackend/server.pem"
     key: "/opt/cert/lastbackend/server-key.pem"
-
-dns:
-  host: 0.0.0.0
-  port: 53
-  default_ip: "127.0.0.1"
