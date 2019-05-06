@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -66,6 +66,17 @@ type JobState struct {
 	hook     hook.Hook
 }
 
+type JobTaskState struct {
+	Active   int
+	Queue    int
+	List     int
+	Finished int
+}
+
+type JobPodState struct {
+	List int
+}
+
 func (js *JobState) Namespace() string {
 	return js.job.Meta.Namespace
 }
@@ -88,13 +99,13 @@ func (js *JobState) Restore() error {
 	}
 
 	js.lock.Lock()
-	for _, p := range pl.Items {
-		log.Infof("%s: restore: restore pod: %s", logPrefix, p.SelfLink())
+	for _, pod := range pl.Items {
+		log.Infof("%s: restore: restore pod: %s", logPrefix, pod.SelfLink())
 
 		// Check if task map for pod exists
-		_, sl := p.SelfLink().Parent()
+		_, sl := pod.SelfLink().Parent()
 		// put pod into map by task name and pod name
-		js.pod.list[sl.String()] = p
+		js.pod.list[sl.String()] = pod
 	}
 	js.lock.Unlock()
 
@@ -107,20 +118,20 @@ func (js *JobState) Restore() error {
 	}
 
 	js.lock.Lock()
-	for _, t := range tl.Items {
-		log.Infof("%s: restore task: %s", logPrefix, t.SelfLink())
-		js.task.list[t.SelfLink().String()] = t
+	for _, task := range tl.Items {
+		log.Infof("%s: restore task: %s", logPrefix, task.SelfLink())
+		js.task.list[task.SelfLink().String()] = task
 	}
 	js.lock.Unlock()
 
 	// Range over pods to sync pod status
-	for _, p := range js.pod.list {
-		js.observers.pod <- p
+	for _, pod := range js.pod.list {
+		js.observers.pod <- pod
 	}
 
 	// Range over tasks to sync tasks status
-	for _, d := range js.task.list {
-		js.observers.task <- d
+	for _, task := range js.task.list {
+		js.observers.task <- task
 	}
 
 	// Sync job state if updated
@@ -154,8 +165,6 @@ func (js *JobState) Observe() {
 
 			log.V(logLevel).Debugf("%s:observe:task:> %s (%s)", logPrefix, task.SelfLink(), task.Status.State)
 
-			status := task.Status
-
 			if err := taskObserve(js, task); err != nil {
 				log.Errorf("%s:observe:task err:> %s", logPrefix, err.Error())
 
@@ -175,14 +184,6 @@ func (js *JobState) Observe() {
 					}
 
 					<-time.After(delay * time.Second)
-				}
-			}
-
-			log.V(logLevel).Debugf("%s:observe:task:> check task %s status (%s) <-> (%s)", logPrefix, task.SelfLink(), status.Status, task.Status.State)
-
-			if task.Status.State != status.State || task.Status.Status != status.Status {
-				if err := js.Hook(task); err != nil {
-					log.Errorf("%s:observe:task> send state err: %s", logPrefix, err.Error())
 				}
 			}
 
@@ -321,25 +322,29 @@ func (js *JobState) Provider() {
 	go func() {
 		for {
 			select {
-			case _ = <-fetch:
+			case <-fetch:
 
 				if js.provider == nil {
 					return
 				}
 
 				manifest, err := js.provider.Fetch()
-
 				if err != nil {
-					log.Errorf("%s:> provider fetch err: %s", logPrefix, err.Error())
+					log.Errorf("%s:> provider fetch err: %v", logPrefix, err)
+					continue
 				}
 
 				if manifest != nil && manifest.Spec.Template == nil && manifest.Spec.Runtime == nil {
 					continue
 				}
 
-				if _, err := taskCreate(js.job, manifest); err != nil {
-					log.Error(err.Error())
+				task, err := taskCreate(js.job, manifest)
+				if err != nil {
+					log.Errorf("%s:> create task err: %v", logPrefix, err)
+					continue
 				}
+
+				js.task.list[task.SelfLink().String()] = task
 
 			}
 		}
@@ -395,12 +400,12 @@ func NewJobState(cs *cluster.ClusterState, job *types.Job) *JobState {
 	js.observers.task = make(chan *types.Task)
 	js.observers.pod = make(chan *types.Pod)
 
-	js.task.list = make(map[string]*types.Task)
-	js.task.queue = make(map[string]*types.Task)
-	js.task.active = make(map[string]*types.Task)
+	js.task.list = make(map[string]*types.Task, 0)
+	js.task.queue = make(map[string]*types.Task, 0)
+	js.task.active = make(map[string]*types.Task, 0)
 	js.task.finished = make([]*types.Task, 0)
 
-	js.pod.list = make(map[string]*types.Pod)
+	js.pod.list = make(map[string]*types.Pod, 0)
 	js.provider, _ = jp.New(job.Spec.Provider)
 	js.hook, _ = jh.New(job.Spec.Hook)
 

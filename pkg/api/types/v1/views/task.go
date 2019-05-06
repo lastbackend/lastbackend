@@ -51,10 +51,12 @@ type TaskMeta struct {
 }
 
 type TaskStatus struct {
-	State   string        `json:"state"`
-	Status  string        `json:"status"`
-	Message string        `json:"message"`
-	Pod     TaskStatusPod `json:"pod"`
+	State    string        `json:"state"`
+	Message  string        `json:"message"`
+	Error    bool          `json:"error"`
+	Done     bool          `json:"done"`
+	Canceled bool          `json:"canceled"`
+	Pod      TaskStatusPod `json:"pod"`
 }
 
 type TaskSpec struct {

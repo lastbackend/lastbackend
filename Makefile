@@ -32,7 +32,6 @@ build-plugin:
 	@echo "== Building Last.Backend plugin"
 	@bash ./hack/build-plugin.sh
 
-
 install:
 	@echo "== Install binaries"
 	@bash ./hack/install-cross.sh ${APP}
@@ -60,7 +59,6 @@ run-ctl:
 run-dns:
 	@echo "== Run lastbackend dns daemon "
 	@go run ./cmd/kit/kit.go dns --config=./contrib/config.yml
-
 
 run-node:
 	@echo "== Run node"

@@ -212,7 +212,7 @@ func (r *Runtime) Loop() {
 
 					if network != nil {
 
-						log.V(logLevel).Debugf("%s> clean up endpoints", logNodeRuntimePrefix)
+						log.V(logLevel).Debugf("%s:> clean up endpoints", logNodeRuntimePrefix)
 						endpoints := network.Endpoints().GetEndpoints()
 						for e := range endpoints {
 
@@ -227,7 +227,7 @@ func (r *Runtime) Loop() {
 						}
 					}
 
-					log.V(logLevel).Debugf("%s> clean up pods", logNodeRuntimePrefix)
+					log.V(logLevel).Debugf("%s:> clean up pods", logNodeRuntimePrefix)
 					pods := envs.Get().GetState().Pods().GetPods()
 
 					for k := range pods {
@@ -238,7 +238,7 @@ func (r *Runtime) Loop() {
 						}
 					}
 
-					log.V(logLevel).Debugf("%s> clean up volumes", logNodeRuntimePrefix)
+					log.V(logLevel).Debugf("%s:> clean up volumes", logNodeRuntimePrefix)
 					volumes := envs.Get().GetState().Volumes().GetVolumes()
 
 					for k := range volumes {
@@ -250,7 +250,7 @@ func (r *Runtime) Loop() {
 					}
 
 					if network != nil {
-						log.V(logLevel).Debugf("%s> clean up subnets", logNodeRuntimePrefix)
+						log.V(logLevel).Debugf("%s:> clean up subnets", logNodeRuntimePrefix)
 						nets := network.Subnets().GetSubnets()
 
 						for cidr := range nets {
@@ -263,7 +263,7 @@ func (r *Runtime) Loop() {
 
 				if network != nil {
 					if len(spec.Resolvers) != 0 {
-						log.V(logLevel).Debugf("%s>set cluster dns ips: %#v", logNodeRuntimePrefix, spec.Resolvers)
+						log.V(logLevel).Debugf("%s:> set cluster dns ips: %#v", logNodeRuntimePrefix, spec.Resolvers)
 						for key, res := range spec.Resolvers {
 							network.Resolvers().SetResolver(key, res)
 							network.ResolverManage(ctx)
@@ -272,14 +272,14 @@ func (r *Runtime) Loop() {
 				}
 
 				if spec.Exporter != nil {
-					log.V(logLevel).Debugf("%s>set cluster exporter endpoint: %s", logNodeRuntimePrefix, spec.Exporter.Endpoint)
+					log.V(logLevel).Debugf("%s:> set cluster exporter endpoint: %s", logNodeRuntimePrefix, spec.Exporter.Endpoint)
 					envs.Get().GetExporter().Reconnect(spec.Exporter.Endpoint)
 				}
 
-				log.V(logLevel).Debugf("%s> provision init", logNodeRuntimePrefix)
+				log.V(logLevel).Debugf("%s:> provision init", logNodeRuntimePrefix)
 
 				if network != nil {
-					log.V(logLevel).Debugf("%s> provision networks", logNodeRuntimePrefix)
+					log.V(logLevel).Debugf("%s:> provision networks", logNodeRuntimePrefix)
 					for cidr, n := range spec.Network {
 						log.V(logLevel).Debugf("network: %v", n)
 						if err := network.SubnetManage(ctx, cidr, n); err != nil {
@@ -288,12 +288,12 @@ func (r *Runtime) Loop() {
 					}
 				}
 
-				log.V(logLevel).Debugf("%s> update secrets %d", logNodeRuntimePrefix, len(spec.Secrets))
+				log.V(logLevel).Debugf("%s:> update secrets %d", logNodeRuntimePrefix, len(spec.Secrets))
 				for s, spec := range spec.Secrets {
 					log.V(logLevel).Debugf("secret: %s > %s", s, spec.State)
 				}
 
-				log.V(logLevel).Debugf("%s> provision configs %d", logNodeRuntimePrefix, len(spec.Configs))
+				log.V(logLevel).Debugf("%s:> provision configs %d", logNodeRuntimePrefix, len(spec.Configs))
 				for s, spec := range spec.Configs {
 					log.V(logLevel).Debugf("config: %s > %s", s, spec.State)
 					if err := ConfigManage(ctx, s, spec); err != nil {
@@ -301,7 +301,7 @@ func (r *Runtime) Loop() {
 					}
 				}
 
-				log.V(logLevel).Debugf("%s> provision pods", logNodeRuntimePrefix)
+				log.V(logLevel).Debugf("%s:> provision pods", logNodeRuntimePrefix)
 				for p, spec := range spec.Pods {
 					log.V(logLevel).Debugf("pod: %v", p)
 					if err := PodManage(ctx, p, spec); err != nil {
@@ -310,7 +310,7 @@ func (r *Runtime) Loop() {
 				}
 
 				if network != nil {
-					log.V(logLevel).Debugf("%s> provision endpoints", logNodeRuntimePrefix)
+					log.V(logLevel).Debugf("%s:> provision endpoints", logNodeRuntimePrefix)
 					for e, spec := range spec.Endpoints {
 						log.V(logLevel).Debugf("endpoint: %v", e)
 						if err := network.EndpointManage(ctx, e, spec); err != nil {
@@ -319,7 +319,7 @@ func (r *Runtime) Loop() {
 					}
 				}
 
-				log.V(logLevel).Debugf("%s> provision volumes", logNodeRuntimePrefix)
+				log.V(logLevel).Debugf("%s:> provision volumes", logNodeRuntimePrefix)
 				for v, spec := range spec.Volumes {
 					log.V(logLevel).Debugf("volume: %v", v)
 					if err := VolumeManage(ctx, v, spec); err != nil {

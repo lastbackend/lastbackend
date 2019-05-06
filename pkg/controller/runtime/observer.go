@@ -22,7 +22,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/controller/state"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"golang.org/x/net/context"
 )
 
 const (
@@ -43,7 +42,7 @@ func (o *Observer) Stop() {
 	o.state = nil
 }
 
-func NewObserver(ctx context.Context) *Observer {
+func NewObserver() *Observer {
 
 	o := new(Observer)
 

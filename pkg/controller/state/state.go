@@ -41,7 +41,9 @@ type State struct {
 func (s *State) Loop() {
 
 	log.Info("start cluster restore")
-	s.Cluster.Loop()
+	if err := s.Cluster.Loop(); err != nil {
+		log.Errorf("cluster loop err:= %v", err)
+	}
 	log.Info("finish cluster restore\n\n")
 
 	log.Info("start namespace restore")
@@ -124,7 +126,9 @@ func (s *State) Loop() {
 				s.Service[svc.SelfLink().String()] = service.NewServiceState(s.Cluster, svc)
 			}
 
-			s.Service[svc.SelfLink().String()].Restore()
+			if err := s.Service[svc.SelfLink().String()].Restore(); err != nil {
+				log.Errorf("service restore err: %v", err)
+			}
 		}
 
 		js, err := jm.ListByNamespace(n.SelfLink().String())
@@ -140,7 +144,9 @@ func (s *State) Loop() {
 				s.Job[jb.SelfLink().String()] = job.NewJobState(s.Cluster, jb)
 			}
 
-			s.Job[jb.SelfLink().String()].Restore()
+			if err := s.Job[jb.SelfLink().String()].Restore(); err != nil {
+				log.Errorf("job restore err: %v", err)
+			}
 		}
 
 		vl, err := vm.ListByNamespace(n.SelfLink().String())
@@ -206,7 +212,9 @@ func (s *State) watchServices(ctx context.Context, rev *int64) {
 		}
 	}()
 
-	sm.Watch(svc, rev)
+	if err := sm.Watch(svc, rev); err != nil {
+		log.Errorf("service watch err: %v", err)
+	}
 }
 
 func (s *State) watchJobs(ctx context.Context, rev *int64) {
@@ -215,7 +223,7 @@ func (s *State) watchJobs(ctx context.Context, rev *int64) {
 		svc = make(chan types.JobEvent)
 	)
 
-	sm := distribution.NewJobModel(ctx, envs.Get().GetStorage())
+	jm := distribution.NewJobModel(ctx, envs.Get().GetStorage())
 
 	go func() {
 		for {
@@ -246,7 +254,9 @@ func (s *State) watchJobs(ctx context.Context, rev *int64) {
 		}
 	}()
 
-	sm.Watch(svc, rev)
+	if err := jm.Watch(svc, rev); err != nil {
+		log.Errorf("job watch err: %v", err)
+	}
 }
 
 func (s *State) watchDeployments(ctx context.Context, rev *int64) {
@@ -288,7 +298,9 @@ func (s *State) watchDeployments(ctx context.Context, rev *int64) {
 		}
 	}()
 
-	dm.Watch(d, rev)
+	if err := dm.Watch(d, rev); err != nil {
+		log.Errorf("deployment watch err: %v", err)
+	}
 }
 
 func (s *State) watchTasks(ctx context.Context, rev *int64) {
@@ -315,7 +327,6 @@ func (s *State) watchTasks(ctx context.Context, rev *int64) {
 				if w.IsActionRemove() {
 					_, ok := s.Job[w.Data.Meta.Job]
 					if ok {
-						// TODO: check of nil
 						s.Job[sl.String()].DelTask(w.Data)
 					}
 					continue
@@ -331,7 +342,9 @@ func (s *State) watchTasks(ctx context.Context, rev *int64) {
 		}
 	}()
 
-	tm.Watch(d, rev)
+	if err := tm.Watch(d, rev); err != nil {
+		log.Errorf("task watch err: %v", err)
+	}
 }
 
 func (s *State) watchPods(ctx context.Context, rev *int64) {
@@ -408,7 +421,9 @@ func (s *State) watchPods(ctx context.Context, rev *int64) {
 		}
 	}()
 
-	pm.Watch(p, rev)
+	if err := pm.Watch(p, rev); err != nil {
+		log.Errorf("pod watch err: %v", err)
+	}
 }
 
 func (s *State) watchVolumes(ctx context.Context, rev *int64) {
@@ -464,7 +479,9 @@ func (s *State) watchVolumes(ctx context.Context, rev *int64) {
 		}
 	}()
 
-	vm.Watch(vl, rev)
+	if err := vm.Watch(vl, rev); err != nil {
+		log.Errorf("volume watch err: %v", err)
+	}
 }
 
 func (s *State) watchSecrets(ctx context.Context, rev *int64) {
@@ -513,7 +530,9 @@ func (s *State) watchSecrets(ctx context.Context, rev *int64) {
 		}
 	}()
 
-	sm.Watch(vl, rev)
+	if err := sm.Watch(vl, rev); err != nil {
+		log.Errorf("secret watch err: %v", err)
+	}
 }
 
 func (s *State) watchConfigs(ctx context.Context, rev *int64) {
@@ -562,7 +581,9 @@ func (s *State) watchConfigs(ctx context.Context, rev *int64) {
 		}
 	}()
 
-	sm.Watch(vl, rev)
+	if err := sm.Watch(vl, rev); err != nil {
+		log.Errorf("config watch err: %v", err)
+	}
 }
 
 func NewState() *State {

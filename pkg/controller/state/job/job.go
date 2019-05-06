@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -35,36 +35,36 @@ const (
 )
 
 // jobObserve manage handlers based on job state
-func jobObserve(ss *JobState, s *types.Job) (err error) {
+func jobObserve(js *JobState, s *types.Job) (err error) {
 
 	log.V(logLevel).Debugf("%s:> observe start: %s > %s", logJobPrefix, s.SelfLink(), s.Status.State)
 
 	switch s.Status.State {
 	// Check job created state triggers
 	case types.StateCreated:
-		err = handleJobStateCreated(ss, s)
+		err = handleJobStateCreated(js, s)
 	// Check job provision state triggers
 	case types.StateRunning:
-		err = handleJobStateRunning(ss, s)
+		err = handleJobStateRunning(js, s)
 	// Check job ready state triggers
 	case types.StatePaused:
-		err = handleJobStatePaused(ss, s)
+		err = handleJobStatePaused(js, s)
 	// Check job error state triggers
 	case types.StateError:
-		err = handleJobStateError(ss, s)
+		err = handleJobStateError(js, s)
 	// Run job destroy process
 	case types.StateDestroy:
-		err = handleJobStateDestroy(ss, s)
+		err = handleJobStateDestroy(js, s)
 	// Remove job from storage if it is already destroyed
 	case types.StateDestroyed:
-		err = handleJobStateDestroyed(ss, s)
+		err = handleJobStateDestroyed(js, s)
 	}
 	if err != nil {
 		log.V(logLevel).Debugf("%s:observe:jobStateCreated:> handle job with state %s err:> %s", logPrefix, s.Status.State, err.Error())
 		return err
 	}
 
-	if ss.job == nil {
+	if js.job == nil {
 		return nil
 	}
 
@@ -103,33 +103,33 @@ func handleJobStateDestroy(js *JobState, job *types.Job) (err error) {
 	log.V(logLevel).Debugf("%s:> handleJobStateDestroy: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 
 	dm := distribution.NewTaskModel(context.Background(), envs.Get().GetStorage())
+
 	if len(js.task.list) == 0 {
-		sm := distribution.NewJobModel(context.Background(), envs.Get().GetStorage())
-		if err = sm.Remove(job); err != nil {
+
+		jm := distribution.NewJobModel(context.Background(), envs.Get().GetStorage())
+		if err = jm.Remove(job); err != nil {
 			log.Errorf("%s:> job remove err: %s", logJobPrefix, err.Error())
 			return err
 		}
 
 		js.job = nil
+
+		job.Status.State = types.StateDestroyed
+		job.Meta.Updated = time.Now()
+
 		return nil
 	}
 
-	for _, d := range js.task.list {
+	for _, task := range js.task.list {
 
-		if d.Status.State == types.StateDestroyed {
+		if task.Status.State == types.StateDestroyed || task.Status.State == types.StateDestroy {
 			continue
 		}
 
-		if d.Status.State != types.StateDestroy {
-			if err := dm.Destroy(d); err != nil {
-				return err
-			}
+		if err := dm.Destroy(task); err != nil {
+			return err
 		}
-	}
 
-	if len(js.task.list) == 0 {
-		job.Status.State = types.StateDestroyed
-		job.Meta.Updated = time.Now()
 	}
 
 	return nil
@@ -144,17 +144,17 @@ func handleJobStateDestroyed(js *JobState, job *types.Job) (err error) {
 	job.Meta.Updated = time.Now()
 
 	if len(js.task.list) > 0 {
-		dm := distribution.NewTaskModel(context.Background(), envs.Get().GetStorage())
-		for _, d := range js.task.list {
+		tm := distribution.NewTaskModel(context.Background(), envs.Get().GetStorage())
+		for _, task := range js.task.list {
 
-			if d.Status.State == types.StateDestroyed {
-				if err = dm.Remove(d); err != nil {
+			if task.Status.State == types.StateDestroyed {
+				if err = tm.Remove(task); err != nil {
 					return err
 				}
 			}
 
-			if d.Status.State != types.StateDestroy {
-				if err = dm.Destroy(d); err != nil {
+			if task.Status.State != types.StateDestroy {
+				if err = tm.Destroy(task); err != nil {
 					return err
 				}
 			}
@@ -172,14 +172,14 @@ func handleJobStateDestroyed(js *JobState, job *types.Job) (err error) {
 
 	ns, err := nm.Get(job.Meta.Namespace)
 	if err != nil {
-		log.Errorf("%s:> namespece fetch err: %s", logJobPrefix, err.Error())
+		log.Errorf("%s:> namespace fetch err: %s", logJobPrefix, err.Error())
 	}
 
 	if ns != nil {
 		ns.ReleaseResources(job.Spec.GetResourceRequest())
 
 		if err := nm.Update(ns); err != nil {
-			log.Errorf("%s:> namespece update err: %s", logJobPrefix, err.Error())
+			log.Errorf("%s:> namespace update err: %s", logJobPrefix, err.Error())
 		}
 	}
 
@@ -235,7 +235,6 @@ func jobTaskProvision(js *JobState) error {
 	}
 
 	t.Status.State = types.StateProvision
-	t.Status.Status = types.StateProvision
 
 	tm := distribution.NewTaskModel(context.Background(), envs.Get().GetStorage())
 	if err := tm.Set(t); err != nil {

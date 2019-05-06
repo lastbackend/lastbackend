@@ -47,7 +47,7 @@ func NewRuntime(ctx context.Context) *Runtime {
 		return nil
 	}
 
-	r.observer = NewObserver(ctx)
+	r.observer = NewObserver()
 
 	return r
 }
