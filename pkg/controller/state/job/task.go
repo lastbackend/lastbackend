@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,16 +20,16 @@ package job
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"fmt"
 	"strings"
-
 	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
 )
 
 const logTaskPrefix = "state:observer:task"
@@ -49,6 +49,8 @@ func taskObserve(js *JobState, task *types.Task) (err error) {
 		err = handleTaskStateRunning(js, task)
 	case types.StateError:
 		err = handleTaskStateError(js, task)
+	case types.StateCanceled:
+		err = handleTaskStateCancel(js, task)
 	case types.StateExited:
 		err = handleTaskStateExited(js, task)
 	case types.StateDestroy:
@@ -57,14 +59,14 @@ func taskObserve(js *JobState, task *types.Task) (err error) {
 		err = handleTaskStateDestroyed(js, task)
 	}
 	if err != nil {
-		log.Errorf("%s:> handle task state %s err: %s", logTaskPrefix, task.Status.State, err.Error())
-		return err
-	}
-
-	if task.Status.State == types.StateDestroyed {
-		delete(js.task.list, task.SelfLink().String())
-	} else {
-		js.task.list[task.SelfLink().String()] = task
+		task.Status.State = types.StateError
+		task.Status.Error = true
+		task.Status.Message = err.Error()
+		if err := handleTaskStateError(js, task); err != nil {
+			log.Errorf("%s:> handle task state %s error err: %s", logTaskPrefix, task.Status.State, err.Error())
+			return err
+		}
+		return nil
 	}
 
 	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logTaskPrefix, task.SelfLink(), task.Status.State)
@@ -78,7 +80,7 @@ func handleTaskStateCreated(js *JobState, task *types.Task) error {
 
 	if err := taskCheckSelectors(js, task); err != nil {
 		task.Status.State = types.StateError
-		task.Status.Status = types.StateError
+		task.Status.Error = true
 		task.Status.Message = err.Error()
 		tm := distribution.NewTaskModel(context.Background(), envs.Get().GetStorage())
 		if err := tm.Set(task); err != nil {
@@ -132,10 +134,23 @@ func handleTaskStateRunning(_ *JobState, task *types.Task) error {
 func handleTaskStateError(js *JobState, task *types.Task) error {
 
 	log.V(logLevel).Debugf("%s:handleTaskStateError:> task %s > %s", logTaskPrefix, task.SelfLink(), task.Status.State)
-	// finish task and destroy it
 
+	// finish task and destroy it
 	if err := taskFinish(js, task); err != nil {
 		log.Errorf("%s:handleTaskStateError:> task finish err: %s", logTaskPrefix, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func handleTaskStateCancel(js *JobState, task *types.Task) error {
+
+	log.V(logLevel).Debugf("%s:handleTaskStateCancel:> task %s > %s", logTaskPrefix, task.SelfLink(), task.Status.State)
+
+	// finish task and destroy it
+	if err := taskFinish(js, task); err != nil {
+		log.Errorf("%s:handleTaskStateCancel:> task finish err: %s", logTaskPrefix, err.Error())
 		return err
 	}
 
@@ -146,7 +161,6 @@ func handleTaskStateExited(js *JobState, task *types.Task) error {
 
 	log.V(logLevel).Debugf("%s:handleTaskStateExited:>: task %s > %s", logTaskPrefix, task.SelfLink(), task.Status.State)
 	// finish task and destroy it
-
 	if err := taskFinish(js, task); err != nil {
 		log.Errorf("%s:handleTaskStateExited:> task finish err: %s", logTaskPrefix, err.Error())
 		return err
@@ -174,7 +188,6 @@ func handleTaskStateDestroyed(js *JobState, task *types.Task) error {
 	link := task.SelfLink().String()
 
 	if _, ok := js.pod.list[link]; ok {
-
 		if err := taskDestroy(js, task); err != nil {
 			log.Errorf("%s:handleTaskStateDestroyed:> task destroy err: %s", logTaskPrefix, err.Error())
 			return err
@@ -214,7 +227,7 @@ func taskCheckSelectors(_ *JobState, d *types.Task) (err error) {
 
 		vl, err := vm.ListByNamespace(d.Meta.Namespace)
 		if err != nil {
-			log.V(logLevel).Errorf("%s:create:> create task, volume list err: %s", logPrefix, err.Error())
+			log.V(logLevel).Errorf("%s:check_selectors:> create task, volume list err: %s", logPrefix, err.Error())
 			return err
 		}
 
@@ -231,12 +244,12 @@ func taskCheckSelectors(_ *JobState, d *types.Task) (err error) {
 				f = true
 
 				if v.Status.State != types.StateReady {
-					log.V(logLevel).Errorf("%s:create:> create task err: volume is not ready yet: %s", logPrefix, v.Meta.Name)
+					log.V(logLevel).Errorf("%s:check_selectors:> create task err: volume is not ready yet: %s", logPrefix, v.Meta.Name)
 					return errors.New(v.Meta.Name).Volume().NotReady(v.Meta.Name)
 				}
 
 				if v.Meta.Node == types.EmptyString {
-					log.V(logLevel).Errorf("%s:create:> create task err: volume is not provisioned yet: %s", logPrefix, v.Meta.Name)
+					log.V(logLevel).Errorf("%s:check_selectors:> create task err: volume is not provisioned yet: %s", logPrefix, v.Meta.Name)
 					return errors.New(v.Meta.Name).Volume().NotProvisioned(v.Meta.Name)
 				}
 
@@ -250,7 +263,7 @@ func taskCheckSelectors(_ *JobState, d *types.Task) (err error) {
 			}
 
 			if !f {
-				log.V(logLevel).Errorf("%s:create:> create task err: volume is not found: %s", logPrefix, name)
+				log.V(logLevel).Errorf("%s:check_selectors:> create task err: volume is not found: %s", logPrefix, name)
 				return errors.New(name).Volume().NotFound(name)
 			}
 		}
@@ -301,12 +314,14 @@ func taskCreate(job *types.Job, mf *types.TaskManifest) (*types.Task, error) {
 
 	if mf != nil {
 		if err := mf.SetTaskSpec(task); err != nil {
+			log.V(logLevel).Errorf("%s:taskCreate:> set task spec err: %v", logTaskPrefix, err)
 			return nil, err
 		}
 	}
 
 	d, err := tm.Create(task)
 	if err != nil {
+		log.V(logLevel).Errorf("%s:taskCreate:> create task err: %v", logTaskPrefix, err)
 		return nil, err
 	}
 
@@ -317,16 +332,26 @@ func taskQueue(js *JobState, task *types.Task) error {
 
 	log.V(logLevel).Debugf("%s:taskQueue:> move task %s to queue", logTaskPrefix, task.Meta.Name)
 
+	// set a task as queued if it is not right now
+	// ==============================================
+
 	if task.Status.State != types.StateQueued {
+
 		task.Status.State = types.StateQueued
-		task.Status.Status = types.StateQueued
+
 		tm := distribution.NewTaskModel(context.Background(), envs.Get().GetStorage())
 		if err := tm.Set(task); err != nil {
 			log.Errorf("%s:taskQueue:> set task err: %s", logTaskPrefix, err.Error())
 			return err
 		}
+
 		return nil
 	}
+
+	// if the task is set to the queued state,
+	// then add the task to queue and set to
+	// provision state if available by limits
+	// ==============================================
 
 	js.task.queue[task.SelfLink().String()] = task
 
@@ -344,54 +369,67 @@ func taskProvision(js *JobState, task *types.Task) (err error) {
 
 	log.V(logLevel).Debugf("%s:taskProvision:> set task %s as provision", logTaskPrefix, task.Meta.Name)
 
-	t := task.Meta.Updated
-
 	var (
 		pm = distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
 	)
 
+	// we look for pod for task.
+	// if exists, then check the node binding
+	// and the presence of the manifest.
+	// ==============================================
+
 	p, ok := js.pod.list[task.SelfLink().String()]
 	if ok {
-		if p.Status.State != types.StateDestroy && p.Status.State != types.StateDestroyed {
 
-			if p.Meta.Node != types.EmptyString {
+		if p.Status.State == types.StateDestroy || p.Status.State == types.StateDestroyed {
+			return nil
+		}
 
-				m, e := pm.ManifestGet(p.Meta.Node, p.SelfLink().String())
-				if err != nil {
-					err = e
-					return e
-				}
+		if p.Meta.Node == types.EmptyString {
+			return errors.New(fmt.Sprintf("pod %s can not be manage: node not attached", p.Meta.SelfLink.String()))
+		}
 
-				if m == nil {
-					if err = podManifestPut(p); err != nil {
-						return err
-					}
-				}
+		m, err := pm.ManifestGet(p.Meta.Node, p.SelfLink().String())
+		if err != nil {
+			return err
+		}
 
+		if m == nil {
+			if err := podManifestPut(p); err != nil {
+				return err
 			}
+		}
 
+		js.task.active[task.SelfLink().String()] = task
+		delete(js.task.queue, task.SelfLink().String())
+
+		return nil
+	}
+
+	// set a task as provision if it is not right now
+	// ==============================================
+
+	if task.Status.State != types.StateProvision {
+		task.Status.State = types.StateProvision
+		task.Meta.Updated = time.Now()
+
+		tm := distribution.NewTaskModel(context.Background(), envs.Get().GetStorage())
+		if err := tm.Set(task); err != nil {
+			log.Errorf("%s:taskProvision:> set task err: %s", logTaskPrefix, err.Error())
+			return err
 		}
 
 		return nil
 	}
+
+	// if the task is set to the provision state,
+	// then create and move task from queue to active
+	// ==============================================
 
 	_, err = podCreate(task)
 	if err != nil {
 		log.Errorf("%s:taskProvision:> creates new pod based on task spec err:", err.Error())
 		return err
-	}
-
-	if task.Status.State != types.StateProvision {
-		task.Status.State = types.StateProvision
-		task.Status.Status = types.StateProvision
-		task.Meta.Updated = time.Now()
-
-		if err := taskUpdate(task, t); err != nil {
-			log.Errorf("%s:taskProvision:> update task err:", err.Error())
-			return err
-		}
-
-		return nil
 	}
 
 	js.task.active[task.SelfLink().String()] = task
@@ -403,7 +441,6 @@ func taskProvision(js *JobState, task *types.Task) (err error) {
 func taskDestroy(js *JobState, task *types.Task) (err error) {
 
 	t := task.Meta.Updated
-
 	defer func() {
 		if err == nil {
 			err = taskUpdate(task, t)
@@ -413,6 +450,7 @@ func taskDestroy(js *JobState, task *types.Task) (err error) {
 	if task.Status.State != types.StateDestroy {
 		task.Status.State = types.StateDestroy
 		task.Meta.Updated = time.Now()
+		return nil
 	}
 
 	p, ok := js.pod.list[task.SelfLink().String()]
@@ -420,17 +458,17 @@ func taskDestroy(js *JobState, task *types.Task) (err error) {
 		task.Status.State = types.StateDestroyed
 		task.Meta.Updated = time.Now()
 		return nil
-	} else {
-		if p.Status.State != types.StateDestroy {
-			if err := podDestroy(js, p); err != nil {
-				return err
-			}
-		}
+	}
 
-		if p.Status.State == types.StateDestroyed {
-			if err := podRemove(js, p); err != nil {
-				return err
-			}
+	if p.Status.State != types.StateDestroy {
+		if err := podDestroy(js, p); err != nil {
+			return err
+		}
+	}
+
+	if p.Status.State == types.StateDestroyed {
+		if err := podRemove(js, p); err != nil {
+			return err
 		}
 	}
 
@@ -455,14 +493,12 @@ func taskRemove(task *types.Task) error {
 	if err := dm.Remove(task); err != nil {
 		return err
 	}
-
 	return nil
 }
 
 func taskFinish(js *JobState, task *types.Task) (err error) {
 
 	t := task.Meta.Updated
-
 	defer func() {
 		if err == nil {
 			err = taskUpdate(task, t)
@@ -470,8 +506,10 @@ func taskFinish(js *JobState, task *types.Task) (err error) {
 	}()
 
 	if task.Status.State != types.StateExited {
+		task.Status.Error = task.Status.State == types.StateError
+		task.Status.Canceled = task.Status.State == types.StateCanceled
+		task.Status.Done = !task.Status.Error && !task.Status.Canceled
 		task.Status.State = types.StateExited
-		task.Status.Status = types.StateReady
 		task.Meta.Updated = time.Now()
 	}
 
@@ -489,6 +527,7 @@ func taskFinish(js *JobState, task *types.Task) (err error) {
 		}
 	}
 
+	js.task.finished = append(js.task.finished, task)
 	delete(js.task.active, task.SelfLink().String())
 
 	for {
@@ -506,7 +545,10 @@ func taskFinish(js *JobState, task *types.Task) (err error) {
 		break
 	}
 
-	js.task.finished = append(js.task.finished, task)
+	if err = taskUpdate(task, t); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -518,18 +560,21 @@ func taskStatusState(js *JobState, t *types.Task, p *types.Pod) (err error) {
 	status := t.Status
 
 	defer func() {
-		log.V(logLevel).Infof("%s:task_status_state:> finish: %s > %s", logTaskPrefix, t.SelfLink(), t.Status.State)
+		if status.State == t.Status.State {
+			return
+		}
+
 		if err == nil {
 			if err := taskUpdate(t, u); err != nil {
 				log.V(logLevel).Infof("%s:task_status_state:> update task %s err: %s", logTaskPrefix, t.Meta.Name, err.Error())
 			}
 		}
 
-		log.V(logLevel).Debugf("%s:task_status_state:> check task %s status (%s) > (%s)", logPrefix, t.SelfLink(), status.Status, t.Status.State)
+		log.V(logLevel).Debugf("%s:task_status_state:> check task %s status (%s) > (%s)", logPrefix, t.SelfLink(), status.State, t.Status.State)
 
-		if t.Status.State != status.State || t.Status.State == types.StateRunning || t.Status.Status != status.Status {
+		if t.Status.State != status.State || t.Status.State == types.StateRunning {
 			if err := js.Hook(t); err != nil {
-				log.Errorf("%s:observe:task> send state err: %s", logPrefix, err.Error())
+				log.Errorf("%s:task_status_state:task> send state err: %s", logPrefix, err.Error())
 			}
 		}
 	}()
@@ -541,44 +586,40 @@ func taskStatusState(js *JobState, t *types.Task, p *types.Pod) (err error) {
 		Runtime:  p.Status.Runtime,
 	}
 
-	switch true {
-	case p.Status.State == types.StateError:
-		if t.Status.State != types.StateExited {
-			log.V(logLevel).Infof("%s:task_status_state:> set task %s status: %s > %s", logTaskPrefix, t.SelfLink(), t.Status.State, types.StateExited)
-			t.Status.State = types.StateExited
-			t.Status.Status = types.StateError
-			t.Status.Message = p.Status.Message
-			t.Meta.Updated = time.Now()
+	switch p.Status.State {
+	case types.StateProvision:
+		if t.Status.State == types.StateProvision {
+			return nil
 		}
-		return nil
-	case p.Status.Status == types.StateError:
-		if t.Status.State != types.StateExited {
-			log.V(logLevel).Infof("%s:task_status_state:> set task %s status: %s > %s", logTaskPrefix, t.SelfLink(), t.Status.State, types.StateExited)
-			t.Status.State = types.StateExited
-			t.Status.Status = types.StateReady
-			t.Status.Message = p.Status.Message
-			t.Meta.Updated = time.Now()
+		t.Status.State = types.StateProvision
+		t.Status.Message = types.EmptyString
+		t.Meta.Updated = time.Now()
+	case types.StateRunning:
+		if t.Status.State == types.StateRunning {
+			return nil
 		}
-		return nil
-	case p.Status.Status == types.StateRunning:
-		if t.Status.State != types.StateRunning {
-			log.V(logLevel).Infof("%s:task_status_state:> set task %s status: %s > %s", logTaskPrefix, t.SelfLink(), t.Status.State, types.StateRunning)
-			t.Status.State = types.StateRunning
-			t.Status.Status = types.StateRunning
-			t.Status.Message = types.EmptyString
-			t.Meta.Updated = time.Now()
-		}
-		return nil
-	case p.Status.Status == types.StateExited:
-		if t.Status.State != types.StateExited {
-			log.V(logLevel).Infof("%s:task_status_state:> set task %s status: %s > %s", logTaskPrefix, t.SelfLink(), t.Status.State, types.StateExited)
-			t.Status.State = types.StateExited
-			t.Status.Status = types.StateReady
-			t.Status.Message = types.EmptyString
-			t.Meta.Updated = time.Now()
-		}
-		return nil
+		t.Status.State = types.StateRunning
+		t.Status.Message = types.EmptyString
+		t.Meta.Updated = time.Now()
+	case types.StateError:
+		t.Status.State = types.StateError
+		t.Status.Error = true
+		t.Status.Message = p.Status.Message
+		t.Meta.Updated = time.Now()
+	case types.StateCanceled:
+		t.Status.State = types.StateCanceled
+		t.Status.Canceled = true
+		t.Status.Message = types.EmptyString
+		t.Meta.Updated = time.Now()
+	case types.StateDestroyed:
+		fallthrough
+	case types.StateDestroy:
+		fallthrough
+	case types.StateExited:
+		t.Status.State = types.StateExited
+		t.Status.Message = types.EmptyString
+		t.Status.Done = !t.Status.Error && !t.Status.Canceled
+		t.Meta.Updated = time.Now()
 	}
-
 	return nil
 }

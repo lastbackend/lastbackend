@@ -44,8 +44,10 @@ type TaskMeta struct {
 
 type TaskStatus struct {
 	State        string             `json:"state"`
-	Status       string             `json:"status"`
 	Message      string             `json:"message"`
+	Error        bool               `json:"error"`
+	Canceled     bool               `json:"canceled"`
+	Done         bool               `json:"done"`
 	Dependencies StatusDependencies `json:"dependencies"`
 	Pod          TaskStatusPod      `json:"pod"`
 }
@@ -131,41 +133,6 @@ func (ts *TaskStatus) CheckDeps() bool {
 	}
 
 	return true
-}
-
-func (ts *TaskStatus) SetCreated() {
-	ts.State = StateCreated
-	ts.Message = ""
-}
-
-func (ts *TaskStatus) SetProvision() {
-	ts.State = StateProvision
-	ts.Message = ""
-}
-
-func (ts *TaskStatus) SetStarted() {
-	ts.State = StateStarted
-	ts.Message = ""
-}
-
-func (ts *TaskStatus) SetFinished() {
-	ts.State = StateExited
-	ts.Message = ""
-}
-
-func (ts *TaskStatus) SetCancel() {
-	ts.State = StateCancel
-	ts.Message = ""
-}
-
-func (ts *TaskStatus) SetDestroy() {
-	ts.State = StateDestroy
-	ts.Message = ""
-}
-
-func (ts *TaskStatus) SetError(message string) {
-	ts.State = StateError
-	ts.Message = message
 }
 
 func (j *Task) SelfLink() *TaskSelfLink {

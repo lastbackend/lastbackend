@@ -28,7 +28,6 @@ const StateNotReady = "not ready"
 const StateRunning = "running"
 const StatePaused = "paused"
 
-const StatusBuild = "build"
 const StatusPull = "pull"
 const StateDestroy = "destroy"
 const StateUpdated = "updated"

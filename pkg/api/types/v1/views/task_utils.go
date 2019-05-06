@@ -51,9 +51,11 @@ func (t *Task) ToMeta(obj types.TaskMeta) {
 
 func (t *Task) ToStatus(obj types.TaskStatus) {
 	ts := TaskStatus{
-		State:   obj.State,
-		Status:  obj.Status,
-		Message: obj.Message,
+		State:    obj.State,
+		Error:    obj.Error,
+		Canceled: obj.Canceled,
+		Done:     obj.Done,
+		Message:  obj.Message,
 		Pod: TaskStatusPod{
 			SelfLink: obj.Pod.SelfLink,
 			Status:   obj.Pod.Status,

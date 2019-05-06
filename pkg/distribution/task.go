@@ -121,7 +121,7 @@ func (t *Task) Cancel(task *types.Task) error {
 	// mark task for destroy
 	task.Spec.State.Cancel = true
 	// mark task for cancel
-	task.Status.SetCancel()
+	task.Status.State = types.StateCanceled
 
 	if err := t.storage.Set(t.context, t.storage.Collection().Task(),
 		task.SelfLink().String(), task, nil); err != nil {
@@ -154,7 +154,7 @@ func (t *Task) Destroy(task *types.Task) error {
 	// mark task for destroy
 	task.Spec.State.Destroy = true
 	// mark task for destroy
-	task.Status.SetDestroy()
+	task.Status.State = types.StateDestroyed
 
 	if err := t.storage.Set(t.context, t.storage.Collection().Task(),
 		task.SelfLink().String(), task, nil); err != nil {

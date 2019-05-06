@@ -92,8 +92,8 @@ var (
 		{Name: "etcd-ca-file", Short: "", Value: "", Desc: "ETCD database certificate authority file", Bind: "storage.etcd.tls.ca"},
 		{Name: "etcd-endpoints", Short: "", Value: []string{"127.0.0.1:2379"}, Desc: "ETCD database endpoints list", Bind: "storage.etcd.endpoints"},
 		{Name: "etcd-prefix", Short: "", Value: "lastbackend", Desc: "ETCD database storage prefix", Bind: "storage.etcd.prefix"},
-		{Name: "verbose", Short: "", Value: 0, Desc: "Set log level from 0 to 7", Bind: "verbose"},
-		{Name: "config", Short: "", Value: "", Desc: "Path for the configuration file", Bind: "config"},
+		{Name: "verbose", Short: "v", Value: 0, Desc: "Set log level from 0 to 7", Bind: "verbose"},
+		{Name: "config", Short: "c", Value: "", Desc: "Path for the configuration file", Bind: "config"},
 	}
 )
 
