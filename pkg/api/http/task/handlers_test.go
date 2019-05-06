@@ -754,7 +754,7 @@ func TestTaskCancel(t *testing.T) {
 				assert.NoError(t, err)
 
 				assert.Equal(t, tc.want.Meta.Name, s.Meta.Name, "description not equal")
-				assert.Equal(t, types.StateCancel, s.Status.State, "status state is not cancel")
+				assert.Equal(t, types.StateCanceled, s.Status.State, "status state is not canceled")
 			}
 		})
 	}
