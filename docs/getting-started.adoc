@@ -2,7 +2,7 @@
 
 There is multiple ways you can use to start with Last.Backend:
 
-- Obtain resources in public Last.Backend clusters.
+- Obtain resources with public Last.Backend clusters.
 - Obtain dedicated cluster from Last.Backend.
 - Deploy your own Last.Backend cluster and connect it to *control-panel*
 

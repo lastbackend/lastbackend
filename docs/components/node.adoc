@@ -1,0 +1,325 @@
+==== Node
+
+Node component is the control point to manage Last.Backend cluster.
+It validates and configures data for the api objects which include pods, services, deployments, routes, and others. 
+
+REST API is distributed as docker image, located at: `index.lstbknd.net/lastbackend/lastbackend`
+
+To run REST API server you can use this command:
+[source,bash]
+----
+docker run -it -d --name=api index.lstbknd.net/lastbackend/lastbackend node [options]
+----
+
+The available options:
+
+.Table Options
+|===
+|Name |Environment |Required |Type |Default value |Description
+
+|--access-token
+|LB_ACCESS_TOKEN
+|[ ]
+|string
+|
+|Access token to API server
+
+|--workdir
+|LB_NODE_WORKDIR
+|[ ]
+|string
+|
+|Node workdir for runtime
+
+|--manifest-path
+|LB_NODE_MANIFESTS_PATH
+|[ ]
+|string
+|
+|Node manifest(s) path
+
+|--bind-interface 
+|LB_NODE_BIND_INTERFACE
+|[ ]
+|string
+|eth0
+|Node bind external network interface to access internal connections
+
+|--network-proxy
+|LB_NETWORK_PROXY
+|[ ]
+|string
+|ipvs
+|Network proxy driver (ipvs by default)
+
+|--network-proxy-iface-internal
+|LB_NETWORK_PROXY_IFACE_INTERNAL
+|[ ]
+|string
+|docker0
+|Network proxy internal interface binding
+
+|--network-proxy-iface-external
+|LB_NETWORK_PROXY_IFACE_EXTERNAL
+|[ ]
+|string
+|eth0
+|Network proxy external interface binding
+
+|--network-driver
+|LB_NETWORK_DRIVER
+|[ ]
+|string
+|vxlan
+|Network driver (vxlan by default)
+
+|--network-driver-iface-external
+|LB_NETWORK_DRIVER_IFACE_EXTERNAL
+|[ ]
+|string
+|eth0
+|Container overlay network external interface for host communication
+
+|--network-driver-iface-internal
+|LB_NETWORK_DRIVER_IFACE_INTERNAL
+|[ ]
+|string
+|docker0
+|Container overlay network internal bridge interface for container intercommunications
+
+|--container-runtime
+|LB_CONTAINER_RUNTIME
+|[ ]
+|string
+|docker
+|Node container runtime
+
+|--container-runtime-docker-version
+|LB_RUNTIME_DOCKER_VERSION
+|[ ]
+|string
+|
+|Set docker version for docker container runtime
+
+|--container-storage-root
+|LB_CONTAINER_STORAGE_ROOT
+|[ ]
+|string
+|/var/run/lastbackend
+|Node container storage root for pod volumes and persistent volumes
+
+|--container-image-runtime
+|LB_CONTAINER_IMAGE_RUNTIME
+|[ ]
+|string
+|docker
+|Node container images runtime
+
+|--bind-address
+|LB_NODE_BIND_ADDRESS
+|[ ]
+|string
+|0.0.0.0
+|Node bind address
+
+|--bind-port
+|LB_NODE_BIND_PORT
+|[ ]
+|integer
+|2965
+|Node listening port binding
+
+|--tls-cert-file
+|LB_NODE_TLS_CERT_FILE
+|[ ]
+|string
+|
+|Node cert file path
+
+|--tls-private-key-file
+|LB_NODE_PRIVATE_KEY_FILE
+|[ ]
+|string
+|
+|Node private key file path
+
+|--tls-ca-file
+|LB_NODE_CA_FILE
+|[ ]
+|string
+|
+|Node certificate authority file path
+
+|--api-uri
+|LB_API_URI
+|[ ]
+|string
+|
+|REST API endpoint
+
+|--api-tls-cert-file
+|LB_API_CERT_FILE
+|[ ]
+|string
+|
+|REST API TLS certificate file path
+
+|--api-tls-private-key-file
+|LB_API_PRIVATE_KEY_FILE
+|[ ]
+|string
+|
+|REST API TLS private key file path
+
+|--api-tls-ca-file
+|LB_API_CA_FILE
+|[ ]
+|string
+|
+|REST API TSL certificate authority file path
+
+|--verbose, -v
+|LB_VERBOSE
+|[ ]
+|integer
+|0
+|Set log level from 0 to 7
+
+|--config, -c 
+|LB_CONFIG
+|[ ]
+|string
+|
+|Path for the configuration file
+
+|--help, -h
+|
+|
+|
+|
+|Print usage
+
+|===
+
+Or you can use config file:
+
+[source,yaml]
+----
+---
+#
+# Last.Backend LLC CONFIDENTIAL
+# _____________________________
+#
+# [2014] - [2019] Last.Backend LLC
+# All Rights Reserved.
+#
+# NOTICE:  All information contained herein is, and remains
+# the property of Last.Backend LLC and its suppliers,
+# if any.  The intellectual and technical concepts contained
+# herein are proprietary to Last.Backend LLC
+# and its suppliers and may be covered by Russian Federation and Foreign Patents,
+# patents in process, and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Last.Backend LLC.
+#
+#
+# ===============================================================================
+# Node config settings ==========================================================
+# ===============================================================================
+
+# Log level [0-7]
+verbose: integer
+# Authentication token
+# Usages:
+#   As header: Authorization Bearer <token>
+#   As querystring parameter: x-lastabckend=<token>
+token: string
+# Node default workdir for system files
+workdir: string
+
+# Local node manifest options. Use local manifests if you need local binded containers or deployments.
+manifest:
+  # Manifest local directory
+  dir: string
+
+
+# Network settings
+network:
+	# External interface for listening worldwide 
+	interface: string
+  # Container proxy interface
+  cpi:
+    # Network proxy driver (ipvs by default)
+    type: string
+    # proxy network interface bindings
+    interface:
+      # external network interface for proxy
+      external:
+      # internal network interface for proxy
+      internal:
+  # Container network interface options
+  cni:
+    # Container overlay network driver (vxlan by default)
+    type: string
+		# overlay network interfaces bindigs
+		iterface:
+			# External network interface for network building
+			external: string
+			# Internal bridge network interface for network building
+			internal: string
+
+# Container interfaces
+container:
+  # Container runtime interface
+  cri:
+    # Container runtime driver (docker by default)
+    type: string
+    # Docker driver configuration
+    docker:
+      #	Optional specify particular docker version
+      version: string
+  # Storage runtime interface
+  csi:
+    # Container storage - directory options
+    dir:
+      # Directiry path
+      root: string
+  # Container images runtime interface
+  iri:
+    # Container images driver (docker by default)
+    type: string
+    # Docker driver configuration
+    docker:
+      # Optional specify particular docker version
+      version: string
+
+# Cluster node http-server settings
+server:
+  # Node API server listen address (0.0.0.0 by default)
+  host: string
+  # Node API server port listen option (2969 by defaul)
+  port: integer
+  # Https/tls configurations
+  tls:
+	  # TLS certificate file path
+	  cert: string
+	  # TLS private key file path
+	  key: string
+	  # TLS certificate authority file path
+	  ca: string
+
+
+# REST API client options
+api:
+  # REST API Endpoint (http://127.0.0.1)
+  uri: string
+  # REST API TLS options 
+  tls:
+    # REST API TLS client certificate file path
+    cert: string
+    # REST API TLS private key file path
+    key: string
+    # REST API TLS client certificate authority file path
+    ca: string
+----

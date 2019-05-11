@@ -1,0 +1,275 @@
+==== Ingress
+
+REST API component is the control point to manage Last.Backend cluster.
+It validates and configures data for the api objects which include pods, services, deployments, routes, and others. 
+
+REST API is distributed as docker image, located at: `index.lstbknd.net/lastbackend/lastbackend`
+
+To run REST API server you can use this command:
+[source,bash]
+----
+docker run -it -d --name=api index.lstbknd.net/lastbackend/lastbackend api [options]
+----
+
+The available options:
+
+.Table Options
+|===
+|Name |Environment |Required |Type |Default value |Description
+
+|--access-token
+|LB_ACCESS_TOKEN
+|[ ]
+|string
+|
+|Access token to API server
+
+|--haproxy-config-path
+|LB_HAPROXY_CONFIG_PATH
+|[ ]
+|string
+|/var/run/lastbackend/ingress/haproxy/haproxy.cfg
+|HAProxy configuration path setup
+
+|--haproxy-pid
+|LB_HAPROXY_PID
+|[ ]
+|string
+|/var/run/lastbackend/ingress/haproxy/haproxy.pid
+|HAProxy pid file path
+
+|--haproxy-exec
+|LB_HAPROXY_EXEC
+|[ ]
+|string
+|/usr/local/bin/haproxy
+|HAProxy entrypoint path
+
+|--haproxy-stat-port
+|LB_HAPROXY_STAT_PORT
+|[ ]
+|integer
+|1936
+|HAProxy statistic port definition. If not provided - statistic will be disabled
+
+|--haproxy-stat-username
+|LB_HAPROXY_STAT_USER
+|[ ]
+|string
+|
+|HAProxy statistic access username
+
+|--haproxy-stat-password
+|LB_HAPROXY_STAT_PASS
+|[ ]
+|string
+|
+|HAProxy statistic access password
+
+|--bind-interface 
+|LB_INGRESS_BIND_INTERFACE
+|[ ]
+|string
+|eth0
+|Exporter bind network interface
+
+|--network-proxy
+|LB_NETWORK_PROXY
+|[ ]
+|string
+|ipvs
+|Container proxy interface driver
+
+|--network-proxy-iface-internal
+|LB_NETWORK_PROXY_IFACE_INTERNAL
+|[ ]
+|string
+|docker0
+|Network internal interface binding
+
+|--network-proxy-iface-external
+|LB_NETWORK_PROXY_IFACE_EXTERNAL
+|[ ]
+|string
+|eth0
+|Network container bridge binding
+
+|--network-driver
+|LB_NETWORK_DRIVER
+|[ ]
+|string
+|vxlan
+|Container overlay network driver
+
+
+|--network-driver-iface-external
+|LB_NETWORK_DRIVER_IFACE_EXTERNAL
+|[ ]
+|string
+|eth0
+|Container overlay network external interface for host communication
+
+
+|--network-driver-iface-internal
+|LB_NETWORK_DRIVER_IFACE_INTERNAL
+|[ ]
+|string
+|docker0
+|Container overlay network internal bridge interface for container intercommunications
+
+|--network-resolvers
+|LB_NETWORK_RESOLVERS
+|[ ]
+|slice of string
+|[8.8.8.8, 8.8.4.4]
+|Additional resolvers IPs for Ingress
+
+
+|--api-uri
+|LB_API_URI
+|[ ]
+|string
+|
+|REST API endpoint
+
+|--api-tls-cert-file
+|LB_API_CERT_FILE
+|[ ]
+|string
+|
+|REST API TLS certificate file path
+
+|--api-tls-private-key-file
+|LB_API_PRIVATE_KEY_FILE
+|[ ]
+|string
+|
+|REST API TLS private key file path
+
+|--api-tls-ca-file
+|LB_API_CA_FILE
+|[ ]
+|string
+|
+|REST API TSL certificate authority file path
+
+|--verbose, -v
+|LB_VERBOSE
+|[ ]
+|integer
+|0
+|Set log level from 0 to 7
+
+|--config, -c 
+|LB_CONFIG
+|[ ]
+|string
+|
+|Path for the configuration file
+
+|--help, -h
+|
+|
+|
+|
+|Print usage
+
+|===
+
+Or you can use config file:
+
+[source,yaml]
+----
+ ---
+#
+# Last.Backend LLC CONFIDENTIAL
+# _____________________________
+#
+# [2014] - [2019] Last.Backend LLC
+# All Rights Reserved.
+#
+# NOTICE:  All information contained herein is, and remains
+# the property of Last.Backend LLC and its suppliers,
+# if any.  The intellectual and technical concepts contained
+# herein are proprietary to Last.Backend LLC
+# and its suppliers and may be covered by Russian Federation and Foreign Patents,
+# patents in process, and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Last.Backend LLC.
+#
+#
+# ===============================================================================
+# Ingress config settings =======================================================
+# ===============================================================================
+
+# Log level [0-7]
+verbose: integer
+# Authentication token
+# Usages:
+#   As header: Authorization Bearer <token>
+#   As querystring parameter: x-lastabckend=<token>
+token: string
+
+# Haproxy proxy runtime options
+haproxy:
+  # Haproxy config file path
+  config: string
+  # Haproxy pid file path
+  pid: string
+  # Haproxy exec binary file path
+  exec: string
+  # Haproxy stats options
+  stats:
+    # Haproxy stats access option: username
+    username: string
+		# Haproxy stats access option: password
+    password: string
+    # Haproxy stats listen port (http://<host>:<port>/stats, 1936 by default)
+    port: integer
+
+
+# Network settings
+network:
+	# External interface for listening worldwide 
+	interface: string
+  # Container proxy interface
+  cpi:
+    # Network proxy driver (ipvs by default)
+    type: string
+    # proxy network interface bindings
+    interface:
+      # external network interface for proxy
+      external:
+      # internal network interface for proxy
+      internal:
+  # Container network interface options
+  cni:
+    # Container overlay network driver (vxlan by default)
+    type: string
+		# overlay network interfaces bindigs
+		iterface:
+			# External network interface for network building
+			external: string
+			# Internal bridge network interface for network building
+			internal: string
+
+  # Network dns-resolver
+  resolver:
+    # Static DNS resolvers for ingress (8.8.8.8, 8.8.8.4 by default)
+    servers: [string]
+
+
+# REST API client options
+api:
+  # REST API Endpoint (http://127.0.0.1)
+  uri: string
+  # REST API TLS options 
+  tls:
+    # REST API TLS client certificate file path
+    cert: string
+    # REST API TLS private key file path
+    key: string
+    # REST API TLS client certificate authority file path
+    ca: string
+----

@@ -1,0 +1,219 @@
+==== Ingress
+
+REST API component is the control point to manage Last.Backend cluster.
+It validates and configures data for the api objects which include pods, services, deployments, routes, and others. 
+
+REST API is distributed as docker image, located at: `index.lstbknd.net/lastbackend/lastbackend`
+
+To run REST API server you can use this command:
+[source,bash]
+----
+docker run -it -d --name=api index.lstbknd.net/lastbackend/lastbackend api [options]
+----
+
+The available options:
+
+.Table Options
+|===
+|Name |Environment |Required |Type |Default value |Description
+
+|--access-token
+|LB_ACCESS_TOKEN
+|[ ]
+|string
+|
+|Access token to API server
+
+|--bind-listener-address
+|LB_BIND_LISTENER_ADDRESS
+|[ ]
+|string
+|0.0.0.0
+|Exporter bind address
+
+|--bind-listener-port
+|LB_BIND_LISTENER_PORT
+|[ ]
+|integer
+|2963
+|Exporter bind port
+
+|--bind-rest-address
+|LB_BIND_REST_ADDRESS
+|[ ]
+|string
+|0.0.0.0
+|Exporter REST listener address for logs and metrics streaming
+
+|--bind-rest-port 
+|LB_BIND_REST_PORT
+|[ ]
+|integer
+|2964
+|Exporter REST listener port
+
+|--tls-cert-file
+|LB_TLS_CERT_FILE
+|[ ]
+|string
+|
+|Exporter REST TLS cert file path
+
+|--tls-private-key-file
+|LB_TLS_PRIVATE_KEY
+|[ ]
+|string
+|
+|Exporter REST TLS private key path
+
+|--tls-ca-file
+|LB_TLS_CA_FILE
+|[ ]
+|string
+|
+|Exporter REST TLS certificate authority file path
+
+
+|--api-uri
+|LB_API_URI
+|[ ]
+|string
+|
+|REST API endpoint
+
+|--api-tls-cert-file
+|LB_API_CERT_FILE
+|[ ]
+|string
+|
+|REST API TLS certificate file path
+
+|--api-tls-private-key-file
+|LB_API_PRIVATE_KEY_FILE
+|[ ]
+|string
+|
+|REST API TLS private key file path
+
+|--api-tls-ca-file
+|LB_API_CA_FILE
+|[ ]
+|string
+|
+|REST API TSL certificate authority file path
+
+|--bind-interface 
+|LB_BIND_INTERFACE
+|[ ]
+|string
+|eth0
+|Exporter bind network interface
+
+|--log-workdir
+|LB_LOG_WORKDIR
+|[ ]
+|string
+|/var/run/lastbackend
+|Set directory on host for logs storage
+
+|--verbose, -v
+|LB_VERBOSE
+|[ ]
+|integer
+|0
+|Set log level from 0 to 7
+
+|--config, -c 
+|LB_CONFIG
+|[ ]
+|string
+|
+|Path for the configuration file
+
+|--help, -h
+|
+|
+|
+|
+|Print usage
+
+|===
+
+Or you can use config file:
+
+[source,yaml]
+----
+---
+#
+# Last.Backend LLC CONFIDENTIAL
+# _____________________________
+#
+# [2014] - [2019] Last.Backend LLC
+# All Rights Reserved.
+#
+# NOTICE:  All information contained herein is, and remains
+# the property of Last.Backend LLC and its suppliers,
+# if any.  The intellectual and technical concepts contained
+# herein are proprietary to Last.Backend LLC
+# and its suppliers and may be covered by Russian Federation and Foreign Patents,
+# patents in process, and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Last.Backend LLC.
+#
+#
+# ===============================================================================
+# Exporter config settings ======================================================
+# ===============================================================================
+
+# Log level [0-7]
+verbose: integer
+# Authentication token
+# Usages:
+#   As header: Authorization Bearer <token>
+#   As querystring parameter: x-lastabckend=<token>
+token: string
+
+
+# Cluster exporter http-server settings
+server:
+  # Exporter API server listen address (0.0.0.0 by default)
+  host: string
+  # Exporter API server port listen option (2964 by defaul)
+  port: integer
+  # Https/tls configurations
+  tls:
+	  # TLS certificate file path
+	  cert: string
+	  # TLS private key file path
+	  key: string
+	  # TLS certificate authority file path
+	  ca: string
+
+logger:
+  # Logger exporter configuration
+  workdir: string
+  # logger tcp server listen options (0.0.0.0 by default)
+  host: string
+  # logger tcp server port  (2963 by default)
+  port: integer
+
+
+# REST API client options
+api:
+  # REST API Endpoint (http://127.0.0.1)
+  uri: string
+  # REST API TLS options 
+  tls:
+    # REST API TLS client certificate file path
+    cert: string
+    # REST API TLS private key file path
+    key: string
+    # REST API TLS client certificate authority file path
+    ca: string
+
+# Network settings
+network:
+  # Public network interface to determine exporter access endpoint (eth0 by default)
+  interface: string
+----
