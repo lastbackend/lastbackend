@@ -20,15 +20,15 @@ package job
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"strings"
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"time"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
 )
 
 const logPodPrefix = "state:observer:pod"
@@ -227,18 +227,15 @@ func podDestroy(js *JobState, p *types.Pod) (err error) {
 	}()
 
 	if p.Spec.State.Destroy {
-
 		if p.Meta.Node == types.EmptyString {
 			p.Status.State = types.StateDestroyed
 			p.Meta.Updated = time.Now()
 			return nil
 		}
-
 		if p.Status.State != types.StateDestroy {
 			p.Status.State = types.StateDestroy
 			p.Meta.Updated = time.Now()
 		}
-
 		return nil
 	}
 

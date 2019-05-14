@@ -217,6 +217,7 @@ func (s *Storage) Put(ctx context.Context, collection string, name string, obj i
 }
 
 func (s *Storage) Set(ctx context.Context, collection string, name string, obj interface{}, opts *types.Opts) error {
+
 	s.check(collection)
 
 	s.lock.Lock()
