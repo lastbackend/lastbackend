@@ -74,104 +74,9 @@ func testTaskObserver(t *testing.T, name, werr string, wjs *JobState, js *JobSta
 			}
 		}
 
-		if wjs.job != nil {
-
-			// check job status jobState is equal
-			if !assert.Equal(t, wjs.job.Status.State, js.job.Status.State,
-				"job status state is different") {
-				return
-			}
-
-			// check job status message is equal
-			if !assert.Equal(t, wjs.job.Status.Message, js.job.Status.Message,
-				"job status message is different") {
-				return
-			}
-		}
-
-		// check list tasks count
-		if !assert.Equal(t, len(wjs.task.list), len(js.task.list),
-			"list tasks count is different") {
+		if err := compareJobStateProperties(wjs, js); assert.NoError(t, err) {
 			return
 		}
-
-		for k, v := range js.task.list {
-			if _, ok := wjs.task.list[k]; !ok {
-				t.Error("list tasks is different")
-				return
-			}
-
-			if err := compareTaskProperties(wjs.task.list[k], v); err != nil {
-				assert.NoError(t, err, err.Error())
-				return
-			}
-		}
-
-		// check queue tasks count
-		if !assert.Equal(t, len(wjs.task.queue), len(js.task.queue),
-			"queue tasks count is different") {
-			return
-		}
-
-		for k, v := range js.task.queue {
-			if _, ok := wjs.task.queue[k]; !ok {
-				t.Error("queue tasks is different")
-				return
-			}
-
-			if err := compareTaskProperties(wjs.task.queue[k], v); err != nil {
-				assert.NoError(t, err, err.Error())
-				return
-			}
-		}
-
-		// check active tasks count
-		if !assert.Equal(t, len(wjs.task.active), len(js.task.active),
-			"active tasks count is different") {
-			return
-		}
-
-		for k, v := range js.task.active {
-			if _, ok := wjs.task.active[k]; !ok {
-				t.Error("active tasks is different")
-				return
-			}
-
-			if err := compareTaskProperties(wjs.task.active[k], v); err != nil {
-				assert.NoError(t, err, err.Error())
-				return
-			}
-		}
-
-		// check finished tasks count
-		if !assert.Equal(t, len(wjs.task.finished), len(js.task.finished),
-			"finished tasks count is different") {
-			return
-		}
-
-		finished := make(map[string]*types.Task, 0)
-		for _, v := range wjs.task.finished {
-			finished[v.SelfLink().String()] = v
-		}
-
-		for _, v := range js.task.finished {
-			if _, ok := finished[v.SelfLink().String()]; !ok {
-				t.Error("finished tasks is different")
-				return
-			}
-
-			if err := compareTaskProperties(finished[v.SelfLink().String()], v); err != nil {
-				assert.NoError(t, err, err.Error())
-				return
-			}
-		}
-
-		// check pods count
-		if !assert.Equal(t, len(wjs.pod.list), len(js.pod.list),
-			"pods count is different") {
-			return
-		}
-
 	})
 }
 
@@ -1620,6 +1525,7 @@ func getTaskAssetWithName(job *types.Job, state, message, name string) *types.Ta
 
 	t := new(types.Task)
 
+	t.Meta.SetDefault()
 	t.Meta.Namespace = job.Meta.Namespace
 	t.Meta.Job = job.SelfLink().String()
 	t.Meta.Name = name
