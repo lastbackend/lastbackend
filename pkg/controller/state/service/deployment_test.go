@@ -68,7 +68,6 @@ func testDeploymentObserver(t *testing.T, name, werr string, wst *ServiceState, 
 			if !assert.Nil(t, state.service, "service should be nil") {
 				return
 			}
-
 		}
 
 		if wst.service != nil {

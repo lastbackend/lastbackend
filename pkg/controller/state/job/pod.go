@@ -20,15 +20,16 @@ package job
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"time"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
 )
 
 const logPodPrefix = "state:observer:pod"
@@ -93,7 +94,7 @@ func handlePodStateCreated(js *JobState, p *types.Pod) error {
 	if err := podProvision(js, p); err != nil {
 		return err
 	}
-	log.V(logLevel).Debugf("%s handle pod create state finish: %s : %s", logPodPrefix, p.SelfLink(), p.Status.State)
+
 	return nil
 }
 
@@ -104,6 +105,7 @@ func handlePodStateProvision(js *JobState, p *types.Pod) error {
 	if err := podProvision(js, p); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -182,6 +184,11 @@ func podProvision(js *JobState, p *types.Pod) (err error) {
 		}
 	}()
 
+	if p.Status.State != types.StateProvision {
+		p.Status.State = types.StateProvision
+		p.Meta.Updated = time.Now()
+	}
+
 	if p.Meta.Node == types.EmptyString {
 
 		var node *types.Node
@@ -208,11 +215,6 @@ func podProvision(js *JobState, p *types.Pod) (err error) {
 		return err
 	}
 
-	if p.Status.State != types.StateProvision {
-		p.Status.State = types.StateProvision
-		p.Meta.Updated = time.Now()
-	}
-
 	return nil
 }
 
@@ -225,20 +227,19 @@ func podDestroy(js *JobState, p *types.Pod) (err error) {
 			err = podUpdate(p, t)
 		}
 	}()
-
+fmt.Println("1 :::")
 	if p.Spec.State.Destroy {
-
+		fmt.Println("2 :::")
 		if p.Meta.Node == types.EmptyString {
 			p.Status.State = types.StateDestroyed
 			p.Meta.Updated = time.Now()
 			return nil
 		}
-
+		fmt.Println("3 :::", p.Status.State)
 		if p.Status.State != types.StateDestroy {
 			p.Status.State = types.StateDestroy
 			p.Meta.Updated = time.Now()
 		}
-
 		return nil
 	}
 

@@ -135,7 +135,7 @@ func (js *JobState) Restore() error {
 	}
 
 	// Sync job state if updated
-	js.observers.job <- js.job
+	js.SetJob(js.job)
 
 	if js.provider != nil {
 		go js.Provider()
@@ -157,51 +157,29 @@ func (js *JobState) Observe() {
 		case pod := <-js.observers.pod:
 			log.V(logLevel).Debugf("%s:observe:pod:> %s", logPrefix, pod.SelfLink())
 			if err := PodObserve(js, pod); err != nil {
-				log.Errorf("%s:observe:pod:> err: %s", logPrefix, err.Error())
+				log.V(logLevel).Errorf("%s:observe:pod:> err: %s", logPrefix, err.Error())
+				break
 			}
-			break
-
 		case task := <-js.observers.task:
 
 			log.V(logLevel).Debugf("%s:observe:task:> %s (%s)", logPrefix, task.SelfLink(), task.Status.State)
 
 			if err := taskObserve(js, task); err != nil {
-				log.Errorf("%s:observe:task err:> %s", logPrefix, err.Error())
-
-				attempt := 0
-				for {
-					attempt++
-
-					log.V(logLevel).Debugf("%s:observe:task:> repeat task %s attempt %в", logPrefix, task.Meta.Name, attempt)
-					if err := taskObserve(js, task); err == nil {
-						log.Errorf("%s:observe:task err:> %s", logPrefix, err.Error())
-						break
-					}
-
-					delay := time.Duration(attempt * 1)
-					if delay > 10 {
-						delay = 10
-					}
-
-					<-time.After(delay * time.Second)
-				}
+				log.V(logLevel).Errorf("%s:observe:task err:> %s", logPrefix, err.Error())
+				break
 			}
-
-			break
-
 		case job := <-js.observers.job:
 			log.V(logLevel).Debugf("%s:observe:job:> %s", logPrefix, job.SelfLink())
 
 			js.job = job
 
 			if err := jobObserve(js, job); err != nil {
-				log.Errorf("%s:observe:job:> err: %s", logPrefix, err.Error())
+				log.V(logLevel).Errorf("%s:observe:job:> err: %s", logPrefix, err.Error())
+				break
 			}
 
 			js.provider, _ = jp.New(job.Spec.Provider)
 			js.hook, _ = jh.New(job.Spec.Hook)
-
-			break
 		}
 
 	}
@@ -215,24 +193,12 @@ func (js *JobState) SetTask(task *types.Task) {
 	js.observers.task <- task
 }
 
-func (js *JobState) DelTask(d *types.Task) {
-
-	if _, ok := js.pod.list[d.SelfLink().String()]; !ok {
-		return
-	}
-
+func (js *JobState) DelTask(t *types.Task) {
 	js.lock.Lock()
-	delete(js.pod.list, d.SelfLink().String())
-	js.lock.Unlock()
-
-	if _, ok := js.task.list[d.SelfLink().String()]; !ok {
-		return
-	}
-
-	js.lock.Lock()
-	delete(js.task.list, d.SelfLink().String())
-	delete(js.task.queue, d.SelfLink().String())
-	delete(js.task.active, d.SelfLink().String())
+	delete(js.task.list, t.SelfLink().String())
+	delete(js.task.queue, t.SelfLink().String())
+	delete(js.task.active, t.SelfLink().String())
+	delete(js.pod.list, t.SelfLink().String())
 	js.lock.Unlock()
 }
 
