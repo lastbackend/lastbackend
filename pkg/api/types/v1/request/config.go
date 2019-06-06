@@ -41,11 +41,6 @@ type ConfigManifestSpec struct {
 	Data map[string]string `json:"data,omitempty" yaml:"data,omitempty"`
 }
 
-type ConfigManifestData struct {
-	Key   string `json:"key,omitempty" yaml:"key,omitempty"`
-	Value string `json:"value,omitempty" yaml:"value,omitempty"`
-}
-
 func (v *ConfigManifest) FromJson(data []byte) error {
 	return json.Unmarshal(data, v)
 }

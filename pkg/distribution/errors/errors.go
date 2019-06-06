@@ -25,6 +25,7 @@ import (
 )
 
 const (
+	StatusNotFound            = "Not Found"
 	StatusBadParameter        = "Bad Parameter"
 	StatusInUse               = "In use"
 	StatusBadRequest          = "Bad Request"
