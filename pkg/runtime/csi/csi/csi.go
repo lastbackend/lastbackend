@@ -27,6 +27,6 @@ import (
 func New(kind string, v *viper.Viper) (csi.CSI, error) {
 	switch kind {
 	default:
-		return dir.Get(v.GetString("runtime.csi.dir.root"))
+		return dir.Get(v.GetString("container.csi.dir.root"))
 	}
 }

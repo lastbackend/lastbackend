@@ -1,0 +1,148 @@
+==== Controller
+
+Controller component is the main cluster state management component.
+
+Controller is a service that embeds the core control loops and handle all cluster state. The Controller's control loop watches the shared state of the cluster through the storage and makes changes attempting to move the current state towards the desired state.
+
+
+Controller is distributed as docker image, located at: `index.lstbknd.net/lastbackend/lastbackend`
+
+To run controller service you can use this command:
+[source,bash]
+----
+docker run -it -d --name=api index.lstbknd.net/lastbackend/lastbackend controller [options]
+----
+
+The available options:
+
+.Table Options
+|===
+|Name |Environment |Required |Type |Default value |Description
+
+
+|--services-cidr
+|LB_SERVICES_CIDR
+|[ ]
+|string
+|172.0.0.0/24
+|Services IP CIDR for internal IPAM service
+
+|--storage
+|LB_STORAGE
+|[ ]
+|string
+|etcd
+|Set storage driver (Allow: etcd, mock)
+
+|--etcd-cert-file
+|LB_ETCD_CERT_FILE
+|[ ]
+|string
+|
+|ETCD database cert file path
+
+|--etcd-private-key-file
+|LB_ETCD_PRIVATE_KEY_FILE
+|[ ]
+|string
+|
+|ETCD database private key file path
+
+|--etcd-ca-file
+|LB_ETCD_CA_FILE
+|[ ]
+|string
+|
+|ETCD database certificate authority file
+
+|--etcd-endpoints
+|LB_ETCD_ENDPOINTS
+|[ ]
+|slice of string
+|127.0.0.1:2379
+|ETCD database endpoints list
+
+|--etcd-prefix
+|LB_ETCD_PREFIX
+|[ ]
+|string
+|lastbackend
+|ETCD database storage prefix
+
+|--verbose, -v
+|LB_VERBOSE
+|[ ]
+|integer
+|0
+|Set log level from 0 to 7
+
+|--config, -c 
+|LB_CONFIG
+|[ ]
+|string
+|
+|Path for the configuration file
+
+|--help, -h
+|
+|
+|
+|
+|Print usage
+
+|===
+
+Or you can use config file:
+
+[source,yaml]
+----
+---
+#
+# Last.Backend LLC CONFIDENTIAL
+# _____________________________
+#
+# [2014] - [2019] Last.Backend LLC
+# All Rights Reserved.
+#
+# NOTICE:  All information contained herein is, and remains
+# the property of Last.Backend LLC and its suppliers,
+# if any.  The intellectual and technical concepts contained
+# herein are proprietary to Last.Backend LLC
+# and its suppliers and may be covered by Russian Federation and Foreign Patents,
+# patents in process, and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Last.Backend LLC.
+#
+#
+# ===============================================================================
+# Controller config settings ====================================================
+# ===============================================================================
+
+# Log level [0-7]
+verbose: integer
+
+# Storage settings
+storage:
+  # Storage driver type (Only: etcd)
+  driver: string
+  # Etcd storage driver
+  etcd:
+    # Last.Backend cluster database prefix
+    prefix: string
+    # ETCD endpoints list
+    endpoints: [string]
+  # Etcd authentication TLS settings
+  tls:
+    # TLS certificate file path
+    cert: string
+    # TLS private key file path
+    key: string
+    # TLS certificate authority file path
+    ca: string
+
+
+service:
+  # Services internal IPAM CIDR
+  cidr: string #172.0.0.0/24 by default
+----

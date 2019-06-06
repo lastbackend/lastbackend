@@ -62,8 +62,7 @@ func Daemon(v *viper.Viper) bool {
 
 	envs.Get().SetState(st)
 	envs.Get().SetTemplate(template.Must(template.New("").Parse(runtime.HaproxyTemplate)),
-		v.GetString("haproxy.path"),
-		v.GetString("haproxy.name"),
+		v.GetString("haproxy.config"),
 		v.GetString("haproxy.pid"))
 
 	envs.Get().SetHaproxy(v.GetString("haproxy.exec"))
