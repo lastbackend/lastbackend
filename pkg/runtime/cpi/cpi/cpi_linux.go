@@ -27,7 +27,7 @@ import (
 )
 
 func New(v *viper.Viper) (cpi.CPI, error) {
-	switch v.GetString("runtime.cpi.type") {
+	switch v.GetString("network.cpi.type") {
 	case "ipvs":
 		return ipvs.New(v)
 	default:

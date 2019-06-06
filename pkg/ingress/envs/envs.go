@@ -35,7 +35,6 @@ type Env struct {
 	config struct {
 		tpl  *template.Template
 		path string
-		name string
 		pid  string
 	}
 	haproxy string
@@ -82,15 +81,14 @@ func (c *Env) GetClient() types.IngressClientV1 {
 	return c.client
 }
 
-func (c *Env) SetTemplate(t *template.Template, path, name, pid string) {
+func (c *Env) SetTemplate(t *template.Template, path, pid string) {
 	c.config.tpl = t
 	c.config.path = path
-	c.config.name = name
 	c.config.pid = pid
 }
 
-func (c *Env) GetTemplate() (*template.Template, string, string, string) {
-	return c.config.tpl, c.config.path, c.config.name, c.config.pid
+func (c *Env) GetTemplate() (*template.Template, string, string) {
+	return c.config.tpl, c.config.path, c.config.pid
 }
 
 func (c *Env) SetHaproxy(exec string) {

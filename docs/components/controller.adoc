@@ -10,7 +10,7 @@ Controller is distributed as docker image, located at: `index.lstbknd.net/lastba
 To run controller service you can use this command:
 [source,bash]
 ----
-docker run -it -d --name=api index.lstbknd.net/lastbackend/lastbackend ctl [options]
+docker run -it -d --name=api index.lstbknd.net/lastbackend/lastbackend controller [options]
 ----
 
 The available options:

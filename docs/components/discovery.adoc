@@ -1,14 +1,17 @@
 ==== Discovery
 
-REST API component is the control point to manage Last.Backend cluster.
-It validates and configures data for the api objects which include pods, services, deployments, routes, and others. 
+Discovery service controll services accessibility with their DNS names. 
+It works with internal IPAM datastore and responce service internal IP to requested resource. 
 
-REST API is distributed as docker image, located at: `index.lstbknd.net/lastbackend/lastbackend`
+Discovery service work with Last.Backend API server to register itself in platform and with internal storage to retrieve DNS information.
+It has built in cache for performance optimization. You don't need to flush cache, because discovery service subscribed to storage data changing events.
 
-To run REST API server you can use this command:
+Discovery service is distributed with docker image, located at: `index.lstbknd.net/lastbackend/discovery`
+
+To run Discovery services you can use this command:
 [source,bash]
 ----
-docker run -it -d --name=api index.lstbknd.net/lastbackend/lastbackend api [options]
+docker run -it -d --name=api index.lstbknd.net/lastbackend/discovery discovery [options]
 ----
 
 The available options:

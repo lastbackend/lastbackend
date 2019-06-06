@@ -79,10 +79,10 @@ func (c conf) Check() error {
 
 	log.Debug("config check")
 	var (
-		_, path, name, _ = envs.Get().GetTemplate()
+		_, path, _ = envs.Get().GetTemplate()
 	)
 
-	cfgPath := filepath.Join(path, name)
+	cfgPath := filepath.Join(path, ConfigName)
 	if _, err := os.Stat(cfgPath); os.IsNotExist(err) {
 		log.Debug("config not found: create new")
 		return c.Sync()
@@ -96,8 +96,8 @@ func (c conf) Sync() error {
 	log.Debug("config sync")
 
 	var (
-		routes             = envs.Get().GetState().Routes().GetRouteManifests()
-		tpl, path, name, _ = envs.Get().GetTemplate()
+		routes       = envs.Get().GetState().Routes().GetRouteManifests()
+		tpl, path, _ = envs.Get().GetTemplate()
 	)
 
 	log.Debugf("Update routes: %d", len(routes))
@@ -179,18 +179,14 @@ func (c conf) Sync() error {
 	)
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		log.Debugf("config direcotry not exists: %s", path)
+		log.Debugf("config directory does not exists: %s", path)
 		if err := os.MkdirAll(path, 0644); err != nil {
 			log.Errorf("can not create config dir: %s", err.Error())
 			return err
 		}
 	}
 
-	if name == types.EmptyString {
-		name = ConfigName
-	}
-
-	cfgPath := filepath.Join(path, name)
+	cfgPath := filepath.Join(path, ConfigName)
 	testPath := fmt.Sprintf("%s.test", cfgPath)
 
 	f, err = os.Open(testPath)

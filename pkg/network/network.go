@@ -49,8 +49,8 @@ func New(v *viper.Viper) (*Network, error) {
 
 	net := new(Network)
 
-	if v.GetString("runtime.cni.type") == types.EmptyString &&
-		v.GetString("runtime.cpi.type") == types.EmptyString {
+	if v.GetString("network.cni.type") == types.EmptyString &&
+		v.GetString("network.cpi.type") == types.EmptyString {
 		log.Debug("run without network management")
 		return nil, nil
 	}
