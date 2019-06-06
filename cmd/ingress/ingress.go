@@ -85,7 +85,7 @@ var (
 		Bind string
 	}{
 		{Name: "access-token", Short: "", Value: "", Desc: "Access token to API server", Bind: "token"},
-		{Name: "haproxy-config-path", Short: "", Value: "/var/run/lastbackend/ingress/haproxy/haproxy.cfg", Desc: "HAProxy configuration path setup", Bind: "haproxy.config.path"},
+		{Name: "haproxy-config-path", Short: "", Value: "/var/run/lastbackend/ingress/haproxy/haproxy.cfg", Desc: "HAProxy configuration path setup", Bind: "haproxy.config"},
 		{Name: "haproxy-pid", Short: "", Value: "/var/run/lastbackend/ingress/haproxy/haproxy.pid", Desc: "HAProxy pid file path", Bind: "haproxy.pid"},
 		{Name: "haproxy-exec", Short: "", Value: "/usr/local/bin/haproxy", Desc: "HAProxy entrypoint path", Bind: "haproxy.exec"},
 		{Name: "haproxy-stat-port", Short: "", Value: 1936, Desc: "HAProxy statistic port definition. If not provided - statistic will be disabled", Bind: "haproxy.stat.port"},

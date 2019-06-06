@@ -72,7 +72,7 @@ func Daemon(v *viper.Viper) bool {
 		v.GetString("haproxy.username"),
 		v.GetString("haproxy.password"),
 	)
-	iface := v.GetString("runtime.interface")
+	iface := v.GetString("network.interface")
 	r := runtime.New(iface, conf)
 
 	st.Ingress().Info = r.IngressInfo()

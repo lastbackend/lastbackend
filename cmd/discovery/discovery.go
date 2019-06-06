@@ -87,11 +87,11 @@ var (
 	}{
 		{Name: "access-token", Short: "", Value: "", Desc: "Access token to API server", Bind: "token"},
 		{Name: "storage", Short: "", Value: "etcd", Desc: "Set storage driver (Allow: etcd, mock)", Bind: "storage.driver"},
+		{Name: "etcd-endpoints", Short: "", Value: []string{"127.0.0.1:2379"}, Desc: "ETCD database endpoints list", Bind: "storage.etcd.endpoints"},
+		{Name: "etcd-prefix", Short: "", Value: "lastbackend", Desc: "ETCD database storage prefix", Bind: "storage.etcd.prefix"},
 		{Name: "etcd-cert-file", Short: "", Value: "", Desc: "ETCD database cert file path", Bind: "storage.etcd.tls.cert"},
 		{Name: "etcd-private-key-file", Short: "", Value: "", Desc: "ETCD database private key file path", Bind: "storage.etcd.tls.key"},
 		{Name: "etcd-ca-file", Short: "", Value: "", Desc: "ETCD database certificate authority file", Bind: "storage.etcd.tls.ca"},
-		{Name: "etcd-endpoints", Short: "", Value: []string{"127.0.0.1:2379"}, Desc: "ETCD database endpoints list", Bind: "storage.etcd.endpoints"},
-		{Name: "etcd-prefix", Short: "", Value: "lastbackend", Desc: "ETCD database storage prefix", Bind: "storage.etcd.prefix"},
 		{Name: "bind-address", Short: "", Value: "0.0.0.0", Desc: "DNS server bind address", Bind: "dns.host"},
 		{Name: "bind-port", Short: "", Value: 53, Desc: "DNS port listening", Bind: "dns.port"},
 		{Name: "dns-ttl", Short: "", Value: "24h", Desc: "DNS cache ttl", Bind: "dns.ttl"},
