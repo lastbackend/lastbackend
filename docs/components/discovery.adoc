@@ -1,0 +1,222 @@
+==== Discovery
+
+Discovery service controll services accessibility with their DNS names. 
+It works with internal IPAM datastore and responce service internal IP to requested resource. 
+
+Discovery service work with Last.Backend API server to register itself in platform and with internal storage to retrieve DNS information.
+It has built in cache for performance optimization. You don't need to flush cache, because discovery service subscribed to storage data changing events.
+
+Discovery service is distributed with docker image, located at: `index.lstbknd.net/lastbackend/discovery`
+
+To run Discovery services you can use this command:
+[source,bash]
+----
+docker run -it -d --name=api index.lstbknd.net/lastbackend/discovery discovery [options]
+----
+
+The available options:
+
+.Table Options
+|===
+|Name |Environment |Required |Type |Default value |Description
+
+|--access-token
+|LB_ACCESS_TOKEN
+|[ ]
+|string
+|
+|Access token to API server
+
+|--bind-address
+|LB_BIND_ADDRESS
+|[ ]
+|string
+|0.0.0.0
+|DNS server bind address
+
+|--bind-port
+|LB_DNS_PORT
+|[ ]
+|integer
+|53
+|DNS port listening
+
+|--dns-ttl
+|LB_DNS_TTL
+|[ ]
+|integer
+|24h
+|DNS cache ttl (24 hours)
+
+|--storage
+|LB_STORAGE
+|[ ]
+|string
+|etcd
+|Set storage driver (Allow: etcd, mock)
+
+|--etcd-cert-file
+|LB_ETCD_CERT_FILE
+|[ ]
+|string
+|
+|ETCD database cert file path
+
+|--etcd-private-key-file
+|LB_ETCD_PRIVATE_KEY_FILE
+|[ ]
+|string
+|
+|ETCD database private key file path
+
+|--etcd-ca-file
+|LB_ETCD_CA_FILE
+|[ ]
+|string
+|
+|ETCD database certificate authority file
+
+|--etcd-endpoints
+|LB_ETCD_ENDPOINTS
+|[ ]
+|slice of string
+|127.0.0.1:2379
+|ETCD database endpoints list
+
+|--etcd-prefix
+|LB_ETCD_PREFIX
+|[ ]
+|string
+|lastbackend
+|ETCD database storage prefix
+
+|--api-uri
+|LB_API_URI
+|[ ]
+|string
+|
+|REST API endpoint
+
+|--api-tls-cert-file
+|LB_API_CERT_FILE
+|[ ]
+|string
+|
+|REST API TLS certificate file path
+
+|--api-tls-private-key-file
+|LB_API_PRIVATE_KEY_FILE
+|[ ]
+|string
+|
+|REST API TLS private key file path
+
+|--api-tls-ca-file
+|LB_API_CA_FILE
+|[ ]
+|string
+|
+|REST API TSL certificate authority file path
+
+|--verbose, -v
+|LB_VERBOSE
+|[ ]
+|integer
+|0
+|Set log level from 0 to 7
+
+|--config, -c 
+|LB_CONFIG
+|[ ]
+|string
+|
+|Path for the configuration file
+
+|--help, -h
+|
+|
+|
+|
+|Print usage
+
+|===
+
+Or you can use config file:
+
+[source,yaml]
+----
+---
+#
+# Last.Backend LLC CONFIDENTIAL
+# _____________________________
+#
+# [2014] - [2019] Last.Backend LLC
+# All Rights Reserved.
+#
+# NOTICE:  All information contained herein is, and remains
+# the property of Last.Backend LLC and its suppliers,
+# if any.  The intellectual and technical concepts contained
+# herein are proprietary to Last.Backend LLC
+# and its suppliers and may be covered by Russian Federation and Foreign Patents,
+# patents in process, and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Last.Backend LLC.
+#
+#
+# ===============================================================================
+# Discovery config settings =====================================================
+# ===============================================================================
+
+# Log level [0-7]
+verbose: integer
+# Authentication token
+# Usages:
+#   As header: Authorization Bearer <token>
+#   As querystring parameter: x-lastabckend=<token>
+token: string
+
+
+# Storage settings
+storage:
+  # Storage driver type (Only: etcd)
+  driver: string
+  # Etcd storage driver
+  etcd:
+    # Last.Backend cluster database prefix
+    prefix: string
+    # ETCD endpoints list
+    endpoints: [string]
+  # Etcd authentication TLS settings
+  tls:
+    # TLS certificate file path
+    cert: string
+    # TLS private key file path
+    key: string
+    # TLS certificate authority file path
+    ca: string
+
+
+# Discovery DNS server listen and cache options
+dns:
+	# DNS address listen
+  host: string
+  # DNS port listen
+  port: integer
+  # DNS TTL options for records cache
+  ttl: duration
+
+
+# REST API client options
+api:
+  # REST API Endpoint (http://127.0.0.1)
+  uri: string
+  # REST API TLS options 
+  tls:
+    # REST API TLS client certificate file path
+    cert: string
+    # REST API TLS private key file path
+    key: string
+    # REST API TLS client certificate authority file path
+    ca: string
+----

@@ -51,16 +51,16 @@ func Daemon(v *viper.Viper) {
 	log := l.New(v.GetInt("verbose"))
 	log.Info("Start Node")
 
-	if !v.IsSet("runtime") {
-		log.Fatalf("Runtime not configured")
+	if !v.IsSet("container") {
+		log.Fatalf("Container not configured")
 	}
-	if !v.IsSet("runtime.cri") {
+	if !v.IsSet("container.cri") {
 		log.Fatalf("CRI not configured")
 	}
-	if !v.IsSet("runtime.iri") {
+	if !v.IsSet("container.iri") {
 		log.Fatalf("IRI not configured")
 	}
-	if !v.IsSet("runtime.csi") {
+	if !v.IsSet("container.csi") {
 		log.Fatalf("CSI not configured")
 	}
 
@@ -68,19 +68,19 @@ func Daemon(v *viper.Viper) {
 		log.Fatalf("Parse config err: %v", err)
 	}
 
-	criDriver := v.GetString("runtime.cri.type")
-	_cri, err := cri.New(criDriver, v.GetStringMap(fmt.Sprintf("runtime.%s", criDriver)))
+	criDriver := v.GetString("container.cri.type")
+	_cri, err := cri.New(criDriver, v.GetStringMap(fmt.Sprintf("container.%s", criDriver)))
 	if err != nil {
 		log.Errorf("Cannot initialize cri: %v", err)
 	}
 
-	iriDriver := v.GetString("runtime.iri.type")
-	_cii, err := cii.New(iriDriver, v.GetStringMap(fmt.Sprintf("runtime.%s", iriDriver)))
+	iriDriver := v.GetString("container.iri.type")
+	_cii, err := cii.New(iriDriver, v.GetStringMap(fmt.Sprintf("container.%s", iriDriver)))
 	if err != nil {
 		log.Errorf("Cannot initialize iri: %v", err)
 	}
 
-	csis := v.GetStringMap("runtime.csi")
+	csis := v.GetStringMap("container.csi")
 	if csis != nil {
 		for kind := range csis {
 			si, err := csi.New(kind, v)

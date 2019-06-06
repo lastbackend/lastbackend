@@ -6,11 +6,22 @@ You can run Last.Backend cluster almost anywhere. You can start from your laptop
 Your decision should be based on available resources and infrastructure design requirements.
 
 
-=== Common
+=== Components
 
-Last.Backend container cluster contains:
+Last.Backend container cluster contains 6 components:
+- REST API
+- Controller
+- Node
+- Ingress
+- Discovery
+- Exporter
 
-
+include::components/rest-api.adoc[]
+include::components/controller.adoc[]
+include::components/node.adoc[]
+include::components/discovery.adoc[]
+include::components/ingress.adoc[]
+include::components/exporter.adoc[]
 
 === Development Installation
 

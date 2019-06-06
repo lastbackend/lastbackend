@@ -512,8 +512,8 @@ func New(v *viper.Viper) (*Proxy, error) {
 	}
 
 	var (
-		eiface = v.GetString("runtime.cpi.interface.external")
-		iiface = v.GetString("runtime.cpi.interface.internal")
+		eiface = v.GetString("network.cpi.interface.external")
+		iiface = v.GetString("network.cpi.interface.internal")
 	)
 
 	if eiface == types.EmptyString {

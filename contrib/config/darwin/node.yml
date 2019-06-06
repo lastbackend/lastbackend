@@ -16,8 +16,8 @@ server:
     insecure: true
 
 
-# Runtime
-runtime:
+# Container
+container:
   docker:
     version: 1.35
   cri:

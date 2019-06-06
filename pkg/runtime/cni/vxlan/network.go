@@ -158,7 +158,7 @@ func (n *Network) AddInterface() error {
 		addr:  n.ExtIface.IfaceAddr,
 		port:  DeviceDefaultPort,
 	}); err != nil {
-		log.Errorf("Can not create xvlan interface: %s", err.Error())
+		log.Errorf("Can not create vxlan interface: %s", err.Error())
 		return err
 	}
 

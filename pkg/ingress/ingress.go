@@ -62,8 +62,7 @@ func Daemon(v *viper.Viper) bool {
 
 	envs.Get().SetState(st)
 	envs.Get().SetTemplate(template.Must(template.New("").Parse(runtime.HaproxyTemplate)),
-		v.GetString("haproxy.path"),
-		v.GetString("haproxy.name"),
+		v.GetString("haproxy.config"),
 		v.GetString("haproxy.pid"))
 
 	envs.Get().SetHaproxy(v.GetString("haproxy.exec"))
@@ -73,7 +72,7 @@ func Daemon(v *viper.Viper) bool {
 		v.GetString("haproxy.username"),
 		v.GetString("haproxy.password"),
 	)
-	iface := v.GetString("runtime.interface")
+	iface := v.GetString("network.interface")
 	r := runtime.New(iface, conf)
 
 	st.Ingress().Info = r.IngressInfo()

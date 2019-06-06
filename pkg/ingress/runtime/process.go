@@ -90,13 +90,13 @@ func (hp *Process) start() (*os.Process, error) {
 	log.Debug("start new process")
 
 	bin := envs.Get().GetHaproxy()
-	_, path, cfg, pid := envs.Get().GetTemplate()
+	_, path, pid := envs.Get().GetTemplate()
 
 	if pid == types.EmptyString {
 		pid = hPid
 	}
 
-	cmd := exec.Command(bin, "-f", filepath.Join(path, cfg), "-D", "-p", pid)
+	cmd := exec.Command(bin, "-f", filepath.Join(path, ConfigName), "-D", "-p", pid)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -138,25 +138,19 @@ func (hp *Process) reload() error {
 	}()
 
 	bin := envs.Get().GetHaproxy()
-	_, path, cfg, pidpath := envs.Get().GetTemplate()
+	_, path, pidpath := envs.Get().GetTemplate()
 	if pidpath == types.EmptyString {
 		pidpath = hPid
 	}
 
-	if cfg == types.EmptyString {
-		cfg = ConfigName
-	}
-
 	pid := hp.getPid()
-	cmd := exec.Command(bin, "-f", filepath.Join(path, cfg), "-p", pidpath, "-sf", fmt.Sprintf("%d", pid))
+	cmd := exec.Command(bin, "-f", filepath.Join(path, ConfigName), "-p", pidpath, "-sf", fmt.Sprintf("%d", pid))
 	cmd.Stdout = os.Stdout
 
 	//for port := range ports {
 	//	c := exec.Command(IPTablesExec, "-I", "INPUT", "-p", "tcp", "--dport", fmt.Sprintf("%d", port), "--syn", "-j", "DROP")
 	//	c.Start()
 	//}
-
-
 
 	err := cmd.Start()
 	if err != nil {
@@ -170,7 +164,7 @@ func (hp *Process) reload() error {
 
 func (hp *Process) getPid() int {
 
-	_, _, _, pidpath := envs.Get().GetTemplate()
+	_, _, pidpath := envs.Get().GetTemplate()
 
 	if pidpath == types.EmptyString {
 		pidpath = hPid

@@ -1,0 +1,255 @@
+==== REST API
+
+REST API component is the control point to manage Last.Backend cluster.
+It validates and configures data for the api objects which include pods, services, deployments, routes, and others. 
+
+REST API is distributed as docker image, located at: `index.lstbknd.net/lastbackend/lastbackend`
+
+To run REST API server you can use this command:
+[source,bash]
+----
+docker run -it -d --name=api index.lstbknd.net/lastbackend/lastbackend api [options]
+----
+
+The available options:
+
+.Table Options
+|===
+|Name |Environment |Required |Type |Default value |Description
+
+|--access-token
+|LB_ACCESS_TOKEN
+|[ ]
+|string
+|
+|Access token to API server
+
+|--cluster-name
+|LB_CLUSTER_NAME
+|[ ]
+|string
+|
+|Cluster name info
+
+|--cluster-description
+|LB_CLUSTER_DESCRIPTION
+|[ ]
+|string
+|
+|Cluster description
+
+|--bind-address
+|LB_BIND_ADDRESS
+|[ ]
+|string
+|0.0.0.0
+|Bind address for listening
+
+|--tls-cert-file
+|LB_TLS_CERT_FILE
+|[ ]
+|string
+|
+|TLS cert file path
+
+|--tls-private-key-file
+|LB_TLS_PRIVATE_KEY
+|[ ]
+|string
+|
+|TLS private key file path
+
+|--tls-ca-file
+|LB_TLS_CA_FILE
+|[ ]
+|string
+|
+|TLS certificate authority file path
+
+|--vault-token
+|LB_VAULT_TOKEN
+|[ ]
+|string
+|
+|Vault access token
+
+
+|--vault-endpoint
+|LB_VAULT_ENDPOINT
+|[ ]
+|string
+|https://api.lastbackend.com
+|Vault access endpoint
+
+|--domain-internal
+|LB_DOMAIN_INTERNAL
+|[ ]
+|string
+|lb.local
+|Internal domain name for cluster
+
+|--domain-external
+|LB_DOMAIN_EXTERNAL
+|[ ]
+|string
+|
+|Default external domain for cluster
+
+|--storage
+|LB_STORAGE
+|[ ]
+|string
+|etcd
+|Set storage driver (Allow: etcd, mock)
+
+|--etcd-cert-file
+|LB_ETCD_CERT_FILE
+|[ ]
+|string
+|
+|ETCD database cert file path
+
+|--etcd-private-key-file
+|LB_ETCD_PRIVATE_KEY_FILE
+|[ ]
+|string
+|
+|ETCD database private key file path
+
+|--etcd-ca-file
+|LB_ETCD_CA_FILE
+|[ ]
+|string
+|
+|ETCD database certificate authority file
+
+|--etcd-endpoints
+|LB_ETCD_ENDPOINTS
+|[ ]
+|slice of string
+|127.0.0.1:2379
+|ETCD database endpoints list
+
+|--etcd-prefix
+|LB_ETCD_PREFIX
+|[ ]
+|string
+|lastbackend
+|ETCD database storage prefix
+
+|--verbose, -v
+|LB_VERBOSE
+|[ ]
+|integer
+|0
+|Set log level from 0 to 7
+
+|--config, -c 
+|LB_CONFIG
+|[ ]
+|string
+|
+|Path for the configuration file
+
+|--help, -h
+|
+|
+|
+|
+|Print usage
+
+|===
+
+Or you can use config file:
+
+[source,yaml]
+----
+#
+# Last.Backend LLC CONFIDENTIAL
+# _____________________________
+#
+# [2014] - [2019] Last.Backend LLC
+# All Rights Reserved.
+#
+# NOTICE:  All information contained herein is, and remains
+# the property of Last.Backend LLC and its suppliers,
+# if any.  The intellectual and technical concepts contained
+# herein are proprietary to Last.Backend LLC
+# and its suppliers and may be covered by Russian Federation and Foreign Patents,
+# patents in process, and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Last.Backend LLC.
+#
+#
+# ===============================================================================
+# REST API config settings ======================================================
+# ===============================================================================
+
+# Log level [0-7]
+verbose: integer
+# Authentication token
+# Usages:
+#   As header: Authorization Bearer <token>
+#   As querystring parameter: x-lastabckend=<token>
+token: string
+
+
+# Cluster name
+name: string
+# Cluster description
+description: string
+
+
+# System domains settings
+# Cluster domains configuration
+domain:
+  # Internal cluster domain for intercluster communication
+  internal: string
+  # External cluster domain for ingress routes
+  external: string
+
+
+# Storage settings
+storage:
+  # Storage driver type (Only: etcd)
+  driver: string
+  # Etcd storage driver
+  etcd:
+    # Last.Backend cluster database prefix
+    prefix: string
+    # ETCD endpoints list
+    endpoints: [string]
+  # Etcd authentication TLS settings
+  tls:
+    # TLS certificate file path
+    cert: string
+    # TLS private key file path
+    key: string
+    # TLS certificate authority file path
+    ca: string
+
+
+# Cluster http-server settings
+server:
+  # REST API server listen address (0.0.0.0 by default)
+  host: string
+  # REST API server port listen option (2967 by defaul)
+  port: integer
+  # Https/tls configurations
+  tls:
+	  # TLS certificate file path
+	  cert: string
+	  # TLS private key file path
+	  key: string
+	  # TLS certificate authority file path
+	  ca: string
+
+
+# Last.Backend vault service settings
+vault:
+  # Last.Backend Vault endpoint
+  endpoint: string
+  # Last.Backend Vault authentication token
+  token: string
+----
