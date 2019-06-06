@@ -220,7 +220,7 @@ func (s *State) watchServices(ctx context.Context, rev *int64) {
 func (s *State) watchJobs(ctx context.Context, rev *int64) {
 
 	var (
-		svc = make(chan types.JobEvent)
+		je = make(chan types.JobEvent)
 	)
 
 	jm := distribution.NewJobModel(ctx, envs.Get().GetStorage())
@@ -230,31 +230,31 @@ func (s *State) watchJobs(ctx context.Context, rev *int64) {
 			select {
 			case <-ctx.Done():
 				return
-			case w := <-svc:
+			case e := <-je:
 
-				if w.Data == nil {
+				if e.Data == nil {
 					continue
 				}
 
-				if w.IsActionRemove() {
-					_, ok := s.Job[w.Data.SelfLink().String()]
+				if e.IsActionRemove() {
+					_, ok := s.Job[e.Data.SelfLink().String()]
 					if ok {
-						delete(s.Job, w.Data.SelfLink().String())
+						delete(s.Job, e.Data.SelfLink().String())
 					}
 					continue
 				}
 
-				_, ok := s.Job[w.Data.SelfLink().String()]
+				_, ok := s.Job[e.Data.SelfLink().String()]
 				if !ok {
-					s.Job[w.Data.SelfLink().String()] = job.NewJobState(s.Cluster, w.Data)
+					s.Job[e.Data.SelfLink().String()] = job.NewJobState(s.Cluster, e.Data)
 				}
 
-				s.Job[w.Data.SelfLink().String()].SetJob(w.Data)
+				s.Job[e.Data.SelfLink().String()].SetJob(e.Data)
 			}
 		}
 	}()
 
-	if err := jm.Watch(svc, rev); err != nil {
+	if err := jm.Watch(je, rev); err != nil {
 		log.Errorf("job watch err: %v", err)
 	}
 }

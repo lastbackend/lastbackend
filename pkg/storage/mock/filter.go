@@ -86,6 +86,10 @@ func byDeployment(namespace, service, deployment string) string {
 	return fmt.Sprintf("%s:%s:d_%s:", namespace, service, deployment)
 }
 
+func byTask(namespace, job, task string) string {
+	return fmt.Sprintf("%s:%s:t_%s:", namespace, job, task)
+}
+
 func byJob(namespace, runner string) string {
 
 	if runner == "" {
@@ -128,7 +132,7 @@ func (PodFilter) ByJob(namespace, job string) string {
 }
 
 func (PodFilter) ByTask(namespace, job, task string) string {
-	return byDeployment(namespace, job, task)
+	return byTask(namespace, job, task)
 }
 
 type EndpointFilter struct{}
