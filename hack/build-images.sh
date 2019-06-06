@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -a arr=("lastbackend")
+declare -a arr=("lastbackend" "ingress" "discovery" "exporter")
 
 if [[ $1 != "" ]]; then
   arr=($1)
