@@ -98,7 +98,6 @@ var (
 		{Name: "container-runtime-docker-version", Short: "", Value: "", Desc: "Set docker version for docker container runtime", Bind: "container.cri.docker.version"},
 		{Name: "container-storage-root", Short: "", Value: "/var/run/lastbackend", Desc: "Node container storage root", Bind: "container.csi.dir.root"},
 		{Name: "container-image-runtime", Short: "", Value: "docker", Desc: "Node container images runtime", Bind: "container.iri.type"},
-		{Name: "container-runtime-docker-version", Short: "", Value: "", Desc: "Set docker version for docker container runtime", Bind: "container.iri.docker.version"},
 		{Name: "bind-address", Short: "", Value: "0.0.0.0", Desc: "Node bind address", Bind: "server.host"},
 		{Name: "bind-port", Short: "", Value: 2965, Desc: "Node listening port binding", Bind: "server.port"},
 		{Name: "tls-cert-file", Short: "", Value: "", Desc: "Node cert file path", Bind: "server.tls.cert"},
