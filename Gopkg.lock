@@ -707,6 +707,14 @@
   revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
   version = "v2.2.2"
 
+[[projects]]
+  branch = "v3"
+  digest = "1:e11e6a71536a7120d56ea0c0cbfb4cf2b24b328f3982e8d03ce6939f7fe8b14c"
+  name = "gopkg.in/yaml.v3"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "55513cacd4ae8b250e3a9084ab9d8c407b1ed618"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -754,6 +762,7 @@
     "golang.org/x/oauth2",
     "golang.org/x/sys/unix",
     "gopkg.in/yaml.v2",
+    "gopkg.in/yaml.v3",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

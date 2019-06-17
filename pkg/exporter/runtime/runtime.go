@@ -48,6 +48,7 @@ func New(opts *RuntimeOpts) (r *Runtime, err error) {
 			os.Exit(1)
 			return nil, err
 		}
+		r.logger = lg
 		envs.Get().SetLogger(lg)
 	}
 	return r, nil

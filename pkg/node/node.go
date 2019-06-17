@@ -69,13 +69,13 @@ func Daemon(v *viper.Viper) {
 	}
 
 	criDriver := v.GetString("container.cri.type")
-	_cri, err := cri.New(criDriver, v.GetStringMap(fmt.Sprintf("container.%s", criDriver)))
+	_cri, err := cri.New(criDriver, v.GetStringMap(fmt.Sprintf("container.cri.%s", criDriver)))
 	if err != nil {
 		log.Errorf("Cannot initialize cri: %v", err)
 	}
 
 	iriDriver := v.GetString("container.iri.type")
-	_cii, err := cii.New(iriDriver, v.GetStringMap(fmt.Sprintf("container.%s", iriDriver)))
+	_cii, err := cii.New(iriDriver, v.GetStringMap(fmt.Sprintf("container.iri.%s", iriDriver)))
 	if err != nil {
 		log.Errorf("Cannot initialize iri: %v", err)
 	}
@@ -172,10 +172,15 @@ func Daemon(v *viper.Viper) {
 	go func() {
 		opts := new(http.HttpOpts)
 		opts.BearerToken = v.GetString("token")
-		opts.Insecure = v.GetBool("server.tls.insecure")
-		opts.CertFile = v.GetString("server.tls.server_cert")
-		opts.KeyFile = v.GetString("server.tls.server_key")
-		opts.CaFile = v.GetString("server.tls.ca")
+
+		if v.IsSet("server.tls") {
+			opts.Insecure = v.GetBool("server.tls.insecure")
+			opts.CertFile = v.GetString("server.tls.cert")
+			opts.KeyFile = v.GetString("server.tls.key")
+			opts.CaFile = v.GetString("server.tls.ca")
+		} else {
+			opts.Insecure = true
+		}
 
 		if err := http.Listen(v.GetString("server.host"), v.GetInt("server.port"), opts); err != nil {
 			log.Fatalf("Http server start error: %v", err)
