@@ -141,6 +141,10 @@ func main() {
 		if err := v.BindEnv(item.Bind, name); err != nil {
 			panic(err)
 		}
+
+		if item.Value != nil {
+			v.SetDefault(item.Bind, item.Value)
+		}
 	}
 
 	v.SetConfigType(default_config_type)

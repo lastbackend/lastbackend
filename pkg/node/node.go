@@ -174,12 +174,9 @@ func Daemon(v *viper.Viper) {
 		opts.BearerToken = v.GetString("token")
 
 		if v.IsSet("server.tls") {
-			opts.Insecure = v.GetBool("server.tls.insecure")
 			opts.CertFile = v.GetString("server.tls.cert")
 			opts.KeyFile = v.GetString("server.tls.key")
 			opts.CaFile = v.GetString("server.tls.ca")
-		} else {
-			opts.Insecure = true
 		}
 
 		if err := http.Listen(v.GetString("server.host"), v.GetInt("server.port"), opts); err != nil {
