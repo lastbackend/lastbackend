@@ -76,8 +76,8 @@
   name = "golang.org/x/oauth2"
 
 [[constraint]]
-  name = "gopkg.in/yaml.v2"
-  version = "2.2.1"
+  name = "gopkg.in/yaml.v3"
+  branch = "v3"
 
 [prune]
   go-tests = true

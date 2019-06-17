@@ -55,8 +55,10 @@ func Daemon(v *viper.Viper) {
 		log.Fatalf("Cannot initialize storage: %s", err.Error())
 	}
 	envs.Get().SetStorage(stg)
-
 	envs.Get().SetCache(cache.NewCache())
+	envs.Get().SetClusterInfo(v.GetString("name"), v.GetString("description"))
+	envs.Get().SetDomain(v.GetString("domain.internal"), v.GetString("domain.external"))
+	envs.Get().SetAccessToken(v.GetString("token"))
 
 	mnt := monitor.New()
 	envs.Get().SetMonitor(mnt)

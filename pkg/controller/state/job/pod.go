@@ -20,7 +20,6 @@ package job
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -227,15 +226,15 @@ func podDestroy(js *JobState, p *types.Pod) (err error) {
 			err = podUpdate(p, t)
 		}
 	}()
-fmt.Println("1 :::")
+
 	if p.Spec.State.Destroy {
-		fmt.Println("2 :::")
+
 		if p.Meta.Node == types.EmptyString {
 			p.Status.State = types.StateDestroyed
 			p.Meta.Updated = time.Now()
 			return nil
 		}
-		fmt.Println("3 :::", p.Status.State)
+
 		if p.Status.State != types.StateDestroy {
 			p.Status.State = types.StateDestroy
 			p.Meta.Updated = time.Now()
