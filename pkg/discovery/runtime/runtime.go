@@ -44,3 +44,7 @@ func New(opts *RuntimeOpts) *Runtime {
 		opts: opts,
 	}
 }
+
+func (r *Runtime) GetOpts() *RuntimeOpts {
+	return r.opts
+}

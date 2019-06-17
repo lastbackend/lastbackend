@@ -20,7 +20,6 @@ package controller
 
 import (
 	"context"
-	"net"
 	"sync"
 	"time"
 
@@ -75,22 +74,18 @@ func (c *Controller) Sync(ctx context.Context) error {
 
 	log.Debugf("Start discovery sync")
 
-	var (
-		ip = net.IP{}
-	)
-
-	log.Debugf("internal route ip net: %s", ip.String())
-
 	log.V(logLevel).Debugf("%s:loop:> update current discovery service info", logPrefix)
 	ticker := time.NewTicker(time.Second * 5)
 
 	for range ticker.C {
-		opts := new(request.DiscoveryStatusOptions)
 
+		opts := new(request.DiscoveryStatusOptions)
 		status := envs.Get().GetState().Discovery().Status
-		opts.IP = ip.String()
-		opts.Port = status.Port
+
 		opts.Ready = status.Ready
+		opts.IP = status.IP
+		opts.Port = status.Port
+		opts.Online = status.Online
 
 		_, err := envs.Get().GetClient().SetStatus(ctx, opts)
 		if err != nil {

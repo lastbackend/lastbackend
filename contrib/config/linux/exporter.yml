@@ -9,11 +9,12 @@ server:
   tls:
     insecure: true
 
+logger:
+  host: 0.0.0.0
+  port: 2966
+  workdir: /opt/logs
+
 api:
   uri: "127.0.0.1:2967"
   tls:
     insecure: true
-
-# Runtime
-network:
-  interface: "ens3"
