@@ -89,6 +89,7 @@ var (
 		{Name: "cluster-name", Short: "", Value: "", Desc: "Cluster name info", Bind: "name"},
 		{Name: "cluster-description", Short: "", Value: "", Desc: "Cluster description", Bind: "description"},
 		{Name: "bind-address", Short: "", Value: "0.0.0.0", Desc: "Bind address for listening", Bind: "server.host"},
+		{Name: "bind-port", Short: "", Value: 2967, Desc: "Bind port for listening", Bind: "server.port"},
 		{Name: "tls-cert-file", Short: "", Value: "", Desc: "TLS cert file path", Bind: "server.tls.cert"},
 		{Name: "tls-private-key-file", Short: "", Value: "", Desc: "TLS private key file path", Bind: "server.tls.key"},
 		{Name: "tls-ca-file", Short: "", Value: "", Desc: "TLS certificate authority file path", Bind: "server.tls.ca"},
@@ -140,6 +141,14 @@ func main() {
 		if err := v.BindEnv(item.Bind, name); err != nil {
 			panic(err)
 		}
+
+		if item.Value != nil {
+			v.SetDefault(item.Bind, item.Value)
+		}
+
+		// Set default port listener
+		v.SetDefault("server.port", 2967)
+
 	}
 
 	v.SetConfigType(default_config_type)
@@ -150,9 +159,6 @@ func main() {
 			panic(fmt.Sprintf("Read config err: %v", err))
 		}
 	}
-
-	// Set default port listener
-	v.SetDefault("server.port", 2967)
 
 	api.Daemon(v)
 }

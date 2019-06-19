@@ -81,7 +81,7 @@ func Listen(host string, port int, opts *HttpOpts) error {
 		r.Handle(route.Path, http.Handle(ctx, route.Handler, route.Middleware...)).Methods(route.Method)
 	}
 
-	if opts.Insecure {
+	if len(opts.CaFile) == 0 || len(opts.CertFile) == 0 || len(opts.KeyFile) == 0 {
 		log.V(logLevel).Debugf("%s:> run insecure http server", logPrefix)
 		return http.Listen(host, port, r)
 	}

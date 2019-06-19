@@ -95,9 +95,10 @@ var (
 		{Name: "network-driver-iface-external", Short: "", Value: "eth0", Desc: "Container overlay network external interface for host communication", Bind: "network.cni.interface.external"},
 		{Name: "network-driver-iface-internal", Short: "", Value: "docker0", Desc: "Container overlay network internal bridge interface for container intercommunications", Bind: "network.cni.interface.internal"},
 		{Name: "container-runtime", Short: "", Value: "docker", Desc: "Node container runtime", Bind: "container.cri.type"},
-		{Name: "container-runtime-docker-version", Short: "", Value: "", Desc: "Set docker version for docker container runtime", Bind: "container.cri.docker.version"},
+		{Name: "container-runtime-docker-version", Short: "", Value: "1.38", Desc: "Set docker version for docker container runtime", Bind: "container.cri.docker.version"},
 		{Name: "container-storage-root", Short: "", Value: "/var/run/lastbackend", Desc: "Node container storage root", Bind: "container.csi.dir.root"},
 		{Name: "container-image-runtime", Short: "", Value: "docker", Desc: "Node container images runtime", Bind: "container.iri.type"},
+		{Name: "container-image-runtime-docker-version", Short: "", Value: "1.38", Desc: "Set docker version for docker container image runtime", Bind: "container.iri.docker.version"},
 		{Name: "bind-address", Short: "", Value: "0.0.0.0", Desc: "Node bind address", Bind: "server.host"},
 		{Name: "bind-port", Short: "", Value: 2965, Desc: "Node listening port binding", Bind: "server.port"},
 		{Name: "tls-cert-file", Short: "", Value: "", Desc: "Node cert file path", Bind: "server.tls.cert"},
@@ -145,6 +146,10 @@ func main() {
 
 		if err := v.BindEnv(item.Bind, name); err != nil {
 			panic(err)
+		}
+
+		if item.Value != nil {
+			v.SetDefault(item.Bind, item.Value)
 		}
 	}
 
