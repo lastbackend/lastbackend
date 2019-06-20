@@ -195,6 +195,7 @@ type SpecTemplateContainer struct {
 // swagger:model types_spec_template_container_image
 type SpecTemplateContainerImage struct {
 	Name   string                           `json:"name" yaml:"name"`
+	Sha    string                           `json:"sha" yaml:"sha"`
 	Secret SpecTemplateContainerImageSecret `json:"secret,omitempty" yaml:"secret"`
 	Policy string                           `json:"policy,omitempty" yaml:"policy"`
 }

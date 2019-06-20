@@ -233,6 +233,7 @@ func (sv Service) ToRequestManifest() *request.ServiceManifest {
 			}
 
 			data.Image.Name = v.Image.Name
+			data.Image.Sha = v.Image.Sha
 			data.Image.Secret.Name = v.Image.Secret.Name
 			data.Image.Secret.Key = v.Image.Secret.Key
 

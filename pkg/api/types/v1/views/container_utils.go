@@ -226,6 +226,7 @@ func (cv *ContainerView) NewPodContainer(c *types.PodContainer) PodContainer {
 	container.State.Stopped.Exit.Code = c.State.Stopped.Exit.Code
 
 	container.Image.Name = c.Image.Name
+	container.Image.Sha = c.Image.Sha
 	container.Image.ID = c.Image.ID
 
 	return container

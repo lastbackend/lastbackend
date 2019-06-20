@@ -93,6 +93,7 @@ type ManifestSpecTemplateContainerEnvConfig struct {
 
 type ManifestSpecTemplateContainerImage struct {
 	Name   string                                   `json:"name,omitempty" yaml:"name,omitempty"`
+	Sha    string                                   `json:"sha,omitempty" yaml:"sha,omitempty"`
 	Secret ManifestSpecTemplateContainerImageSecret `json:"secret,omitempty" yaml:"secret,omitempty"`
 }
 
@@ -350,6 +351,7 @@ func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
 	}
 
 	s.Image.Name = m.Image.Name
+	s.Image.Sha = m.Image.Sha
 	s.Image.Secret.Name = m.Image.Secret.Name
 	s.Image.Secret.Key = m.Image.Secret.Key
 
@@ -599,6 +601,11 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 
 		if spec.Image.Name != c.Image.Name {
 			spec.Image.Name = c.Image.Name
+			st.Updated = time.Now()
+		}
+
+		if spec.Image.Sha != c.Image.Sha {
+			spec.Image.Sha = c.Image.Sha
 			st.Updated = time.Now()
 		}
 
@@ -1156,6 +1163,10 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 
 		if spec.Image.Name != c.Image.Name {
 			spec.Image.Name = c.Image.Name
+		}
+
+		if spec.Image.Sha != c.Image.Sha {
+			spec.Image.Sha = c.Image.Sha
 		}
 
 		if spec.Image.Secret.Name != c.Image.Secret.Name || spec.Image.Secret.Key != c.Image.Secret.Key {

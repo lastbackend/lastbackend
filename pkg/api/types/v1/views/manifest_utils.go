@@ -65,6 +65,7 @@ func (mv *ManifestView) NewManifestSpecTemplate(obj types.SpecTemplate) Manifest
 
 		c.Image = new(ManifestSpecTemplateContainerImage)
 		c.Image.Name = s.Image.Name
+		c.Image.Sha = s.Image.Sha
 		c.Image.Secret.Name = s.Image.Secret.Name
 		c.Image.Secret.Key = s.Image.Secret.Key
 

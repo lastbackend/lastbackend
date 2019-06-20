@@ -130,6 +130,7 @@ type SpecTemplateContainer struct {
 
 type SpecTemplateContainerImage struct {
 	Name   string                           `json:"name" yaml:"name"`
+	Sha    string                           `json:"sha" yaml:"sha"`
 	Secret SpecTemplateContainerImageSecret `json:"secret" yaml:"secret"`
 	Policy string                           `json:"policy" yaml:"policy"`
 }
