@@ -21,6 +21,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"time"
 
@@ -402,7 +403,6 @@ func NewContainerManifest(spec *SpecTemplateContainer) *ContainerManifest {
 
 	mf := new(ContainerManifest)
 	mf.Resources = spec.Resources
-	mf.Image = spec.Image.Name
 	mf.Labels = spec.Labels
 	mf.Ports = spec.Ports
 	mf.Network = spec.Network
@@ -413,6 +413,11 @@ func NewContainerManifest(spec *SpecTemplateContainer) *ContainerManifest {
 	mf.PublishAllPorts = spec.PublishAllPorts
 	mf.Security = spec.Security
 	mf.AutoRemove = spec.AutoRemove
+
+	mf.Image = spec.Image.Name
+	if len(spec.Image.Sha) != 0 {
+		mf.Image = fmt.Sprintf("%s@%s", strings.Split(spec.Image.Name, ":"), spec.Image.Sha)
+	}
 
 	var envs []string
 	for _, e := range spec.EnvVars {

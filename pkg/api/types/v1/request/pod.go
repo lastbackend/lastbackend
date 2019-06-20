@@ -261,6 +261,11 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 				pod.Spec.Template.Updated = time.Now()
 			}
 
+			if spec.Image.Sha != c.Image.Sha {
+				spec.Image.Sha = c.Image.Sha
+				pod.Spec.Template.Updated = time.Now()
+			}
+
 			if spec.Image.Secret.Name != c.Image.Secret.Name || spec.Image.Secret.Key != c.Image.Secret.Key {
 				spec.Image.Secret.Name = c.Image.Secret.Name
 				spec.Image.Secret.Key = c.Image.Secret.Key

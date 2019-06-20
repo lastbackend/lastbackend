@@ -54,6 +54,7 @@ func (sv *SpecView) NewContainer(c *types.SpecTemplateContainer) *SpecTemplateCo
 	s.Labels = c.Labels
 	s.Image = SpecTemplateContainerImage{
 		Name: c.Image.Name,
+		Sha: c.Image.Sha,
 		Secret: SpecTemplateContainerImageSecret{
 			Name: c.Image.Secret.Name,
 			Key:  c.Image.Secret.Key,

@@ -198,6 +198,8 @@ type PodContainerImage struct {
 	ID string `json:"id"`
 	// Pod container image name
 	Name string `json:"name"`
+	// Pod container image sha
+	Sha string `json:"sha"`
 }
 
 // PodSteps is a map of pod steps

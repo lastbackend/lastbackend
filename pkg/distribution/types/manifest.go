@@ -426,6 +426,7 @@ func (m ManifestSpecTemplateContainer) GetSpec() SpecTemplateContainer {
 	}
 
 	s.Image.Name = m.Image.Name
+	s.Image.Sha = m.Image.Sha
 	s.Image.Secret.Name = m.Image.Secret.Name
 	s.Image.Secret.Key = m.Image.Secret.Key
 
@@ -668,6 +669,11 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *SpecTemplate) error {
 
 		if spec.Image.Name != c.Image.Name {
 			spec.Image.Name = c.Image.Name
+			st.Updated = time.Now()
+		}
+
+		if spec.Image.Sha != c.Image.Sha {
+			spec.Image.Sha = c.Image.Sha
 			st.Updated = time.Now()
 		}
 

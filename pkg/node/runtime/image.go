@@ -20,6 +20,7 @@ package runtime
 
 import (
 	"encoding/base64"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -35,6 +36,10 @@ func ImagePull(ctx context.Context, namespace string, image *types.SpecTemplateC
 	)
 
 	mf.Name = image.Name
+	if len(image.Sha) != 0 {
+		mf.Name = fmt.Sprintf("%s@%s", strings.Split(image.Name, ":")[0], image.Sha)
+	}
+
 	if image.Secret.Name != types.EmptyString {
 
 		secret, err := SecretGet(ctx, namespace, image.Secret.Name)

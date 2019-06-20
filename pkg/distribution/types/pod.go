@@ -19,6 +19,8 @@
 package types
 
 import (
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -179,6 +181,8 @@ type PodContainerImage struct {
 	ID string `json:"id" yaml:"id"`
 	// Pod container image name
 	Name string `json:"name" yaml:"name"`
+	// Pod container image sha
+	Sha string `json:"sha" yaml:"sha"`
 }
 
 // swagger:model types_pod_container_state
@@ -413,11 +417,14 @@ func (c *PodContainer) GetManifest() *ContainerManifest {
 	var manifest = new(ContainerManifest)
 
 	manifest.Name = c.Name
-	manifest.Image = c.Image.Name
 	manifest.Binds = c.Binds
 	manifest.Envs = c.Envs
 	manifest.Ports = c.Ports
 	manifest.Exec = c.Exec
+	manifest.Image = c.Image.Name
+	if len(c.Image.Sha) != 0 {
+		manifest.Image = fmt.Sprintf("%s@%s", strings.Split(c.Image.Name, ":"), c.Image.Sha)
+	}
 
 	manifest.RestartPolicy.Policy = c.Restart.Policy
 	manifest.RestartPolicy.Attempt = c.Restart.Attempt
