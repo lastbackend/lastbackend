@@ -165,8 +165,7 @@ func (n *Network) AddInterface() error {
 		return err
 	}
 
-	n.Device.SetIP(*n.CIDR)
-	return nil
+	return n.Device.SetIP(*n.CIDR)
 }
 
 func (n *Network) Info(ctx context.Context) *types.NetworkState {
