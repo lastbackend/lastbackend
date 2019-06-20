@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/discovery/envs"
 	"github.com/lastbackend/lastbackend/pkg/discovery/runtime"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
@@ -31,9 +32,8 @@ import (
 )
 
 const (
-	logPrefix   = "controller"
-	logLevel    = 3
-	ifaceDocker = "docker0"
+	logPrefix = "controller"
+	logLevel  = 3
 )
 
 type Controller struct {
@@ -68,4 +68,31 @@ func (c *Controller) Connect(ctx context.Context) error {
 		log.Errorf("connect err: %s", err.Error())
 		time.Sleep(3 * time.Second)
 	}
+}
+
+func (c *Controller) Sync(ctx context.Context) error {
+
+	log.Debugf("Start discovery sync")
+
+	log.V(logLevel).Debugf("%s:loop:> update current discovery service info", logPrefix)
+	ticker := time.NewTicker(time.Second * 5)
+
+	for range ticker.C {
+
+		opts := new(request.DiscoveryStatusOptions)
+		status := envs.Get().GetState().Discovery().Status
+
+		opts.Ready = status.Ready
+		opts.IP = status.IP
+		opts.Port = status.Port
+		opts.Online = status.Online
+
+		_, err := envs.Get().GetClient().SetStatus(ctx, opts)
+		if err != nil {
+			log.Errorf("discovery:exporter:dispatch err: %s", err.Error())
+		}
+
+	}
+
+	return nil
 }

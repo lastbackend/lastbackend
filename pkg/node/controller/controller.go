@@ -68,8 +68,6 @@ func (c *Controller) Connect(v *viper.Viper) error {
 	opts := v1.Request().Node().NodeConnectOptions()
 	opts.Info = envs.Get().GetState().Node().Info
 
-	log.Info(opts.Info)
-
 	opts.Status = envs.Get().GetState().Node().Status
 	var network = envs.Get().GetNet()
 	if network != nil {
@@ -105,10 +103,13 @@ func (c *Controller) Connect(v *viper.Viper) error {
 	}
 
 	for {
+		log.V(logLevel).Debugf("%s:connect:> establish connection", logPrefix)
 		if err := envs.Get().GetNodeClient().Connect(c.ctx, opts); err == nil {
 			return nil
+		} else {
+			log.V(logLevel).Errorf("%s:connect:> establish connection err: %s", logPrefix, err.Error())
+			time.Sleep(3 * time.Second)
 		}
-		time.Sleep(3 * time.Second)
 	}
 }
 

@@ -20,7 +20,6 @@ package storage
 
 import (
 	"context"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 	v3 "github.com/lastbackend/lastbackend/pkg/storage/etcd/v3"
@@ -76,10 +75,16 @@ func Get(v *viper.Viper) (Storage, error) {
 	case "mock":
 		return mock.New()
 	default:
+
 		config := new(v3.Config)
-		if err := v.UnmarshalKey("storage.etcd", config); err != nil {
-			return nil, errors.New(fmt.Sprintf("parse etcd config err: %v", err))
-		}
+
+		config.Prefix = v.GetString("storage.etcd.prefix")
+		config.Endpoints = v.GetStringSlice("storage.etcd.endpoints")
+
+		config.TLS.CA = v.GetString("storage.etcd.tls.ca")
+		config.TLS.Cert = v.GetString("storage.etcd.tls.cert")
+		config.TLS.Key = v.GetString("storage.etcd.tls.key")
+
 		return etcd.New(config)
 	}
 }

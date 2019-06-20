@@ -37,6 +37,7 @@ const (
 var Routes = make([]http.Route, 0)
 
 type HttpOpts struct {
+	TLS         bool
 	BearerToken string
 
 	CertFile string

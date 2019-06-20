@@ -102,9 +102,10 @@ func Daemon(v *viper.Viper) bool {
 			log.Errorf("ingress:initialize: connect err %s", err.Error())
 		}
 
+		go ctl.Sync(context.Background())
 	}
 
-	sd, err := Listen(v.GetString( "dns.host"), v.GetInt( "dns.port"))
+	sd, err := Listen(v.GetString("dns.host"), v.GetInt("dns.port"))
 	if err != nil {
 		log.Fatalf("Start discovery server error: %v", err)
 	}

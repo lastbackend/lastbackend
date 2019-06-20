@@ -101,10 +101,12 @@ var (
 		{Name: "container-image-runtime-docker-version", Short: "", Value: "1.38", Desc: "Set docker version for docker container image runtime", Bind: "container.iri.docker.version"},
 		{Name: "bind-address", Short: "", Value: "0.0.0.0", Desc: "Node bind address", Bind: "server.host"},
 		{Name: "bind-port", Short: "", Value: 2965, Desc: "Node listening port binding", Bind: "server.port"},
+		{Name: "tls-verify", Short: "", Value: false, Desc: "Node TLS verify options", Bind: "server.tls.verify"},
 		{Name: "tls-cert-file", Short: "", Value: "", Desc: "Node cert file path", Bind: "server.tls.cert"},
 		{Name: "tls-private-key-file", Short: "", Value: "", Desc: "Node private key file path", Bind: "server.tls.key"},
 		{Name: "tls-ca-file", Short: "", Value: "", Desc: "Node certificate authority file path", Bind: "server.tls.ca"},
 		{Name: "api-uri", Short: "", Value: "", Desc: "REST API endpoint", Bind: "api.uri"},
+		{Name: "api-tls-verify", Short: "", Value: false, Desc: "REST API endpoint", Bind: "api.tls.verify"},
 		{Name: "api-tls-cert-file", Short: "", Value: "", Desc: "REST API TLS certificate file path", Bind: "api.tls.cert"},
 		{Name: "api-tls-private-key-file", Short: "", Value: "", Desc: "REST API TLS private key file path", Bind: "api.tls.key"},
 		{Name: "api-tls-ca-file", Short: "", Value: "", Desc: "REST API TSL certificate authority file path", Bind: "api.tls.ca"},
@@ -117,6 +119,8 @@ func main() {
 
 	for _, item := range flags {
 		switch item.Value.(type) {
+		case bool:
+			flag.BoolP(item.Name, item.Short, item.Value.(bool), item.Desc)
 		case string:
 			flag.StringP(item.Name, item.Short, item.Value.(string), item.Desc)
 		case int:

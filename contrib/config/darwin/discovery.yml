@@ -5,8 +5,6 @@ token: lstbknd
 
 api:
   uri: "127.0.0.1:2967"
-  tls:
-    insecure: true
 
 # Etcd database
 storage:

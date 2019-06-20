@@ -30,6 +30,7 @@ const (
 )
 
 func New(driver string, cfg map[string]interface{}) (cri.CRI, error) {
+
 	switch driver {
 	case dockerDriver:
 		return docker.New(cfg)

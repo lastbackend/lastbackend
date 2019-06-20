@@ -73,7 +73,10 @@ func New(iface string) (*Network, error) {
 			log.Errorf("Can not get interface [%s]: %s", iface, err.Error())
 			return nt, err
 		}
+	}
 
+	if nt.ExtIface.Iface == nil || nt.ExtIface.IfaceAddr == nil {
+		return nt, errors.New(fmt.Sprintf("can not initialize external ineterface for VxLAN: %s", iface))
 	}
 
 	log.Debugf("external interface: %s:%s", nt.ExtIface.Iface.Name, nt.ExtIface.IfaceAddr.String())
@@ -162,8 +165,7 @@ func (n *Network) AddInterface() error {
 		return err
 	}
 
-	n.Device.SetIP(*n.CIDR)
-	return nil
+	return n.Device.SetIP(*n.CIDR)
 }
 
 func (n *Network) Info(ctx context.Context) *types.NetworkState {

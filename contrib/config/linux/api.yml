@@ -3,24 +3,30 @@
 # Runtime
 verbose: 3
 token: lstbknd
+
+# Cluster info
 name: "lastbackend"
 description: "lastbackend cluster"
 
-# Etcd database
-etcd:
-  prefix: lastbackend
-  endpoints:
-    "127.0.0.1:2379"
-
-# Domain
+# System domains settings
 domain:
   internal: "lb.local"
-  external: "undassa.lbdp.io"
+  external: "demo.lbdp.io"
 
+# Etcd database
+storage:
+  driver: "etcd"
+  etcd:
+    prefix: lastbackend
+    endpoints:
+      "127.0.0.1:2379"
+
+# Cluster http-server settings
 server:
   host: 0.0.0.0
   tls:
     insecure: true
-    ca: "/opt/cert/lastbackend/ca.pem"
-    cert: "/opt/cert/lastbackend/server.pem"
-    key: "/opt/cert/lastbackend/server-key.pem"
+
+# Last.Backend vault service settings
+vault:
+  token: fca7678528b749db863d04cd9ec27d89
