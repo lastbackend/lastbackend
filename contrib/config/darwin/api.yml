@@ -11,7 +11,7 @@ description: "lastbackend cluster"
 # System domains settings
 domain:
   internal: "lb.local"
-  external: "undassa.lbdp.io"
+  external: "lastbackend.lbdp.io"
 
 # Etcd database
 storage:
@@ -30,4 +30,4 @@ server:
 # Last.Backend vault service settings
 vault:
   endpoint: http://127.0.0.1:2965
-  token: fca7678528b749db863d04cd9ec27d89
+  token: d3ee20b4307141b8b52a6ba18029c88e

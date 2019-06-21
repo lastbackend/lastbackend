@@ -46,6 +46,7 @@ func serviceStart(ctx context.Context, pod string, m *types.ContainerManifest, s
 		}
 
 		log.Errorf("%s can-not create container: %s", logServicePrefix, err)
+
 		c.State.Error = types.PodContainerStateError{
 			Error:   true,
 			Message: err.Error(),

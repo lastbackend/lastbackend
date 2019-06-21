@@ -45,6 +45,9 @@ func ImagePull(ctx context.Context, namespace string, image *types.SpecTemplateC
 		secret, err := SecretGet(ctx, namespace, image.Secret.Name)
 		if err != nil {
 			log.Errorf("can not get secret for image. err: %s", err.Error())
+			if strings.Contains(err.Error(), "Internal Server Error") {
+				return errors.New("can not get secret data")
+			}
 			return err
 		}
 

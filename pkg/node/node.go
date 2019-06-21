@@ -137,13 +137,14 @@ func Daemon(v *viper.Viper) {
 		}
 	}
 
-	if v.IsSet("api") {
+	if v.IsSet("api.uri") && len(v.GetString("api.uri")) != 0 {
 
 		cfg := client.NewConfig()
 		cfg.BearerToken = v.GetString("token")
 
-		if v.IsSet("api.tls") && !v.GetBool("api.tls.insecure") {
+		if v.IsSet("api.tls") {
 			cfg.TLS = client.NewTLSConfig()
+			cfg.TLS.Verify = v.GetBool("api.tls.verify")
 			cfg.TLS.CertFile = v.GetString("api.tls.cert")
 			cfg.TLS.KeyFile = v.GetString("api.tls.key")
 			cfg.TLS.CAFile = v.GetString("api.tls.ca")
@@ -164,6 +165,7 @@ func Daemon(v *viper.Viper) {
 
 		if err := ctl.Connect(v); err != nil {
 			log.Errorf("node:initialize: connect err %s", err.Error())
+
 		}
 		go ctl.Subscribe()
 		go ctl.Sync()
@@ -174,6 +176,7 @@ func Daemon(v *viper.Viper) {
 		opts.BearerToken = v.GetString("token")
 
 		if v.IsSet("server.tls") {
+			opts.TLS = v.GetBool("server.tls.verify")
 			opts.CertFile = v.GetString("server.tls.cert")
 			opts.KeyFile = v.GetString("server.tls.key")
 			opts.CaFile = v.GetString("server.tls.ca")

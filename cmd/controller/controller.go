@@ -131,9 +131,7 @@ func main() {
 			panic(err)
 		}
 
-		if item.Value != nil {
-			v.SetDefault(item.Bind, item.Value)
-		}
+		v.SetDefault(item.Bind, item.Value)
 	}
 
 	v.SetConfigType(default_config_type)

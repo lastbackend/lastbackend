@@ -85,9 +85,9 @@ var (
 		Bind string
 	}{
 		{Name: "access-token", Short: "", Value: "", Desc: "Access token to API server", Bind: "token"},
-		{Name: "haproxy-config-path", Short: "", Value: "/var/run/lastbackend/ingress/haproxy/haproxy.cfg", Desc: "HAProxy configuration path setup", Bind: "haproxy.config"},
+		{Name: "haproxy-config-path", Short: "", Value: "/var/run/lastbackend/ingress/haproxy", Desc: "HAProxy configuration path setup", Bind: "haproxy.config"},
 		{Name: "haproxy-pid", Short: "", Value: "/var/run/lastbackend/ingress/haproxy/haproxy.pid", Desc: "HAProxy pid file path", Bind: "haproxy.pid"},
-		{Name: "haproxy-exec", Short: "", Value: "/usr/local/bin/haproxy", Desc: "HAProxy entrypoint path", Bind: "haproxy.exec"},
+		{Name: "haproxy-exec", Short: "", Value: "/usr/sbin/haproxy", Desc: "HAProxy entrypoint path", Bind: "haproxy.exec"},
 		{Name: "haproxy-stat-port", Short: "", Value: 1936, Desc: "HAProxy statistic port definition. If not provided - statistic will be disabled", Bind: "haproxy.stat.port"},
 		{Name: "haproxy-stat-username", Short: "", Value: "", Desc: "HAProxy statistic access username", Bind: "haproxy.stat.username"},
 		{Name: "haproxy-stat-password", Short: "", Value: "", Desc: "HAProxy statistic access password", Bind: "haproxy.stat.password"},
@@ -142,9 +142,7 @@ func main() {
 			panic(err)
 		}
 
-		if item.Value != nil {
-			v.SetDefault(item.Bind, item.Value)
-		}
+		v.SetDefault(item.Bind, item.Value)
 	}
 
 	v.SetConfigType(default_config_type)

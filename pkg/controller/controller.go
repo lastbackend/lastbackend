@@ -47,7 +47,7 @@ func Daemon(v *viper.Viper) bool {
 
 	log.Info("Start Controller")
 
-	if !v.IsSet("storage") {
+	if !v.IsSet("storage.driver") {
 		log.Fatalf("Storage not configured")
 	}
 
