@@ -100,7 +100,7 @@ var (
 		{Name: "container-image-runtime", Short: "", Value: "docker", Desc: "Node container images runtime", Bind: "container.iri.type"},
 		{Name: "container-image-runtime-docker-version", Short: "", Value: "1.38", Desc: "Set docker version for docker container image runtime", Bind: "container.iri.docker.version"},
 		{Name: "bind-address", Short: "", Value: "0.0.0.0", Desc: "Node bind address", Bind: "server.host"},
-		{Name: "bind-port", Short: "", Value: 2965, Desc: "Node listening port binding", Bind: "server.port"},
+		{Name: "bind-port", Short: "", Value: 2969, Desc: "Node listening port binding", Bind: "server.port"},
 		{Name: "tls-verify", Short: "", Value: false, Desc: "Node TLS verify options", Bind: "server.tls.verify"},
 		{Name: "tls-cert-file", Short: "", Value: "", Desc: "Node cert file path", Bind: "server.tls.cert"},
 		{Name: "tls-private-key-file", Short: "", Value: "", Desc: "Node private key file path", Bind: "server.tls.key"},
@@ -152,9 +152,7 @@ func main() {
 			panic(err)
 		}
 
-		if item.Value != nil {
-			v.SetDefault(item.Bind, item.Value)
-		}
+		v.SetDefault(item.Bind, item.Value)
 	}
 
 	v.SetConfigType(default_config_type)

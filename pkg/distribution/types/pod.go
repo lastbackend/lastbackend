@@ -423,7 +423,7 @@ func (c *PodContainer) GetManifest() *ContainerManifest {
 	manifest.Exec = c.Exec
 	manifest.Image = c.Image.Name
 	if len(c.Image.Sha) != 0 {
-		manifest.Image = fmt.Sprintf("%s@%s", strings.Split(c.Image.Name, ":"), c.Image.Sha)
+		manifest.Image = fmt.Sprintf("%s@%s", strings.Split(c.Image.Name, ":")[0], c.Image.Sha)
 	}
 
 	manifest.RestartPolicy.Policy = c.Restart.Policy

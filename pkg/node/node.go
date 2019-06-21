@@ -137,8 +137,7 @@ func Daemon(v *viper.Viper) {
 		}
 	}
 
-	if v.IsSet("api.uri") {
-
+	if v.IsSet("api.uri") && len(v.GetString("api.uri")) != 0 {
 
 		cfg := client.NewConfig()
 		cfg.BearerToken = v.GetString("token")

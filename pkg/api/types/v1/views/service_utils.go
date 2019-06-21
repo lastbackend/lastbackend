@@ -232,18 +232,31 @@ func (sv Service) ToRequestManifest() *request.ServiceManifest {
 				}
 			}
 
+			data.Image = new(request.ManifestSpecTemplateContainerImage)
 			data.Image.Name = v.Image.Name
 			data.Image.Sha = v.Image.Sha
 			data.Image.Secret.Name = v.Image.Secret.Name
 			data.Image.Secret.Key = v.Image.Secret.Key
 
-			data.Resources.Request.RAM = v.Resources.Request.RAM
-			data.Resources.Request.CPU = v.Resources.Request.CPU
-			data.Resources.Limits.RAM = v.Resources.Limits.RAM
-			data.Resources.Limits.CPU = v.Resources.Limits.CPU
+			if v.Resources != nil {
+				data.Resources = new(request.ManifestSpecTemplateContainerResources)
+				if v.Resources.Request != nil {
+					data.Resources.Request = new(request.ManifestSpecTemplateContainerResource)
+					data.Resources.Request.RAM = v.Resources.Request.RAM
+					data.Resources.Request.CPU = v.Resources.Request.CPU
+				}
+				if v.Resources.Limits != nil {
+					data.Resources.Limits = new(request.ManifestSpecTemplateContainerResource)
+					data.Resources.Limits.RAM = v.Resources.Limits.RAM
+					data.Resources.Limits.CPU = v.Resources.Limits.CPU
+				}
+			}
 
-			data.RestartPolicy.Policy = v.RestartPolicy.Policy
-			data.RestartPolicy.Attempt = v.RestartPolicy.Attempt
+			if v.RestartPolicy != nil {
+				data.RestartPolicy = new(request.ManifestSpecTemplateRestartPolicy)
+				data.RestartPolicy.Policy = v.RestartPolicy.Policy
+				data.RestartPolicy.Attempt = v.RestartPolicy.Attempt
+			}
 
 			sm.Spec.Template.Containers = append(sm.Spec.Template.Containers, data)
 		}

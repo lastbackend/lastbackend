@@ -416,7 +416,7 @@ func NewContainerManifest(spec *SpecTemplateContainer) *ContainerManifest {
 
 	mf.Image = spec.Image.Name
 	if len(spec.Image.Sha) != 0 {
-		mf.Image = fmt.Sprintf("%s@%s", strings.Split(spec.Image.Name, ":"), spec.Image.Sha)
+		mf.Image = fmt.Sprintf("%s@%s", strings.Split(spec.Image.Name, ":")[0], spec.Image.Sha)
 	}
 
 	var envs []string

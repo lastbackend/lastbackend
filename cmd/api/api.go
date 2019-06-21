@@ -142,9 +142,7 @@ func main() {
 			panic(err)
 		}
 
-		if item.Value != nil {
-			v.SetDefault(item.Bind, item.Value)
-		}
+		v.SetDefault(item.Bind, item.Value)
 
 		// Set default port listener
 		v.SetDefault("server.port", 2967)
