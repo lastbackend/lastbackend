@@ -285,10 +285,6 @@ func TestConfigCreate(t *testing.T) {
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Config(), tc.want.Meta.SelfLink, got, nil)
 				assert.NoError(t, err)
 
-				if !assert.Equal(t, c1.Spec.Type, got.Spec.Type, "config kind different") {
-					return
-				}
-
 				if !assert.Equal(t, len(c1.Spec.Data), len(got.Spec.Data), "config kind different") {
 					return
 				}
@@ -570,8 +566,6 @@ func getConfigManifest(s *types.Config) *request.ConfigManifest {
 		smf.Spec.Data[key] = val
 	}
 
-	smf.Spec.Type = s.Spec.Type
-
 	return smf
 }
 
@@ -590,7 +584,6 @@ func getConfigAsset(namespace *types.Namespace, name string) *types.Config {
 	c.Meta.Name = name
 	c.Meta.Namespace = namespace.Meta.Name
 	c.Meta.SelfLink = *types.NewConfigSelfLink(namespace.Meta.Name, name)
-	c.Spec.Type = types.KindConfigText
 	c.Spec.Data = make(map[string]string, 0)
 	return &c
 }

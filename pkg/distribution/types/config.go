@@ -59,14 +59,12 @@ type ConfigMeta struct {
 }
 
 type ConfigSpec struct {
-	Type string            `json:"type" yaml:"type"`
 	Data map[string]string `json:"data" yaml:"data"`
 }
 
 type ConfigManifest struct {
 	System
 	State   string            `json:"state"`
-	Type    string            `json:"kind"`
 	Data    map[string]string `json:"data" yaml:"data"`
 	Created time.Time         `json:"created"`
 	Updated time.Time         `json:"updated"`
@@ -81,7 +79,6 @@ type ConfigFile struct {
 }
 
 func (c *ConfigManifest) Set(cfg *Config) {
-	c.Type = cfg.Spec.Type
 	c.Data = cfg.Spec.Data
 }
 

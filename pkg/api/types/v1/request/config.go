@@ -35,9 +35,7 @@ type ConfigManifestMeta struct {
 }
 
 type ConfigManifestSpec struct {
-	// Template volume types
-	Type string `json:"type,omitempty" yaml:"type,omitempty"`
-	// Tempate volume selector
+	// Config data
 	Data map[string]string `json:"data,omitempty" yaml:"data,omitempty"`
 }
 
@@ -77,7 +75,6 @@ func (v *ConfigManifest) SetConfigMeta(cfg *types.Config) {
 // TODO: check if config spec is updated => update Meta.Updated or skip
 func (v *ConfigManifest) SetConfigSpec(cfg *types.Config) {
 
-	cfg.Spec.Type = v.Spec.Type
 	cfg.Spec.Data = make(map[string]string, 0)
 
 	for key, value := range v.Spec.Data {
@@ -87,7 +84,6 @@ func (v *ConfigManifest) SetConfigSpec(cfg *types.Config) {
 
 func (v *ConfigManifest) GetManifest() *types.ConfigManifest {
 	cfg := new(types.ConfigManifest)
-	cfg.Type = v.Spec.Type
 	cfg.Data = make(map[string]string, 0)
 	for key, value := range v.Spec.Data {
 		cfg.Data[key] = value
