@@ -95,7 +95,7 @@ var (
 		{Name: "tls-ca-file", Short: "", Value: "", Desc: "TLS certificate authority file path", Bind: "server.tls.ca"},
 		{Name: "vault-token", Short: "", Value: "", Desc: "Vault access token", Bind: "vault.token"},
 		{Name: "vault-endpoint", Short: "", Value: "", Desc: "Vault access endpoint", Bind: "vault.endpoint"},
-		{Name: "domain-internal", Short: "", Value: "", Desc: "Default external domain for cluster", Bind: "domain.internal"},
+		{Name: "domain-internal", Short: "", Value: "lb.local", Desc: "Default external domain for cluster", Bind: "domain.internal"},
 		{Name: "domain-external", Short: "", Value: "", Desc: "Internal domain name for cluster", Bind: "domain.external"},
 		{Name: "storage", Short: "", Value: "etcd", Desc: "Set storage driver (Allow: etcd, mock)", Bind: "storage.driver"},
 		{Name: "etcd-cert-file", Short: "", Value: "", Desc: "ETCD database cert file path", Bind: "storage.etcd.tls.cert"},
