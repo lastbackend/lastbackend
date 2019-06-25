@@ -63,7 +63,7 @@ resolvers lstbknd
 #---------------------------------------------------------------------
 # frontend which proxys stats
 #---------------------------------------------------------------------
-{{ if .Stats.Enable }}
+{{ if ne .Stats.Port 0 }}
 listen stats # Define a listen section called "stats"
   bind :{{ .Stats.Port }} # Listen on localhost:9000
   mode http
@@ -72,11 +72,12 @@ listen stats # Define a listen section called "stats"
   stats realm Haproxy\ Statistics  # Title text for popup window
   stats uri /stats  # Stats URI
   stats auth {{ .Stats.Username }}:{{ .Stats.Password }} 
-{{ end }}  
+{{ end }} 
 
 #---------------------------------------------------------------------
 # frontend which proxys raw/ssl request to the backends
 #---------------------------------------------------------------------
+{{range $port, $f := .Frontend}}{{if eq $f.Type "http" }}
 frontend http
   mode http
   bind :80
@@ -94,6 +95,7 @@ frontend http
   {{end}}{{end}}
   default_backend local_http
 
+{{else if eq $f.Type "https" }}
 frontend https
   bind :443
   mode tcp
@@ -110,9 +112,7 @@ frontend https
 
   default_backend local_http
 
-
-{{range $port, $f := .Frontend}}
-{{if eq $f.Type "tcp" }}
+{{else if eq $f.Type "tcp" }}
 frontend {{$port}}_tcp
   bind 0.0.0.0:{{$port}}
   {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend {{$backend}}

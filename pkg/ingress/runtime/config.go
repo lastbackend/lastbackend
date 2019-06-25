@@ -117,6 +117,10 @@ func (c conf) Sync() error {
 	cfg.Frontend = make(map[uint16]*confFrontend, 0)
 	cfg.Backend = make(map[string]*confBackend, 0)
 
+	cfg.Frontend[80] = new(confFrontend)
+	cfg.Frontend[80].Type = "http"
+	cfg.Frontend[80].Rules = make(map[string]map[string]string, 0)
+
 	for n, r := range routes {
 
 		log.Debugf("route configure: %s", n)
