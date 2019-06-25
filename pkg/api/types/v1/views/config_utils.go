@@ -51,8 +51,6 @@ func (s *Config) ToMeta(obj types.ConfigMeta) ConfigMeta {
 func (s *Config) ToSpec(obj types.ConfigSpec) ConfigSpec {
 
 	spec := ConfigSpec{}
-	spec.Type = obj.Type
-
 	spec.Data = make(map[string]string, 0)
 
 	for key, val := range obj.Data {
