@@ -30,7 +30,6 @@ type Config struct {
 }
 
 type ConfigSpec struct {
-	Type string            `json:"type"`
 	Data map[string]string `json:"data"`
 }
 
@@ -67,7 +66,6 @@ func (s *Config) Decode() *types.Config {
 	o.Meta.Updated = s.Meta.Updated
 	o.Meta.Created = s.Meta.Created
 
-	o.Spec.Type = s.Spec.Type
 	o.Spec.Data = make(map[string]string, 0)
 
 	for key, val := range s.Spec.Data {

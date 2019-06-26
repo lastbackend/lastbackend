@@ -897,7 +897,6 @@ func getConfigAsset(namespace, name string) *types.Config {
 	c.Meta.SetDefault()
 	c.Meta.Name = name
 	c.Meta.Namespace = namespace
-	c.Spec.Type = types.KindConfigText
 	c.Spec.Data = make(map[string]string, 0)
 	c.Meta.SelfLink = *types.NewConfigSelfLink(namespace, name)
 	return &c
