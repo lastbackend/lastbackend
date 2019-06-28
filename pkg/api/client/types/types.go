@@ -21,6 +21,7 @@ package types
 import (
 	"context"
 	"io"
+	"net/http"
 
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
@@ -90,7 +91,7 @@ type ServiceClientV1 interface {
 	Get(ctx context.Context) (*vv1.Service, error)
 	Update(ctx context.Context, opts *rv1.ServiceManifest) (*vv1.Service, error)
 	Remove(ctx context.Context, opts *rv1.ServiceRemoveOptions) error
-	Logs(ctx context.Context, opts *rv1.ServiceLogsOptions) (io.ReadCloser, error)
+	Logs(ctx context.Context, opts *rv1.ServiceLogsOptions) (io.ReadCloser, *http.Response, error)
 }
 
 type JobClientV1 interface {
@@ -101,7 +102,7 @@ type JobClientV1 interface {
 	Get(ctx context.Context) (*vv1.Job, error)
 	Update(ctx context.Context, opts *rv1.JobManifest) (*vv1.Job, error)
 	Remove(ctx context.Context, opts *rv1.JobRemoveOptions) error
-	Logs(ctx context.Context, opts *rv1.JobLogsOptions) (io.ReadCloser, error)
+	Logs(ctx context.Context, opts *rv1.JobLogsOptions) (io.ReadCloser, *http.Response, error)
 }
 
 type TaskClientV1 interface {
@@ -123,7 +124,7 @@ type DeploymentClientV1 interface {
 type PodClientV1 interface {
 	List(ctx context.Context) (*vv1.PodList, error)
 	Get(ctx context.Context) (*vv1.Pod, error)
-	Logs(ctx context.Context, opts *rv1.PodLogsOptions) (io.ReadCloser, error)
+	Logs(ctx context.Context, opts *rv1.PodLogsOptions) (io.ReadCloser, *http.Response, error)
 }
 
 type EventsClientV1 interface {

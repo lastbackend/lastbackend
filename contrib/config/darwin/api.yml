@@ -19,7 +19,7 @@ storage:
   etcd:
     prefix: lastbackend
     endpoints:
-      "127.0.0.1:2379"
+      - "127.0.0.1:2379"
 
 # Cluster http-server settings
 server:
