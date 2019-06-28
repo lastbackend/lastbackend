@@ -184,16 +184,16 @@ func (r Result) Error() error {
 	return r.err
 }
 
-func (r *Request) Stream() (io.ReadCloser, error) {
+func (r *Request) Stream() (io.ReadCloser, *http.Response, error) {
 	if r.err != nil {
-		return nil, r.err
+		return nil, nil, r.err
 	}
 
 	u := r.URL().String()
 
 	req, err := http.NewRequest(r.verb, u, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if r.ctx != nil {
 		req = req.WithContext(r.ctx)
@@ -208,12 +208,12 @@ func (r *Request) Stream() (io.ReadCloser, error) {
 
 	res, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	switch {
 	case (res.StatusCode >= 200) && (res.StatusCode < 400):
-		return res.Body, nil
+		return res.Body, res, nil
 
 	default:
 		defer res.Body.Close()
@@ -223,7 +223,7 @@ func (r *Request) Stream() (io.ReadCloser, error) {
 		if err == nil {
 			err = fmt.Errorf("%d while accessing %v: %s", result.statusCode, u, string(result.body))
 		}
-		return nil, err
+		return nil, res, err
 	}
 }
 

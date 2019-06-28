@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/request"
 	"io"
+	"net/http"
 	"strconv"
 )
 
@@ -193,7 +194,7 @@ func (sc *JobClient) Remove(ctx context.Context, opts *rv1.JobRemoveOptions) err
 	return nil
 }
 
-func (sc *JobClient) Logs(ctx context.Context, opts *rv1.JobLogsOptions) (io.ReadCloser, error) {
+func (sc *JobClient) Logs(ctx context.Context, opts *rv1.JobLogsOptions) (io.ReadCloser, *http.Response, error) {
 
 	res := sc.client.Get(fmt.Sprintf("/namespace/%s/job/%s/logs", sc.namespace, sc.name))
 

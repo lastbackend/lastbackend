@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"strconv"
 
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
@@ -169,7 +170,7 @@ func (sc *ServiceClient) Remove(ctx context.Context, opts *rv1.ServiceRemoveOpti
 	return nil
 }
 
-func (sc *ServiceClient) Logs(ctx context.Context, opts *rv1.ServiceLogsOptions) (io.ReadCloser, error) {
+func (sc *ServiceClient) Logs(ctx context.Context, opts *rv1.ServiceLogsOptions) (io.ReadCloser, *http.Response, error) {
 
 	res := sc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/logs", sc.namespace, sc.name))
 
