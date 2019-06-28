@@ -127,6 +127,14 @@ func (t *TaskCancelOptions) ToJson() ([]byte, error) {
 	return json.Marshal(t)
 }
 
+type TaskRemoveOptions struct {
+	Force bool `json:"force"`
+}
+
+func (t *TaskRemoveOptions) ToJson() ([]byte, error) {
+	return json.Marshal(t)
+}
+
 type TaskLogsOptions struct {
 	Tail      int    `json:"tail"`
 	Pod       string `json:"pod"`
