@@ -112,6 +112,7 @@ type TaskClientV1 interface {
 	List(ctx context.Context) (*vv1.TaskList, error)
 	Get(ctx context.Context) (*vv1.Task, error)
 	Cancel(ctx context.Context, opts *rv1.TaskCancelOptions) (*vv1.Task, error)
+	Remove(ctx context.Context, opts *rv1.TaskRemoveOptions) error
 }
 
 type DeploymentClientV1 interface {

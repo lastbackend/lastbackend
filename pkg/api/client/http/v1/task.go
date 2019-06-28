@@ -21,6 +21,7 @@ package v1
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
@@ -121,29 +122,27 @@ func (tc *TaskClient) Cancel(ctx context.Context, opts *rv1.TaskCancelOptions) (
 	return s, nil
 }
 
-func (tc *TaskClient) Remove(ctx context.Context, opts *rv1.TaskRemoveOptions) (*vv1.Task, error) {
+func (tc *TaskClient) Remove(ctx context.Context, opts *rv1.TaskRemoveOptions) error {
 
-	body, err := opts.ToJson()
-	if err != nil {
-		return nil, err
+	req := tc.client.Delete(fmt.Sprintf("/namespace/%s/job/%s/task/%s", tc.namespace.String(), tc.job.Name(), tc.selflink.Name())).
+		AddHeader("Content-Entity", "application/json")
+
+	if opts != nil {
+		if opts.Force {
+			req.Param("force", strconv.FormatBool(opts.Force))
+		}
 	}
 
-	var s *vv1.Task
 	var e *errors.Http
 
-	err = tc.client.Delete(fmt.Sprintf("/namespace/%s/job/%s/task/%s", tc.namespace.String(), tc.job.Name(), tc.selflink.Name())).
-		AddHeader("Content-Type", "application/json").
-		Body(body).
-		JSON(&s, &e)
-
-	if err != nil {
-		return nil, err
+	if err := req.JSON(nil, &e); err != nil {
+		return err
 	}
 	if e != nil {
-		return nil, errors.New(e.Message)
+		return errors.New(e.Message)
 	}
 
-	return s, nil
+	return nil
 }
 
 func newTaskClient(client *request.RESTClient, namespace, job, name string) *TaskClient {
