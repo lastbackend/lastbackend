@@ -39,6 +39,7 @@ func PodGetH(w http.ResponseWriter, _ *http.Request) {
 func PodLogsH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debug("node:http:pod:get:> get pod logs")
+
 	var (
 		c      = mux.Vars(r)["container"]
 		p      = envs.Get().GetState().Pods().GetPod(mux.Vars(r)["pod"])

@@ -99,6 +99,9 @@ func Daemon(v *viper.Viper) bool {
 		}
 
 		endpoint := v.GetString("api.uri")
+		if len(endpoint) == 0 {
+			log.Fatalf("Api endpoint is not set")
+		}
 
 		rest, err := client.New(client.ClientHTTP, endpoint, cfg)
 		if err != nil {
