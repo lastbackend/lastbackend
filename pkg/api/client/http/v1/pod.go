@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"io"
+	"net/http"
 	"strconv"
 
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
@@ -124,7 +125,7 @@ func (pc *PodClient) Get(ctx context.Context) (*vv1.Pod, error) {
 	return s, nil
 }
 
-func (pc *PodClient) Logs(ctx context.Context, opts *rv1.PodLogsOptions) (io.ReadCloser, error) {
+func (pc *PodClient) Logs(ctx context.Context, opts *rv1.PodLogsOptions) (io.ReadCloser, *http.Response, error) {
 
 	var url, parent string
 
@@ -132,7 +133,7 @@ func (pc *PodClient) Logs(ctx context.Context, opts *rv1.PodLogsOptions) (io.Rea
 	case types.KindDeployment:
 		dsl := types.DeploymentSelfLink{}
 		if err := dsl.Parse(pc.parent.selflink); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		parent = dsl.Name()
 		_, svc := dsl.Parent()
@@ -140,7 +141,7 @@ func (pc *PodClient) Logs(ctx context.Context, opts *rv1.PodLogsOptions) (io.Rea
 	case types.KindTask:
 		tsl := types.TaskSelfLink{}
 		if err := tsl.Parse(pc.parent.selflink); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		parent = tsl.Name()
 		_, job := tsl.Parent()
