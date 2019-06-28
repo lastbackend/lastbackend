@@ -38,7 +38,7 @@ type TaskClient struct {
 	selflink  t.TaskSelfLink
 }
 
-func (dc *TaskClient) Pod(args ...string) types.PodClientV1 {
+func (tc *TaskClient) Pod(args ...string) types.PodClientV1 {
 	name := ""
 	// Get any parameters passed to us out of the args variable into "real"
 	// variables we created for them.
@@ -50,15 +50,15 @@ func (dc *TaskClient) Pod(args ...string) types.PodClientV1 {
 			panic("Wrong parameter count: (is allowed from 0 to 1)")
 		}
 	}
-	return newPodClient(dc.client, dc.namespace.String(), t.KindTask, dc.selflink.String(), name)
+	return newPodClient(tc.client, tc.namespace.String(), t.KindTask, tc.selflink.String(), name)
 }
 
-func (dc *TaskClient) List(ctx context.Context) (*vv1.TaskList, error) {
+func (tc *TaskClient) List(ctx context.Context) (*vv1.TaskList, error) {
 
 	var s *vv1.TaskList
 	var e *errors.Http
 
-	err := dc.client.Get(fmt.Sprintf("/namespace/%s/job/%s/task", dc.namespace.String(), dc.job.Name())).
+	err := tc.client.Get(fmt.Sprintf("/namespace/%s/job/%s/task", tc.namespace.String(), tc.job.Name())).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
@@ -77,12 +77,12 @@ func (dc *TaskClient) List(ctx context.Context) (*vv1.TaskList, error) {
 	return s, nil
 }
 
-func (dc *TaskClient) Get(ctx context.Context) (*vv1.Task, error) {
+func (tc *TaskClient) Get(ctx context.Context) (*vv1.Task, error) {
 
 	var s *vv1.Task
 	var e *errors.Http
 
-	err := dc.client.Get(fmt.Sprintf("/namespace/%s/job/%s/task/%s", dc.namespace.String(), dc.job.Name(), dc.selflink.Name())).
+	err := tc.client.Get(fmt.Sprintf("/namespace/%s/job/%s/task/%s", tc.namespace.String(), tc.job.Name(), tc.selflink.Name())).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
@@ -96,7 +96,7 @@ func (dc *TaskClient) Get(ctx context.Context) (*vv1.Task, error) {
 	return s, nil
 }
 
-func (dc *TaskClient) Cancel(ctx context.Context, opts *rv1.TaskCancelOptions) (*vv1.Task, error) {
+func (tc *TaskClient) Cancel(ctx context.Context, opts *rv1.TaskCancelOptions) (*vv1.Task, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
@@ -106,7 +106,32 @@ func (dc *TaskClient) Cancel(ctx context.Context, opts *rv1.TaskCancelOptions) (
 	var s *vv1.Task
 	var e *errors.Http
 
-	err = dc.client.Delete(fmt.Sprintf("/namespace/%s/job/%s/deployment/%s", dc.namespace.String(), dc.job.Name(), dc.selflink.Name())).
+	err = tc.client.Post(fmt.Sprintf("/namespace/%s/job/%s/task/%s", tc.namespace.String(), tc.job.Name(), tc.selflink.Name())).
+		AddHeader("Content-Type", "application/json").
+		Body(body).
+		JSON(&s, &e)
+
+	if err != nil {
+		return nil, err
+	}
+	if e != nil {
+		return nil, errors.New(e.Message)
+	}
+
+	return s, nil
+}
+
+func (tc *TaskClient) Remove(ctx context.Context, opts *rv1.TaskRemoveOptions) (*vv1.Task, error) {
+
+	body, err := opts.ToJson()
+	if err != nil {
+		return nil, err
+	}
+
+	var s *vv1.Task
+	var e *errors.Http
+
+	err = tc.client.Delete(fmt.Sprintf("/namespace/%s/job/%s/task/%s", tc.namespace.String(), tc.job.Name(), tc.selflink.Name())).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		JSON(&s, &e)

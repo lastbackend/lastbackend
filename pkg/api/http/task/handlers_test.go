@@ -761,6 +761,162 @@ func TestTaskCancel(t *testing.T) {
 
 }
 
+// Testing TaskRemoveH handler
+func TestTaskRemove(t *testing.T) {
+
+	var ctx = context.Background()
+
+	v := viper.New()
+	v.SetDefault("storage.driver", "mock")
+
+	stg, _ := storage.Get(v)
+	envs.Get().SetStorage(stg)
+
+	ns1 := getNamespaceAsset("exists", "")
+	ns2 := getNamespaceAsset("not-exist", "")
+
+	j1 := getJobAsset(ns1.Meta.Name, "job1", "")
+	j2 := getJobAsset(ns1.Meta.Name, "job2", "")
+
+	t1 := getTaskAsset(ns1.Meta.Name, j1.Meta.Name, "task1")
+	t2 := getTaskAsset(ns1.Meta.Name, j1.Meta.Name, "task1")
+
+	t2.Status.State = types.StateDestroy
+	t2.Spec.State.Destroy = true
+
+	t3 := getTaskAsset(ns1.Meta.Name, j1.Meta.Name, "task3")
+
+	type fields struct {
+		stg storage.Storage
+	}
+
+	type args struct {
+		ctx       context.Context
+		namespace *types.Namespace
+		job       *types.Job
+		task      *types.Task
+	}
+
+	tests := []struct {
+		name         string
+		fields       fields
+		args         args
+		headers      map[string]string
+		handler      func(http.ResponseWriter, *http.Request)
+		want         *views.Task
+		wantErr      bool
+		err          string
+		expectedCode int
+	}{
+		{
+			name:         "checking cancel task in not existing namespace",
+			args:         args{ctx, ns2, j1, t1},
+			fields:       fields{stg},
+			handler:      task.TaskRemoveH,
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			wantErr:      true,
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "checking cancel task in not existing job",
+			args:         args{ctx, ns1, j2, t1},
+			fields:       fields{stg},
+			handler:      task.TaskRemoveH,
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Job not found\"}",
+			wantErr:      true,
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "checking remove task in not existing task",
+			args:         args{ctx, ns1, j1, t3},
+			fields:       fields{stg},
+			handler:      task.TaskRemoveH,
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Task not found\"}",
+			wantErr:      true,
+			expectedCode: http.StatusNotFound,
+		},
+		// TODO: check another spec parameters
+		{
+			name:         "check remove task success",
+			args:         args{ctx, ns1, j1, t1},
+			fields:       fields{stg},
+			handler:      task.TaskRemoveH,
+			want:         v1.View().Task().New(t2),
+			wantErr:      false,
+			expectedCode: http.StatusOK,
+		},
+	}
+
+	clear := func() {
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), types.EmptyString)
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Task(), types.EmptyString)
+		assert.NoError(t, err)
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns1.SelfLink().String(), ns1, nil)
+			assert.NoError(t, err)
+
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), j1.SelfLink().String(), j1, nil)
+			assert.NoError(t, err)
+
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Task(), t1.SelfLink().String(), tc.args.task, nil)
+			assert.NoError(t, err)
+
+			req, err := http.NewRequest("DELETE", fmt.Sprintf("/namespace/%s/job/%s/task/%s", tc.args.namespace.Meta.Name, tc.args.job.Meta.Name, tc.args.task.Meta.Name), strings.NewReader(""))
+			assert.NoError(t, err)
+
+			if tc.headers != nil {
+				for key, val := range tc.headers {
+					req.Header.Set(key, val)
+				}
+			}
+
+			r := mux.NewRouter()
+			r.HandleFunc("/namespace/{namespace}/job/{job}/task/{task}", tc.handler)
+
+			setRequestVars(r, req)
+
+			// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+			res := httptest.NewRecorder()
+
+			// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+			// directly and pass in our Request and ResponseRecorder.
+			r.ServeHTTP(res, req)
+
+			// Check the status code is what we expect.
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
+
+			body, err := ioutil.ReadAll(res.Body)
+			assert.NoError(t, err)
+
+			if tc.wantErr && res.Code != 200 {
+				assert.Equal(t, tc.err, string(body), "incorrect status code")
+			} else {
+				s := new(views.Task)
+				err := json.Unmarshal(body, &s)
+				assert.NoError(t, err)
+
+				assert.Equal(t, tc.want.Meta.Name, s.Meta.Name, "description not equal")
+				assert.Equal(t, types.StateDestroy, s.Status.State, "status state is not canceled")
+			}
+		})
+	}
+
+}
+
 func getNamespaceAsset(name, desc string) *types.Namespace {
 	var n = types.Namespace{}
 	n.Meta.SetDefault()

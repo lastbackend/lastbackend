@@ -337,6 +337,86 @@ func TaskCancelH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func TaskRemoveH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation DELETE /namespace/{namespace}/job/{job} job jobRemove
+	//
+	// Remove job
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: job
+	//     in: path
+	//     description: job id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Job was successfully removed
+	//   '404':
+	//     description: Namespace not found / Job not found
+	//   '500':
+	//     description: Internal server error
+
+	nid := utils.Vars(r)["namespace"]
+	jid := utils.Vars(r)["job"]
+	tsl := utils.Vars(r)["task"]
+
+	log.V(logLevel).Debugf("%s:remove:> remove job `%s` from app `%s`", logPrefix, jid, nid)
+
+	var (
+		stg = envs.Get().GetStorage()
+		tm  = distribution.NewTaskModel(r.Context(), stg)
+	)
+
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
+		return
+	}
+
+	jb, e := job.Fetch(r.Context(), ns.Meta.Name, jid)
+	if e != nil {
+		e.Http(w)
+		return
+	}
+
+	tk, e := task.Fetch(r.Context(), ns.Meta.Name, jb.Meta.Name, tsl)
+	if e != nil {
+		e.Http(w)
+		return
+	}
+
+	tk.Status.State = types.StateDestroy
+	tk.Spec.State.Destroy = true
+
+	if err := tm.Set(tk); err != nil {
+		log.V(logLevel).Errorf("%s:remove:> remove job err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := v1.View().Task().New(tk).ToJson()
+	if err != nil {
+		log.V(logLevel).Errorf("%s:info:> convert struct to json err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err = w.Write(response); err != nil {
+		log.V(logLevel).Errorf("%s:get write response err: %s", logPrefix, err.Error())
+		return
+	}
+}
+
 func TaskLogsH(w http.ResponseWriter, r *http.Request) {
 
 	// swagger:operation GET /namespace/{namespace}/service/{service}/logs service serviceLogs

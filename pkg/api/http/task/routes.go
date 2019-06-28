@@ -27,6 +27,7 @@ var Routes = []http.Route{
 	{Path: "/namespace/{namespace}/job/{job}/task", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Authenticate}, Handler: TaskCreateH},
 	{Path: "/namespace/{namespace}/job/{job}/task", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: TaskListH},
 	{Path: "/namespace/{namespace}/job/{job}/task/{task}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: TaskInfoH},
-	{Path: "/namespace/{namespace}/job/{job}/task/{task}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Authenticate}, Handler: TaskCancelH},
+	{Path: "/namespace/{namespace}/job/{job}/task/{task}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: TaskCancelH},
+	{Path: "/namespace/{namespace}/job/{job}/task/{task}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Authenticate}, Handler: TaskRemoveH},
 	{Path: "/namespace/{namespace}/job/{job}/task/{task}/logs", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: TaskLogsH},
 }

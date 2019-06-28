@@ -768,6 +768,7 @@ func TestHandleTaskStateCanceled(t *testing.T) {
 }
 
 func TestHandleTaskStateExited(t *testing.T) {
+
 	type suit struct {
 		name string
 		args struct {
@@ -789,6 +790,7 @@ func TestHandleTaskStateExited(t *testing.T) {
 		job := getJobAsset(types.StateWaiting, types.EmptyString)
 		js := getJobStateAsset(job)
 		task := getTaskAsset(job, types.StateExited, types.EmptyString)
+		task.Status.Done = true
 
 		s.args.task = task
 		s.args.jobState = js
@@ -814,6 +816,7 @@ func TestHandleTaskStateExited(t *testing.T) {
 		job := getJobAsset(types.StateWaiting, types.EmptyString)
 		js := getJobStateAsset(job)
 		task := getTaskAsset(job, types.StateExited, types.EmptyString)
+		task.Status.Done = true
 
 		s.args.task = task
 		s.args.jobState = js
@@ -841,6 +844,7 @@ func TestHandleTaskStateExited(t *testing.T) {
 		job := getJobAsset(types.StateWaiting, types.EmptyString)
 		js := getJobStateAsset(job)
 		task := getTaskAsset(job, types.StateExited, types.EmptyString)
+		task.Status.Done = true
 
 		s.args.task = task
 		s.args.jobState = js
@@ -1767,7 +1771,7 @@ func compareTaskProperties(old *types.Task, new *types.Task) error {
 
 func getTaskManifestAsset(name string) *types.TaskManifest {
 	t := new(types.TaskManifest)
-	json.Unmarshal([]byte(taskManifest), t)
+	_ = json.Unmarshal([]byte(taskManifest), t)
 	t.Meta.Name = &name
 
 	return t

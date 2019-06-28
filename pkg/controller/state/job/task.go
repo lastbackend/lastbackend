@@ -510,11 +510,13 @@ func taskFinish(js *JobState, task *types.Task) (err error) {
 		}
 	}()
 
-	task.Status.Error = task.Status.State == types.StateError
-	task.Status.Canceled = task.Status.State == types.StateCanceled
-	task.Status.Done = !task.Status.Error && !task.Status.Canceled
-	task.Status.State = types.StateExited
-	task.Meta.Updated = time.Now()
+	if task.Status.State != types.StateExited {
+		task.Status.Error = task.Status.State == types.StateError
+		task.Status.Canceled = task.Status.State == types.StateCanceled
+		task.Status.Done = !task.Status.Error && !task.Status.Canceled
+		task.Status.State = types.StateExited
+		task.Meta.Updated = time.Now()
+	}
 
 	p, ok := js.pod.list[task.SelfLink().String()]
 	if ok {
