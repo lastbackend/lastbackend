@@ -95,7 +95,8 @@ type ServiceClientV1 interface {
 }
 
 type JobClientV1 interface {
-	Tasks(args ...string) TaskClientV1
+	Task(args ...string) TaskClientV1
+
 	Create(ctx context.Context, opts *rv1.JobManifest) (*vv1.Job, error)
 	Run(ctx context.Context, opts *rv1.TaskManifest) (*vv1.Task, error)
 	List(ctx context.Context) (*vv1.JobList, error)

@@ -65,7 +65,7 @@ func (c *Controller) Connect(ctx context.Context) error {
 			return nil
 		}
 
-		log.Errorf("connect err: %s", err.Error())
+		log.Errorf("%s connect err: %s", logPrefix, err.Error())
 		time.Sleep(3 * time.Second)
 	}
 }

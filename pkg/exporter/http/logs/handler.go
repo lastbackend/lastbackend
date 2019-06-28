@@ -28,9 +28,8 @@ import (
 )
 
 const (
-	logPrefix   = "exporter:http:logs"
-	logLevel    = 3
-	BUFFER_SIZE = 512
+	logPrefix = "exporter:http:logs"
+	logLevel  = 3
 )
 
 func LogsH(w http.ResponseWriter, r *http.Request) {

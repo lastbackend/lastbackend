@@ -38,7 +38,7 @@ type JobClient struct {
 	name      string
 }
 
-func (sc *JobClient) Tasks(args ...string) types.TaskClientV1 {
+func (sc *JobClient) Task(args ...string) types.TaskClientV1 {
 	name := ""
 	// Get any parameters passed to us out of the args variable into "real"
 	// variables we created for them.
