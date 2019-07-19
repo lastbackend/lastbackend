@@ -42,6 +42,11 @@ type ClusterStatus struct {
 		Offline int `json:"offline"`
 	} `json:"nodes"`
 
+	Namespace []Namespace `json:"namespace"`
+	Service   []Service   `json:"service"`
+	Route     []Route     `json:"route"`
+	Task      []Task      `json:"task"`
+
 	Capacity ClusterResources `json:"capacity"`
 
 	Allocated ClusterResources `json:"allocated"`

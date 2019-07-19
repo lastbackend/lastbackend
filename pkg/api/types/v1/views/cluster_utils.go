@@ -56,6 +56,10 @@ func (cl *ClusterList) ToJson() ([]byte, error) {
 	return json.Marshal(cl)
 }
 
+func (cv *ClusterView) ClusterStatus() *ClusterStatus {
+	return new(ClusterStatus)
+}
+
 func (cv *ClusterView) ToClusterStatus(status types.ClusterStatus) ClusterStatus {
 	return ClusterStatus{
 		Nodes: status.Nodes,
