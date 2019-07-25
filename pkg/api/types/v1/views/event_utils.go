@@ -38,7 +38,7 @@ func (nv *EventView) New(obj *types.Event) *Event {
 	case types.KindService:
 		n.Payload = new(ServiceView).New(obj.Data.(*types.Service))
 	case types.KindDeployment:
-		n.Payload = new(DeploymentView).New(obj.Data.(*types.Deployment), nil)
+		n.Payload = new(DeploymentView).New(obj.Data.(*types.Deployment))
 	case types.KindPod:
 		n.Payload = new(PodView).New(obj.Data.(*types.Pod))
 	case types.KindRoute:

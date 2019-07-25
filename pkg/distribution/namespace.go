@@ -95,7 +95,6 @@ func (n *Namespace) Create(ns *types.Namespace) (*types.Namespace, error) {
 
 	log.V(logLevel).Debugf("%s:create:> create Namespace %#v", logNamespacePrefix, ns.Meta.Name)
 
-	ns.Meta.SetDefault()
 	ns.Meta.SelfLink = *types.NewNamespaceSelfLink(ns.Meta.Name)
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Namespace(), ns.SelfLink().String(), ns, nil); err != nil {

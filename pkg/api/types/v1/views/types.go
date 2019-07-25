@@ -34,7 +34,7 @@ type IView interface {
 	Config() *ConfigView
 	Deployment() *DeploymentView
 	Endpoint() *EndpointView
-	Pod() *Pod
+	Pod() *PodView
 	Container() *ContainerView
 	Volume() *VolumeView
 
@@ -80,8 +80,8 @@ func (View) Config() *ConfigView {
 func (View) Deployment() *DeploymentView {
 	return new(DeploymentView)
 }
-func (View) Pod() *Pod {
-	return new(Pod)
+func (View) Pod() *PodView {
+	return new(PodView)
 }
 func (View) Endpoint() *EndpointView {
 	return new(EndpointView)

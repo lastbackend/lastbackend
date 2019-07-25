@@ -28,3 +28,10 @@ type ClusterUpdateOptions struct {
 
 // swagger:model request_cluster_update_quotas
 type ClusterQuotasOptions struct{}
+
+type ClusterManifest struct {
+	Namespace []NamespaceManifest `json:"namespace"`
+	Service   []ServiceManifest   `json:"service"`
+	Route     []RouteManifest     `json:"route"`
+	Task      []TaskManifest      `json:"task"`
+}

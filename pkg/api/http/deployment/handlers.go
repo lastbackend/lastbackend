@@ -74,7 +74,6 @@ func DeploymentListH(w http.ResponseWriter, r *http.Request) {
 		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 		dm  = distribution.NewDeploymentModel(r.Context(), envs.Get().GetStorage())
-		pdm = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	ns, err := nsm.Get(nid)
@@ -109,14 +108,7 @@ func DeploymentListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pods, err := pdm.ListByService(srv.Meta.Namespace, srv.Meta.Name)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> get pod list by service id `%s` err: %s", logPrefix, srv.Meta.Name, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	response, err := v1.View().Deployment().NewList(dl, pods).ToJson()
+	response, err := v1.View().Deployment().NewList(dl).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:list:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -175,7 +167,6 @@ func DeploymentInfoH(w http.ResponseWriter, r *http.Request) {
 		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 		dm  = distribution.NewDeploymentModel(r.Context(), envs.Get().GetStorage())
-		pdm = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	ns, err := nsm.Get(nid)
@@ -215,14 +206,7 @@ func DeploymentInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pods, err := pdm.ListByDeployment(srv.Meta.Namespace, srv.Meta.Name, d.Meta.Name)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:info:> get pod list by service id `%s` err: %s", logPrefix, srv.Meta.Name, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	response, err := v1.View().Deployment().New(d, pods).ToJson()
+	response, err := v1.View().Deployment().New(d).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:info:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -291,7 +275,6 @@ func DeploymentUpdateH(w http.ResponseWriter, r *http.Request) {
 		err error
 		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 		dm  = distribution.NewDeploymentModel(r.Context(), envs.Get().GetStorage())
-		pdm = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
 		ns  = r.Context().Value("namespace").(*types.Namespace)
 	)
 
@@ -328,13 +311,7 @@ func DeploymentUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pl, err := pdm.ListByDeployment(srv.Meta.Namespace, srv.Meta.Name, dp.Meta.Name)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> update deployment err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-	}
-
-	response, err := v1.View().Deployment().New(dp, pl).ToJson()
+	response, err := v1.View().Deployment().New(dp).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)

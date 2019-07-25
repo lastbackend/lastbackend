@@ -20,12 +20,9 @@ package request
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"gopkg.in/yaml.v2"
-	"strings"
 )
 
 type NamespaceManifest struct {
@@ -69,27 +66,14 @@ func (s *NamespaceManifest) SetNamespaceMeta(ns *types.Namespace) {
 	}
 
 	if s.Meta.Labels != nil {
-		ns.Meta.Labels = s.Meta.Labels
+		ns.Meta.Labels = make(map[string]string, 0)
+		for k, v := range s.Meta.Labels {
+			ns.Meta.Labels[k] = v
+		}
 	}
-
-	internal, _ := envs.Get().GetDomain()
-	ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", ns.Meta.Name, internal))
-
 }
 
 func (s *NamespaceManifest) SetNamespaceSpec(ns *types.Namespace) error {
-
-	internal, external := envs.Get().GetDomain()
-
-	ns.Spec.Domain.Internal = internal
-
-	if s.Spec.Domain != nil {
-		if len(*s.Spec.Domain) == 0 {
-			ns.Spec.Domain.External = external
-		} else {
-			ns.Spec.Domain.External = *s.Spec.Domain
-		}
-	}
 
 	if s.Spec.Resources != nil {
 

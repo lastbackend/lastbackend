@@ -63,3 +63,38 @@ func (c *ClusterUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 func (s *ClusterUpdateOptions) ToJson() ([]byte, error) {
 	return json.Marshal(s)
 }
+
+func (c *ClusterRequest) Manifest() *ClusterManifest {
+
+	cm := new(ClusterManifest)
+	cm.Namespace = make([]NamespaceManifest, 0)
+	cm.Service = make([]ServiceManifest, 0)
+	cm.Route = make([]RouteManifest, 0)
+	cm.Task = make([]TaskManifest, 0)
+
+	return cm
+}
+
+func (m *ClusterManifest) DecodeAndValidate(reader io.Reader) *errors.Err {
+
+	if reader == nil {
+		err := errors.New("data body can not be null")
+		return errors.New("cluster").IncorrectJSON(err)
+	}
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return errors.New("cluster").Unknown(err)
+	}
+
+	err = json.Unmarshal(body, m)
+	if err != nil {
+		return errors.New("cluster").IncorrectJSON(err)
+	}
+
+	return nil
+}
+
+func (s *ClusterManifest) ToJson() ([]byte, error) {
+	return json.Marshal(s)
+}

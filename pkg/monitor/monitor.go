@@ -74,6 +74,7 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 	}
 
 	go func() {
+
 		for {
 			select {
 			case <-ctx.Done():
@@ -113,7 +114,9 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 						log.Errorf("%s:> parse data err: %v", logMonitorPrefix, err)
 						continue
 					}
+
 					res.Data = entity
+
 				case types.KindDeployment:
 					res.Kind = types.KindDeployment
 					entity := new(types.Deployment)
@@ -121,15 +124,19 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 						log.Errorf("%s:> parse data err: %v", logMonitorPrefix, err)
 						continue
 					}
+
 					res.Data = entity
+
 				case types.KindJob:
 					res.Kind = types.KindJob
-					entity := new(types.Task)
+					entity := new(types.Job)
 					if err := json.Unmarshal(e.Data.([]byte), entity); err != nil {
 						log.Errorf("%s:> parse data err: %v", logMonitorPrefix, err)
 						continue
 					}
+
 					res.Data = entity
+
 				case types.KindPod:
 					res.Kind = types.KindPod
 					entity := new(types.Pod)
@@ -138,6 +145,7 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 						continue
 					}
 					res.Data = entity
+
 				case types.KindSecret:
 					res.Kind = types.KindSecret
 					entity := new(types.Secret)
@@ -146,6 +154,7 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 						continue
 					}
 					res.Data = entity
+
 				case types.KindConfig:
 					res.Kind = types.KindConfig
 					entity := new(types.Config)
@@ -154,6 +163,7 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 						continue
 					}
 					res.Data = entity
+
 				case types.KindVolume:
 					res.Kind = types.KindVolume
 					entity := new(types.Volume)
@@ -162,6 +172,7 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 						continue
 					}
 					res.Data = entity
+
 				case types.KindRoute:
 					res.Kind = types.KindRoute
 					entity := new(types.Route)
@@ -170,6 +181,7 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 						continue
 					}
 					res.Data = entity
+
 				case types.KindNode:
 
 					if keys[2] != "info" {
@@ -183,6 +195,7 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 						continue
 					}
 					res.Data = entity
+
 				case types.KindDiscovery:
 					res.Kind = types.KindDiscovery
 
@@ -196,6 +209,7 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 						continue
 					}
 					res.Data = entity
+
 				case types.KindIngress:
 					res.Kind = types.KindIngress
 
@@ -209,6 +223,7 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 						continue
 					}
 					res.Data = entity
+
 				case types.KindCluster:
 					res.Kind = types.KindCluster
 

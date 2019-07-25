@@ -29,7 +29,6 @@ type Job struct {
 	Meta   JobMeta   `json:"meta"`
 	Status JobStatus `json:"status"`
 	Spec   JobSpec   `json:"spec"`
-	Tasks  TaskList  `json:"tasks,omitempty"`
 }
 
 type JobMeta struct {
