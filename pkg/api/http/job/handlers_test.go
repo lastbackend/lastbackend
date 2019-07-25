@@ -101,7 +101,7 @@ func TestJobInfo(t *testing.T) {
 			handler:      job.JobInfoH,
 			args:         args{ctx, ns1, j1},
 			fields:       fields{stg},
-			want:         v1.View().Job().New(j1, nil, nil),
+			want:         v1.View().Job().New(j1),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -476,7 +476,7 @@ func TestJobCreate(t *testing.T) {
 			fields:       fields{stg},
 			handler:      job.JobCreateH,
 			data:         getJobManifest("success", "redis"),
-			want:         v1.View().Job().New(s4, nil, nil),
+			want:         v1.View().Job().New(s4),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -486,7 +486,7 @@ func TestJobCreate(t *testing.T) {
 			fields:       fields{stg},
 			handler:      job.JobCreateH,
 			data:         sm7,
-			want:         v1.View().Job().New(s3, nil, nil),
+			want:         v1.View().Job().New(s3),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -496,7 +496,7 @@ func TestJobCreate(t *testing.T) {
 			fields:       fields{stg},
 			handler:      job.JobCreateH,
 			data:         sm6,
-			want:         v1.View().Job().New(s3, nil, nil),
+			want:         v1.View().Job().New(s3),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -765,7 +765,7 @@ func TestJobUpdate(t *testing.T) {
 			args:         args{ctx, ns1, s1},
 			handler:      job.JobUpdateH,
 			data:         m3,
-			want:         v1.View().Job().New(s3, nil, nil),
+			want:         v1.View().Job().New(s3),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -775,7 +775,7 @@ func TestJobUpdate(t *testing.T) {
 			fields:       fields{stg},
 			handler:      job.JobUpdateH,
 			data:         sm6,
-			want:         v1.View().Job().New(s4, nil, nil),
+			want:         v1.View().Job().New(s4),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -785,7 +785,7 @@ func TestJobUpdate(t *testing.T) {
 			fields:       fields{stg},
 			handler:      job.JobUpdateH,
 			data:         sm7,
-			want:         v1.View().Job().New(s4, nil, nil),
+			want:         v1.View().Job().New(s4),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -1097,7 +1097,7 @@ func TestJobRemove(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got := new(types.Job)
+				var got *types.Job
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Job(), tc.args.job.SelfLink().String(), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)

@@ -113,7 +113,7 @@ func TestDeploymentInfo(t *testing.T) {
 			handler:      deployment.DeploymentInfoH,
 			args:         args{ctx, ns1, s1, d1},
 			fields:       fields{stg},
-			want:         v1.View().Deployment().New(d1, nil),
+			want:         v1.View().Deployment().New(d1),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},

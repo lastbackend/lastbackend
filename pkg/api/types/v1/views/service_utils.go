@@ -40,16 +40,11 @@ func (sv *ServiceView) New(srv *types.Service) *Service {
 	return s
 }
 
-func (sv *ServiceView) NewWithDeployment(srv *types.Service, d *types.DeploymentList, p *types.PodList) *Service {
+func (sv *ServiceView) NewWithDeployment(srv *types.Service) *Service {
 	s := new(Service)
 	s.Meta = s.ToMeta(srv.Meta)
 	s.Status = s.ToStatus(srv.Status)
 	s.Spec = s.ToSpec(srv.Spec)
-
-	s.Deployments = make(DeploymentMap, 0)
-	if d != nil {
-		s.Deployments = s.ToDeployments(d, p)
-	}
 	return s
 }
 
@@ -100,12 +95,12 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 	return spec
 }
 
-func (sv *Service) ToDeployments(obj *types.DeploymentList, pods *types.PodList) DeploymentMap {
+func (sv *Service) ToDeployments(obj *types.DeploymentList) DeploymentMap {
 	deployments := make(DeploymentMap, 0)
 	for _, d := range obj.Items {
 		if d.Meta.Namespace == sv.Meta.Namespace && d.Meta.Service == sv.Meta.Name {
 			dv := new(DeploymentView)
-			dp := dv.New(d, pods)
+			dp := dv.New(d)
 			deployments[dp.Meta.SelfLink] = dp
 		}
 	}
@@ -265,7 +260,7 @@ func (sv Service) ToRequestManifest() *request.ServiceManifest {
 	return sm
 }
 
-func (sv *ServiceView) NewList(obj *types.ServiceList, d *types.DeploymentList, pl *types.PodList) *ServiceList {
+func (sv *ServiceView) NewList(obj *types.ServiceList) *ServiceList {
 	if obj == nil {
 		return nil
 	}
@@ -273,7 +268,7 @@ func (sv *ServiceView) NewList(obj *types.ServiceList, d *types.DeploymentList, 
 	s := make(ServiceList, 0)
 	slv := ServiceView{}
 	for _, v := range obj.Items {
-		s = append(s, slv.NewWithDeployment(v, d, pl))
+		s = append(s, slv.NewWithDeployment(v))
 	}
 	return &s
 }

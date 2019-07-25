@@ -73,8 +73,6 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		stg = envs.Get().GetStorage()
 		sm  = distribution.NewServiceModel(r.Context(), stg)
 		nsm = distribution.NewNamespaceModel(r.Context(), stg)
-		dm  = distribution.NewDeploymentModel(r.Context(), stg)
-		pm  = distribution.NewPodModel(r.Context(), stg)
 	)
 
 	ns, err := nsm.Get(nid)
@@ -97,21 +95,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dl, err := dm.ListByNamespace(ns.Meta.Name)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> get pod list by service id `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	pl, err := pm.ListByNamespace(ns.Meta.Name)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> get pod list by service id `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	response, err := v1.View().Service().NewList(items, dl, pl).ToJson()
+	response, err := v1.View().Service().NewList(items).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:list:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -160,11 +144,6 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("%s:info:> get service `%s` in namespace `%s`", logPrefix, sid, nid)
 
-	var (
-		dm  = distribution.NewDeploymentModel(r.Context(), envs.Get().GetStorage())
-		pdm = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
-	)
-
 	ns, e := namespace.FetchFromRequest(r.Context(), nid)
 	if e != nil {
 		e.Http(w)
@@ -177,21 +156,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dl, err := dm.ListByService(svc.Meta.Namespace, svc.Meta.Name)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:info:> get pod list by service id `%s` err: %s", logPrefix, svc.Meta.Name, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	pods, err := pdm.ListByService(svc.Meta.Namespace, svc.Meta.Name)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:info:> get pod list by service id `%s` err: %s", logPrefix, svc.Meta.Name, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	response, err := v1.View().Service().NewWithDeployment(svc, dl, pods).ToJson()
+	response, err := v1.View().Service().NewWithDeployment(svc).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:info:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -264,7 +229,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v1.View().Service().NewWithDeployment(svc, nil, nil).ToJson()
+	response, err := v1.View().Service().NewWithDeployment(svc).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -346,7 +311,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v1.View().Service().NewWithDeployment(svc, nil, nil).ToJson()
+	response, err := v1.View().Service().NewWithDeployment(svc).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)

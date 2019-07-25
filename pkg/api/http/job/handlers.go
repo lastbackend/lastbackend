@@ -71,7 +71,6 @@ func JobListH(w http.ResponseWriter, r *http.Request) {
 	var (
 		stg = envs.Get().GetStorage()
 		jm  = distribution.NewJobModel(r.Context(), stg)
-		tm  = distribution.NewTaskModel(r.Context(), stg)
 	)
 
 	ns, e := namespace.FetchFromRequest(r.Context(), nid)
@@ -87,14 +86,7 @@ func JobListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tasks, err := tm.ListByNamespace(ns.Meta.Name)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> get pod list by job id `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	response, err := v1.View().Job().NewList(jobs, tasks, nil).ToJson()
+	response, err := v1.View().Job().NewList(jobs).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:list:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -143,10 +135,6 @@ func JobInfoH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("%s:info:> get job `%s` in namespace `%s`", logPrefix, sid, nid)
 
-	var (
-		tm = distribution.NewTaskModel(r.Context(), envs.Get().GetStorage())
-	)
-
 	ns, e := namespace.FetchFromRequest(r.Context(), nid)
 	if e != nil {
 		e.Http(w)
@@ -159,14 +147,7 @@ func JobInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tasks, err := tm.ListByJob(jb.Meta.Namespace, jb.Meta.Name)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:info:> get task list by job id `%s` err: %s", logPrefix, jb.Meta.Name, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	response, err := v1.View().Job().New(jb, tasks, nil).ToJson()
+	response, err := v1.View().Job().New(jb).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:info:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -239,7 +220,7 @@ func JobCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v1.View().Job().New(jb, nil, nil).ToJson()
+	response, err := v1.View().Job().New(jb).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -319,7 +300,7 @@ func JobUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v1.View().Job().New(jb, nil, nil).ToJson()
+	response, err := v1.View().Job().New(jb).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)

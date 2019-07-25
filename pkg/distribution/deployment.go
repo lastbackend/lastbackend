@@ -86,6 +86,11 @@ func (d *Deployment) Create(service *types.Service, version int) (*types.Deploym
 	deployment.Meta.Created = time.Now()
 	deployment.Meta.Updated = time.Now()
 
+	deployment.Meta.Labels = make(map[string]string, 0)
+	for k, v := range service.Meta.Labels {
+		deployment.Meta.Labels[k] = v
+	}
+
 	deployment.Meta.SelfLink = *types.NewDeploymentSelfLink(deployment.Meta.Namespace, deployment.Meta.Service, deployment.Meta.Name)
 
 	deployment.Spec = types.DeploymentSpec{

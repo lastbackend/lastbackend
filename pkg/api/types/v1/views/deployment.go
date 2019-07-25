@@ -33,13 +33,9 @@ import (
 // swagger:model views_deployment
 type Deployment struct {
 	// deployment id
-	Meta     DeploymentMeta         `json:"meta"`
-	Status   DeploymentStatusInfo   `json:"status"`
-	Spec     DeploymentSpec         `json:"spec"`
-	Sources  DeploymentSources      `json:"sources"`
-	Replicas DeploymentReplicasInfo `json:"replicas"`
-	// deployment pods
-	Pods map[string]Pod `json:"pods"`
+	Meta   DeploymentMeta       `json:"meta"`
+	Status DeploymentStatusInfo `json:"status"`
+	Spec   DeploymentSpec       `json:"spec"`
 }
 
 // swagger:ignore
@@ -62,12 +58,13 @@ type DeploymentMeta struct {
 	// Deployment description
 	Description string `json:"description"`
 
-	Version   int    `json:"version"`
-	Namespace string `json:"namespace"`
-	Service   string `json:"service"`
-	Endpoint  string `json:"endpoint"`
-	SelfLink  string `json:"self_link"`
-	Status    string `json:"status"`
+	Version   int               `json:"version"`
+	Namespace string            `json:"namespace"`
+	Service   string            `json:"service"`
+	Endpoint  string            `json:"endpoint"`
+	SelfLink  string            `json:"self_link"`
+	Status    string            `json:"status"`
+	Labels    map[string]string `json:"labels"`
 
 	// Deployment creation time
 	Created time.Time `json:"created"`

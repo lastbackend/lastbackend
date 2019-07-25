@@ -30,6 +30,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"net/http"
+	"strings"
 
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	v1 "github.com/lastbackend/lastbackend/pkg/api/types/v1"
@@ -191,12 +192,28 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ns := new(types.Namespace)
+	ns.Meta.SetDefault()
 	opts.SetNamespaceMeta(ns)
 
-	if err:= opts.SetNamespaceSpec(ns); err != nil {
+	internal, _ := envs.Get().GetDomain()
+	ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", ns.Meta.Name, internal))
+
+	if err := opts.SetNamespaceSpec(ns); err != nil {
 		log.V(logLevel).Errorf("%s:create:> set namespace spec err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
+	}
+
+	internal, external := envs.Get().GetDomain()
+
+	ns.Spec.Domain.Internal = internal
+
+	if opts.Spec.Domain != nil {
+		if len(*opts.Spec.Domain) == 0 {
+			ns.Spec.Domain.External = external
+		} else {
+			ns.Spec.Domain.External = *opts.Spec.Domain
+		}
 	}
 
 	ns, err = nsm.Create(ns)
@@ -242,7 +259,7 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 	//       "$ref": "#/definitions/request_namespace_update"
 	// responses:
 	//   '200':
-	//     description: Namespace was successfully updated
+	//     description: Environment was successfully updated
 	//     schema:
 	//       "$ref": "#/definitions/views_namespace"
 	//   '404':
@@ -274,7 +291,26 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	opts.SetNamespaceMeta(ns)
-	opts.SetNamespaceSpec(ns)
+	if err := opts.SetNamespaceSpec(ns); err != nil {
+		log.V(logLevel).Errorf("%s:create:> set namespace spec err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	internal, _ := envs.Get().GetDomain()
+	ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", ns.Meta.Name, internal))
+
+	internal, external := envs.Get().GetDomain()
+
+	ns.Spec.Domain.Internal = internal
+
+	if opts.Spec.Domain != nil {
+		if len(*opts.Spec.Domain) == 0 {
+			ns.Spec.Domain.External = external
+		} else {
+			ns.Spec.Domain.External = *opts.Spec.Domain
+		}
+	}
 
 	if err := nsm.Update(ns); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update namespace `%s` err: %s", logPrefix, nid, err.Error())

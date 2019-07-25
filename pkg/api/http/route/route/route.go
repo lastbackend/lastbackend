@@ -20,6 +20,7 @@ package route
 
 import (
 	"context"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
@@ -27,6 +28,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -111,6 +113,11 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.RouteManifest)
 	mf.SetRouteMeta(route)
 	mf.SetRouteSpec(route, ns, svc)
 
+	if route.Spec.Endpoint == types.EmptyString {
+		_, external := envs.Get().GetDomain()
+		route.Spec.Endpoint = fmt.Sprintf("%s.%s.%s", strings.ToLower(route.Meta.Name), strings.ToLower(ns.Meta.Name), external)
+	}
+
 	if len(route.Spec.Rules) == 0 {
 		err := errors.New("route rules are incorrect")
 		log.V(logLevel).Errorf("%s:create:> route rules empty", logPrefix, err.Error())
@@ -158,6 +165,11 @@ func Update(ctx context.Context, ns *types.Namespace, rt *types.Route, mf *reque
 
 	mf.SetRouteMeta(rt)
 	mf.SetRouteSpec(rt, ns, svc)
+
+	if rt.Spec.Endpoint == types.EmptyString {
+		_, external := envs.Get().GetDomain()
+		rt.Spec.Endpoint = fmt.Sprintf("%s.%s.%s", strings.ToLower(rt.Meta.Name), strings.ToLower(ns.Meta.Name), external)
+	}
 
 	if len(rt.Spec.Rules) == 0 {
 		err := errors.New("route rules are incorrect")

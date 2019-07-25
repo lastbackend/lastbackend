@@ -21,23 +21,16 @@ package views
 import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/resource"
-	"sort"
 )
 
 type JobView struct{}
 
-func (jw *JobView) New(obj *types.Job, tasks *types.TaskList, pods *types.PodList) *Job {
+func (jw *JobView) New(obj *types.Job) *Job {
 	j := Job{}
 
 	j.SetMeta(obj.Meta)
 	j.SetStatus(obj.Status)
 	j.SetSpec(obj.Spec)
-
-	if tasks != nil {
-		j.Tasks = make(TaskList, 0)
-		j.JoinTasks(tasks, pods)
-		sort.Sort(j.Tasks)
-	}
 
 	return &j
 }
@@ -133,23 +126,7 @@ func (j *Job) SetSpec(obj types.JobSpec) {
 	j.Spec = js
 }
 
-func (j *Job) JoinTasks(tasks *types.TaskList, pods *types.PodList) {
-
-	for _, t := range tasks.Items {
-
-		if t.Meta.Namespace != t.Meta.Namespace {
-			continue
-		}
-
-		if t.Meta.Job != j.Meta.SelfLink {
-			continue
-		}
-
-		j.Tasks = append(j.Tasks, new(TaskView).New(t))
-	}
-}
-
-func (jw *JobView) NewList(obj *types.JobList, tasks *types.TaskList, pods *types.PodList) *JobList {
+func (jw *JobView) NewList(obj *types.JobList) *JobList {
 
 	if obj == nil {
 		return nil
@@ -157,7 +134,7 @@ func (jw *JobView) NewList(obj *types.JobList, tasks *types.TaskList, pods *type
 
 	jl := make(JobList, 0)
 	for _, v := range obj.Items {
-		jl = append(jl, jw.New(v, tasks, pods))
+		jl = append(jl, jw.New(v))
 	}
 
 	return &jl
