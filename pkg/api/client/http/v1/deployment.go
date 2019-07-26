@@ -58,7 +58,7 @@ func (dc *DeploymentClient) List(ctx context.Context) (*vv1.DeploymentList, erro
 	var s *vv1.DeploymentList
 	var e *errors.Http
 
-	err := dc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet", dc.namespace.String(), dc.service.String())).
+	err := dc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deployment", dc.namespace.String(), dc.service.String())).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
@@ -82,7 +82,7 @@ func (dc *DeploymentClient) Get(ctx context.Context) (*vv1.Deployment, error) {
 	var s *vv1.Deployment
 	var e *errors.Http
 
-	err := dc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s", dc.namespace.String(), dc.service.String(), dc.selflink.Name())).
+	err := dc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deployment/%s", dc.namespace.String(), dc.service.String(), dc.selflink.Name())).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
