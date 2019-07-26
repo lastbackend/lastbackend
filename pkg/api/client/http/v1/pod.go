@@ -58,7 +58,7 @@ func (pc *PodClient) List(ctx context.Context) (*vv1.PodList, error) {
 			return nil, err
 		}
 		_, svc := dsl.Parent()
-		url = fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod", pc.namespace, svc.Name(), dsl.Name())
+		url = fmt.Sprintf("/namespace/%s/service/%s/deployment/%s/pod", pc.namespace, svc.Name(), dsl.Name())
 	case types.KindTask:
 		tsl := types.TaskSelfLink{}
 		if err := tsl.Parse(pc.parent.selflink); err != nil {
@@ -101,7 +101,7 @@ func (pc *PodClient) Get(ctx context.Context) (*vv1.Pod, error) {
 			return nil, err
 		}
 		_, svc := dsl.Parent()
-		url = fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod/%s", pc.namespace, svc.Name(), dsl.Name(), pc.name)
+		url = fmt.Sprintf("/namespace/%s/service/%s/deployment/%s/pod/%s", pc.namespace, svc.Name(), dsl.Name(), pc.name)
 	case types.KindTask:
 		tsl := types.TaskSelfLink{}
 		if err := tsl.Parse(pc.parent.selflink); err != nil {

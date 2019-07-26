@@ -103,27 +103,6 @@ func (t *Task) ToSpec(obj types.TaskSpec) {
 	t.Spec = ts
 }
 
-func (t *Task) JoinPods(pods *types.PodList) {
-
-	for _, p := range pods.Items {
-
-		if p.Meta.Namespace != t.Meta.Namespace {
-			continue
-		}
-
-		k, sl := p.SelfLink().Parent()
-		if k != types.KindTask {
-			continue
-		}
-
-		if sl.String() != t.Meta.SelfLink {
-			continue
-		}
-
-		t.Pods[p.Meta.SelfLink.String()] = new(PodView).New(p)
-	}
-}
-
 func (tw *TaskView) NewList(obj *types.TaskList) *TaskList {
 
 	if obj == nil {
