@@ -35,7 +35,7 @@ type Pod struct {
 // swagger:ignore
 // PodList is a map of pods
 // swagger:model views_pod_list
-type PodList map[string]Pod
+type PodList []*Pod
 
 // PodMeta is a meta of pod
 // swagger:model views_pod_meta

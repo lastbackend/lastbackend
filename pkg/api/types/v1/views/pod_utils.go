@@ -19,13 +19,14 @@
 package views
 
 import (
+	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 type PodView struct{}
 
-func (pv *PodView) New(pod *types.Pod) Pod {
-	p := Pod{}
+func (pv *PodView) New(pod *types.Pod) *Pod {
+	p := new(Pod)
 	p.SetMeta(pod.Meta)
 	p.SetStatus(pod.Status)
 	p.SetSpec(pod.Spec)
@@ -103,4 +104,18 @@ func (p *Pod) SetStatus(pod types.PodStatus) {
 	}
 
 	p.Status = status
+}
+
+func (pv *PodView) NewList(obj *types.PodList) *PodList {
+	pl := make(PodList, 0)
+	for _, d := range obj.Items {
+		v := new(PodView)
+		p := v.New(d)
+		pl = append(pl, p)
+	}
+	return &pl
+}
+
+func (pl *PodList) ToJson() ([]byte, error) {
+	return json.Marshal(pl)
 }
