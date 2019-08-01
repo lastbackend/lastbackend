@@ -20,7 +20,7 @@
 //
 // Open-source system for automating deployment, scaling, and management of containerized applications.
 //
-// Terms Of Service:
+// Terms Of Applications:
 //
 // https://lastbackend.com/legal/terms/
 //

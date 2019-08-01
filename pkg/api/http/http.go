@@ -31,6 +31,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/http/job"
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/http/node"
+	"github.com/lastbackend/lastbackend/pkg/api/http/pod"
 	"github.com/lastbackend/lastbackend/pkg/api/http/route"
 	"github.com/lastbackend/lastbackend/pkg/api/http/secret"
 	"github.com/lastbackend/lastbackend/pkg/api/http/service"
@@ -74,13 +75,14 @@ func init() {
 	AddRoutes(exporter.Routes)
 	AddRoutes(discovery.Routes)
 
-	// Namespace
+	// Environment
 	AddRoutes(namespace.Routes)
 	AddRoutes(secret.Routes)
 	AddRoutes(config.Routes)
 	AddRoutes(route.Routes)
 	AddRoutes(service.Routes)
 	AddRoutes(deployment.Routes)
+	AddRoutes(pod.Routes)
 	AddRoutes(volume.Routes)
 	AddRoutes(ingress.Routes)
 	AddRoutes(job.Routes)

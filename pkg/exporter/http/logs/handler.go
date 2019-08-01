@@ -69,9 +69,9 @@ func LogsH(w http.ResponseWriter, r *http.Request) {
 	//     type: string
 	// responses:
 	//   '200':
-	//     description: Service logs received
+	//     description: Applications logs received
 	//   '404':
-	//     description: Namespace not found / Service not found
+	//     description: Environment not found / Applications not found
 	//   '500':
 	//     description: Internal server error
 

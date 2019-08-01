@@ -20,6 +20,7 @@ package socket
 
 import (
 	"context"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"sync"
 	"time"
@@ -82,7 +83,7 @@ func (s *Socket) listen() {
 				if err != nil {
 
 					if err := s.disconnect(); err != nil {
-						//log.Errorf(err.Error())
+						log.Errorf(err.Error())
 					}
 				}
 
@@ -112,11 +113,11 @@ func (s *Socket) listen() {
 
 				if err := s.socket.WriteMessage(websocket.CloseMessage,
 					websocket.FormatCloseMessage(websocket.CloseNormalClosure, "")); err != nil {
-					//log.Errorf(err.Error())
+					log.Errorf("ws, format close: %s", err.Error())
 				}
 
 				if err := s.disconnect(); err != nil {
-					//log.Errorf(err.Error())
+					log.Errorf("ws, disconnect: %s", err.Error())
 				}
 			}
 		}
@@ -146,7 +147,7 @@ func (s *Socket) listen() {
 
 			if err != nil {
 				s.done <- s
-				//log.Errorf(err.Error())
+				log.Errorf("read message err: %s", err.Error())
 				break
 			}
 
@@ -196,6 +197,7 @@ func (s *Socket) disconnect() error {
 
 	if s.socket != nil {
 		if err := s.socket.Close(); err != nil {
+			fmt.Println("call disconnect")
 			s.done <- s
 			return err
 		}

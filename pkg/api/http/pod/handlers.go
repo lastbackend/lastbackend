@@ -71,9 +71,9 @@ func PodListH(w http.ResponseWriter, r *http.Request) {
 
 	sid := utils.Vars(r)["service"]
 	nid := utils.Vars(r)["namespace"]
-	did := utils.Vars(r)["namespace"]
+	did := utils.Vars(r)["deployment"]
 
-	log.V(logLevel).Debugf("%s:list:> get deployments list for `%s/%s`", logPrefix, sid, nid)
+	log.V(logLevel).Debugf("%s:list:> get pod list for `%s/%s`", logPrefix, sid, nid)
 
 	var (
 		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())

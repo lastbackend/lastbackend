@@ -42,9 +42,9 @@ type DeploymentMeta struct {
 	Meta
 	// Version
 	Version int `json:"version"`
-	// Namespace id
+	// Environment id
 	Namespace string `json:"namespace"`
-	// Service id
+	// Applications id
 	Service string `json:"service"`
 	// Upstream
 	Endpoint string `json:"endpoint"`
