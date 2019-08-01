@@ -46,6 +46,11 @@ func (r *Route) ToMeta(obj types.RouteMeta) RouteMeta {
 	meta.Updated = obj.Updated
 	meta.Created = obj.Created
 
+	meta.Labels = make(map[string]string, 0)
+	for k, v := range obj.Labels {
+		meta.Labels[k] = v
+	}
+
 	return meta
 }
 

@@ -35,11 +35,12 @@ type RouteList []*Route
 
 // swagger:model views_route_meta
 type RouteMeta struct {
-	Name      string    `json:"name"`
-	Namespace string    `json:"namespace"`
-	SelfLink  string    `json:"self_link"`
-	Updated   time.Time `json:"updated"`
-	Created   time.Time `json:"created"`
+	Name      string            `json:"name"`
+	Namespace string            `json:"namespace"`
+	SelfLink  string            `json:"self_link"`
+	Labels    map[string]string `json:"labels"`
+	Updated   time.Time         `json:"updated"`
+	Created   time.Time         `json:"created"`
 }
 
 // swagger:model views_route_spec
