@@ -57,7 +57,7 @@ func NamespaceListH(w http.ResponseWriter, r *http.Request) {
 	// - application/json
 	// responses:
 	//   '200':
-	//     description: Namespace list response
+	//     description: Environment list response
 	//     schema:
 	//       "$ref": "#/definitions/views_namespace_list"
 	//   '500':
@@ -107,7 +107,7 @@ func NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 	//     type: string
 	// responses:
 	//   '200':
-	//     description: Namespace response
+	//     description: Environment response
 	//     schema:
 	//       "$ref": "#/definitions/views_namespace"
 	//   '404':
@@ -156,7 +156,7 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 	//       "$ref": "#/definitions/request_namespace_create"
 	// responses:
 	//   '200':
-	//     description: Namespace was successfully created
+	//     description: Environment was successfully created
 	//     schema:
 	//       "$ref": "#/definitions/views_namespace"
 	//   '400':
@@ -354,7 +354,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 	//       "$ref": "#/definitions/request_namespace_apply"
 	// responses:
 	//   '200':
-	//     description: Namespace was successfully updated
+	//     description: Environment was successfully updated
 	//     schema:
 	//       "$ref": "#/definitions/views_namespace"
 	//   '404':
@@ -573,7 +573,7 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 	//       "$ref": "#/definitions/request_namespace_remove"
 	// responses:
 	//   '200':
-	//     description: Namespace was successfully removed
+	//     description: Environment was successfully removed
 	//   '403':
 	//     description: Forbidden
 	//   '404':

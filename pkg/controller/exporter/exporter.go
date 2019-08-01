@@ -35,9 +35,12 @@ type Exporter struct {
 		lock        sync.RWMutex
 		cluster     *types.Cluster
 		nodes       map[string]*types.Node
+		namespaces  map[string]*types.Namespace
 		services    map[string]*types.Service
 		deployments map[string]*types.Deployment
 		pods        map[string]*types.Pod
+		jobs				map[string]*types.Job
+		tasks				map[string]*types.Task
 		volumes     map[string]*types.Volume
 		routes      map[string]*types.Route
 	}
@@ -51,18 +54,18 @@ func New() *Exporter {
 func (c *Exporter) Connect(ctx context.Context) error {
 	log.V(logLevel).Debugf("%s:connect:> connect init", logPrefix)
 
-
-
 	return nil
 }
-
-
 
 func (c *Exporter) SendClusterState(ctx context.Context) error {
 	return nil
 }
 
 func (c *Exporter) SendNodeState(ctx context.Context) error {
+	return nil
+}
+
+func (c *Exporter) SendNamespaceState(ctx context.Context) error {
 	return nil
 }
 
@@ -79,5 +82,17 @@ func (c *Exporter) SendPodState(ctx context.Context) error {
 }
 
 func (c *Exporter) SendVolumeState(ctx context.Context) error {
+	return nil
+}
+
+func (c *Exporter) SendJobState(ctx context.Context) error {
+	return nil
+}
+
+func (c *Exporter) SendTaskState(ctx context.Context) error {
+	return nil
+}
+
+func (c *Exporter) SendRouteState(ctx context.Context) error {
 	return nil
 }

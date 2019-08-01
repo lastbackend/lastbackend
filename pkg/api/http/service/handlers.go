@@ -57,7 +57,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 	//     type: string
 	// responses:
 	//   '200':
-	//     description: Service list response
+	//     description: Applications list response
 	//     schema:
 	//       "$ref": "#/definitions/views_service_list"
 	//   '404':
@@ -131,7 +131,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	//     type: string
 	// responses:
 	//   '200':
-	//     description: Service list response
+	//     description: Applications list response
 	//     schema:
 	//       "$ref": "#/definitions/views_service"
 	//   '404':
@@ -192,7 +192,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	//       "$ref": "#/definitions/request_service_create"
 	// responses:
 	//   '200':
-	//     description: Service was successfully created
+	//     description: Applications was successfully created
 	//     schema:
 	//       "$ref": "#/definitions/views_service"
 	//   '400':
@@ -270,7 +270,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	//       "$ref": "#/definitions/request_service_update"
 	// responses:
 	//   '200':
-	//     description: Service was successfully updated
+	//     description: Applications was successfully updated
 	//     schema:
 	//       "$ref": "#/definitions/views_service"
 	//   '404':
@@ -347,7 +347,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	//     type: string
 	// responses:
 	//   '200':
-	//     description: Service was successfully removed
+	//     description: Applications was successfully removed
 	//   '404':
 	//     description: Namespace not found / Service not found
 	//   '500':
@@ -458,7 +458,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 	//     type: string
 	// responses:
 	//   '200':
-	//     description: Service logs received
+	//     description: Applications logs received
 	//   '404':
 	//     description: Namespace not found / Service not found
 	//   '500':

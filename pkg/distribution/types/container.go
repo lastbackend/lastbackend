@@ -42,7 +42,7 @@ type Container struct {
 	Pod string `json:"pod"`
 	// Container Deployment ID
 	Deployment string `json:"deployment"`
-	// Container Namespace ID
+	// Container Environment ID
 	Namespace string `json:"namespace"`
 	// Container envs
 	Envs []string `json:"envs"`
@@ -172,9 +172,9 @@ type ContainerManifest struct {
 
 type ContainerSpecMeta struct {
 	Meta
-	// Service id
+	// Applications id
 	Service string `json:"service"`
-	// Service spec id
+	// Applications spec id
 	Spec string `json:"spec"`
 }
 

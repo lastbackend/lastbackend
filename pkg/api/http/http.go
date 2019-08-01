@@ -75,7 +75,7 @@ func init() {
 	AddRoutes(exporter.Routes)
 	AddRoutes(discovery.Routes)
 
-	// Namespace
+	// Environment
 	AddRoutes(namespace.Routes)
 	AddRoutes(secret.Routes)
 	AddRoutes(config.Routes)

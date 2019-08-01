@@ -24,7 +24,7 @@ import (
 )
 
 var Routes = []http.Route{
-	// Namespace handlers
+	// Environment handlers
 	{Path: "/namespace", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NamespaceListH},
 	{Path: "/namespace", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NamespaceCreateH},
 	{Path: "/namespace/{namespace}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NamespaceInfoH},

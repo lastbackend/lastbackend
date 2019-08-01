@@ -48,7 +48,7 @@ type EndpointMap struct {
 // EndpointMeta - endpoint meta data
 type EndpointMeta struct {
 	Meta
-	// Namespace name
+	// Environment name
 	Namespace string `json:"namespace"`
 	// SelfLink
 	SelfLink EndpointSelfLink `json:"self_link"`
