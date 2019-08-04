@@ -81,7 +81,9 @@ func (r *RouteManifest) SetRouteMeta(route *types.Route) {
 	}
 
 	if r.Meta.Labels != nil {
-		route.Meta.Labels = r.Meta.Labels
+		for k, v := range r.Meta.Labels {
+			route.Meta.Labels[k] = v
+		}
 	}
 }
 

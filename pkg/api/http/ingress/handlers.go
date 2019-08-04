@@ -442,6 +442,7 @@ func getIngressManifest(ctx context.Context, ing *types.Ingress) (*types.Ingress
 		stg   = envs.Get().GetStorage()
 		ns    = distribution.NewNetworkModel(ctx, stg)
 		em    = distribution.NewEndpointModel(ctx, stg)
+		rm    = distribution.NewRouteModel(ctx, stg)
 	)
 
 	if spec == nil {
@@ -449,7 +450,18 @@ func getIngressManifest(ctx context.Context, ing *types.Ingress) (*types.Ingress
 		spec.Meta.Initial = true
 
 		spec.Resolvers = cache.GetResolvers()
-		spec.Routes = cache.GetRoutes(ing.SelfLink().String())
+		spec.Routes = make(map[string]*types.RouteManifest, 0)
+		routes, err := rm.ManifestMap(ing.SelfLink().String())
+		if err != nil {
+			log.V(logLevel).Errorf("%s:getmanifest:> get endpoint manifests for node err: %s", logPrefix, err.Error())
+			return spec, err
+		}
+
+		if routes != nil {
+			for s, r := range routes.Items {
+				spec.Routes[s] = r
+			}
+		}
 
 		endpoints, err := em.ManifestMap()
 		if err != nil {
