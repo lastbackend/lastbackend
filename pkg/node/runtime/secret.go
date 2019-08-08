@@ -28,12 +28,17 @@ import (
 
 func SecretGet(ctx context.Context, namespace, name string) (*types.Secret, error) {
 
+	cli := envs.Get().GetRestClient()
+	if cli == nil {
+		return nil, nil
+	}
+
 	secret := envs.Get().GetState().Secrets().GetSecret(types.NewSecretSelfLink(namespace, name).String())
 	if secret != nil {
 		return secret, nil
 	}
 
-	sr, err := envs.Get().GetRestClient().Namespace(namespace).Secret(name).Get(ctx)
+	sr, err := cli.Namespace(namespace).Secret(name).Get(ctx)
 	if err != nil {
 		log.Errorf("can not receive secret from api, err: %s", err.Error())
 		return nil, err
@@ -44,31 +49,44 @@ func SecretGet(ctx context.Context, namespace, name string) (*types.Secret, erro
 
 func SecretCreate(ctx context.Context, namespace, name string) error {
 
+	cli := envs.Get().GetRestClient()
+	if cli == nil {
+		return nil
+	}
+
 	ok := envs.Get().GetState().Secrets().GetSecret(types.NewSecretSelfLink(namespace, name).String())
 	if ok != nil {
 		return nil
 	}
 
-	secret, err := envs.Get().GetRestClient().Namespace(namespace).Secret(name).Get(ctx)
+	secret, err := cli.Namespace(namespace).Secret(name).Get(ctx)
 	if err != nil {
 		log.Errorf("get secret err: %s", err.Error())
 		return err
 	}
 
 	envs.Get().GetState().Secrets().AddSecret(secret.Meta.SelfLink, secret.Decode())
+
 	return nil
 }
 
 func SecretUpdate(ctx context.Context, selflink string) error {
 
+	cli := envs.Get().GetRestClient()
+	if cli == nil {
+		return nil
+	}
+
 	namespace, name := parseSecretSelflink(selflink)
-	secret, err := envs.Get().GetRestClient().Namespace(namespace).Secret(name).Get(ctx)
+
+	secret, err := cli.Namespace(namespace).Secret(name).Get(ctx)
 	if err != nil {
 		log.Errorf("get secret err: %s", err.Error())
 		return err
 	}
 
 	envs.Get().GetState().Secrets().AddSecret(secret.Meta.SelfLink, secret.Decode())
+
 	return nil
 
 }
