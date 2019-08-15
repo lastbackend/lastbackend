@@ -61,6 +61,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"strings"
 
 	"github.com/lastbackend/lastbackend/pkg/api"
@@ -126,13 +127,19 @@ func main() {
 	flag.Parse()
 
 	v := viper.New()
+
 	v.AutomaticEnv()
 	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	v.SetEnvPrefix(default_env_prefix)
 
 	for _, item := range flags {
-		if err := v.BindPFlag(item.Bind, flag.Lookup(item.Name)); err != nil {
-			panic(err)
+
+		if len(flag.Lookup(item.Name).Value.String()) != 0 {
+			if err := v.BindPFlag(item.Bind, flag.Lookup(item.Name)); err != nil {
+				panic(err)
+			}
+		} else {
+			v.SetDefault(item.Bind, nil)
 		}
 
 		name := strings.Replace(strings.ToUpper(item.Name), "-", "_", -1)
@@ -142,12 +149,14 @@ func main() {
 			panic(err)
 		}
 
-		v.SetDefault(item.Bind, item.Value)
-
-		// Set default port listener
-		v.SetDefault("server.port", 2967)
+		if !validator.IsZeroOfUnderlyingType(item.Value) {
+			v.SetDefault(item.Bind, item.Value)
+		}
 
 	}
+
+	// Set default port listener
+	v.SetDefault("server.port", 2967)
 
 	v.SetConfigType(default_config_type)
 	v.SetConfigFile(v.GetString(default_config_name))

@@ -92,7 +92,7 @@ func NodeCapacity() types.NodeResources {
 
 	var stat syscall.Statfs_t
 
-	syscall.Statfs(envs.Get().GetConfig().Runtime.Csi.Dir.Root, &stat)
+	syscall.Statfs(envs.Get().GetConfig().Container.Csi.Dir.Root, &stat)
 
 	// Available blocks * size per block = available space in bytes
 	storage := stat.Blocks * uint64(stat.Bsize)

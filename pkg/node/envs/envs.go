@@ -37,63 +37,64 @@ func Get() *Env {
 }
 
 type config struct {
-	Verbose  string `yaml:"verbose"`
-	Token    string `yaml:"token"`
-	Workdir  string `yaml:"workdir"`
+	Verbose  string `mapstructure:"verbose" json:"verbose" yaml:"verbose"`
+	Token    string `mapstructure:"token" json:"token" yaml:"token"`
+	Workdir  string `mapstructure:"workdir" json:"workdir" yaml:"workdir"`
 	Manifest struct {
-		Dir string `yaml:"dir"`
-	} `yaml:"manifest"`
+		Dir string `mapstructure:"dir" json:"dir" yaml:"dir"`
+	} `mapstructure:"manifest" json:"manifest" yaml:"manifest"`
 	Network struct {
-		Interface string `yaml:"interface"`
+		Interface string `mapstructure:"interface" json:"interface" yaml:"interface"`
 		Cpi       struct {
-			Type      string `yaml:"type"`
+			Type      string `mapstructure:"type" json:"type" yaml:"type"`
 			Interface struct {
-				External interface{} `yaml:"external"`
-				Internal interface{} `yaml:"internal"`
-			} `yaml:"interface"`
-		} `yaml:"cpi"`
+				External interface{} `mapstructure:"external" json:"external" yaml:"external"`
+				Internal interface{} `mapstructure:"internal" json:"internal" yaml:"internal"`
+			} `mapstructure:"interface" json:"interface" yaml:"interface"`
+		} `mapstructure:"cpi" json:"cpi" yaml:"cpi"`
 		Cni struct {
-			Type string `yaml:"type"`
-		} `yaml:"cni"`
-	} `yaml:"network"`
-	Runtime struct {
+			Type string `mapstructure:"type" json:"type" yaml:"type"`
+		} `mapstructure:"cni" json:"cni" yaml:"cni"`
+	} `mapstructure:"network" json:"network" yaml:"network"`
+	Container struct {
 		Cri struct {
-			Type   string `yaml:"type"`
+			Type   string `mapstructure:"type" json:"type" yaml:"type"`
 			Docker struct {
-				Version string `yaml:"version"`
-			} `yaml:"docker"`
-		} `yaml:"cri"`
+				Version string `mapstructure:"version" json:"version" yaml:"version"`
+			} `mapstructure:"docker" json:"docker" yaml:"docker"`
+		} `mapstructure:"cri" json:"cri" yaml:"cri"`
 		Csi struct {
 			Dir struct {
-				Root string `yaml:"root"`
-			} `yaml:"dir"`
-		} `yaml:"csi"`
+				Root string `mapstructure:"root" json:"root" yaml:"root"`
+			} `mapstructure:"dir" json:"dir" yaml:"dir"`
+		} `mapstructure:"csi" json:"csi" yaml:"csi"`
 		Iri struct {
-			Type   string `yaml:"type"`
+			Type   string `mapstructure:"type" json:"type" yaml:"type"`
 			Docker struct {
-				Version string `yaml:"version"`
-			} `yaml:"docker"`
-		} `yaml:"iri"`
-	} `yaml:"runtime"`
+				Version string `mapstructure:"version" json:"version" yaml:"version"`
+			} `mapstructure:"docker" json:"docker" yaml:"docker"`
+		} `mapstructure:"iri" json:"iri" yaml:"iri"`
+		ExtraHosts []string `mapstructure:"extra_hosts" json:"extra_hosts" yaml:"extra_hosts"`
+	} `mapstructure:"container" json:"container" yaml:"container"`
 	Server struct {
-		Host string `yaml:"host"`
-		Port string `yaml:"port"`
+		Host string `mapstructure:"host" json:"host" yaml:"host"`
+		Port string `mapstructure:"port" json:"port" yaml:"port"`
 		TLS  struct {
-			Insecure string `yaml:"insecure"`
-		} `yaml:"tls"`
-		Cert string `yaml:"cert"`
-		Key  string `yaml:"key"`
-		Ca   string `yaml:"ca"`
-	} `yaml:"server"`
+			Insecure string `mapstructure:"insecure" json:"insecure" yaml:"insecure"`
+		} `mapstructure:"tls" json:"tls" yaml:"tls"`
+		Cert string `mapstructure:"cert" json:"cert" yaml:"cert"`
+		Key  string `mapstructure:"key" json:"key" yaml:"key"`
+		Ca   string `mapstructure:"ca" json:"ca" yaml:"ca"`
+	} `mapstructure:"server" json:"server" yaml:"server"`
 	API struct {
-		URI interface{} `yaml:"uri"`
+		URI interface{} `mapstructure:"uri" json:"uri" yaml:"uri"`
 		TLS struct {
-			Insecure string `yaml:"insecure"`
-			Cert     string `yaml:"cert"`
-			Key      string `yaml:"key"`
-			Ca       string `yaml:"ca"`
-		} `yaml:"tls"`
-	} `yaml:"api"`
+			Insecure string `mapstructure:"insecure" json:"insecure" yaml:"insecure"`
+			Cert     string `mapstructure:"cert" json:"cert" yaml:"cert"`
+			Key      string `mapstructure:"key" json:"key" yaml:"key"`
+			Ca       string `mapstructure:"ca" json:"ca" yaml:"ca"`
+		} `mapstructure:"tls" json:"tls" yaml:"tls"`
+	} `mapstructure:"api" json:"api" yaml:"api"`
 }
 
 type Env struct {

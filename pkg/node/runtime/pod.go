@@ -33,6 +33,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
+	"github.com/lastbackend/lastbackend/pkg/util"
 	"github.com/lastbackend/lastbackend/pkg/util/cleaner"
 	"github.com/lastbackend/lastbackend/pkg/util/filesystem"
 )
@@ -373,6 +374,7 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 			svc.Network.Mode = fmt.Sprintf("container:%s", primary)
 		} else {
 			primary = svc.Name
+			svc.ExtraHosts = util.RemoveDuplicates(append(svc.ExtraHosts, envs.Get().GetConfig().Container.ExtraHosts...))
 		}
 
 		if err := serviceStart(ctx, key, svc, status); err != nil {

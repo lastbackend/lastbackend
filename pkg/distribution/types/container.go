@@ -30,7 +30,7 @@ import (
 
 const (
 	ContainerTypeLBC            = "LBC"
-	ContainerTypeRuntime        = "LBC:Runtime"
+	ContainerTypeRuntime        = "LBC:Container"
 	ContainerTypeRuntimeService = "service"
 	ContainerTypeRuntimeTask    = "task"
 )

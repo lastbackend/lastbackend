@@ -65,7 +65,7 @@ type PodMeta struct {
 
 type PodMetaParent struct {
 	Kind     string `json:"kind" yaml:"kind"`
-	SelfLink string `json:"self_link", yaml:"self_link"`
+	SelfLink string `json:"self_link" yaml:"self_link"`
 }
 
 // PodSpec is a spec of pod

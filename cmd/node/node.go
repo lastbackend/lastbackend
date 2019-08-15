@@ -62,6 +62,7 @@ package main
 import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/node"
+	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"strings"
@@ -96,9 +97,20 @@ var (
 		{Name: "network-driver-iface-internal", Short: "", Value: "docker0", Desc: "Container overlay network internal bridge interface for container intercommunications", Bind: "network.cni.interface.internal"},
 		{Name: "container-runtime", Short: "", Value: "docker", Desc: "Node container runtime", Bind: "container.cri.type"},
 		{Name: "container-runtime-docker-version", Short: "", Value: "1.38", Desc: "Set docker version for docker container runtime", Bind: "container.cri.docker.version"},
+		{Name: "container-runtime-docker-host", Short: "", Value: "unix:///var/run/docker.sock", Desc: "Set docker host for docker container runtime", Bind: "container.cri.docker.host"},
+		{Name: "container-runtime-docker-tls-verify", Short: "", Value: false, Desc: "Enable check tls for docker container runtime", Bind: "container.cri.docker.tls.verify"},
+		{Name: "container-runtime-docker-tls-ca", Short: "", Value: "", Desc: "Set path to ca file for docker container runtime", Bind: "container.cri.docker.tls.ca_file"},
+		{Name: "container-runtime-docker-tls-cert", Short: "", Value: "", Desc: "Set path to cert file for docker container runtime", Bind: "container.cri.docker.tls.cert_file"},
+		{Name: "container-runtime-docker-tls-key", Short: "", Value: "", Desc: "Set path to key file for docker container runtime", Bind: "container.cri.docker.tls.key_file"},
 		{Name: "container-storage-root", Short: "", Value: "/var/run/lastbackend", Desc: "Node container storage root", Bind: "container.csi.dir.root"},
 		{Name: "container-image-runtime", Short: "", Value: "docker", Desc: "Node container images runtime", Bind: "container.iri.type"},
 		{Name: "container-image-runtime-docker-version", Short: "", Value: "1.38", Desc: "Set docker version for docker container image runtime", Bind: "container.iri.docker.version"},
+		{Name: "container-image-runtime-docker-host", Short: "", Value: "unix:///var/run/docker.sock", Desc: "Set docker host for docker container image runtime", Bind: "container.iri.docker.host"},
+		{Name: "container-image-runtime-docker-tls-verify", Short: "", Value: false, Desc: "Enable check tls for docker container image runtime", Bind: "container.iri.docker.tls.verify"},
+		{Name: "container-image-runtime-docker-tls-ca", Short: "", Value: "", Desc: "Set path to ca file for docker container image runtime", Bind: "container.iri.docker.tls.ca_file"},
+		{Name: "container-image-runtime-docker-tls-cert", Short: "", Value: "", Desc: "Set path to cert file for docker container image runtime", Bind: "container.iri.docker.tls.cert_file"},
+		{Name: "container-image-runtime-docker-tls-key", Short: "", Value: "", Desc: "Set path to key file for docker container image runtime", Bind: "container.iri.docker.tls.key_file"},
+		{Name: "container-extra-hosts", Short: "", Value: []string{}, Desc: "Set hostname mappings for containers", Bind: "container.extra_hosts"},
 		{Name: "bind-address", Short: "", Value: "0.0.0.0", Desc: "Node bind address", Bind: "server.host"},
 		{Name: "bind-port", Short: "", Value: 2969, Desc: "Node listening port binding", Bind: "server.port"},
 		{Name: "tls-verify", Short: "", Value: false, Desc: "Node TLS verify options", Bind: "server.tls.verify"},
@@ -141,8 +153,13 @@ func main() {
 	v.SetEnvPrefix(default_env_prefix)
 
 	for _, item := range flags {
-		if err := v.BindPFlag(item.Bind, flag.Lookup(item.Name)); err != nil {
-			panic(err)
+
+		if len(flag.Lookup(item.Name).Value.String()) != 0 {
+			if err := v.BindPFlag(item.Bind, flag.Lookup(item.Name)); err != nil {
+				panic(err)
+			}
+		} else {
+			v.SetDefault(item.Bind, nil)
 		}
 
 		name := strings.Replace(strings.ToUpper(item.Name), "-", "_", -1)
@@ -152,7 +169,10 @@ func main() {
 			panic(err)
 		}
 
-		v.SetDefault(item.Bind, item.Value)
+		if !validator.IsZeroOfUnderlyingType(item.Value) {
+			v.SetDefault(item.Bind, item.Value)
+		}
+
 	}
 
 	v.SetConfigType(default_config_type)

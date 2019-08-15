@@ -17,6 +17,8 @@ server:
 
 # Container
 container:
+  #  extra_hosts:
+  #    - <domain>: <ip>
   docker:
     version: 1.35
   cri:

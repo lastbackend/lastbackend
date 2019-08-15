@@ -19,7 +19,6 @@
 package node
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -68,14 +67,12 @@ func Daemon(v *viper.Viper) {
 		log.Fatalf("Parse config err: %v", err)
 	}
 
-	criDriver := v.GetString("container.cri.type")
-	_cri, err := cri.New(criDriver, v.GetStringMap(fmt.Sprintf("container.cri.%s", criDriver)))
+	_cri, err := cri.New(v)
 	if err != nil {
 		log.Errorf("Cannot initialize cri: %v", err)
 	}
 
-	iriDriver := v.GetString("container.iri.type")
-	_cii, err := cii.New(iriDriver, v.GetStringMap(fmt.Sprintf("container.iri.%s", iriDriver)))
+	_cii, err := cii.New(v)
 	if err != nil {
 		log.Errorf("Cannot initialize iri: %v", err)
 	}
