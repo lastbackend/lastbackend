@@ -61,7 +61,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"strings"
 
 	"github.com/lastbackend/lastbackend/pkg/api"
@@ -149,14 +148,9 @@ func main() {
 			panic(err)
 		}
 
-		if !validator.IsZeroOfUnderlyingType(item.Value) {
-			v.SetDefault(item.Bind, item.Value)
-		}
+		v.SetDefault(item.Bind, item.Value)
 
 	}
-
-	// Set default port listener
-	v.SetDefault("server.port", 2967)
 
 	v.SetConfigType(default_config_type)
 	v.SetConfigFile(v.GetString(default_config_name))

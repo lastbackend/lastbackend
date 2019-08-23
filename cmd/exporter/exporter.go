@@ -61,7 +61,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"strings"
 
 	"github.com/lastbackend/lastbackend/pkg/exporter"
@@ -145,9 +144,7 @@ func main() {
 			panic(err)
 		}
 
-		if !validator.IsZeroOfUnderlyingType(item.Value) {
-			v.SetDefault(item.Bind, item.Value)
-		}
+		v.SetDefault(item.Bind, item.Value)
 
 	}
 

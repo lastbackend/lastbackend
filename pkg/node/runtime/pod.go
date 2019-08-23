@@ -335,14 +335,21 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 	)
 
 	if len(manifest.Runtime.Services) == 0 {
-		for _, s := range manifest.Template.Containers {
-			m, err := containerManifestCreate(ctx, key, s)
-			if err != nil {
-				log.Errorf("%s can not create container manifest from spec: %s", logPodPrefix, err.Error())
-				return setError(err)
-			}
 
-			services = append(services, m)
+		if len(manifest.Runtime.Tasks) > 0 {
+			tpl := types.GetPauseContainerTemplate()
+			manifest.Runtime.Services = append(manifest.Runtime.Services, tpl.Name)
+			manifest.Template.Containers = append(manifest.Template.Containers, tpl)
+		} else {
+			for _, s := range manifest.Template.Containers {
+				m, err := containerManifestCreate(ctx, key, s)
+				if err != nil {
+					log.Errorf("%s can not create container manifest from spec: %s", logPodPrefix, err.Error())
+					return setError(err)
+				}
+
+				services = append(services, m)
+			}
 		}
 	}
 

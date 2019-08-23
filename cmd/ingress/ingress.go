@@ -62,7 +62,6 @@ package main
 import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/ingress"
-	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"strings"
@@ -149,9 +148,7 @@ func main() {
 			panic(err)
 		}
 
-		if !validator.IsZeroOfUnderlyingType(item.Value) {
-			v.SetDefault(item.Bind, item.Value)
-		}
+		v.SetDefault(item.Bind, item.Value)
 
 	}
 
