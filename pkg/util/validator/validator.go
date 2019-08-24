@@ -139,6 +139,10 @@ func IsPublicKey(key string) bool {
 	return false
 }
 
+func IsZeroOfUnderlyingType(x interface{}) bool {
+	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
+}
+
 // Check incoming string on git valid utl
 // Ex:
 // 	* https://github.com/lastbackend/enterprise.git

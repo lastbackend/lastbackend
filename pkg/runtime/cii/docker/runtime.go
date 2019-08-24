@@ -19,19 +19,29 @@
 package docker
 
 import (
+	"errors"
+
 	"github.com/docker/docker/api"
 	"github.com/docker/docker/client"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"strconv"
 )
 
 type Runtime struct {
 	client *client.Client
 }
 
-type config map[string]interface{}
+type Config struct {
+	Host    string
+	Version string
+	TLS     *TLSConfig
+}
 
-func New(cfg config) (*Runtime, error) {
+type TLSConfig struct {
+	CAPath   string
+	CertPath string
+	KeyPath  string
+}
+
+func New(cfg Config) (*Runtime, error) {
 
 	var (
 		err           error
@@ -39,47 +49,36 @@ func New(cfg config) (*Runtime, error) {
 		clientOptions = make([]client.Opt, 0)
 	)
 
-	log.V(logLevel).Debug("Use docker runtime interface")
-
-	if cfg == nil {
-		cfg = make(config, 0)
-	}
-
 	host := client.DefaultDockerHost
-	if v, ok := cfg["host"]; ok {
-		host = v.(string)
+	if len(cfg.Host) != 0 {
+		host = cfg.Host
 	}
 	clientOptions = append(clientOptions, client.WithHost(host))
 
 	version := api.DefaultVersion
-	if v, ok := cfg["version"]; ok {
-		switch i := v.(type) {
-		case string:
-			version = string(i)
-		case float64:
-			version = strconv.FormatFloat(float64(i), 'f', 2, 64)
-		}
+	if len(cfg.Version) != 0 {
+		version = cfg.Version
 	}
+
 	clientOptions = append(clientOptions, client.WithVersion(version))
 
-	if v, ok := cfg["tls"]; ok {
+	if cfg.TLS != nil {
 
-		var tls = v.(map[string]string)
-		var caFile, certFile, keyFile string
-
-		if v, ok := tls["ca_file"]; ok {
-			caFile = v
+		if len(cfg.TLS.CAPath) == 0 {
+			return nil, errors.New("path to ca file not set")
+		}
+		if len(cfg.TLS.CertPath) == 0 {
+			return nil, errors.New("path to cert file not set")
+		}
+		if len(cfg.TLS.KeyPath) == 0 {
+			return nil, errors.New("path to key file not set")
 		}
 
-		if v, ok := tls["cert_file"]; ok {
-			certFile = v
-		}
+		caPath := cfg.TLS.CAPath
+		certPath := cfg.TLS.CertPath
+		keyPath := cfg.TLS.KeyPath
 
-		if v, ok := tls["key_file"]; ok {
-			keyFile = v
-		}
-
-		clientOptions = append(clientOptions, client.WithTLSClientConfig(caFile, certFile, keyFile))
+		clientOptions = append(clientOptions, client.WithTLSClientConfig(caPath, certPath, keyPath))
 	}
 
 	r.client, err = client.NewClientWithOpts(clientOptions...)

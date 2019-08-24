@@ -68,7 +68,7 @@ func Daemon(v *viper.Viper) bool {
 	}
 	env.SetIPAM(ipm)
 
-	// Initialize Runtime
+	// Initialize Container
 	r := runtime.NewRuntime(context.Background())
 	r.Loop()
 
