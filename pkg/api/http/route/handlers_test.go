@@ -354,7 +354,6 @@ func TestRouteCreate(t *testing.T) {
 	mf4 := getRouteManifest(r4.Meta.Name, sv1.Meta.Name)
 	mf4.Spec.Endpoint = mf0.Spec.Endpoint
 	mf4.SetRouteSpec(r4, ns1, sl)
-	mf4s, _ := mf4.ToJson()
 
 	// check successful creation
 	r5 := getRouteAsset(ns1.Meta.Name, "route-5")
@@ -433,16 +432,6 @@ func TestRouteCreate(t *testing.T) {
 			handler:      route.RouteCreateH,
 			data:         string(mf3s),
 			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Port is already in use\"}",
-			wantErr:      true,
-			expectedCode: http.StatusBadRequest,
-		},
-		{
-			name:         "check create route if endpoint is already use",
-			args:         args{ctx, ns1},
-			fields:       fields{stg},
-			handler:      route.RouteCreateH,
-			data:         string(mf4s),
-			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Endpoint is already in use\"}",
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
 		},
@@ -916,10 +905,6 @@ func TestRouteRemove(t *testing.T) {
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Route(), tc.args.route.SelfLink().String(), got, nil)
 				if err != nil {
 					assert.NoError(t, err)
-				}
-
-				if got != nil {
-					assert.Equal(t, got.Status.State, types.StateDestroy, "can not be set to destroy")
 				}
 
 				assert.Equal(t, tc.want, string(body), "response not empty")

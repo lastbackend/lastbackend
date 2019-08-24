@@ -189,52 +189,62 @@ func routeProvision(cs *ClusterState, route *types.Route) (err error) {
 		return nil
 	}
 
-	if route.Meta.Ingress == types.EmptyString {
+	log.Debugf("%s:> route provision > find ingress server for route: %s", logPrefixRoute, route.SelfLink().String())
 
-		log.Debugf("%s:> route provision > find ingress server for route: %s", logPrefixRoute, route.SelfLink().String())
-
-		if len(cs.ingress.list) == 0 {
-			route.Status.State = types.StateError
-			route.Status.Message = errors.IngressNotFound
-			return nil
-		}
-
-		var ing string
-
-		for k, i := range cs.ingress.list {
-
-			if ing == types.EmptyString {
-				ing = k
-			} else {
-				if cs.route.ingress[ing] > cs.route.ingress[k] {
-					ing = k
-				}
-			}
-
-			if !i.Status.Ready {
-				continue
-			}
-
-			if route.Spec.Selector.Ingress == k {
-				route.Meta.Ingress = k
-				break
-			}
-		}
-
-		if route.Meta.Ingress == types.EmptyString && ing != types.EmptyString {
-			route.Meta.Ingress = ing
-		} else {
-			route.Status.State = types.StateError
-			route.Status.Message = errors.IngressNotFound
-			return nil
-		}
-
-		route.Meta.Updated = time.Now()
+	if len(cs.ingress.list) == 0 {
+		route.Status.State = types.StateError
+		route.Status.Message = errors.IngressNotFound
+		return nil
 	}
 
-	if err := routeManifestSet(route); err != nil {
-		log.Errorf("%s:> route manifest set err: %s", logPrefixRoute, err.Error())
+	var ing string
+
+	for k, i := range cs.ingress.list {
+
+		if ing == types.EmptyString {
+			ing = k
+		} else {
+			if cs.route.ingress[ing] > cs.route.ingress[k] {
+				ing = k
+			}
+		}
+
+		if !i.Status.Ready {
+			continue
+		}
+
+		if route.Spec.Selector.Ingress == k {
+			route.Meta.Ingress = k
+			break
+		}
+	}
+
+	if route.Meta.Ingress == types.EmptyString && ing != types.EmptyString {
+		route.Meta.Ingress = ing
+	} else {
+		route.Status.State = types.StateError
+		route.Status.Message = errors.IngressNotFound
+		return nil
+	}
+
+	mf, err := rm.ManifestGet(route.Meta.Ingress, route.SelfLink().String())
+	if err != nil {
+		log.Errorf("%s:> route manifest create err: %s", logPrefixRoute, err.Error())
 		return err
+	}
+
+	if mf != nil {
+		if !routeManifestCheckEqual(mf, route) {
+			if err := routeManifestSet(route); err != nil {
+				log.Errorf("%s:> route manifest set err: %s", logPrefixRoute, err.Error())
+				return err
+			}
+		}
+	} else {
+		if err := routeManifestAdd(route); err != nil {
+			log.Errorf("%s:> route manifest add err: %s", logPrefixRoute, err.Error())
+			return err
+		}
 	}
 
 	if route.Status.State != types.StateProvision {
@@ -339,14 +349,25 @@ func routeManifestSet(route *types.Route) error {
 	}
 
 	// Update manifest
-	if mf == nil && (route.Status.State != types.StateDestroy && route.Status.State != types.StateDestroyed) {
-		log.V(logLevel).Debugf("%s: create route manifest for ingress: %s", logPrefixRoute, route.SelfLink().String())
-		mf = new(types.RouteManifest)
-		mf.Set(route)
-	} else {
-		mf.Set(route)
+	if mf == nil {
+
+		if route.Status.State != types.StateDestroy && route.Status.State != types.StateDestroyed {
+
+			log.V(logLevel).Debugf("%s: create route manifest for ingress: %s", logPrefixRoute, route.SelfLink().String())
+
+			mf = new(types.RouteManifest)
+			mf.Set(route)
+
+			if err := rm.ManifestAdd(route.Meta.Ingress, route.SelfLink().String(), mf); err != nil {
+				log.Errorf("%s:> route manifest create err: %s", logPrefixRoute, err.Error())
+				return err
+			}
+		}
+
+		return nil
 	}
 
+	mf.Set(route)
 	if err := rm.ManifestSet(route.Meta.Ingress, route.SelfLink().String(), mf); err != nil {
 		log.Errorf("can not update route manifest: %s", err.Error())
 		return err
