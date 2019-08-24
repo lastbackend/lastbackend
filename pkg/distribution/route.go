@@ -41,10 +41,10 @@ type Route struct {
 
 func (r *Route) Runtime() (*types.System, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get route runtime info", logPodPrefix)
+	log.V(logLevel).Debugf("%s:get:> get route runtime info", logRoutePrefix)
 	runtime, err := r.storage.Info(r.context, r.storage.Collection().Pod(), "")
 	if err != nil {
-		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logPodPrefix, err)
+		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logRoutePrefix, err)
 		return &runtime.System, err
 	}
 	return &runtime.System, nil
@@ -198,7 +198,7 @@ func (r *Route) ManifestMap(ingress string) (*types.RouteManifestMap, error) {
 
 	if err := r.storage.Map(r.context, r.storage.Collection().Manifest().Route(ingress), types.EmptyString, mf, nil); err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
-			log.Errorf("%s:ManifestMap:> err: %s", logPodPrefix, err.Error())
+			log.Errorf("%s:ManifestMap:> err: %s", logRoutePrefix, err.Error())
 			return nil, err
 		}
 
@@ -229,10 +229,10 @@ func (r *Route) ManifestGet(ingress, route string) (*types.RouteManifest, error)
 
 func (r *Route) ManifestAdd(ingress, route string, manifest *types.RouteManifest) error {
 
-	log.V(logLevel).Debugf("%s:ManifestAdd:> ", logPodPrefix)
+	log.V(logLevel).Debugf("%s:ManifestAdd:> ", logRoutePrefix)
 
 	if err := r.storage.Put(r.context, r.storage.Collection().Manifest().Route(ingress), route, manifest, nil); err != nil {
-		log.Errorf("%s:ManifestAdd:> err :%s", logPodPrefix, err.Error())
+		log.Errorf("%s:ManifestAdd:> err :%s", logRoutePrefix, err.Error())
 		return err
 	}
 
@@ -240,10 +240,10 @@ func (r *Route) ManifestAdd(ingress, route string, manifest *types.RouteManifest
 }
 
 func (r *Route) ManifestSet(ingress, route string, manifest *types.RouteManifest) error {
-	log.V(logLevel).Debugf("%s:ManifestSet:> ", logPodPrefix)
+	log.V(logLevel).Debugf("%s:ManifestSet:> ", logRoutePrefix)
 
 	if err := r.storage.Set(r.context, r.storage.Collection().Manifest().Route(ingress), route, manifest, nil); err != nil {
-		log.Errorf("%s:ManifestSet:> err :%s", logPodPrefix, err.Error())
+		log.Errorf("%s:ManifestSet:> err :%s", logRoutePrefix, err.Error())
 		return err
 	}
 
@@ -251,10 +251,10 @@ func (r *Route) ManifestSet(ingress, route string, manifest *types.RouteManifest
 }
 
 func (r *Route) ManifestDel(ingress, route string) error {
-	log.V(logLevel).Debugf("%s:ManifestDel:> %s on ingress %s", logPodPrefix, route, ingress)
+	log.V(logLevel).Debugf("%s:ManifestDel:> %s on ingress %s", logRoutePrefix, route, ingress)
 
 	if err := r.storage.Del(r.context, r.storage.Collection().Manifest().Route(ingress), route); err != nil {
-		log.Errorf("%s:ManifestDel:> err :%s", logPodPrefix, err.Error())
+		log.Errorf("%s:ManifestDel:> err :%s", logRoutePrefix, err.Error())
 		return err
 	}
 
@@ -279,7 +279,7 @@ func (r *Route) ManifestWatch(ingress string, ch chan types.RouteManifestEvent, 
 
 	rg, err := regexp.Compile(f)
 	if err != nil {
-		log.Errorf("%s:> filter compile err: %v", logPodPrefix, err.Error())
+		log.Errorf("%s:> filter compile err: %v", logRoutePrefix, err.Error())
 		return err
 	}
 
