@@ -218,12 +218,11 @@
   version = "v0.4.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:3cc96b9974bb118591c493d522c6f74f636f943a444e1f38b2120bf7252c44c1"
+  digest = "1:5124976000248a510d19561a59320134a17b3135e1555808d6b1c808a41b3559"
   name = "github.com/docker/libnetwork"
   packages = ["ipvs"]
   pruneopts = "UT"
-  revision = "6edb83eaba190ffcf71281ebc504a2f82532c418"
+  revision = "df6600248773b327cee184907914d4c6338e8a3d"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
