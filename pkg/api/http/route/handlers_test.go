@@ -436,16 +436,6 @@ func TestRouteCreate(t *testing.T) {
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
 		},
-		{
-			name:         "check create route if endpoint is already use",
-			args:         args{ctx, ns1},
-			fields:       fields{stg},
-			handler:      route.RouteCreateH,
-			data:         string(mf4s),
-			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Endpoint is already in use\"}",
-			wantErr:      true,
-			expectedCode: http.StatusBadRequest,
-		},
 		// TODO: need checking incoming data for validity
 		{
 			name:         "check create route success",
