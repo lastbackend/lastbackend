@@ -84,8 +84,8 @@
   unused-packages = true
 
 [[constraint]]
-  branch = "master"
   name = "github.com/docker/libnetwork"
+  revision = "df6600248773b327cee184907914d4c6338e8a3d"
 
 [[constraint]]
   name = "github.com/gogo/protobuf"
