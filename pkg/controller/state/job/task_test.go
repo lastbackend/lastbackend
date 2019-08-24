@@ -1732,7 +1732,7 @@ func compareTaskProperties(old *types.Task, new *types.Task) error {
 		if !compareStringSlice(old.Spec.Runtime.Tasks[i].Commands, new.Spec.Runtime.Tasks[i].Commands) {
 			return errors.New("task spec runtime services is different")
 		}
-		// TODO: check old.Spec.Runtime.Tasks[i].EnvVars and new.Spec.Runtime.Tasks[i].EnvVars
+		// TODO: check old.Spec.Container.Tasks[i].EnvVars and new.Spec.Container.Tasks[i].EnvVars
 	}
 	if old.Spec.Selector.Updated != new.Spec.Selector.Updated {
 		return errors.New("task spec selector updated is different")
@@ -1783,7 +1783,7 @@ const taskManifest = `
     "Name": "demo"
   },
   "Spec": {
-    "Runtime": {
+    "Container": {
       "services": [
         "s_etcd",
         "s_dind"
