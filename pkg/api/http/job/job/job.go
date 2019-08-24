@@ -120,7 +120,7 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.JobManifest) (
 
 	} else {
 		if err := nm.Update(ns); err != nil {
-			log.V(logLevel).Errorf("%s:update:> update namespace err: %s", logPrefix, err.Error())
+			log.V(logLevel).Errorf("%s:create:> update namespace err: %s", logPrefix, err.Error())
 			return nil, errors.New("job").InternalServerError()
 		}
 	}

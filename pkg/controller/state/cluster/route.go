@@ -159,7 +159,7 @@ func routeProvision(cs *ClusterState, route *types.Route) (err error) {
 	rm := distribution.NewRouteModel(context.Background(), envs.Get().GetStorage())
 
 	if route.Meta.Ingress != types.EmptyString {
-		log.Debugf("%s:> route manifest create: %s", logPrefixRoute, route.SelfLink().String())
+		log.Debugf("%s:> route manifest provision: %s", logPrefixRoute, route.SelfLink().String())
 
 		mf, err := rm.ManifestGet(route.Meta.Ingress, route.SelfLink().String())
 		if err != nil {
@@ -232,7 +232,7 @@ func routeProvision(cs *ClusterState, route *types.Route) (err error) {
 		route.Meta.Updated = time.Now()
 	}
 
-	if err := routeManifestAdd(route); err != nil {
+	if err := routeManifestSet(route); err != nil {
 		log.Errorf("%s:> route manifest set err: %s", logPrefixRoute, err.Error())
 		return err
 	}

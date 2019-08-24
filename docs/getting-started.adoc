@@ -9,7 +9,7 @@ There is multiple ways you can use to start with Last.Backend:
 
 === Ready to go environment
 
-Ready-to-go environment is available on https://cloud.lastbackend.com control panel for your experiments.
+Ready-to-go environment is available on https://app.lastbackend.com control panel for your experiments.
 In our control plane you can create new cluster, or connect existing cluster.
 
 There are several types of management for cluster connected to control panel:

@@ -73,7 +73,7 @@ spec:
           name: golang:stretch
       - name: dind
         image:
-          name: docker:dind
+          name: docker:18-dind
         security:
           privileged: true
       - name: builder

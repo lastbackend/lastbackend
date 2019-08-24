@@ -132,6 +132,6 @@ func NewRouteManifestList() *RouteManifestList {
 
 func NewRouteManifestMap() *RouteManifestMap {
 	dm := new(RouteManifestMap)
-	dm.Items = make(map[string]*RouteManifest)
+	dm.Items = make(map[string]*RouteManifest, 0)
 	return dm
 }

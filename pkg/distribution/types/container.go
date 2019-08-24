@@ -21,6 +21,8 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"strings"
 
 	"time"
@@ -30,7 +32,7 @@ import (
 
 const (
 	ContainerTypeLBC            = "LBC"
-	ContainerTypeRuntime        = "LBC:Runtime"
+	ContainerTypeRuntime        = "LBC:Container"
 	ContainerTypeRuntimeService = "service"
 	ContainerTypeRuntimeTask    = "task"
 )
@@ -431,4 +433,17 @@ func NewContainerManifest(spec *SpecTemplateContainer) *ContainerManifest {
 
 	mf.Envs = envs
 	return mf
+}
+
+func GetPauseContainerTemplate() *SpecTemplateContainer {
+	tpl := new(SpecTemplateContainer)
+	tpl.Name = generator.GenerateRandomString(6)
+	tpl.Image = SpecTemplateContainerImage{Name: "busybox"}
+	tpl.Exec.Entrypoint = []string{"/bin/sh"}
+	tpl.Exec.Command = []string{"-c", "while true; do sleep 30m; done;"}
+	tpl.Resources.Request.RAM, _ = resource.DecodeMemoryResource("32MB")
+	tpl.Resources.Request.CPU, _ = resource.DecodeCpuResource("0.1")
+	tpl.Resources.Limits.RAM, _ = resource.DecodeMemoryResource("32MB")
+	tpl.Resources.Limits.CPU, _ = resource.DecodeCpuResource("0.1")
+	return tpl
 }

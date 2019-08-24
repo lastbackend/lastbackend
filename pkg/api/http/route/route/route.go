@@ -110,7 +110,6 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.RouteManifest)
 	route.Meta.SelfLink = *types.NewRouteSelfLink(ns.Meta.Name, *mf.Meta.Name)
 	route.Meta.Namespace = ns.Meta.Name
 
-
 	mf.SetRouteMeta(route)
 	mf.SetRouteSpec(route, ns, svc)
 
@@ -121,7 +120,7 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.RouteManifest)
 
 	if len(route.Spec.Rules) == 0 {
 		err := errors.New("route rules are incorrect")
-		log.V(logLevel).Errorf("%s:create:> route rules empty", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:create:> route rules empty: %s", logPrefix, err.Error())
 		return nil, errors.New("route").BadParameter("rules", err)
 	}
 
@@ -154,13 +153,13 @@ func Update(ctx context.Context, ns *types.Namespace, rt *types.Route, mf *reque
 	}
 
 	if err := validateManifest(ctx, mf); err != nil {
-		log.V(logLevel).Errorf("%s:update:> route manifest validation err", logPrefix, err.Err().Error())
+		log.V(logLevel).Errorf("%s:update:> route manifest validation err: %s", logPrefix, err.Err().Error())
 		return nil, err
 	}
 
 	svc, err := sm.List(ns.Meta.Name)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> get services", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:create:> get services err: %s", logPrefix, err.Error())
 		return nil, errors.New("route").InternalServerError()
 	}
 
@@ -174,10 +173,11 @@ func Update(ctx context.Context, ns *types.Namespace, rt *types.Route, mf *reque
 
 	if len(rt.Spec.Rules) == 0 {
 		err := errors.New("route rules are incorrect")
-		log.V(logLevel).Errorf("%s:create:> route rules empty", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:create:> route rules empty: %s", logPrefix, err.Error())
 		return nil, errors.New("route").BadParameter("rules", err)
 	}
 
+	rt.Status.State = types.StateProvision
 	rt, err = rm.Set(rt)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> update route `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
@@ -205,13 +205,14 @@ func validateManifest(ctx context.Context, mf *request.RouteManifest) *errors.Er
 		}
 	}
 
-	if mf.Spec.Endpoint != types.EmptyString {
-		for _, r := range rl.Items {
-			if r.Spec.Endpoint == mf.Spec.Endpoint {
-				return errors.New("route").Allocated("endpoint", errors.Route().NewErrEndpointAllocated())
-			}
-		}
-	}
+	// TODO:  check this. If we want to update route, we need to validate it but endpoint is always allocated
+	//if mf.Spec.Endpoint != types.EmptyString {
+	//	for _, r := range rl.Items {
+	//		if r.Spec.Endpoint == mf.Spec.Endpoint {
+	//			return errors.New("route").Allocated("endpoint", errors.Route().NewErrEndpointAllocated())
+	//		}
+	//	}
+	//}
 
 	return nil
 }

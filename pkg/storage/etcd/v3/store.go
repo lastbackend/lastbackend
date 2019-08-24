@@ -53,7 +53,7 @@ func (s *dbstore) Info(ctx context.Context, key string) (*types.System, error) {
 	key = path.Join(s.pathPrefix, key)
 	r := new(types.System)
 
-	log.V(logLevel).Debugf("%s:count:> key: %s with filter: %s", logPrefix, key)
+	log.V(logLevel).Debugf("%s:count:> key: %s", logPrefix, key)
 
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
