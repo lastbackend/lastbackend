@@ -57,7 +57,7 @@
 
 [[constraint]]
   name = "github.com/vishvananda/netlink"
-  revision = "b2de5d10e38ecce8607e6b438b6d174f389a004e"
+  revision = "a2ad57a690f3caf3015351d2d6e1c0b95c349752"
 
 [[constraint]]
   branch = "master"
@@ -79,14 +79,14 @@
   name = "gopkg.in/yaml.v3"
   branch = "v3"
 
-[prune]
-  go-tests = true
-  unused-packages = true
-
 [[constraint]]
   name = "github.com/docker/libnetwork"
-  revision = "df6600248773b327cee184907914d4c6338e8a3d"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/gogo/protobuf"
   version = "1.1.1"
+
+[prune]
+  go-tests = true
+  unused-packages = true
