@@ -218,11 +218,12 @@
   version = "v0.4.0"
 
 [[projects]]
-  digest = "1:5124976000248a510d19561a59320134a17b3135e1555808d6b1c808a41b3559"
+  branch = "master"
+  digest = "1:3cc96b9974bb118591c493d522c6f74f636f943a444e1f38b2120bf7252c44c1"
   name = "github.com/docker/libnetwork"
   packages = ["ipvs"]
   pruneopts = "UT"
-  revision = "df6600248773b327cee184907914d4c6338e8a3d"
+  revision = "6edb83eaba190ffcf71281ebc504a2f82532c418"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
@@ -550,14 +551,14 @@
   revision = "bda0ff6ed73c67bfb5e62bc9c697f146b7fd7f13"
 
 [[projects]]
-  digest = "1:1b8826ba0a37365d3da96a8acfa718a8a1cd715620a35e5e0f46510045d81421"
+  digest = "1:2d9d06cb9d46dacfdbb45f8575b39fc0126d083841a29d4fbf8d97708f43107e"
   name = "github.com/vishvananda/netlink"
   packages = [
     ".",
     "nl",
   ]
   pruneopts = "UT"
-  revision = "b2de5d10e38ecce8607e6b438b6d174f389a004e"
+  revision = "a2ad57a690f3caf3015351d2d6e1c0b95c349752"
 
 [[projects]]
   branch = "master"
