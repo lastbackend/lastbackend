@@ -10,7 +10,7 @@ docker-machine create --driver virtualbox master
 docker-machine create --driver virtualbox minion-00
 
 # run etcd on master machine
-eval (docker-machine env master)
+eval $(docker-machine env master)
 export MASTER_IP=$(docker-machine ip master)
 docker run -d -p 4001:4001 -p 2380:2380 -p 2379:2379 \
  --name etcd quay.io/coreos/etcd:v3.2.9 /usr/local/bin/etcd \
