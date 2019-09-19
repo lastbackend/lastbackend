@@ -18,12 +18,15 @@
 
 package types
 
-const KindCluster = "cluster"
-const KindAPIServer = "api"
-const KindController = "controller"
-const KindDiscovery = "discovery"
-const KindIngress = "ingress"
-const KindNode = "node"
+const (
+	KindCluster    = "cluster"
+	KindAPIServer  = "api"
+	KindController = "controller"
+	KindDiscovery  = "discovery"
+	KindIngress    = "ingress"
+	KindExporter   = "exporter"
+	KindNode       = "node"
+)
 
 type Process struct {
 	System
