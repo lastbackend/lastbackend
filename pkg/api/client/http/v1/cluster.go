@@ -91,6 +91,36 @@ func (cc *ClusterClient) Discovery(args ...string) types.DiscoveryClientV1 {
 	return newDiscoveryClient(cc.client, name)
 }
 
+func (cc *ClusterClient) API(args ...string) types.APIClientV1 {
+	name := ""
+	// Get any parameters passed to us out of the args variable into "real"
+	// variables we created for them.
+	for i := range args {
+		switch i {
+		case 0: // hostname
+			name = args[0]
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
+	}
+	return newApiClient(cc.client, name)
+}
+
+func (cc *ClusterClient) Controller(args ...string) types.ControllerClientV1 {
+	name := ""
+	// Get any parameters passed to us out of the args variable into "real"
+	// variables we created for them.
+	for i := range args {
+		switch i {
+		case 0: // hostname
+			name = args[0]
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
+	}
+	return newControllerClient(cc.client, name)
+}
+
 func (cc *ClusterClient) Get(ctx context.Context) (*vv1.Cluster, error) {
 
 	var s *vv1.Cluster

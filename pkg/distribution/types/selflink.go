@@ -1149,6 +1149,100 @@ func NewExporterSelfLink(hostname string) *ExporterSelfLink {
 	return sl
 }
 
+type APISelfLink struct {
+	string
+	hostname string
+}
+
+func (sl *APISelfLink) Parse(selflink string) {
+	sl.hostname = selflink
+	sl.string = selflink
+}
+
+func (sl *APISelfLink) String() string {
+	return sl.string
+}
+
+func (sl *APISelfLink) Hostname() string {
+	return sl.hostname
+}
+
+func (sl APISelfLink) MarshalJSON() ([]byte, error) {
+	buffer := bytes.NewBufferString("\"")
+	buffer.WriteString(sl.string)
+	buffer.WriteString("\"")
+	return buffer.Bytes(), nil
+}
+
+func (sl *APISelfLink) UnmarshalJSON(b []byte) error {
+	var link string
+	if err := json.Unmarshal(b, &link); err != nil {
+		return err
+	}
+
+	sl.Parse(link)
+	return nil
+}
+
+func NewAPISelfLink(hostname string) *APISelfLink {
+
+	sl := new(APISelfLink)
+
+	link := fmt.Sprintf("%s", hostname)
+
+	sl.string = link
+	sl.hostname = hostname
+
+	return sl
+}
+
+type ControllerSelfLink struct {
+	string
+	hostname string
+}
+
+func (sl *ControllerSelfLink) Parse(selflink string) {
+	sl.hostname = selflink
+	sl.string = selflink
+}
+
+func (sl *ControllerSelfLink) String() string {
+	return sl.string
+}
+
+func (sl *ControllerSelfLink) Hostname() string {
+	return sl.hostname
+}
+
+func (sl ControllerSelfLink) MarshalJSON() ([]byte, error) {
+	buffer := bytes.NewBufferString("\"")
+	buffer.WriteString(sl.string)
+	buffer.WriteString("\"")
+	return buffer.Bytes(), nil
+}
+
+func (sl *ControllerSelfLink) UnmarshalJSON(b []byte) error {
+	var link string
+	if err := json.Unmarshal(b, &link); err != nil {
+		return err
+	}
+
+	sl.Parse(link)
+	return nil
+}
+
+func NewControllerSelfLink(hostname string) *ControllerSelfLink {
+
+	sl := new(ControllerSelfLink)
+
+	link := fmt.Sprintf("%s", hostname)
+
+	sl.string = link
+	sl.hostname = hostname
+
+	return sl
+}
+
 type ProcessSelfLink struct {
 	string
 	name string
