@@ -20,6 +20,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 
 	"time"
@@ -648,8 +649,7 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 func deploymentCreate(svc *types.Service, version int) (*types.Deployment, error) {
 
 	dm := distribution.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
-
-	d, err := dm.Create(svc, version)
+	d, err := dm.Create(svc, fmt.Sprintf("v%d", version))
 	if err != nil {
 		return nil, err
 	}

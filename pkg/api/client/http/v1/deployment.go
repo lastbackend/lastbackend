@@ -21,6 +21,7 @@ package v1
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
@@ -96,7 +97,32 @@ func (dc *DeploymentClient) Get(ctx context.Context) (*vv1.Deployment, error) {
 	return s, nil
 }
 
-func (dc *DeploymentClient) Update(ctx context.Context, opts *rv1.DeploymentUpdateOptions) (*vv1.Deployment, error) {
+func (dc *DeploymentClient) Create(ctx context.Context, opts *rv1.DeploymentManifest) (*vv1.Deployment, error) {
+
+	body, err := opts.ToJson()
+	if err != nil {
+		return nil, err
+	}
+
+	var s *vv1.Deployment
+	var e *errors.Http
+
+	err = dc.client.Post(fmt.Sprintf("/namespace/%s/service/%s/deployment", dc.namespace.String(), dc.service.Name())).
+		AddHeader("Content-Type", "application/json").
+		Body(body).
+		JSON(&s, &e)
+
+	if err != nil {
+		return nil, err
+	}
+	if e != nil {
+		return nil, errors.New(e.Message)
+	}
+
+	return s, nil
+}
+
+func (dc *DeploymentClient) Update(ctx context.Context, opts *rv1.DeploymentManifest) (*vv1.Deployment, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
@@ -119,6 +145,29 @@ func (dc *DeploymentClient) Update(ctx context.Context, opts *rv1.DeploymentUpda
 	}
 
 	return s, nil
+}
+
+func (dc *DeploymentClient) Remove(ctx context.Context, opts *rv1.DeploymentRemoveOptions) error {
+
+	req := dc.client.Delete(fmt.Sprintf("/namespace/%s/service/%s/deployment/%s", dc.namespace.String(), dc.service.Name(), dc.selflink.Name())).
+		AddHeader("Content-Type", "application/json")
+
+	if opts != nil {
+		if opts.Force {
+			req.Param("force", strconv.FormatBool(opts.Force))
+		}
+	}
+
+	var e *errors.Http
+
+	if err := req.JSON(nil, &e); err != nil {
+		return err
+	}
+	if e != nil {
+		return errors.New(e.Message)
+	}
+
+	return nil
 }
 
 func newDeploymentClient(client *request.RESTClient, namespace, service, name string) *DeploymentClient {

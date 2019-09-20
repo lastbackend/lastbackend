@@ -20,7 +20,6 @@ package distribution
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"encoding/json"
@@ -74,7 +73,7 @@ func (d *Deployment) Get(namespace, service, name string) (*types.Deployment, er
 }
 
 // Create new deployment
-func (d *Deployment) Create(service *types.Service, version int) (*types.Deployment, error) {
+func (d *Deployment) Create(service *types.Service, name string) (*types.Deployment, error) {
 
 	log.V(logLevel).Debugf("%s:create:> distribution create in service: %s", logDeploymentPrefix, service.Meta.Name)
 
@@ -82,7 +81,7 @@ func (d *Deployment) Create(service *types.Service, version int) (*types.Deploym
 
 	deployment.Meta.Namespace = service.Meta.Namespace
 	deployment.Meta.Service = service.Meta.Name
-	deployment.Meta.Name = fmt.Sprintf("v%d", version)
+	deployment.Meta.Name = name
 	deployment.Meta.Created = time.Now()
 	deployment.Meta.Updated = time.Now()
 

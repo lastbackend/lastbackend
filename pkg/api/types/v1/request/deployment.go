@@ -18,6 +18,96 @@
 
 package request
 
+import (
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"gopkg.in/yaml.v2"
+)
+
+type DeploymentManifest struct {
+	Meta DeploymentManifestMeta `json:"meta,omitempty" yaml:"meta,omitempty"`
+	Spec DeploymentManifestSpec `json:"spec,omitempty" yaml:"spec,omitempty"`
+}
+
+type DeploymentManifestMeta struct {
+	RuntimeMeta `yaml:",inline"`
+}
+
+type DeploymentManifestSpec struct {
+	Replicas *int                  `json:"replicas,omitempty" yaml:"replicas,omitempty"`
+	Selector *ManifestSpecSelector `json:"selector,omitempty" yaml:"selector,omitempty"`
+	Network  *ManifestSpecNetwork  `json:"network,omitempty" yaml:"network,omitempty"`
+	Strategy *ManifestSpecStrategy `json:"strategy,omitempty" yaml:"strategy,omitempty"`
+	Template *ManifestSpecTemplate `json:"template,omitempty" yaml:"template,omitempty"`
+}
+
+func (s *DeploymentManifest) FromJson(data []byte) error {
+	return json.Unmarshal(data, s)
+}
+
+func (s *DeploymentManifest) ToJson() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+func (s *DeploymentManifest) FromYaml(data []byte) error {
+	return yaml.Unmarshal(data, s)
+}
+
+func (s *DeploymentManifest) ToYaml() ([]byte, error) {
+	return yaml.Marshal(s)
+}
+
+func (s *DeploymentManifest) SetDeploymentMeta(dep *types.Deployment) {
+
+	if dep.Meta.Name == types.EmptyString {
+		dep.Meta.Name = *s.Meta.Name
+	}
+
+	if s.Meta.Description != nil {
+		dep.Meta.Description = *s.Meta.Description
+	}
+
+	if s.Meta.Labels != nil {
+		dep.Meta.Labels = s.Meta.Labels
+	}
+
+}
+
+func (s *DeploymentManifest) SetDeploymentSpec(dep *types.Deployment) (err error) {
+
+	defer func() {
+		if s.Spec.Replicas != nil {
+			dep.Status.State = types.StateProvision
+			return
+		}
+	}()
+
+	if s.Spec.Replicas != nil {
+		dep.Spec.Replicas = *s.Spec.Replicas
+	}
+
+	if s.Spec.Selector != nil {
+		s.Spec.Selector.SetSpecSelector(&dep.Spec.Selector)
+	} else {
+		dep.Spec.Selector.SetDefault()
+	}
+
+	if s.Spec.Template != nil {
+
+		if err := s.Spec.Template.SetSpecTemplate(&dep.Spec.Template); err != nil {
+			return err
+		}
+
+	}
+
+	return nil
+}
+
+func (s *DeploymentManifest) GetManifest() *types.DeploymentManifest {
+	sm := new(types.DeploymentManifest)
+	return sm
+}
+
 // DeploymentUpdateOptions represents options availible to update in deployment
 //
 // swagger:model request_deployment_update
@@ -31,4 +121,8 @@ type DeploymentUpdateOptions struct {
 		State   string `json:"state"`
 		Message string `json:"message"`
 	} `json:"status"`
+}
+
+type DeploymentRemoveOptions struct {
+	Force bool `json:"force"`
 }

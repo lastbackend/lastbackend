@@ -20,6 +20,8 @@ package request
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
 	"io/ioutil"
 
@@ -27,6 +29,55 @@ import (
 )
 
 type DeploymentRequest struct{}
+
+func (DeploymentRequest) Manifest() *DeploymentManifest {
+	return new(DeploymentManifest)
+}
+
+func (s *DeploymentManifest) Validate() *errors.Err {
+	switch true {
+	case s.Meta.Name != nil && !validator.IsServiceName(*s.Meta.Name):
+		return errors.New("deployment").BadParameter("name")
+	case s.Meta.Description != nil && len(*s.Meta.Description) > DEFAULT_DESCRIPTION_LIMIT:
+		return errors.New("deployment").BadParameter("description")
+	case len(s.Spec.Template.Containers) == 0:
+		return errors.New("deployment").BadParameter("spec")
+	case len(s.Spec.Template.Containers) != 0:
+		for _, container := range s.Spec.Template.Containers {
+			if len(container.Image.Name) == 0 {
+				return errors.New("deployment").BadParameter("image")
+			}
+		}
+	}
+
+	return nil
+}
+
+func (s *DeploymentManifest) DecodeAndValidate(reader io.Reader) *errors.Err {
+
+	if reader == nil {
+		err := errors.New("data body can not be null")
+		return errors.New("deployment").IncorrectJSON(err)
+	}
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return errors.New("deployment").Unknown(err)
+	}
+
+	fmt.Println(string(body))
+
+	err = json.Unmarshal(body, s)
+	if err != nil {
+		return errors.New("deployment").IncorrectJSON(err)
+	}
+
+	if err := s.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func (DeploymentRequest) UpdateOptions() *DeploymentUpdateOptions {
 	return new(DeploymentUpdateOptions)
@@ -64,4 +115,8 @@ func (d *DeploymentUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Er
 
 func (s *DeploymentUpdateOptions) ToJson() ([]byte, error) {
 	return json.Marshal(s)
+}
+
+func (DeploymentRequest) RemoveOptions() *DeploymentRemoveOptions {
+	return new(DeploymentRemoveOptions)
 }

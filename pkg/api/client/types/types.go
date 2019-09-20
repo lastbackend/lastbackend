@@ -129,10 +129,11 @@ type TaskClientV1 interface {
 
 type DeploymentClientV1 interface {
 	Pod(args ...string) PodClientV1
-
 	List(ctx context.Context) (*vv1.DeploymentList, error)
 	Get(ctx context.Context) (*vv1.Deployment, error)
-	Update(ctx context.Context, opts *rv1.DeploymentUpdateOptions) (*vv1.Deployment, error)
+	Create(ctx context.Context, opts *rv1.DeploymentManifest) (*vv1.Deployment, error)
+	Update(ctx context.Context, opts *rv1.DeploymentManifest) (*vv1.Deployment, error)
+	Remove(ctx context.Context, opts *rv1.DeploymentRemoveOptions) error
 }
 
 type PodClientV1 interface {
