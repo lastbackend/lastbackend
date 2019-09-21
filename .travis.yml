@@ -13,10 +13,10 @@ before_install:
   - ./etcd-v3.2.9-linux-amd64/etcd >> /dev/null&
 
 before_script:
-  - make test
+  - env GO111MODULE=on make test
 
 script:
-  - make build
+  - env GO111MODULE=on make build
 
 after_success:
   - make docs
