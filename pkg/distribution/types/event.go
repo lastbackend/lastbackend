@@ -18,6 +18,8 @@
 
 package types
 
+import "time"
+
 const (
 	EventActionCreate = "create"
 	EventActionUpdate = "update"
@@ -26,9 +28,10 @@ const (
 )
 
 type event struct {
-	Action   string
-	Name     string
-	SelfLink string
+	Action    string
+	Name      string
+	SelfLink  string
+	Timestamp time.Time
 }
 
 type Event struct {
