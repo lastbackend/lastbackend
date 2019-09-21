@@ -2,7 +2,10 @@ module github.com/lastbackend/lastbackend
 
 go 1.12
 
-replace github.com/Sirupsen/logrus v1.0.6 => github.com/sirupsen/logrus v1.4.2
+replace (
+	github.com/Sirupsen/logrus v1.0.6 => github.com/sirupsen/logrus v1.4.2
+	github.com/docker/docker v0.0.0-20170601211448-f5ec1e2936dc => github.com/docker/engine v0.0.0-20180718150940-a3ef7e9a9bda
+)
 
 require (
 	github.com/Microsoft/go-winio v0.4.14 // indirect
@@ -12,7 +15,8 @@ require (
 	github.com/coreos/go-iptables v0.3.0
 	github.com/coreos/go-systemd v0.0.0-20190620071333-e64a0ec8b42a // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
-	github.com/docker/docker v1.13.1
+	github.com/docker/docker v0.0.0-20170601211448-f5ec1e2936dc
+	github.com/docker/engine v0.0.0-20180718150940-a3ef7e9a9bda
 	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-plugins-helpers v0.0.0-20181025120712-1e6269c305b8
 	github.com/docker/go-units v0.4.0 // indirect
@@ -30,6 +34,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
+	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v1.1.0 // indirect

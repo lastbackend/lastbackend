@@ -66,7 +66,7 @@ run-ing:
 
 run-node:
 	@echo "== Run node"
-	@go run ./cmd/node/node.go --dir=./contrib/manifest
+	@go run ./cmd/node/node.go
 
 swagger-spec:
 	@echo "== Generating Swagger spec for Last.Backend API"
