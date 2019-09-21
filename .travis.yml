@@ -7,19 +7,16 @@ services:
 go:
   - 1.11.x
 
-install:
-  - make deps
-
 before_install:
   - curl -L  https://github.com/coreos/etcd/releases/download/v3.2.9/etcd-v3.2.9-linux-amd64.tar.gz -o etcd-v3.2.9-linux-amd64.tar.gz
   - tar xzvf etcd-v3.2.9-linux-amd64.tar.gz
   - ./etcd-v3.2.9-linux-amd64/etcd >> /dev/null&
 
 before_script:
-  - make test
+  - env GO111MODULE=on make test
 
 script:
-  - make build
+  - env GO111MODULE=on make build
 
 after_success:
   - make docs

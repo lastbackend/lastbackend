@@ -46,7 +46,7 @@ func New(cfg Config) (*Runtime, error) {
 	var (
 		err           error
 		r             = new(Runtime)
-		clientOptions = make([]client.Opt, 0)
+		clientOptions = make([]func(c *client.Client) error, 0)
 	)
 
 	host := client.DefaultDockerHost

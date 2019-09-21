@@ -19,13 +19,16 @@
 package deployment
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/api/http/deployment/deployment"
+	"github.com/lastbackend/lastbackend/pkg/api/http/namespace/namespace"
+	"github.com/lastbackend/lastbackend/pkg/api/http/service/service"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"net/http"
 
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 )
@@ -220,6 +223,95 @@ func DeploymentInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func DeploymentCreateH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation POST /namespace/{namespace}/service/{service}/deployment/ deployment deploymentCreate
+	//
+	// Updates deployment parameters
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: name of the namespace
+	//     required: true
+	//     type: string
+	//   - name: service
+	//     in: path
+	//     description: name of the service
+	//     required: true
+	//     type: string
+	//   - name: deployment
+	//     in: path
+	//     description: name of the deployment
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_deployment_update"
+	// responses:
+	//   '200':
+	//     description: Deployment was successfully updated
+	//     schema:
+	//       "$ref": "#/definitions/views_deployment"
+	//   '404':
+	//     description: Namespace not found / Service not found
+	//   '500':
+	//     description: Internal server error
+
+	nid := utils.Vars(r)["namespace"]
+	sid := utils.Vars(r)["service"]
+
+	log.V(logLevel).Debugf("%s:create:> create deployment `%s` in service `%s`", logPrefix, sid, nid)
+
+	var (
+		err error
+	)
+
+	// request body struct
+	opts := v1.Request().Deployment().Manifest()
+	if err := opts.DecodeAndValidate(r.Body); err != nil {
+		log.V(logLevel).Errorf("%s:create:> validation incoming data err: %s", logPrefix, err.Err())
+		err.Http(w)
+		return
+	}
+
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
+		return
+	}
+
+	svc, e := service.Fetch(r.Context(), ns.Meta.Name, sid)
+	if e != nil {
+		e.Http(w)
+		return
+	}
+
+	dp, e := deployment.Create(r.Context(), ns, svc, opts)
+	if e != nil {
+		e.Http(w)
+		return
+	}
+
+	response, err := v1.View().Deployment().New(dp).ToJson()
+	if err != nil {
+		log.V(logLevel).Errorf("%s:create:> convert struct to json err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		log.V(logLevel).Errorf("%s:create:> write response err: %s", logPrefix, err.Error())
+		return
+	}
+}
+
 func DeploymentUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	// swagger:operation PUT /namespace/{namespace}/service/{service}/deployment/{deployment} deployment deploymentUpdate
@@ -266,47 +358,133 @@ func DeploymentUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("%s:update:> update deployment `%s` in service `%s`", logPrefix, sid, nid)
 
-	if r.Context().Value("namespace") == nil {
-		errors.HTTP.Forbidden(w)
-		return
-	}
-
 	var (
 		err error
-		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		dm  = distribution.NewDeploymentModel(r.Context(), envs.Get().GetStorage())
-		ns  = r.Context().Value("namespace").(*types.Namespace)
 	)
 
 	// request body struct
-	opts := v1.Request().Deployment().UpdateOptions()
+	opts := v1.Request().Deployment().Manifest()
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("%s:update:> validation incoming data err: %s", logPrefix, err.Err())
 		err.Http(w)
 		return
 	}
 
-	srv, err := sm.Get(ns.Meta.Name, sid)
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
+		return
+	}
+
+	svc, e := service.Fetch(r.Context(), ns.Meta.Name, sid)
+	if e != nil {
+		e.Http(w)
+		return
+	}
+
+	dp, e := deployment.Fetch(r.Context(), ns.Meta.Name, svc.Meta.Name, did)
+	if e != nil {
+		e.Http(w)
+		return
+	}
+
+	dp, e = deployment.Update(r.Context(), ns, svc, dp, opts, &request.DeploymentUpdateOptions{})
+	if e != nil {
+		e.Http(w)
+		return
+	}
+
+	response, err := v1.View().Deployment().New(dp).ToJson()
 	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> get service by name` err: %s", logPrefix, sid, err.Error())
+		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
-	if srv == nil {
-		log.V(logLevel).Warnf("%s:update:> service name `%s` in namespace `%s` not found", logPrefix, sid, ns.Meta.Name)
-		errors.New("service").NotFound().Http(w)
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		log.V(logLevel).Errorf("%s:update:> write response err: %s", logPrefix, err.Error())
+		return
+	}
+}
+
+func DeploymentRemoveH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation PUT /namespace/{namespace}/service/{service}/deployment/{deployment} deployment deploymentUpdate
+	//
+	// Updates deployment parameters
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: name of the namespace
+	//     required: true
+	//     type: string
+	//   - name: service
+	//     in: path
+	//     description: name of the service
+	//     required: true
+	//     type: string
+	//   - name: deployment
+	//     in: path
+	//     description: name of the deployment
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_deployment_update"
+	// responses:
+	//   '200':
+	//     description: Deployment was successfully updated
+	//     schema:
+	//       "$ref": "#/definitions/views_deployment"
+	//   '404':
+	//     description: Namespace not found / Service not found
+	//   '500':
+	//     description: Internal server error
+
+	nid := utils.Vars(r)["namespace"]
+	sid := utils.Vars(r)["service"]
+	did := utils.Vars(r)["deployment"]
+
+	log.V(logLevel).Debugf("%s:update:> remove deployment `%s` in service `%s`", logPrefix, sid, nid)
+
+	var (
+		err error
+		dm  = distribution.NewDeploymentModel(r.Context(), envs.Get().GetStorage())
+	)
+
+	// request body struct
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
-	dp, err := dm.Get(srv.Meta.Namespace, srv.Meta.Name, did)
-	if err != nil {
-		log.V(logLevel).Warnf("%s:update:> get deployments by service failed: %s", logPrefix, err.Error())
-		errors.New("service").NotFound().Http(w)
+	svc, e := service.Fetch(r.Context(), ns.Meta.Name, sid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
-	if err := dm.Update(dp); err != nil {
-		log.V(logLevel).Errorf("%s:update:> update deployment err: %s", logPrefix, err.Error())
+	dp, e := deployment.Fetch(r.Context(), ns.Meta.Name, svc.Meta.Name, did)
+	if e != nil {
+		e.Http(w)
+		return
+	}
+	if dp == nil {
+		log.V(logLevel).Warnf("%s:remove:> deployment name `%s` in namespace `%s` not found", logPrefix, did, ns.Meta.Name)
+		errors.New("deployment").NotFound().Http(w)
+		return
+	}
+
+	if err := dm.Destroy(dp); err != nil {
+		log.V(logLevel).Errorf("%s:remove:> remove deployment err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}

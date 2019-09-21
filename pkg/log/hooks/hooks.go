@@ -19,7 +19,7 @@
 package hooks
 
 import (
-	"github.com/sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"path"
 	"runtime"
 	"strings"

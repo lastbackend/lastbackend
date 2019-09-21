@@ -21,7 +21,7 @@ package formatter
 import (
 	"bytes"
 	"fmt"
-	"github.com/sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"strings"
 	"time"
 )

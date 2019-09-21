@@ -44,25 +44,29 @@ image-develop:
 	@echo "== Pre-building configuration"
 	@sh ./hack/build-images.sh $(app)
 
-run-kit:
-	@echo "== Run kit daemon all in one"
-	@go run ./cmd/kit/kit.go $(app) --config=./contrib/config.yml
-
 run-api:
-	@echo "== Run lastbackend rest api daemon all in one"
-	@go run ./cmd/kit/kit.go api --config=./contrib/config.yml
+	@echo "== Run lastbackend rest api"
+	@go run ./cmd/api/api.go
 
 run-ctl:
-	@echo "== Run lastbackend rest api daemon all in one"
-	@go run ./cmd/kit/kit.go ctl --config=./contrib/config.yml
+	@echo "== Run lastbackend cluster controller"
+	@go run ./cmd/controller/controller.go
 
 run-dns:
-	@echo "== Run lastbackend dns daemon "
-	@go run ./cmd/kit/kit.go dns --config=./contrib/config.yml
+	@echo "== Run lastbackend dns daemon"
+	@go run ./cmd/discovery/discovery.go
+
+run-exp:
+	@echo "== Run lastbackend exporter daemon "
+	@go run ./cmd/discovery/discovery.go
+
+run-ing:
+	@echo "== Run lastbackend ingress proxy"
+	@go run ./cmd/ingress/ingress.go
 
 run-node:
 	@echo "== Run node"
-	@go run ./cmd/node/node.go --config=./contrib/node.yml --dir=./contrib/manifest
+	@go run ./cmd/node/node.go
 
 swagger-spec:
 	@echo "== Generating Swagger spec for Last.Backend API"

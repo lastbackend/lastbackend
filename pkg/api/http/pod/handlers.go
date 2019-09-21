@@ -115,7 +115,7 @@ func PodListH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if dep == nil {
-		log.V(logLevel).Warnf("%s:list:> deployment `%s` in namespace `%s` not found", logPrefix, sid, ns.Meta.Name)
+		log.V(logLevel).Warnf("%s:list:> deployment `%s` in namespace `%s` not found", logPrefix, sid, did)
 		errors.New("deployment").NotFound().Http(w)
 		return
 	}

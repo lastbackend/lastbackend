@@ -1,8 +1,5 @@
 #!/bin/bash
 
-go get -u github.com/golang/dep/cmd/dep
-dep ensure
-
 mkdir -p build/linux && mkdir -p build/darwin  && mkdir -p build/windows
 
 ## declare an array of components variable

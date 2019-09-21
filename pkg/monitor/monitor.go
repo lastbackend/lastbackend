@@ -21,11 +21,13 @@ package monitor
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"regexp"
 	"sync"
+	"time"
 )
 
 const (
@@ -96,6 +98,9 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 				res.Action = e.Action
 				res.Name = e.Name
 				res.SelfLink = e.SelfLink
+				res.Timestamp = time.Now()
+
+				fmt.Println("got event:> dispatcher", res.Action, res.SelfLink, res.Timestamp)
 
 				switch keys[1] {
 				case types.KindNamespace:
@@ -263,6 +268,7 @@ func (m *Monitor) dispatch(ctx context.Context, event *types.Event) error {
 	m.sync.Lock()
 	for c := range m.watchers {
 		go func() {
+			fmt.Println("sent event:> dispatcher", event.Action, event.SelfLink, event.Timestamp)
 			c <- event
 		}()
 	}
