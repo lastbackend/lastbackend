@@ -108,26 +108,30 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifes
 		return nil, errors.New("service").BadRequest(err.Error())
 	}
 
-	if ns.Spec.Resources.Limits.RAM != 0 || ns.Spec.Resources.Limits.CPU != 0 {
-		for _, c := range svc.Spec.Template.Containers {
-			if c.Resources.Limits.RAM == 0 {
-				c.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(types.DEFAULT_RESOURCE_LIMITS_RAM)
-			}
-			if c.Resources.Limits.CPU == 0 {
-				c.Resources.Limits.CPU, _ = resource.DecodeCpuResource(types.DEFAULT_RESOURCE_LIMITS_CPU)
+	if len(svc.Spec.Template.Containers) != 0 {
+
+		if ns.Spec.Resources.Limits.RAM != 0 || ns.Spec.Resources.Limits.CPU != 0 {
+			for _, c := range svc.Spec.Template.Containers {
+				if c.Resources.Limits.RAM == 0 {
+					c.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(types.DEFAULT_RESOURCE_LIMITS_RAM)
+				}
+				if c.Resources.Limits.CPU == 0 {
+					c.Resources.Limits.CPU, _ = resource.DecodeCpuResource(types.DEFAULT_RESOURCE_LIMITS_CPU)
+				}
 			}
 		}
-	}
 
-	if err := ns.AllocateResources(svc.Spec.GetResourceRequest()); err != nil {
-		log.V(logLevel).Errorf("%s:create:> %s", logPrefix, err.Error())
-		return nil, errors.New("service").BadRequest(err.Error())
+		if err := ns.AllocateResources(svc.Spec.GetResourceRequest()); err != nil {
+			log.V(logLevel).Errorf("%s:create:> %s", logPrefix, err.Error())
+			return nil, errors.New("service").BadRequest(err.Error())
 
-	} else {
-		if err := nm.Update(ns); err != nil {
-			log.V(logLevel).Errorf("%s:update:> update namespace err: %s", logPrefix, err.Error())
-			return nil, errors.New("service").InternalServerError()
+		} else {
+			if err := nm.Update(ns); err != nil {
+				log.V(logLevel).Errorf("%s:update:> update namespace err: %s", logPrefix, err.Error())
+				return nil, errors.New("service").InternalServerError()
+			}
 		}
+
 	}
 
 	svc, err := sm.Create(ns, svc)

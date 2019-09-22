@@ -95,6 +95,7 @@ func Create(ctx context.Context, ns *types.Namespace, svc *types.Service, mf *re
 
 	dep := new(types.Deployment)
 	mf.SetDeploymentMeta(dep)
+
 	dep.Meta.SelfLink = *types.NewDeploymentSelfLink(ns.Meta.Name, svc.Meta.Name, *mf.Meta.Name)
 	dep.Meta.Namespace = ns.Meta.Name
 	dep.Meta.Endpoint = svc.Meta.Endpoint
@@ -103,7 +104,7 @@ func Create(ctx context.Context, ns *types.Namespace, svc *types.Service, mf *re
 		return nil, errors.New("deployment").BadRequest(err.Error())
 	}
 
-	dep, err := dm.Create(svc, *mf.Meta.Name)
+	err := dm.Insert(dep)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> create deployment err: %s", logPrefix, err.Error())
 		return nil, errors.New("deployment").InternalServerError()

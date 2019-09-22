@@ -109,6 +109,19 @@ func (d *Deployment) Create(service *types.Service, name string) (*types.Deploym
 	return deployment, nil
 }
 
+func (d *Deployment) Insert(dep *types.Deployment) error {
+
+	log.V(logLevel).Debugf("%s:create:> distribution insert new deployment in service: %s", logDeploymentPrefix, dep.Meta.Service)
+
+	if err := d.storage.Put(d.context, d.storage.Collection().Deployment(),
+		dep.SelfLink().String(), dep, nil); err != nil {
+		log.Errorf("%s:create:> distribution create deployment in service: %s err: %v", logDeploymentPrefix, dep.Meta.Service, err)
+		return err
+	}
+
+	return nil
+}
+
 // ListByService - list of deployments by service
 func (d *Deployment) ListByNamespace(namespace string) (*types.DeploymentList, error) {
 

@@ -22,12 +22,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage"
 	"regexp"
 	"sync"
 	"time"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
 const (
@@ -47,9 +48,7 @@ func (m *Monitor) Subscribe(subscriber chan *types.Event, done chan bool) {
 	m.sync.Unlock()
 
 	log.V(logLevel).Debugf("%s:watch:> subscribe ", logMonitorPrefix)
-
 	<-done
-
 	log.V(logLevel).Debugf("%s:watch:> unsubscribe ", logMonitorPrefix)
 
 	m.sync.Lock()
@@ -99,8 +98,6 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 				res.Name = e.Name
 				res.SelfLink = e.SelfLink
 				res.Timestamp = time.Now()
-
-				fmt.Println("got event:> dispatcher", res.Action, res.SelfLink, res.Timestamp)
 
 				switch keys[1] {
 				case types.KindNamespace:

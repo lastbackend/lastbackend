@@ -19,12 +19,12 @@
 package events
 
 import (
-	"fmt"
+	"net/http"
+
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	v1 "github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/socket"
-	"net/http"
 
 	"github.com/gorilla/websocket"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -82,8 +82,6 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 				return
 
 			case e := <-es:
-
-				fmt.Println("got event:> subscriber: ", e.Action, e.SelfLink, e.Timestamp)
 
 				event := v1.View().Event().New(e)
 				msg, err := event.ToJson()
