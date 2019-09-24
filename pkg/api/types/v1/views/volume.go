@@ -45,7 +45,7 @@ type VolumeSpec struct {
 }
 
 type VolumeSpecSelector struct {
-	Node string `json:"node"`
+	Node   string            `json:"node"`
 	Labels map[string]string `json:"labels"`
 }
 
@@ -58,6 +58,7 @@ type VolumeSpecState struct {
 }
 
 type VolumeStatus struct {
+	State string `json:"state"`
 }
 
 type VolumeList []*Volume

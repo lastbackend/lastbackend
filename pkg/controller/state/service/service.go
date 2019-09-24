@@ -387,6 +387,11 @@ func serviceStatusState(ss *ServiceState) (err error) {
 	}()
 
 	if ss.service.Status.State == types.StateDestroyed {
+		sm := distribution.NewServiceModel(context.Background(), envs.Get().GetStorage())
+		if err := sm.Set(ss.service); err != nil {
+			log.Errorf("%s", err.Error())
+			return err
+		}
 		return nil
 	}
 

@@ -121,6 +121,7 @@ type JobClientV1 interface {
 type TaskClientV1 interface {
 	Pod(args ...string) PodClientV1
 
+	Create(ctx context.Context, opts *rv1.TaskManifest) (*vv1.Task, error)
 	List(ctx context.Context) (*vv1.TaskList, error)
 	Get(ctx context.Context) (*vv1.Task, error)
 	Cancel(ctx context.Context, opts *rv1.TaskCancelOptions) (*vv1.Task, error)
