@@ -63,7 +63,15 @@ func (r *Volume) ToSpec(obj types.VolumeSpec) VolumeSpec {
 }
 
 func (r *Volume) ToStatus(obj types.VolumeStatus) VolumeStatus {
-	state := VolumeStatus{}
+	state := VolumeStatus{
+		State:   obj.State,
+		Message: obj.Message,
+		Status: VolumeState{
+			Path:  obj.Status.Path,
+			Type:  obj.Status.Type,
+			Ready: obj.Status.Ready,
+		},
+	}
 	return state
 }
 
