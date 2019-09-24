@@ -56,9 +56,12 @@ defaults
   timeout check           5s
   default-server init-addr none
 
+{{ if ne (len .Resolvers) 0 }}
 resolvers lstbknd
   {{range $endpoint, $port := .Resolvers}}nameserver dns {{$endpoint}}:{{$port}}
   {{end}}
+{{ end }}
+
 
 #---------------------------------------------------------------------
 # frontend which proxys stats
@@ -80,8 +83,8 @@ listen stats # Define a listen section called "stats"
 {{range $port, $f := .Frontend}}{{if eq $f.Type "http" }}
 frontend http
   mode http
-  bind :80
-  http-send-name-header Host
+  bind :8080
+
   http-request set-header Host %[req.hdr(Host)]
   http-request set-header X-Forwarded-Host %[req.hdr(Host)]
 
@@ -89,15 +92,12 @@ frontend http
   {{end}}{{end}}
   {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}acl r_{{$backend}}_down  nbsrv({{$backend}}) lt 1
   {{end}}{{end}}
-  {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend local_http if r_{{$backend}}_down r_{{$backend}}
-  {{end}}{{end}}
   {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend {{$backend}} if r_{{$backend}} {{if eq $path "/"}}{{range $p, $b := $acl}}{{if ne $p "/"}}!r_{{$b}} {{end}}{{end}}{{end}}
   {{end}}{{end}}
-  default_backend local_http
 
 {{else if eq $f.Type "https" }}
 frontend https
-  bind :443
+  bind :8443
   mode tcp
 	tcp-request inspect-delay 5s
 
@@ -105,27 +105,16 @@ frontend https
   {{end}}{{end}}
 	{{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}acl r_{{$backend}}_down  nbsrv({{$backend}}) lt 1
   {{end}}{{end}}
-  {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend local_http if r_{{$backend}}_down r_{{$backend}}
-  {{end}}{{end}}
   {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend {{$backend}} if r_{{$backend}}
   {{end}}{{end}}
 
-  default_backend local_http
 
 {{else if eq $f.Type "tcp" }}
 frontend {{$port}}_tcp
   bind 0.0.0.0:{{$port}}
   {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend {{$backend}}
   {{end}}{{end}}
-  default_backend local_http
 {{end}}{{end}}
-
-#---------------------------------------------------------------------
-# local proxy configuration
-#---------------------------------------------------------------------
-backend local_http
-    mode http
-    errorfile 503 /var/run/html/errors/503.html
 
 #---------------------------------------------------------------------
 # balancing between the various backends
@@ -135,14 +124,14 @@ backend {{$name}}
   mode http
   balance roundrobin
   option forwardfor
-  server {{$b.Upstream}} {{$b.Upstream}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
+  server {{$b.Upstream}} {{$b.Upstream}}:{{$b.Port}} check init-addr last,libc,none {{ if ne (len .Resolvers) 0 }} resolvers lstbknd {{ end }}
 {{else if eq $b.Type "https" }}
 backend {{$name}}
   mode tcp
   # maximum SSL session ID length is 32 bytes.
-  server {{$b.Upstream}} {{$b.Upstream}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
+  server {{$b.Upstream}} {{$b.Upstream}}:{{$b.Port}} check init-addr last,libc,none resolvers {{ if ne (len .Resolvers) 0 }} resolvers lstbknd {{ end }}
 {{else if eq $b.Type "tcp" }}
 backend {{$name}}
-  server {{$b.Upstream}} {{$b.Upstream}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
+  server {{$b.Upstream}} {{$b.Upstream}}:{{$b.Port}} check init-addr last,libc,none resolvers {{ if ne (len .Resolvers) 0 }} resolvers lstbknd {{ end }}
 {{end}}{{end}}
 `

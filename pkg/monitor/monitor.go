@@ -21,7 +21,6 @@ package monitor
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"regexp"
 	"sync"
 	"time"
@@ -265,7 +264,6 @@ func (m *Monitor) dispatch(ctx context.Context, event *types.Event) error {
 	m.sync.Lock()
 	for c := range m.watchers {
 		go func() {
-			fmt.Println("sent event:> dispatcher", event.Action, event.SelfLink, event.Timestamp)
 			c <- event
 		}()
 	}
