@@ -75,6 +75,16 @@ func jobObserve(js *JobState, job *types.Job) (err error) {
 // handleJobStateCreated handles job created state
 func handleJobStateCreated(js *JobState, job *types.Job) error {
 	log.V(logLevel).Debugf("%s:> handleJobStateCreated: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
+
+	if js.provider != nil {
+		go js.Provider()
+	}
+
+	if err := jobTaskProvision(js); err != nil {
+		log.Errorf("%s:> job task provision err: %s", logPrefix, err.Error())
+		return err
+	}
+
 	return nil
 }
 
@@ -106,15 +116,13 @@ func handleJobStateDestroy(js *JobState, job *types.Job) (err error) {
 	if len(js.task.list) == 0 {
 
 		jm := distribution.NewJobModel(context.Background(), envs.Get().GetStorage())
-		if err = jm.Remove(job); err != nil {
-			log.Errorf("%s:> job remove err: %s", logJobPrefix, err.Error())
-			return err
-		}
-
-		js.job = nil
 
 		job.Status.State = types.StateDestroyed
 		job.Meta.Updated = time.Now()
+
+		if err := jm.Set(job); err != nil {
+			return err
+		}
 
 		return nil
 	}

@@ -20,6 +20,7 @@ package http
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -40,6 +41,8 @@ type JobHttpHook struct {
 func (h *JobHttpHook) Execute(task *types.Task) (err error) {
 
 	response, err := v1.View().Task().New(task).ToJson()
+
+	fmt.Println("call hook:", h.config.Endpoint)
 
 	client := http.Client{}
 	req, err := http.NewRequest(strings.ToUpper(h.config.Method), h.config.Endpoint, bytes.NewBuffer(response))
