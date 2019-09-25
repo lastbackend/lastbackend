@@ -40,7 +40,7 @@ import (
 
 const (
 	logPodPrefix               = "node:runtime:pod:>"
-	defaultRootLocalStorgePath = "/private/var/lib/lastbackend/runtime/"
+	defaultRootLocalStorgePath = "/var/lib/lastbackend/runtime/"
 
 	BUFFER_SIZE = 1024
 )

@@ -452,7 +452,7 @@ func DeploymentRemoveH(w http.ResponseWriter, r *http.Request) {
 	sid := utils.Vars(r)["service"]
 	did := utils.Vars(r)["deployment"]
 
-	log.V(logLevel).Debugf("%s:update:> remove deployment `%s` in service `%s`", logPrefix, sid, nid)
+	log.V(logLevel).Debugf("%s:update:> remove deployment `%s` in service `%s`", logPrefix, did, sid)
 
 	var (
 		err error

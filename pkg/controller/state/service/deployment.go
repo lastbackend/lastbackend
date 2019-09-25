@@ -111,6 +111,8 @@ func handleDeploymentStateCreated(ss *ServiceState, d *types.Deployment) error {
 
 	log.V(logLevel).Debugf("%s:> handleDeploymentStateCreated: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
+	ss.deployment.provision = d
+
 	check, err := deploymentCheckDependencies(ss, d)
 	if err != nil {
 		log.Errorf("%s:> handle deployment check deps: %s, err: %s", logDeploymentPrefix, d.SelfLink(), err.Error())
@@ -150,6 +152,14 @@ func handleDeploymentStateProvision(ss *ServiceState, d *types.Deployment) error
 
 	log.V(logLevel).Debugf("%s:> handleDeploymentStateProvision: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
+	if ss.deployment.provision != nil {
+		if ss.deployment.provision.Spec.Template.Updated.After(d.Spec.Template.Updated) {
+			d.Status.State = types.StateCanceled
+			return nil
+		}
+	}
+
+	ss.deployment.provision = d
 	if err := deploymentPodProvision(ss, d); err != nil {
 		log.Errorf("%s", err.Error())
 		return err

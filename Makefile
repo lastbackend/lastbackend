@@ -46,27 +46,27 @@ image-develop:
 
 run-api:
 	@echo "== Run lastbackend rest api"
-	@go run ./cmd/api/api.go
+	@go run ./cmd/api/api.go -v=3
 
 run-ctl:
 	@echo "== Run lastbackend cluster controller"
-	@go run ./cmd/controller/controller.go
+	@go run ./cmd/controller/controller.go -v=3
 
 run-dns:
 	@echo "== Run lastbackend dns daemon"
-	@go run ./cmd/discovery/discovery.go
+	@go run ./cmd/discovery/discovery.go -v=3
 
 run-exp:
 	@echo "== Run lastbackend exporter daemon "
-	@go run ./cmd/discovery/discovery.go
+	@go run ./cmd/exporter/exporter.go --api-uri="http://127.0.0.1:2967" -v=3
 
 run-ing:
 	@echo "== Run lastbackend ingress proxy"
-	@go run ./cmd/ingress/ingress.go
+	@go run ./cmd/ingress/ingress.go --api-uri="http://127.0.0.1:2967" -v=3
 
 run-node:
 	@echo "== Run node"
-	@go run ./cmd/node/node.go
+	@go run ./cmd/node/node.go --api-uri="http://127.0.0.1:2967" -v=3
 
 swagger-spec:
 	@echo "== Generating Swagger spec for Last.Backend API"

@@ -38,12 +38,15 @@ func (j *JobManifest) Validate() *errors.Err {
 		return errors.New("job").BadParameter("name")
 	case j.Meta.Description != nil && len(*j.Meta.Description) > DEFAULT_DESCRIPTION_LIMIT:
 		return errors.New("job").BadParameter("description")
-	case len(j.Spec.Task.Template.Containers) == 0:
-		return errors.New("job").BadParameter("spec")
-	case len(j.Spec.Task.Template.Containers) != 0:
-		for _, container := range j.Spec.Task.Template.Containers {
-			if len(container.Image.Name) == 0 {
-				return errors.New("job").BadParameter("image")
+	case j.Spec.Task.Template != nil:
+		if len(j.Spec.Task.Template.Containers) == 0 {
+			return errors.New("job").BadParameter("spec")
+		}
+		if len(j.Spec.Task.Template.Containers) != 0 {
+			for _, container := range j.Spec.Task.Template.Containers {
+				if len(container.Image.Name) == 0 {
+					return errors.New("job").BadParameter("image")
+				}
 			}
 		}
 	}

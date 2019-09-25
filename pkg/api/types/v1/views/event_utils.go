@@ -49,6 +49,10 @@ func (nv *EventView) New(obj *types.Event) *Event {
 		n.Payload = new(ConfigView).New(obj.Data.(*types.Config))
 	case types.KindVolume:
 		n.Payload = new(VolumeView).New(obj.Data.(*types.Volume))
+	case types.KindJob:
+		n.Payload = new(JobView).New(obj.Data.(*types.Job))
+	case types.KindTask:
+		n.Payload = new(TaskView).New(obj.Data.(*types.Task))
 	case types.KindNode:
 		n.Payload = new(NodeView).New(obj.Data.(*types.Node))
 	case types.KindDiscovery:

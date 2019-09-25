@@ -7,14 +7,13 @@ RUN apk add --no-cache iptables \
     linux-headers \
     gcc \
     musl-dev \
+    git  \
     iproute2
 
 RUN set -ex \
 	&& apk add --no-cache --virtual .build-deps \
-    bash \
-    git  \
+    bash \    
     make \
-	\
 	&& rm -rf /*.patch
 
 ENV GOPATH /go

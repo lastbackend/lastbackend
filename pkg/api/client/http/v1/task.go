@@ -78,6 +78,30 @@ func (tc *TaskClient) List(ctx context.Context) (*vv1.TaskList, error) {
 	return s, nil
 }
 
+func (tc *TaskClient) Create(ctx context.Context, opts *rv1.TaskManifest) (*vv1.Task, error) {
+	body, err := opts.ToJson()
+	if err != nil {
+		return nil, err
+	}
+
+	var s *vv1.Task
+	var e *errors.Http
+
+	err = tc.client.Post(fmt.Sprintf("/namespace/%s/job/%s/task", tc.namespace.String(), tc.job.Name())).
+		AddHeader("Content-Type", "application/json").
+		Body(body).
+		JSON(&s, &e)
+
+	if err != nil {
+		return nil, err
+	}
+	if e != nil {
+		return nil, errors.New(e.Message)
+	}
+
+	return s, nil
+}
+
 func (tc *TaskClient) Get(ctx context.Context) (*vv1.Task, error) {
 
 	var s *vv1.Task

@@ -98,6 +98,7 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.JobManifest) (
 	mf.SetJobMeta(job)
 	job.Meta.SelfLink = *types.NewJobSelfLink(ns.Meta.Name, *mf.Meta.Name)
 	job.Meta.Namespace = ns.Meta.Name
+	job.Status.State = types.StateCreated
 
 	if err := mf.SetJobSpec(job); err != nil {
 		return nil, errors.New("job").BadRequest(err.Error())

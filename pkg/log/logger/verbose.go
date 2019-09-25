@@ -18,7 +18,7 @@
 
 package logger
 
-import "github.com/Sirupsen/logrus"
+import "github.com/sirupsen/logrus"
 
 // Verbose is a boolean type that implements Infof (like Printf) etc.
 type Logrus struct {

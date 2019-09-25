@@ -93,6 +93,7 @@ func (j *Job) ListByNamespace(namespace string) (*types.JobList, error) {
 func (j *Job) Create(job *types.Job) (*types.Job, error) {
 
 	job.Meta.Created = time.Now()
+
 	if err := j.storage.Put(j.context, j.storage.Collection().Job(),
 		job.SelfLink().String(), job, nil); err != nil {
 		log.Errorf("%s:create:> job %s create err: %v", logJobPrefix, job.Meta.SelfLink, err)
