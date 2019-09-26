@@ -20,6 +20,7 @@ package job
 
 import (
 	"context"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/cluster"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
@@ -72,7 +73,7 @@ func testJobObserver(t *testing.T, name, werr string, wjs *JobState, js *JobStat
 		}
 
 		if wjs.job == nil {
-			if !assert.Nil(t, js.job, "job should be nil") {
+			if assert.Nil(t, js.job, "job should be nil") {
 				return
 			}
 		}
@@ -112,7 +113,7 @@ func TestHandleJobStateCreated(t *testing.T) {
 
 		s.want.err = types.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateCreated
+		s.want.jobState.job.Status.State = types.StateWaiting
 
 		return s
 	}())
@@ -260,7 +261,7 @@ func TestHandleJobStateDestroy(t *testing.T) {
 
 		s.want.err = types.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job = nil
+		s.want.jobState.job.Status.State = types.StateDestroyed
 
 		return s
 	}())
@@ -581,10 +582,10 @@ func compareJobStateProperties(old *JobState, new *JobState) error {
 
 	if old.job != nil {
 		if old.job.Status.State != new.job.Status.State {
-			return errors.New("job status state is different")
+			return errors.New(fmt.Sprintf("job status state is different %s != %s", old.job.Status.State, new.job.Status.State))
 		}
 		if old.job.Status.Message != new.job.Status.Message {
-			return errors.New("job status message is different")
+			return errors.New(fmt.Sprintf("job status message is different %s != %s", old.job.Status.Message, new.job.Status.Message))
 		}
 
 	}

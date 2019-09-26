@@ -1231,6 +1231,11 @@ func getServiceAsset(state, message string) *types.Service {
 	s.Spec.Replicas = 1
 	s.Spec.Template.Updated = time.Now()
 
+	s.Spec.Template.Containers = types.SpecTemplateContainers{}
+	s.Spec.Template.Containers = append(s.Spec.Template.Containers, &types.SpecTemplateContainer{
+		Name: "demo",
+	})
+
 	return s
 }
 

@@ -83,7 +83,7 @@ listen stats # Define a listen section called "stats"
 {{range $port, $f := .Frontend}}{{if eq $f.Type "http" }}
 frontend http
   mode http
-  bind :8080
+  bind :80
 
   http-request set-header Host %[req.hdr(Host)]
   http-request set-header X-Forwarded-Host %[req.hdr(Host)]
@@ -97,7 +97,7 @@ frontend http
 
 {{else if eq $f.Type "https" }}
 frontend https
-  bind :8443
+  bind :443
   mode tcp
 	tcp-request inspect-delay 5s
 
