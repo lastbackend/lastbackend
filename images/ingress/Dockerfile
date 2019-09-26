@@ -19,6 +19,7 @@ RUN set -ex \
 ENV GOPATH /go
 ENV GOROOT /usr/local/go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
+ENV GO111MODULE on
 
 ADD . /go/src/github.com/lastbackend/lastbackend
 WORKDIR /go/src/github.com/lastbackend/lastbackend
