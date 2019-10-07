@@ -35,7 +35,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func Daemon(v *viper.Viper) {
+func Daemon(v *viper.Viper) bool {
 
 	var (
 		sigs = make(chan os.Signal)
@@ -45,10 +45,6 @@ func Daemon(v *viper.Viper) {
 	log := l.New(v.GetInt("verbose"))
 
 	log.Info("Start API server")
-
-	if !v.IsSet("storage") {
-		log.Fatalf("Storage not configured")
-	}
 
 	stg, err := storage.Get(v)
 	if err != nil {
@@ -117,4 +113,6 @@ func Daemon(v *viper.Viper) {
 	<-done
 
 	log.Info("Handle SIGINT and SIGTERM.")
+
+	return true
 }

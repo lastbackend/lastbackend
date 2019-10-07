@@ -20,6 +20,7 @@ package envs
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/api/cache"
+	"github.com/lastbackend/lastbackend/pkg/controller/ipam/ipam"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/monitor"
 	"github.com/lastbackend/lastbackend/pkg/storage"
@@ -32,6 +33,7 @@ type Env struct {
 	cache   *cache.Cache
 	monitor *monitor.Monitor
 	vault   *types.Vault
+	ipam    ipam.IPAM
 
 	clusterName string
 	clusterDesc string
@@ -102,4 +104,12 @@ func (c *Env) SetAccessToken(token string) {
 
 func (c *Env) GetAccessToken() string {
 	return c.accessToken
+}
+
+func (c *Env) SetIPAM(ipam ipam.IPAM) {
+	c.ipam = ipam
+}
+
+func (c *Env) GetIPAM() ipam.IPAM {
+	return c.ipam
 }

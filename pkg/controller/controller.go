@@ -47,10 +47,6 @@ func Daemon(v *viper.Viper) bool {
 
 	log.Info("Start Controller")
 
-	if !v.IsSet("storage.driver") {
-		log.Fatalf("Storage not configured")
-	}
-
 	stg, err := storage.Get(v)
 	if err != nil {
 		log.Fatalf("Cannot initialize storage: %s", err.Error())
@@ -88,5 +84,6 @@ func Daemon(v *viper.Viper) bool {
 	<-done
 
 	log.Info("Handle SIGINT and SIGTERM.")
+
 	return true
 }

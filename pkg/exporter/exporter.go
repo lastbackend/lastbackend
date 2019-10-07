@@ -39,7 +39,7 @@ const (
 	defaultIface = "eth0"
 )
 
-func Daemon(v *viper.Viper) bool {
+func Daemon(v *viper.Viper) {
 
 	var (
 		sigs = make(chan os.Signal)
@@ -158,6 +158,4 @@ func Daemon(v *viper.Viper) bool {
 	<-done
 
 	log.Info("Handle SIGINT and SIGTERM.")
-
-	return true
 }

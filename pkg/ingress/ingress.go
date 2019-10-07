@@ -45,10 +45,6 @@ func Daemon(v *viper.Viper) bool {
 	log := l.New(v.GetInt("verbose"))
 	log.Info("Start Ingress server")
 
-	if !v.IsSet("haproxy") {
-		log.Fatalf("Haproxy not configured")
-	}
-
 	if v.IsSet("network") {
 		net, err := network.New(v)
 		if err != nil {

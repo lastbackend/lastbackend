@@ -47,10 +47,6 @@ func Daemon(v *viper.Viper) bool {
 
 	log.Info("Start service discovery")
 
-	if !v.IsSet("storage") {
-		log.Fatalf("Storage not configured")
-	}
-
 	port := uint(53)
 	if v.IsSet("dns.port") {
 		port = uint(v.GetInt("dns.port"))
@@ -130,5 +126,6 @@ func Daemon(v *viper.Viper) bool {
 	sd.Shutdown()
 
 	log.Info("Handle SIGINT and SIGTERM.")
+
 	return true
 }

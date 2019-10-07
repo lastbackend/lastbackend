@@ -21,6 +21,7 @@ package middleware
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
 	"strings"
@@ -31,20 +32,14 @@ func Authenticate(ctx context.Context, h http.HandlerFunc) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		if ctx.Value("access_token") == nil {
-			h.ServeHTTP(w, r)
-			return
-		}
-
-		t := ctx.Value("access_token").(string)
-
-		if len(t) == 0 {
-			h.ServeHTTP(w, r)
-			return
-		}
-
-		var token string
+		var accessToken = types.EmptyString
+		var token = types.EmptyString
 		var params = utils.Vars(r)
+
+		if ctx.Value("access_token") != nil {
+			accessToken = ctx.Value("access_token").(string)
+		}
+
 		if _, ok := r.URL.Query()["x-lastbackend-token"]; ok {
 			token = r.URL.Query().Get("x-lastbackend-token")
 		} else if _, ok := params["x-lastbackend-token"]; ok {
@@ -63,7 +58,7 @@ func Authenticate(ctx context.Context, h http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		if token != t {
+		if token != accessToken {
 			errors.HTTP.Unauthorized(w)
 			return
 		}

@@ -16,23 +16,23 @@
 // from Last.Backend LLC.
 //
 
-package node
+package agent
 
 import (
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/lastbackend/lastbackend/pkg/agent/controller"
+	"github.com/lastbackend/lastbackend/pkg/agent/envs"
+	"github.com/lastbackend/lastbackend/pkg/agent/exporter"
+	"github.com/lastbackend/lastbackend/pkg/agent/http"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
+	"github.com/lastbackend/lastbackend/pkg/agent/state"
 	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	l "github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/network"
-	"github.com/lastbackend/lastbackend/pkg/node/controller"
-	"github.com/lastbackend/lastbackend/pkg/node/envs"
-	"github.com/lastbackend/lastbackend/pkg/node/exporter"
-	"github.com/lastbackend/lastbackend/pkg/node/http"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime"
-	"github.com/lastbackend/lastbackend/pkg/node/state"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cii/cii"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri/cri"
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi/csi"
@@ -40,7 +40,7 @@ import (
 )
 
 // Daemon - run node daemon
-func Daemon(v *viper.Viper) {
+func Daemon(v *viper.Viper) bool {
 
 	var (
 		sigs = make(chan os.Signal)
@@ -49,19 +49,6 @@ func Daemon(v *viper.Viper) {
 
 	log := l.New(v.GetInt("verbose"))
 	log.Info("Start Node")
-
-	if !v.IsSet("container") {
-		log.Fatalf("Container not configured")
-	}
-	if !v.IsSet("container.cri") {
-		log.Fatalf("CRI not configured")
-	}
-	if !v.IsSet("container.iri") {
-		log.Fatalf("IRI not configured")
-	}
-	if !v.IsSet("container.csi") {
-		log.Fatalf("CSI not configured")
-	}
 
 	if err := envs.Get().SetConfig(v); err != nil {
 		log.Fatalf("Parse config err: %v", err)
@@ -83,7 +70,7 @@ func Daemon(v *viper.Viper) {
 			si, err := csi.New(kind, v)
 			if err != nil {
 				log.Errorf("Cannot initialize csi: %s > %v", kind, err)
-				return
+				return true
 			}
 			envs.Get().SetCSI(kind, si)
 		}
@@ -201,5 +188,5 @@ func Daemon(v *viper.Viper) {
 	<-done
 	log.Info("Handle SIGINT and SIGTERM.")
 
-	return
+	return true
 }

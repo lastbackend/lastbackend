@@ -22,8 +22,8 @@ import (
 	"context"
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/node/http/node"
-	"github.com/lastbackend/lastbackend/pkg/node/http/pod"
+	"github.com/lastbackend/lastbackend/pkg/agent/http/node"
+	"github.com/lastbackend/lastbackend/pkg/agent/http/pod"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/lastbackend/lastbackend/pkg/util/http/cors"
 )
