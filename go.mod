@@ -8,7 +8,11 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20180315120708-ccb8e960c48f
+	github.com/containerd/containerd v1.3.0
+	github.com/containerd/continuity v0.0.0-20190827140505-75bee3e2ccb6 // indirect
 	github.com/containerd/fifo v0.0.0-20190816180239-bda0ff6ed73c // indirect
+	github.com/containerd/ttrpc v0.0.0-20190828172938-92c8520ef9f8 // indirect
+	github.com/containerd/typeurl v0.0.0-20190911142611-5eb25027c9fd // indirect
 	github.com/coreos/etcd v3.3.15+incompatible
 	github.com/coreos/go-iptables v0.3.0
 	github.com/coreos/go-systemd v0.0.0-20190620071333-e64a0ec8b42a // indirect
@@ -16,11 +20,13 @@ require (
 
 	github.com/docker/docker v0.0.0-20170601211448-f5ec1e2936dc
 	github.com/docker/go-connections v0.4.0
+	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/docker/go-plugins-helpers v0.0.0-20181025120712-1e6269c305b8
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/docker/libnetwork v0.0.0-20190822223215-6edb83eaba19
-	github.com/gogo/protobuf v1.2.1
+	github.com/gogo/googleapis v1.3.0 // indirect
+	github.com/gogo/protobuf v1.3.0
 	github.com/golang/protobuf v1.3.2
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/gorilla/mux v1.7.3
@@ -32,6 +38,8 @@ require (
 	github.com/morikuni/aec v0.0.0-20170113033406-39771216ff4c // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
+	github.com/opencontainers/runc v0.1.1 // indirect
+	github.com/opencontainers/runtime-spec v1.0.1 // indirect
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4 // indirect
@@ -43,6 +51,7 @@ require (
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.4.0
+	github.com/syndtr/gocapability v0.0.0-20180916011248-d98352740cb2 // indirect
 	github.com/tonistiigi/fifo v0.0.0-20190816180239-bda0ff6ed73c
 	github.com/vishvananda/netlink v1.0.0
 	github.com/vishvananda/netns v0.0.0-20190625233234-7109fa855b0f // indirect

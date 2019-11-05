@@ -23,9 +23,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/go-connections/nat"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"strconv"
 )
 
@@ -48,8 +47,8 @@ func GetConfig(manifest *types.ContainerManifest) *container.Config {
 		ExposedPorts: ports,
 		Volumes:      volumes,
 		Labels:       manifest.Labels,
-		Cmd:          strslice.StrSlice(manifest.Exec.Command),
-		Entrypoint:   strslice.StrSlice(manifest.Exec.Entrypoint),
+		Cmd:          manifest.Exec.Command,
+		Entrypoint:   manifest.Exec.Entrypoint,
 		Image:        manifest.Image,
 		WorkingDir:   manifest.Exec.Workdir,
 	}

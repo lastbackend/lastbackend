@@ -20,16 +20,15 @@ package cri
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri/docker"
+	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/spf13/viper"
 )
 
 const (
 	logLevel     = 5
 	dockerDriver = "docker"
-	runcDriver   = "runc"
 )
 
 func New(v *viper.Viper) (cri.CRI, error) {

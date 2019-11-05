@@ -25,7 +25,7 @@ import (
 	"net"
 	"syscall"
 
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/vishvananda/netlink"
 )
 
@@ -125,7 +125,6 @@ func (d *Device) SetIP(nt net.IPNet) error {
 		Mask: net.CIDRMask(32, 32),
 	}
 
-
 	ipn.IP[3] = byte(0)
 	addr := netlink.Addr{IPNet: &ipn, Broadcast: net.ParseIP("0.0.0.0")}
 
@@ -180,7 +179,7 @@ func (d *Device) AddFDB(MAC net.HardwareAddr, IP net.IP) error {
 
 	for _, rule := range rules {
 		if rule.DST == IP.String() && rule.Device == d.link.Name {
-			mac, err :=net.ParseMAC(rule.Mac)
+			mac, err := net.ParseMAC(rule.Mac)
 			if err != nil {
 				continue
 			}

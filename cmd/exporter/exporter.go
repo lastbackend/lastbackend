@@ -63,14 +63,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lastbackend/lastbackend/pkg/exporter"
+	"github.com/lastbackend/lastbackend/internal/exporter"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
-const default_env_prefix = "LB"
-const default_config_type = "yaml"
-const default_config_name = "config"
+const defaultEnvPrefix = "LB"
+const defaultConfigType = "yaml"
+const defaultConfigName = "config"
 
 var (
 	flags = []struct {
@@ -125,7 +125,7 @@ func main() {
 
 	v.AutomaticEnv()
 	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	v.SetEnvPrefix(default_env_prefix)
+	v.SetEnvPrefix(defaultEnvPrefix)
 
 	for _, item := range flags {
 
@@ -138,7 +138,7 @@ func main() {
 		}
 
 		name := strings.Replace(strings.ToUpper(item.Name), "-", "_", -1)
-		name = strings.Join([]string{default_env_prefix, name}, "_")
+		name = strings.Join([]string{defaultEnvPrefix, name}, "_")
 
 		if err := v.BindEnv(item.Bind, name); err != nil {
 			panic(err)
@@ -148,8 +148,8 @@ func main() {
 
 	}
 
-	v.SetConfigType(default_config_type)
-	v.SetConfigFile(v.GetString(default_config_name))
+	v.SetConfigType(defaultConfigType)
+	v.SetConfigFile(v.GetString(defaultConfigName))
 
 	if len(v.GetString("config")) != 0 {
 		if err := v.ReadInConfig(); err != nil {

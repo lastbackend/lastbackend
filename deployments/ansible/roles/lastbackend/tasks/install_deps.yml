@@ -1,0 +1,8 @@
+---
+
+- name: Install lastbackend binaries
+  get_url:
+    url: "{{ lastbackend_bin_url }}"
+    dest: "/usr/local/bin/lastbackend"
+    mode: 0755
+  become: true

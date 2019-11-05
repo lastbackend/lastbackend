@@ -5,7 +5,7 @@
 [![Licensed under Apache License version 2.0](https://img.shields.io/github/license/lastbackend/lastbackend.svg?maxAge=2592000)](https://www.apache.org/licenses/LICENSE-2.0)
 [![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/last-backend/last-backend)
 
-![alt text](docs/assets/preview.png?raw=true "Image")
+![alt text](assets/preview.png?raw=true "Image")
 
 
 ### The Open-source container management platform
@@ -34,7 +34,7 @@ Container platform is an open-source system for automating deployment, scaling, 
 It contains a set of technologies like: container scheduling, service discovery, overlay network, container runtime, 
 container images runtime, load-balancing and more. All of these technologies provided out of the box and don't requiring additional research and setup.
 
-![alt text](docs/assets/structure.png?raw=true "Image")
+![alt text](assets/structure.png?raw=true "Image")
 
 
 Platform structure:

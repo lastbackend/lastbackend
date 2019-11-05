@@ -21,10 +21,10 @@ package network
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/pkg/network/state"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const (

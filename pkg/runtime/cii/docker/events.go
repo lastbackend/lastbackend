@@ -22,8 +22,8 @@ import (
 	"context"
 	d "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/events"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 func (r *Runtime) Subscribe(ctx context.Context) (chan *types.Image, error) {

@@ -20,16 +20,15 @@ package cii
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cii"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cii/docker"
+	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/spf13/viper"
 )
 
 const (
 	logLevel     = 5
 	dockerDriver = "docker"
-	runcDriver   = "runc"
 )
 
 func New(v *viper.Viper) (cii.CII, error) {

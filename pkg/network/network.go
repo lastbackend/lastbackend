@@ -19,13 +19,13 @@
 package network
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/pkg/network/state"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
 	ni "github.com/lastbackend/lastbackend/pkg/runtime/cni/cni"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
 	pi "github.com/lastbackend/lastbackend/pkg/runtime/cpi/cpi"
+	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/spf13/viper"
 )
 

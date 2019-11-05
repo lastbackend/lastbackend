@@ -23,9 +23,9 @@ import (
 	"net"
 	"syscall"
 
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/tools/log"
 
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/vishvananda/netlink"
 )
 
@@ -126,7 +126,7 @@ func GetIfaceIP4Addr(iface *net.Interface) (net.IP, error) {
 
 func getIfaceAddrs(iface *net.Interface) ([]netlink.Addr, error) {
 	link := &netlink.Device{
-		netlink.LinkAttrs{
+		LinkAttrs: netlink.LinkAttrs{
 			Index: iface.Index,
 		},
 	}
