@@ -1,0 +1,8 @@
+/var/log/acpid.log {
+	missingok
+	notifempty
+	sharedscripts
+	postrotate
+		/etc/init.d/acpid --ifstarted restart || true
+	endscript
+}

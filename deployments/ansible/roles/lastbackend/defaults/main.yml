@@ -1,0 +1,4 @@
+---
+lastbackend_version: v0.1.0-beta2
+
+lastbackend_bin_url: "https://github.com/lastbackend/lastbackend/releases/download/{{ lastbackend_version }}/lastbackend"

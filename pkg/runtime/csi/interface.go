@@ -20,7 +20,7 @@ package csi
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/types"
 )
 
 type CSI interface {

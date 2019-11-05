@@ -1,0 +1,5 @@
+---
+lb_version: v0.1.0-beta2
+ansible_user: debian
+systemd_dir: /etc/systemd/system
+master_ip: "{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}"

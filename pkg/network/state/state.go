@@ -19,7 +19,7 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/types"
 )
 
 const logLevel = 3
@@ -38,7 +38,7 @@ func (s *State) Endpoints() *EndpointState {
 	return s.endpoints
 }
 
-func (s *State) Resolvers () *ResolverState {
+func (s *State) Resolvers() *ResolverState {
 	return s.resolvers
 }
 

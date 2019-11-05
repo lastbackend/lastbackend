@@ -20,7 +20,7 @@ package utils
 
 import (
 	"bytes"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/tools/log"
 	"os/exec"
 	"strings"
 )

@@ -19,8 +19,8 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/tools/log"
 	"sync"
 )
 

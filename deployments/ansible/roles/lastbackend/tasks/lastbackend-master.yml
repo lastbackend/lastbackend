@@ -1,0 +1,26 @@
+---
+- name: Install lastbackend-server service
+  copy:
+    src: lastbackend-server.service
+    dest: /etc/systemd/system/lastbackend-server.service
+  become: true
+
+- name: Start and enable lastbackend-server
+  systemd:
+    name: lastbackend-server
+    state: started
+    enabled: true
+    daemon_reload: true
+  become: true
+
+- name: Get join token
+  command: cat /var/lib/lastbackend/server/node-token
+  register: found_join_token
+  retries: 30
+  delay: 5
+  until: found_join_token.rc == 0
+  become: true
+
+- name: Save join token
+  set_fact:
+    master_join_token: "{{ found_join_token.stdout }}"

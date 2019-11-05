@@ -21,7 +21,7 @@ package utils
 import (
 	"fmt"
 	"github.com/coreos/go-iptables/iptables"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/tools/log"
 	"net"
 	"strings"
 	"time"
@@ -104,7 +104,7 @@ func SetupAndEnsureIPTables(rules []IPTablesRule, resyncPeriod int) {
 func ensureIPTables(ipt IPTables, rules []IPTablesRule) error {
 	exists, err := ipTablesRulesExist(ipt, rules)
 	if err != nil {
-		return fmt.Errorf("Error checking rule existence: %v", err)
+		return fmt.Errorf("error checking rule existence: %v", err)
 	}
 	if exists {
 		// if all the rules already exist, no need to do anything
@@ -115,7 +115,7 @@ func ensureIPTables(ipt IPTables, rules []IPTablesRule) error {
 	log.Info("Some iptables rules are missing; deleting and recreating rules")
 	teardownIPTables(ipt, rules)
 	if err = setupIPTables(ipt, rules); err != nil {
-		return fmt.Errorf("Error setting up rules: %v", err)
+		return fmt.Errorf("error setting up rules: %v", err)
 	}
 	return nil
 }

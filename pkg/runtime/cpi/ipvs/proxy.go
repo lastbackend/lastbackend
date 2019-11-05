@@ -33,11 +33,11 @@ import (
 	"syscall"
 
 	libipvs "github.com/docker/libnetwork/ipvs"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/util/network"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
-	"github.com/lastbackend/lastbackend/pkg/util/network"
+	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/vishvananda/netlink/nl"
 )
 

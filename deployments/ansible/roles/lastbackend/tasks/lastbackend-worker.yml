@@ -1,0 +1,19 @@
+---
+- name: Set lastbackend master facts
+  set_fact:
+    master_node_ip: "{{ hostvars[groups['masters'][0]]['ansible_default_ipv4']['address'] }}"
+    master_join_token: "{{ hostvars[groups['masters'][0]]['master_join_token'] }}"
+
+- name: Create lastbackend worker service
+  template:
+    src: lastbackend-worker.service.j2
+    dest: /etc/systemd/system/lastbackend-worker.service
+  become: true
+
+- name: Start and enable lastbackend-worker
+  systemd:
+    name: lastbackend-worker
+    state: restarted
+    enabled: true
+    daemon_reload: true
+  become: true

@@ -1,0 +1,9 @@
+---
+
+- hosts: lastbackend-cluster
+  gather_facts: yes
+  become: yes
+  roles:
+    - raspbian
+    - lastbackend
+
