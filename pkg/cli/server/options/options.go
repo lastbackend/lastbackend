@@ -19,43 +19,67 @@
 package options
 
 import (
-	"fmt"
+	"bytes"
 	"github.com/spf13/pflag"
-	"os"
-	"strings"
+	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
 
 type ServerFlags struct {
-	AccessToken        string
-	ClusterName        string
-	ClusterDescription string
-	Server             struct {
-		Host string
-		Port uint
+	AccessToken        string `yaml:"token" mapstructure:"token"`
+	ClusterName        string `yaml:"name" mapstructure:"name"`
+	ClusterDescription string `yaml:"description" mapstructure:"description"`
+
+	Server struct {
+		Host string `yaml:"host" mapstructure:"host"`
+		Port uint   `yaml:"port" mapstructure:"port"`
 		TLS  struct {
-			FileCert string
-			FileKey  string
-			FileCA   string
-		}
-	}
+			FileCert string `yaml:"cert" mapstructure:"cert"`
+			FileKey  string `yaml:"key" mapstructure:"key"`
+			FileCA   string `yaml:"ca" mapstructure:"ca"`
+		} `yaml:"tls" mapstructure:"tls"`
+	} `yaml:"server" mapstructure:"server"`
+
 	Vault struct {
-		Token    string
-		Endpoint string
-	}
+		Token    string `yaml:"token" mapstructure:"token"`
+		Endpoint string `yaml:"endpoint" mapstructure:"endpoint"`
+	} `yaml:"vault" mapstructure:"vault"`
+
 	Domain struct {
-		Internal string
-		External string
-	}
+		Internal string `yaml:"internal" mapstructure:"internal"`
+		External string `yaml:"external" mapstructure:"external"`
+	} `yaml:"domain" mapstructure:"domain"`
+
 	Storage struct {
-		Driver string
+		Driver string `yaml:"driver" mapstructure:"driver"`
 		Etcd   struct {
-			FileCert  string
-			FileKey   string
-			FileCA    string
-			Endpoints []string
-		}
+			Endpoints []string `yaml:"endpoints" mapstructure:"endpoints"`
+			Prefix    string   `yaml:"prefix" mapstructure:"prefix"`
+			TLS       struct {
+				FileCert string `yaml:"cert" mapstructure:"cert"`
+				FileKey  string `yaml:"key" mapstructure:"key"`
+				FileCA   string `yaml:"ca" mapstructure:"ca"`
+			} `yaml:"tls" mapstructure:"tls"`
+		} `yaml:"etcd" mapstructure:"etcd"`
+	} `yaml:"storage" mapstructure:"storage"`
+
+	CIDR string `yaml:"cidr" mapstructure:"cidr"`
+}
+
+func (cfg ServerFlags) LoadViper(v *viper.Viper) *viper.Viper {
+	v.SetConfigType("yaml")
+
+	buf, err := yaml.Marshal(cfg)
+	if err != nil {
+		panic(err)
 	}
-	CIDR string
+
+	reader := bytes.NewReader(buf)
+	if err := v.ReadConfig(reader); err != nil {
+		panic(err)
+	}
+
+	return v
 }
 
 func NewServerFlags() *ServerFlags {
@@ -89,36 +113,11 @@ func (f *ServerFlags) AddFlags(mainfs *pflag.FlagSet) {
 	fs.StringVarP(&f.Domain.Internal, "domain-internal", "", "lb.local", "Default external domain for cluster")
 	fs.StringVarP(&f.Domain.External, "domain-external", "", "", "Internal domain name for cluster")
 	fs.StringVarP(&f.Storage.Driver, "storage", "", "etcd", "Set storage driver (Allow: etcd, mock)")
-	fs.StringVarP(&f.Storage.Etcd.FileCert, "etcd-cert-file", "", "", "ETCD database cert file path")
-	fs.StringVarP(&f.Storage.Etcd.FileKey, "etcd-private-key-file", "", "", "ETCD database private key file path")
-	fs.StringVarP(&f.Storage.Etcd.FileCA, "etcd-ca-file", "", "", "ETCD database certificate authority file")
+	fs.StringVarP(&f.Storage.Etcd.TLS.FileCert, "etcd-cert-file", "", "", "ETCD database cert file path")
+	fs.StringVarP(&f.Storage.Etcd.TLS.FileKey, "etcd-private-key-file", "", "", "ETCD database private key file path")
+	fs.StringVarP(&f.Storage.Etcd.TLS.FileCA, "etcd-ca-file", "", "", "ETCD database certificate authority file")
 	fs.StringSliceVarP(&f.Storage.Etcd.Endpoints, "etcd-endpoints", "", []string{"127.0.0.1:2379"}, "ETCD database endpoints list")
+	fs.StringVarP(&f.Storage.Etcd.Prefix, "etcd-prefix", "", "lastbackend", "ETCD database prefix")
 	fs.StringVarP(&f.CIDR, "services-cidr", "", "172.0.0.0/24", "Services IP CIDR for internal IPAM service")
 
 }
-
-func AddGlobalFlags(fs *pflag.FlagSet) {
-
-	// lookup flags in global flag set and re-register the values with our flagset
-	global := pflag.CommandLine
-	local := pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
-
-	pflagRegister(global, local, "verbose", "v")
-
-	fs.AddFlagSet(local)
-}
-
-func pflagRegister(global, local *pflag.FlagSet, globalName string, shaortName string) {
-	if f := global.Lookup(globalName); f != nil {
-		f.Name = normalize(f.Name)
-		f.Shorthand = shaortName
-		local.AddFlag(f)
-	} else {
-		panic(fmt.Sprintf("failed to find flag in global flagset (pflag): %s", globalName))
-	}
-}
-
-func normalize(s string) string {
-	return strings.Replace(s, "_", "-", -1)
-}
-

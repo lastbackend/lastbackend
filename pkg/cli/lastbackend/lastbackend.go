@@ -42,6 +42,8 @@ var cfgFile string
 
 func NewLbCommand() *cobra.Command {
 
+	initConfig()
+
 	global := pflag.CommandLine
 
 	cleanFlagSet := pflag.NewFlagSet(componentLB, pflag.ContinueOnError)
@@ -50,9 +52,9 @@ func NewLbCommand() *cobra.Command {
 	agentFlags := ao.NewServerFlags()
 
 	var command = &cobra.Command{
-		Use:                "lb",
-		Short:              "Last.Backend Open-source PaaS",
-		Long:               `Open-source system for automating deployment, scaling, and management of containerized applications.`,
+		Use:   "lb",
+		Short: "Last.Backend Open-source PaaS",
+		Long:  `Open-source system for automating deployment, scaling, and management of containerized applications.`,
 		// Because has special flag parsing requirements to enforce flag precedence rules,
 		// so we do all our parsing manually in Run, below.
 		// DisableFlagParsing=true provides the full set of flags passed
@@ -86,11 +88,22 @@ func NewLbCommand() *cobra.Command {
 
 			PrintFlags(cleanFlagSet)
 
-			server.Run(viper.New())
-			agent.Run(viper.New())
+			serverViper := viper.New()
+			if len(cfgFile) == 0 {
+				serverViper = serverFlags.LoadViper(viper.New())
+			}
+
+			agentViper := viper.New()
+			if len(cfgFile) == 0 {
+				agentViper = agentFlags.LoadViper(viper.New())
+			}
+
+			server.Run(serverViper)
+			agent.Run(agentViper)
 		},
 	}
 
+	global.StringVarP(&cfgFile, "config", "c", "", "Path for the configuration file")
 	global.IntP("verbose", "v", 0, "Set log level from 0 to 7")
 
 	// keep cleanFlagSet separate, so Cobra doesn't pollute it with the global flags

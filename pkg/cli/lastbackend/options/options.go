@@ -18,34 +18,3 @@
 
 package options
 
-import (
-	"fmt"
-	"github.com/spf13/pflag"
-	"os"
-	"strings"
-)
-
-func AddGlobalFlags(fs *pflag.FlagSet) {
-
-	// lookup flags in global flag set and re-register the values with our flagset
-	global := pflag.CommandLine
-	local := pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
-
-	pflagRegister(global, local, "verbose", "v")
-
-	fs.AddFlagSet(local)
-}
-
-func pflagRegister(global, local *pflag.FlagSet, globalName string, shaortName string) {
-	if f := global.Lookup(globalName); f != nil {
-		f.Name = normalize(f.Name)
-		f.Shorthand = shaortName
-		local.AddFlag(f)
-	} else {
-		panic(fmt.Sprintf("failed to find flag in global flagset (pflag): %s", globalName))
-	}
-}
-
-func normalize(s string) string {
-	return strings.Replace(s, "_", "-", -1)
-}

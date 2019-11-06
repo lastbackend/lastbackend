@@ -19,78 +19,113 @@
 package options
 
 import (
-	"fmt"
+	"bytes"
 	"github.com/spf13/pflag"
-	"os"
-	"strings"
+	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
 
 type ServerFlags struct {
-	AccessToken string
-	Server      struct {
-		Host string
-		Port uint
+	AccessToken string `yaml:"token" mapstructure:"token"`
+
+	Server struct {
+		Host string `yaml:"host" mapstructure:"host"`
+		Port uint   `yaml:"port" mapstructure:"port"`
 		TLS  struct {
-			Verify   bool
-			FileCert string
-			FileKey  string
-			FileCA   string
-		}
-	}
+			Verify   bool   `yaml:"verify" mapstructure:"verify"`
+			FileCert string `yaml:"cert" mapstructure:"cert"`
+			FileKey  string `yaml:"key" mapstructure:"key"`
+			FileCA   string `yaml:"ca" mapstructure:"ca"`
+		} `yaml:"tls" mapstructure:"tls"`
+	} `yaml:"server" mapstructure:"server"`
+
 	API struct {
-		Endpoint string
+		Endpoint string `yaml:"uri" mapstructure:"uri"`
 		TLS      struct {
-			Verify   bool
-			FileCert string
-			FileKey  string
-			FileCA   string
-		}
-	}
-	Workdir           string
-	ManifestPath      string
-	ExporterInterface string
-	Proxy             struct {
-		Interface string
-		Internal  string
-		External  string
-	}
+			Verify   bool   `yaml:"verify" mapstructure:"verify"`
+			FileCert string `yaml:"cert" mapstructure:"cert"`
+			FileKey  string `yaml:"key" mapstructure:"key"`
+			FileCA   string `yaml:"ca" mapstructure:"ca"`
+		} `yaml:"tls" mapstructure:"tls"`
+	} `yaml:"api" mapstructure:"api"`
+
+	Workdir string `yaml:"workdir" mapstructure:"workdir"`
+
+	Manifest struct {
+		Path string `yaml:"dir" mapstructure:"dir"`
+	} `yaml:"manifest" mapstructure:"manifest"`
+
 	Network struct {
-		Interface string
-		Internal  string
-		External  string
+		Type string `yaml:"interface" mapstructure:"interface"`
+		CPI  struct {
+			Type      string `yaml:"type" mapstructure:"type"`
+			Interface struct {
+				Internal string `yaml:"internal" mapstructure:"internal"`
+				External string `yaml:"external" mapstructure:"external"`
+			} `yaml:"interface" mapstructure:"interface"`
+		} `yaml:"cpi" mapstructure:"cpi"`
+
+		CNI struct {
+			Type      string `yaml:"type" mapstructure:"type"`
+			Interface struct {
+				Internal string `yaml:"internal" mapstructure:"internal"`
+				External string `yaml:"external" mapstructure:"external"`
+			} `yaml:"interface" mapstructure:"interface"`
+		} `yaml:"cni" mapstructure:"cni"`
+	} `yaml:"network" mapstructure:"network"`
+
+	Container struct {
+		CRI struct {
+			Driver string `yaml:"type" mapstructure:"type"`
+			Docker struct {
+				Version string `yaml:"version" mapstructure:"version"`
+				Host    string `yaml:"host" mapstructure:"host"`
+				TLS     struct {
+					Verify   bool   `yaml:"verify" mapstructure:"verify"`
+					FileCert string `yaml:"cert_file" mapstructure:"cert_file"`
+					FileKey  string `yaml:"key_file" mapstructure:"key_file"`
+					FileCA   string `yaml:"ca_file" mapstructure:"ca_file"`
+				} `yaml:"tls" mapstructure:"tls"`
+			} `yaml:"docker" mapstructure:"docker"`
+		} `yaml:"cri" mapstructure:"cri"`
+
+		IRI struct {
+			Driver string `yaml:"type" mapstructure:"type"`
+			Docker struct {
+				Version string `yaml:"version" mapstructure:"version"`
+				Host    string `yaml:"host" mapstructure:"host"`
+				TLS     struct {
+					Verify   bool   `yaml:"verify" mapstructure:"verify"`
+					FileCert string `yaml:"cert_file" mapstructure:"cert_file"`
+					FileKey  string `yaml:"key_file" mapstructure:"key_file"`
+					FileCA   string `yaml:"ca_file" mapstructure:"ca_file"`
+				} `yaml:"tls" mapstructure:"tls"`
+			} `yaml:"docker" mapstructure:"docker"`
+		} `yaml:"iri" mapstructure:"iri"`
+
+		CSI struct {
+			Dir struct {
+				RootPath string `yaml:"root" mapstructure:"root"`
+			} `yaml:"dir" mapstructure:"dir"`
+		} `yaml:"csi" mapstructure:"csi"`
+		ContainerExtraHosts []string `yaml:"extra_hosts" mapstructure:"extra_hosts"`
+	} `yaml:"container" mapstructure:"container"`
+}
+
+func (cfg *ServerFlags) LoadViper(v *viper.Viper) *viper.Viper {
+	v.SetConfigType("yaml")
+
+	buf, err := yaml.Marshal(cfg)
+	if err != nil {
+		panic(err)
 	}
-	CRI struct {
-		Driver string
-		Docker struct {
-			Version     string
-			Host        string
-			StoragePath string
-			TLS         struct {
-				Verify   bool
-				FileCert string
-				FileKey  string
-				FileCA   string
-			}
-		}
+
+	reader := bytes.NewReader(buf)
+	if err := v.ReadConfig(reader); err != nil {
+		panic(err)
 	}
-	IRI struct {
-		Driver string
-		Docker struct {
-			Version     string
-			Host        string
-			StoragePath string
-			TLS         struct {
-				Verify   bool
-				FileCert string
-				FileKey  string
-				FileCA   string
-			}
-		}
-	}
-	CSI struct {
-		Path string
-	}
-	ContainerExtraHosts []string
+
+	return v
 }
 
 func NewServerFlags() *ServerFlags {
@@ -113,30 +148,30 @@ func (f *ServerFlags) AddFlags(mainfs *pflag.FlagSet) {
 
 	fs.StringVarP(&f.AccessToken, "access-token", "", "", "Access token to API server")
 	fs.StringVarP(&f.Workdir, "workdir", "", "", "Node workdir for runtime")
-	fs.StringVarP(&f.ManifestPath, "manifest-path", "", "", "Node manifest(s) path")
-	fs.StringVarP(&f.ExporterInterface, "bind-interface", "", "eth0", "Exporter bind network interface")
-	fs.StringVarP(&f.Proxy.Interface, "network-proxy", "", "ipvs", "Network proxy driver (ipvs by default)")
-	fs.StringVarP(&f.Proxy.Internal, "network-proxy-iface-internal", "", "docker0", "Network proxy internal interface binding")
-	fs.StringVarP(&f.Proxy.External, "network-proxy-iface-external", "", "eth0", "Network proxy external interface binding")
-	fs.StringVarP(&f.Network.Interface, "network-driver", "", "vxlan", "Network driver (vxlan by default)")
-	fs.StringVarP(&f.Network.Internal, "network-driver-iface-internal", "", "docker0", "Container overlay network internal bridge interface for container intercommunications")
-	fs.StringVarP(&f.Network.External, "network-driver-iface-external", "", "eth0", "Container overlay network external interface for host communication")
-	fs.StringVarP(&f.CRI.Driver, "container-runtime", "", "docker", "Node container runtime")
-	fs.StringVarP(&f.CRI.Docker.Version, "container-runtime-docker-version", "", "1.38", "Set docker version for docker container runtime")
-	fs.StringVarP(&f.CRI.Docker.Host, "container-runtime-docker-host", "", "unix:///var/run/docker.sock", "Set docker host for docker container runtime")
-	fs.BoolVarP(&f.CRI.Docker.TLS.Verify, "container-runtime-docker-tls-verify", "", false, "Enable check tls for docker container runtime")
-	fs.StringVarP(&f.CRI.Docker.TLS.FileCert, "container-runtime-docker-tls-cert", "", "", "Set path to cert file for docker container runtime")
-	fs.StringVarP(&f.CRI.Docker.TLS.FileKey, "container-runtime-docker-tls-key", "", "", "Set path to key file for docker container runtime")
-	fs.StringVarP(&f.CRI.Docker.TLS.FileCA, "container-runtime-docker-tls-ca", "", "", "Set path to ca file for docker container runtime")
-	fs.StringVarP(&f.IRI.Driver, "container-image-runtime", "", "docker", "Node container image runtime")
-	fs.StringVarP(&f.IRI.Docker.Version, "container-image-runtime-docker-version", "", "1.38", "Set docker version for docker container image runtime")
-	fs.StringVarP(&f.IRI.Docker.Host, "container-image-runtime-docker-host", "", "unix:///var/run/docker.sock", "Set docker host for docker container image runtime")
-	fs.BoolVarP(&f.IRI.Docker.TLS.Verify, "container-image-runtime-docker-tls-verify", "", false, "Enable check tls for docker container image runtime")
-	fs.StringVarP(&f.IRI.Docker.TLS.FileCert, "container-image-runtime-docker-tls-cert", "", "", "Set path to cert file for docker container image runtime")
-	fs.StringVarP(&f.IRI.Docker.TLS.FileKey, "container-image-runtime-docker-tls-key", "", "", "Set path to key file for docker container image runtime")
-	fs.StringVarP(&f.IRI.Docker.TLS.FileCA, "container-image-runtime-docker-tls-ca", "", "", "Set path to ca file for docker container image runtime")
-	fs.StringVarP(&f.CSI.Path, "container-storage-root", "", "/var/run/lastbackend", "Node container storage root")
-	fs.StringSliceVarP(&f.ContainerExtraHosts, "container-extra-hosts", "", []string{}, "Set hostname mappings for containers")
+	fs.StringVarP(&f.Manifest.Path, "manifest-path", "", "", "Node manifest(s) path")
+	fs.StringVarP(&f.Network.Type, "bind-interface", "", "eth0", "Exporter bind network interface")
+	fs.StringVarP(&f.Network.CPI.Type, "network-proxy", "", "ipvs", "Network proxy driver (ipvs by default)")
+	fs.StringVarP(&f.Network.CPI.Interface.Internal, "network-proxy-iface-internal", "", "docker0", "Network proxy internal interface binding")
+	fs.StringVarP(&f.Network.CPI.Interface.External, "network-proxy-iface-external", "", "eth0", "Network proxy external interface binding")
+	fs.StringVarP(&f.Network.CNI.Type, "network-driver", "", "vxlan", "Network driver (vxlan by default)")
+	fs.StringVarP(&f.Network.CNI.Interface.Internal, "network-driver-iface-internal", "", "docker0", "Container overlay network internal bridge interface for container intercommunications")
+	fs.StringVarP(&f.Network.CNI.Interface.External, "network-driver-iface-external", "", "eth0", "Container overlay network external interface for host communication")
+	fs.StringVarP(&f.Container.CRI.Driver, "container-runtime", "", "docker", "Node container runtime")
+	fs.StringVarP(&f.Container.CRI.Docker.Version, "container-runtime-docker-version", "", "1.38", "Set docker version for docker container runtime")
+	fs.StringVarP(&f.Container.CRI.Docker.Host, "container-runtime-docker-host", "", "unix:///var/run/docker.sock", "Set docker host for docker container runtime")
+	fs.BoolVarP(&f.Container.CRI.Docker.TLS.Verify, "container-runtime-docker-tls-verify", "", false, "Enable check tls for docker container runtime")
+	fs.StringVarP(&f.Container.CRI.Docker.TLS.FileCert, "container-runtime-docker-tls-cert", "", "", "Set path to cert file for docker container runtime")
+	fs.StringVarP(&f.Container.CRI.Docker.TLS.FileKey, "container-runtime-docker-tls-key", "", "", "Set path to key file for docker container runtime")
+	fs.StringVarP(&f.Container.CRI.Docker.TLS.FileCA, "container-runtime-docker-tls-ca", "", "", "Set path to ca file for docker container runtime")
+	fs.StringVarP(&f.Container.IRI.Driver, "container-image-runtime", "", "docker", "Node container image runtime")
+	fs.StringVarP(&f.Container.IRI.Docker.Version, "container-image-runtime-docker-version", "", "1.38", "Set docker version for docker container image runtime")
+	fs.StringVarP(&f.Container.IRI.Docker.Version, "container-image-runtime-docker-host", "", "unix:///var/run/docker.sock", "Set docker host for docker container image runtime")
+	fs.BoolVarP(&f.Container.IRI.Docker.TLS.Verify, "container-image-runtime-docker-tls-verify", "", false, "Enable check tls for docker container image runtime")
+	fs.StringVarP(&f.Container.IRI.Docker.TLS.FileCert, "container-image-runtime-docker-tls-cert", "", "", "Set path to cert file for docker container image runtime")
+	fs.StringVarP(&f.Container.IRI.Docker.TLS.FileKey, "container-image-runtime-docker-tls-key", "", "", "Set path to key file for docker container image runtime")
+	fs.StringVarP(&f.Container.IRI.Docker.TLS.FileCA, "container-image-runtime-docker-tls-ca", "", "", "Set path to ca file for docker container image runtime")
+	fs.StringVarP(&f.Container.CSI.Dir.RootPath, "container-storage-root", "", "/var/run/lastbackend", "Node container storage root")
+	fs.StringSliceVarP(&f.Container.ContainerExtraHosts, "container-extra-hosts", "", []string{}, "Set hostname mappings for containers")
 	fs.StringVarP(&f.Server.Host, "bind-address", "", "0.0.0.0", "Node bind address")
 	fs.UintVarP(&f.Server.Port, "bind-port", "", 2969, "Node listening port binding")
 	fs.BoolVarP(&f.Server.TLS.Verify, "tls-verify", "", false, "Node TLS verify options")
@@ -149,29 +184,3 @@ func (f *ServerFlags) AddFlags(mainfs *pflag.FlagSet) {
 	fs.StringVarP(&f.API.TLS.FileKey, "api-tls-private-key-file", "", "false", "REST API TLS private key file path")
 	fs.StringVarP(&f.API.TLS.FileCA, "api-tls-ca-file", "", "", "REST API TSL certificate authority file path")
 }
-
-func AddGlobalFlags(fs *pflag.FlagSet) {
-
-	// lookup flags in global flag set and re-register the values with our flagset
-	global := pflag.CommandLine
-	local := pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
-
-	pflagRegister(global, local, "verbose", "v")
-
-	fs.AddFlagSet(local)
-}
-
-func pflagRegister(global, local *pflag.FlagSet, globalName string, shaortName string) {
-	if f := global.Lookup(globalName); f != nil {
-		f.Name = normalize(f.Name)
-		f.Shorthand = shaortName
-		local.AddFlag(f)
-	} else {
-		panic(fmt.Sprintf("failed to find flag in global flagset (pflag): %s", globalName))
-	}
-}
-
-func normalize(s string) string {
-	return strings.Replace(s, "_", "-", -1)
-}
-

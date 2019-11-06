@@ -26,14 +26,20 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"os"
 	"strings"
 )
 
-const (
-	componentServer = "server"
-)
+const defaultEnvPrefix = "LB"
+const defaultConfigType = "yaml"
+const defaultConfigName = "config"
+const componentServer = "server"
+
+var cfgFile string
 
 func NewServerCommand() *cobra.Command {
+
+	initConfig()
 
 	global := pflag.CommandLine
 
@@ -73,32 +79,11 @@ func NewServerCommand() *cobra.Command {
 
 			PrintFlags(cleanFlagSet)
 
-			// TODO: configure viper
-			//cmd.MarkFlagRequired("vault-token")
-			//cmd.MarkFlagRequired("vault-endpoint")
-			//
-			//v.BindPFlag("token", fs.Lookup("access-token"))
-			//v.BindPFlag("name", fs.Lookup("cluster-name"))
-			//v.BindPFlag("description", fs.Lookup("cluster-description"))
-			//v.BindPFlag("server.host", fs.Lookup("bind-address"))
-			//v.BindPFlag("server.port", fs.Lookup("bind-port"))
-			//v.BindPFlag("server.tls.cert", fs.Lookup("tls-cert-file"))
-			//v.BindPFlag("server.tls.key", fs.Lookup("tls-private-key-file"))
-			//v.BindPFlag("server.tls.ca", fs.Lookup("tls-ca-file"))
-			//v.BindPFlag("vault.token", fs.Lookup("vault-token"))
-			//v.BindPFlag("vault.endpoint", fs.Lookup("vault-endpoint"))
-			//v.BindPFlag("domain.internal", fs.Lookup("domain-internal"))
-			//v.BindPFlag("domain.external", fs.Lookup("domain-external"))
-			//v.BindPFlag("storage.driver", fs.Lookup("storage"))
-			//v.BindPFlag("storage.etcd.tls.cert", fs.Lookup("etcd-cert-file"))
-			//v.BindPFlag("storage.etcd.tls.key", fs.Lookup("etcd-private-key-file"))
-			//v.BindPFlag("storage.etcd.tls.ca", fs.Lookup("etcd-ca-file"))
-			//v.BindPFlag("storage.etcd.endpoints", fs.Lookup("etcd-endpoints"))
-			//v.BindPFlag("storage.etcd.prefix", fs.Lookup("etcd-prefix"))
 			Run(viper.New())
 		},
 	}
 
+	global.StringVarP(&cfgFile, "config", "c", "", "Path for the configuration file")
 	global.IntP("verbose", "v", 0, "Set log level from 0 to 7")
 
 	serverFlags.AddFlags(cleanFlagSet)
@@ -152,6 +137,25 @@ func Run(v *viper.Viper) {
 	}()
 
 	<-done
+}
+
+func initConfig() {
+
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	viper.SetEnvPrefix(defaultEnvPrefix)
+	viper.SetConfigType(defaultConfigType)
+	viper.SetConfigFile(viper.GetString(defaultConfigName))
+
+	if cfgFile != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(cfgFile)
+
+		if err := viper.ReadInConfig(); err != nil {
+			fmt.Println("Can't read config:", err)
+			os.Exit(1)
+		}
+	}
 }
 
 // PrintFlags logs the flags in the flagset
