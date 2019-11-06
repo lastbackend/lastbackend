@@ -34,9 +34,11 @@ const (
 
 func NewServerCommand() *cobra.Command {
 
+	global := pflag.CommandLine
+
 	cleanFlagSet := pflag.NewFlagSet(componentAgent, pflag.ContinueOnError)
 	cleanFlagSet.SetNormalizeFunc(WordSepNormalizeFunc)
-	serverFlags := options.NewServerFlags()
+	agentFlags := options.NewServerFlags()
 
 	var command = &cobra.Command{
 		Use:                "agent",
@@ -47,6 +49,7 @@ func NewServerCommand() *cobra.Command {
 			if err := cleanFlagSet.Parse(args); err != nil {
 				cmd.Usage()
 				fmt.Println(err)
+				return
 			}
 
 			// check if there are non-flag arguments in the command line
@@ -54,6 +57,7 @@ func NewServerCommand() *cobra.Command {
 			if len(cmds) > 0 {
 				cmd.Usage()
 				fmt.Println("unknown command: %s", cmds[0])
+				return
 			}
 
 			// short-circuit on help
@@ -111,7 +115,10 @@ func NewServerCommand() *cobra.Command {
 		},
 	}
 
-	serverFlags.AddFlags(cleanFlagSet)
+	global.IntP("verbose", "v", 0, "Set log level from 0 to 7")
+
+	agentFlags.AddFlags(cleanFlagSet)
+	options.AddGlobalFlags(cleanFlagSet)
 
 	cleanFlagSet.BoolP("help", "h", false, fmt.Sprintf("help for %s", command.Name()))
 

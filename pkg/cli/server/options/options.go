@@ -18,16 +18,21 @@
 
 package options
 
-import "github.com/spf13/pflag"
+import (
+	"fmt"
+	"github.com/spf13/pflag"
+	"os"
+	"strings"
+)
 
 type ServerFlags struct {
 	AccessToken        string
 	ClusterName        string
 	ClusterDescription string
 	Server             struct {
-		BindAddress string
-		BindPort    uint
-		TLS         struct {
+		Host string
+		Port uint
+		TLS  struct {
 			FileCert string
 			FileKey  string
 			FileCA   string
@@ -74,11 +79,11 @@ func (f *ServerFlags) AddFlags(mainfs *pflag.FlagSet) {
 	fs.StringVarP(&f.AccessToken, "access-token", "", "", "Access token to API server")
 	fs.StringVarP(&f.ClusterName, "cluster-name", "", "", "Cluster name info")
 	fs.StringVarP(&f.ClusterDescription, "cluster-desc", "", "", "Cluster description")
-	fs.StringVarP(&f.Server.BindAddress, "bind-address", "", "0.0.0.0", "Bind address for listening")
-	fs.UintVarP(&f.Server.BindPort, "bind-port", "", 2967, "Bind address for listening")
+	fs.StringVarP(&f.Server.Host, "bind-address", "", "0.0.0.0", "Bind address for listening")
+	fs.UintVarP(&f.Server.Port, "bind-port", "", 2967, "Bind address for listening")
 	fs.StringVarP(&f.Server.TLS.FileCert, "tls-cert-file", "", "", "TLS cert file path")
 	fs.StringVarP(&f.Server.TLS.FileKey, "tls-private-key-file", "", "", "TLS private key file path")
-	fs.StringVarP(&f.Server.TLS.FileCert, "tls-ca-file", "", "", "TLS certificate authority file path")
+	fs.StringVarP(&f.Server.TLS.FileCA, "tls-ca-file", "", "", "TLS certificate authority file path")
 	fs.StringVarP(&f.Vault.Token, "vault-token", "", "", "Vault access token")
 	fs.StringVarP(&f.Vault.Endpoint, "vault-endpoint", "", "", "Vault access endpoint")
 	fs.StringVarP(&f.Domain.Internal, "domain-internal", "", "lb.local", "Default external domain for cluster")
@@ -91,3 +96,29 @@ func (f *ServerFlags) AddFlags(mainfs *pflag.FlagSet) {
 	fs.StringVarP(&f.CIDR, "services-cidr", "", "172.0.0.0/24", "Services IP CIDR for internal IPAM service")
 
 }
+
+func AddGlobalFlags(fs *pflag.FlagSet) {
+
+	// lookup flags in global flag set and re-register the values with our flagset
+	global := pflag.CommandLine
+	local := pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
+
+	pflagRegister(global, local, "verbose", "v")
+
+	fs.AddFlagSet(local)
+}
+
+func pflagRegister(global, local *pflag.FlagSet, globalName string, shaortName string) {
+	if f := global.Lookup(globalName); f != nil {
+		f.Name = normalize(f.Name)
+		f.Shorthand = shaortName
+		local.AddFlag(f)
+	} else {
+		panic(fmt.Sprintf("failed to find flag in global flagset (pflag): %s", globalName))
+	}
+}
+
+func normalize(s string) string {
+	return strings.Replace(s, "_", "-", -1)
+}
+

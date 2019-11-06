@@ -20,39 +20,96 @@ package lastbackend
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/cli/agent"
+	"github.com/lastbackend/lastbackend/pkg/cli/lastbackend/options"
 	"os"
 	"strings"
 
+	"github.com/lastbackend/lastbackend/pkg/cli/agent"
+	ao "github.com/lastbackend/lastbackend/pkg/cli/agent/options"
 	"github.com/lastbackend/lastbackend/pkg/cli/server"
+	so "github.com/lastbackend/lastbackend/pkg/cli/server/options"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 const defaultEnvPrefix = "LB"
 const defaultConfigType = "yaml"
 const defaultConfigName = "config"
+const componentLB = "lastbackend"
 
 var cfgFile string
 
 func NewLbCommand() *cobra.Command {
 
+	global := pflag.CommandLine
+
+	cleanFlagSet := pflag.NewFlagSet(componentLB, pflag.ContinueOnError)
+	cleanFlagSet.SetNormalizeFunc(WordSepNormalizeFunc)
+	serverFlags := so.NewServerFlags()
+	agentFlags := ao.NewServerFlags()
 
 	var command = &cobra.Command{
-		Use:   "lb",
-		Short: "Last.Backend Open-source API",
-		Long:  `Open-source system for automating deployment, scaling, and management of containerized applications.`,
+		Use:                "lb",
+		Short:              "Last.Backend Open-source PaaS",
+		Long:               `Open-source system for automating deployment, scaling, and management of containerized applications.`,
+		// Because has special flag parsing requirements to enforce flag precedence rules,
+		// so we do all our parsing manually in Run, below.
+		// DisableFlagParsing=true provides the full set of flags passed
+		// `args`  to Run, without Cobra's interference.
+		DisableFlagParsing: true,
 		Run: func(cmd *cobra.Command, args []string) {
+
+			if err := cleanFlagSet.Parse(args); err != nil {
+				cmd.Usage()
+				fmt.Println(err)
+				return
+			}
+
+			// check if there are non-flag arguments in the command line
+			cmds := cleanFlagSet.Args()
+			if len(cmds) > 0 {
+				cmd.Usage()
+				fmt.Println("unknown command: %s", cmds[0])
+				return
+			}
+
+			// short-circuit on help
+			help, err := cleanFlagSet.GetBool("help")
+			if err != nil {
+				fmt.Println(`"help" flag is non-bool, programmer error, please correct`)
+			}
+			if help {
+				cmd.Help()
+				return
+			}
+
+			PrintFlags(cleanFlagSet)
+
 			server.Run(viper.New())
 			agent.Run(viper.New())
 		},
 	}
 
-	command.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Path for the configuration file")
-	command.PersistentFlags().IntP("verbose", "v", 0, "Set log level from 0 to 7")
+	global.IntP("verbose", "v", 0, "Set log level from 0 to 7")
 
-	viper.BindPFlag("service.cidr", command.PersistentFlags().Lookup("services-cidr"))
-	viper.BindPFlag("verbose", command.PersistentFlags().Lookup("verbose"))
+	// keep cleanFlagSet separate, so Cobra doesn't pollute it with the global flags
+	serverFlags.AddFlags(cleanFlagSet)
+	agentFlags.AddFlags(cleanFlagSet)
+	options.AddGlobalFlags(cleanFlagSet)
+
+	cleanFlagSet.BoolP("help", "h", false, fmt.Sprintf("help for %s", command.Name()))
+
+	// this necessary, because Cobra's default UsageFunc and HelpFunc pollute the flagset with global flags
+	const usageFmt = "Usage:\n  %s\n\nFlags:\n%s"
+	command.SetUsageFunc(func(cmd *cobra.Command) error {
+		fmt.Fprintf(cmd.OutOrStderr(), usageFmt, cmd.UseLine(), cleanFlagSet.FlagUsagesWrapped(2))
+		return nil
+	})
+
+	command.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		fmt.Fprintf(cmd.OutOrStdout(), "%s\n\n"+usageFmt, cmd.Long, cmd.UseLine(), cleanFlagSet.FlagUsagesWrapped(2))
+	})
 
 	return command
 }
@@ -74,4 +131,18 @@ func initConfig() {
 			os.Exit(1)
 		}
 	}
+}
+
+// PrintFlags logs the flags in the flagset
+func PrintFlags(flags *pflag.FlagSet) {
+	flags.VisitAll(func(flag *pflag.Flag) {
+		fmt.Println(fmt.Sprintf("FLAG: --%s=%q", flag.Name, flag.Value))
+	})
+}
+
+func WordSepNormalizeFunc(f *pflag.FlagSet, name string) pflag.NormalizedName {
+	if strings.Contains(name, "_") {
+		return pflag.NormalizedName(strings.Replace(name, "_", "-", -1))
+	}
+	return pflag.NormalizedName(name)
 }
