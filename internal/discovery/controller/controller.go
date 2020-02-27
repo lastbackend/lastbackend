@@ -25,9 +25,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lastbackend/lastbackend/internal/api/types/v1"
-	"github.com/lastbackend/lastbackend/internal/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 

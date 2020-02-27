@@ -20,7 +20,7 @@ package v1
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/client/types"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"

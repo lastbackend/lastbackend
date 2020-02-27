@@ -66,7 +66,7 @@ import (
 )
 
 func main() {
-	command := lastbackend.NewLbCommand()
+	command := lastbackend.NewRootCommand()
 
 	if err := command.Execute(); err != nil {
 		os.Exit(1)

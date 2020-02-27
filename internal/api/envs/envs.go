@@ -19,7 +19,7 @@
 package envs
 
 import (
-	"github.com/lastbackend/lastbackend/internal/api/cache"
+	"github.com/lastbackend/lastbackend/internal/master/cache"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 )

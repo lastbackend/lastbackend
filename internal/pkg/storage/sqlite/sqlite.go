@@ -20,7 +20,11 @@ package sqlite
 
 import (
 	"context"
+	"fmt"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/types"
+	"database/sql"
+	sqlite "github.com/mattn/go-sqlite3"
+
 )
 
 type Storage struct {
@@ -81,4 +85,38 @@ func (s Storage) Collection() types.Collection {
 func New() (*Storage, error) {
 	db := new(Storage)
 	return db, nil
+}
+
+
+func test() {
+	sql.Register("sqlite3_custom", &sqlite.SQLiteDriver{
+		ConnectHook: func(conn *sqlite.SQLiteConn) error {
+			if err := conn.RegisterFunc("pow", pow, true); err != nil {
+				return err
+			}
+			if err := conn.RegisterFunc("xor", xor, true); err != nil {
+				return err
+			}
+			if err := conn.RegisterFunc("rand", getrand, false); err != nil {
+				return err
+			}
+			if err := conn.RegisterAggregator("stddev", newStddev, true); err != nil {
+				return err
+			}
+			return nil
+		},
+	})
+
+	db, err := sql.Open("sqlite3_custom", ":memory:")
+	if err != nil {
+		log.Fatal("Failed to open database:", err)
+	}
+	defer db.Close()
+
+	var i int64
+	err = db.QueryRow("SELECT pow(2,3)").Scan(&i)
+	if err != nil {
+		log.Fatal("POW query error:", err)
+	}
+	fmt.Println("pow(2,3) =", i) // 8
 }

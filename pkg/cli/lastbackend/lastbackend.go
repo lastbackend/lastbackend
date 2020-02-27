@@ -24,10 +24,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/lastbackend/lastbackend/pkg/cli/agent"
-	ao "github.com/lastbackend/lastbackend/pkg/cli/agent/options"
-	"github.com/lastbackend/lastbackend/pkg/cli/server"
-	so "github.com/lastbackend/lastbackend/pkg/cli/server/options"
+	"github.com/lastbackend/lastbackend/pkg/cli/master"
+	mo "github.com/lastbackend/lastbackend/pkg/cli/master/options"
+	"github.com/lastbackend/lastbackend/pkg/cli/minion"
+	no "github.com/lastbackend/lastbackend/pkg/cli/minion/options"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -40,7 +40,8 @@ const componentLB = "lastbackend"
 
 var cfgFile string
 
-func NewLbCommand() *cobra.Command {
+// NewLBCmd entrypoint for CLI launcher
+func NewRootCommand() *cobra.Command {
 
 	initConfig()
 
@@ -48,8 +49,8 @@ func NewLbCommand() *cobra.Command {
 
 	cleanFlagSet := pflag.NewFlagSet(componentLB, pflag.ContinueOnError)
 	cleanFlagSet.SetNormalizeFunc(WordSepNormalizeFunc)
-	serverFlags := so.NewServerFlags()
-	agentFlags := ao.NewServerFlags()
+	masterFlags := mo.NewMasterFlags()
+	minionFlags := no.NewMinionFlags()
 
 	var command = &cobra.Command{
 		Use:   "lb",
@@ -72,7 +73,7 @@ func NewLbCommand() *cobra.Command {
 			cmds := cleanFlagSet.Args()
 			if len(cmds) > 0 {
 				cmd.Usage()
-				fmt.Println("unknown command: %s", cmds[0])
+				fmt.Println("unknown command: ", cmds[0])
 				return
 			}
 
@@ -88,18 +89,18 @@ func NewLbCommand() *cobra.Command {
 
 			PrintFlags(cleanFlagSet)
 
-			serverViper := viper.New()
+			masterViper := viper.New()
 			if len(cfgFile) == 0 {
-				serverViper = serverFlags.LoadViper(viper.New())
+				masterViper = masterFlags.LoadViper(viper.New())
 			}
 
-			agentViper := viper.New()
+			minionViper := viper.New()
 			if len(cfgFile) == 0 {
-				agentViper = agentFlags.LoadViper(viper.New())
+				minionViper = minionFlags.LoadViper(viper.New())
 			}
 
-			server.Run(serverViper)
-			agent.Run(agentViper)
+			master.Run(masterViper)
+			minion.Run(minionViper)
 		},
 	}
 
@@ -107,8 +108,8 @@ func NewLbCommand() *cobra.Command {
 	global.IntP("verbose", "v", 0, "Set log level from 0 to 7")
 
 	// keep cleanFlagSet separate, so Cobra doesn't pollute it with the global flags
-	serverFlags.AddFlags(cleanFlagSet)
-	agentFlags.AddFlags(cleanFlagSet)
+	masterFlags.AddFlags(cleanFlagSet)
+	minionFlags.AddFlags(cleanFlagSet)
 	options.AddGlobalFlags(cleanFlagSet)
 
 	cleanFlagSet.BoolP("help", "h", false, fmt.Sprintf("help for %s", command.Name()))
@@ -153,6 +154,7 @@ func PrintFlags(flags *pflag.FlagSet) {
 	})
 }
 
+// WordSepNormalizeFunc normalizes cli flags
 func WordSepNormalizeFunc(f *pflag.FlagSet, name string) pflag.NormalizedName {
 	if strings.Contains(name, "_") {
 		return pflag.NormalizedName(strings.Replace(name, "_", "-", -1))
