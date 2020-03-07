@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package sqlite
+package badger
 
 import "fmt"
 

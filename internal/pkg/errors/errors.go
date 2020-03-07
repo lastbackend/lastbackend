@@ -116,6 +116,14 @@ func New(text string) *err {
 	return &err{text}
 }
 
+func NewResourceNotFound() *err {
+	return &err{ResourceNotFound}
+}
+
+func NewResourceExists() *err {
+	return &err{ResourceExists}
+}
+
 func (e *err) Error() string {
 	return e.s
 }

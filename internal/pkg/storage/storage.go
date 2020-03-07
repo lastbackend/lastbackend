@@ -21,10 +21,10 @@ package storage
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage/badger"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/etcd"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/etcd/v3"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/mock"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage/sqlite"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/types"
 	"github.com/spf13/viper"
 )
@@ -87,7 +87,7 @@ func Get(v *viper.Viper) (Storage, error) {
 
 		return etcd.New(config)
 	default:
-		sqlite.New()
+		return badger.New()
 	}
 }
 

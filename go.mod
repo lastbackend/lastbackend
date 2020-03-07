@@ -11,8 +11,8 @@ require (
 	github.com/coreos/etcd v3.3.15+incompatible
 	github.com/coreos/go-iptables v0.3.0
 	github.com/coreos/go-systemd v0.0.0-20190620071333-e64a0ec8b42a // indirect
+	github.com/dgraph-io/badger v1.6.0
 	github.com/docker/distribution v2.7.1+incompatible // indirect
-
 	github.com/docker/docker v0.0.0-20170601211448-f5ec1e2936dc
 	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-units v0.4.0 // indirect
@@ -25,7 +25,6 @@ require (
 	github.com/hpcloud/tail v1.0.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/magiconair/properties v1.8.1 // indirect
-	github.com/mattn/go-sqlite3 v2.0.2+incompatible
 	github.com/miekg/dns v1.1.16
 	github.com/morikuni/aec v0.0.0-20170113033406-39771216ff4c // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
