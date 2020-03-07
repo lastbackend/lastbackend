@@ -36,8 +36,6 @@ require (
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/miekg/dns v1.1.16
 	github.com/mitchellh/mapstructure v1.1.2
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/morikuni/aec v0.0.0-20170113033406-39771216ff4c // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
