@@ -23,10 +23,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/lastbackend/lastbackend/internal/api/cache"
 	"github.com/lastbackend/lastbackend/internal/api/envs"
-	"github.com/lastbackend/lastbackend/internal/api/http"
 	"github.com/lastbackend/lastbackend/internal/api/runtime"
+	"github.com/lastbackend/lastbackend/internal/master/cache"
+	"github.com/lastbackend/lastbackend/internal/master/http"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	l "github.com/lastbackend/lastbackend/tools/log"

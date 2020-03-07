@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/etcd"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/etcd/v3"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/mock"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage/sqlite"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/types"
 	"github.com/spf13/viper"
 )
@@ -74,8 +75,7 @@ func Get(v *viper.Viper) (Storage, error) {
 	switch v.GetString("storage.driver") {
 	case "mock":
 		return mock.New()
-	default:
-
+	case "etcd":
 		config := new(v3.Config)
 
 		config.Prefix = v.GetString("storage.etcd.prefix")
@@ -86,6 +86,8 @@ func Get(v *viper.Viper) (Storage, error) {
 		config.TLS.Key = v.GetString("storage.etcd.tls.key")
 
 		return etcd.New(config)
+	default:
+		sqlite.New()
 	}
 }
 

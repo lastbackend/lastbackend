@@ -21,9 +21,9 @@ package v1
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/util/http/request"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 )
 
 type ControllerClient struct {

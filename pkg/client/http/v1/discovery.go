@@ -21,10 +21,10 @@ package v1
 import (
 	"context"
 	"fmt"
-	rv1 "github.com/lastbackend/lastbackend/internal/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/internal/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/util/http/request"
+	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 )
 
 type DiscoveryClient struct {
