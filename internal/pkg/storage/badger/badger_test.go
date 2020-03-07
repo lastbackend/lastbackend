@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package sqlite_test
+package badger_test
 
 import (
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"

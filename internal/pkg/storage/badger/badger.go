@@ -16,15 +16,13 @@
 // from Last.Backend LLC.
 //
 
-package sqlite
+package badger
 
 import (
 	"context"
-	"fmt"
+	badger "github.com/dgraph-io/badger"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/types"
-	"database/sql"
-	sqlite "github.com/mattn/go-sqlite3"
-
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 type Storage struct {
@@ -87,36 +85,10 @@ func New() (*Storage, error) {
 	return db, nil
 }
 
-
 func test() {
-	sql.Register("sqlite3_custom", &sqlite.SQLiteDriver{
-		ConnectHook: func(conn *sqlite.SQLiteConn) error {
-			if err := conn.RegisterFunc("pow", pow, true); err != nil {
-				return err
-			}
-			if err := conn.RegisterFunc("xor", xor, true); err != nil {
-				return err
-			}
-			if err := conn.RegisterFunc("rand", getrand, false); err != nil {
-				return err
-			}
-			if err := conn.RegisterAggregator("stddev", newStddev, true); err != nil {
-				return err
-			}
-			return nil
-		},
-	})
-
-	db, err := sql.Open("sqlite3_custom", ":memory:")
+	db, err := badger.Open(badger.DefaultOptions("/tmp/badger"))
 	if err != nil {
-		log.Fatal("Failed to open database:", err)
+		log.Fatal(err)
 	}
 	defer db.Close()
-
-	var i int64
-	err = db.QueryRow("SELECT pow(2,3)").Scan(&i)
-	if err != nil {
-		log.Fatal("POW query error:", err)
-	}
-	fmt.Println("pow(2,3) =", i) // 8
 }
