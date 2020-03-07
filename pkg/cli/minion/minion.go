@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -103,6 +103,36 @@ func NewMinionCommand() *cobra.Command {
 	return command
 }
 
+func Run(v *viper.Viper) {
+
+	var (
+		sigs = make(chan os.Signal)
+		done = make(chan bool, 1)
+	)
+
+	app, err := minion.New(v)
+	if err != nil {
+		panic(fmt.Sprintf("Create master application err: %v", err))
+	}
+
+	if err := app.Run(); err != nil {
+		panic(fmt.Sprintf("Run master application err: %v", err))
+	}
+
+	go func() {
+		for {
+			select {
+			case <-sigs:
+				app.Stop()
+				done <- true
+				return
+			}
+		}
+	}()
+
+	<-done
+}
+
 func initConfig() {
 
 	viper.AutomaticEnv()
@@ -120,10 +150,6 @@ func initConfig() {
 			os.Exit(1)
 		}
 	}
-}
-
-func Run(v *viper.Viper) {
-	minion.Daemon(v)
 }
 
 // PrintFlags logs the flags in the flagset

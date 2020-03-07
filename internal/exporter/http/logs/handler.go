@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -75,10 +75,10 @@ func LogsH(w http.ResponseWriter, r *http.Request) {
 	//   '500':
 	//     description: Internal server error
 
-	kind := utils.QueryString(r, "kind")
-	selflink := utils.QueryString(r, "selflink")
-	follow := utils.QueryBool(r, "follow")
-	lines := utils.QueryInt(r, "lines")
+	kind := util.QueryString(r, "kind")
+	selflink := util.QueryString(r, "selflink")
+	follow := util.QueryBool(r, "follow")
+	lines := util.QueryInt(r, "lines")
 
 	log.V(logLevel).Debugf("%s:logs:> get by selflink `%s`", logPrefix, selflink)
 

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -32,14 +32,15 @@ func AddGlobalFlags(fs *pflag.FlagSet) {
 	local := pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 
 	pflagRegister(global, local, "verbose", "v")
+	pflagRegister(global, local, "config", "c")
 
 	fs.AddFlagSet(local)
 }
 
-func pflagRegister(global, local *pflag.FlagSet, globalName string, shaortName string) {
+func pflagRegister(global, local *pflag.FlagSet, globalName string, shortName string) {
 	if f := global.Lookup(globalName); f != nil {
 		f.Name = normalize(f.Name)
-		f.Shorthand = shaortName
+		f.Shorthand = shortName
 		local.AddFlag(f)
 	} else {
 		panic(fmt.Sprintf("failed to find flag in global flagset (pflag): %s", globalName))

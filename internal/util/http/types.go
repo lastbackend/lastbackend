@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,8 +19,19 @@
 package http
 
 import (
-	"context"
 	"net/http"
+)
+
+const (
+	MethodGet     = http.MethodGet
+	MethodHead    = http.MethodHead
+	MethodPost    = http.MethodPost
+	MethodPut     = http.MethodPut
+	MethodPatch   = http.MethodPatch
+	MethodDelete  = http.MethodDelete
+	MethodConnect = http.MethodConnect
+	MethodOptions = http.MethodOptions
+	MethodTrace   = http.MethodTrace
 )
 
 type Route struct {
@@ -30,8 +41,4 @@ type Route struct {
 	Method     string
 }
 
-//type Middleware interface {
-//	Handler(func(w http.ResponseWriter, r *http.Request) error) func(w http.ResponseWriter, r *http.Request) error
-//}
-
-type Middleware func(context.Context, http.HandlerFunc) http.HandlerFunc
+type Middleware func(http.HandlerFunc) http.HandlerFunc

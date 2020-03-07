@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,13 +20,13 @@ package lastbackend
 
 import (
 	"fmt"
+	"github.com/lastbackend/lastbackend/internal/master"
+	"github.com/lastbackend/lastbackend/internal/minion"
 	"github.com/lastbackend/lastbackend/pkg/cli/lastbackend/options"
 	"os"
 	"strings"
 
-	"github.com/lastbackend/lastbackend/pkg/cli/master"
 	mo "github.com/lastbackend/lastbackend/pkg/cli/master/options"
-	"github.com/lastbackend/lastbackend/pkg/cli/minion"
 	no "github.com/lastbackend/lastbackend/pkg/cli/minion/options"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -90,17 +90,38 @@ func NewRootCommand() *cobra.Command {
 			PrintFlags(cleanFlagSet)
 
 			masterViper := viper.New()
-			if len(cfgFile) == 0 {
-				masterViper = masterFlags.LoadViper(viper.New())
+			masterViper.AutomaticEnv()
+			masterViper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+			masterViper.SetEnvPrefix(defaultEnvPrefix)
+			masterViper.SetConfigType(defaultConfigType)
+			masterViper.SetConfigFile(masterViper.GetString(defaultConfigName))
+
+			// Use config file from the flag.
+			if cfgFile != "" {
+				masterViper.SetConfigFile(cfgFile)
+				if err := masterViper.ReadInConfig(); err != nil {
+					fmt.Println(err)
+					return
+				}
 			}
 
 			minionViper := viper.New()
-			if len(cfgFile) == 0 {
-				minionViper = minionFlags.LoadViper(viper.New())
+			minionViper.AutomaticEnv()
+			minionViper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+			minionViper.SetEnvPrefix(defaultEnvPrefix)
+			minionViper.SetConfigType(defaultConfigType)
+			minionViper.SetConfigFile(minionViper.GetString(defaultConfigName))
+
+			// Use config file from the flag.
+			if cfgFile != "" {
+				minionViper.SetConfigFile(cfgFile)
+				if err := minionViper.ReadInConfig(); err != nil {
+					fmt.Println(err)
+					return
+				}
 			}
 
-			master.Run(masterViper)
-			minion.Run(minionViper)
+			Run(masterViper, minionViper)
 		},
 	}
 
@@ -126,6 +147,46 @@ func NewRootCommand() *cobra.Command {
 	})
 
 	return command
+}
+
+func Run(masterViper *viper.Viper, minionViper *viper.Viper) {
+
+	var (
+		sigs = make(chan os.Signal)
+		done = make(chan bool, 1)
+	)
+
+	masterApp, err := master.New(masterViper)
+	if err != nil {
+		panic(fmt.Sprintf("Create master application err: %v", err))
+	}
+
+	if err := masterApp.Run(); err != nil {
+		panic(fmt.Sprintf("Run master application err: %v", err))
+	}
+
+	minionApp, err := minion.New(minionViper)
+	if err != nil {
+		panic(fmt.Sprintf("Create minion application err: %v", err))
+	}
+
+	if err := minionApp.Run(); err != nil {
+		panic(fmt.Sprintf("Run minion application err: %v", err))
+	}
+
+	go func() {
+		for {
+			select {
+			case <-sigs:
+				masterApp.Stop()
+				minionApp.Stop()
+				done <- true
+				return
+			}
+		}
+	}()
+
+	<-done
 }
 
 func initConfig() {

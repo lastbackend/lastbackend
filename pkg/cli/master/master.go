@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -104,7 +104,33 @@ func NewServerCommand() *cobra.Command {
 }
 
 func Run(v *viper.Viper) {
-	master.Daemon(v)
+
+	var (
+		sigs = make(chan os.Signal)
+		done = make(chan bool, 1)
+	)
+
+	app, err := master.New(v)
+	if err != nil {
+		panic(fmt.Sprintf("Create master application err: %v", err))
+	}
+
+	if err := app.Run(); err != nil {
+		panic(fmt.Sprintf("Run master application err: %v", err))
+	}
+
+	go func() {
+		for {
+			select {
+			case <-sigs:
+				app.Stop()
+				done <- true
+				return
+			}
+		}
+	}()
+
+	<-done
 }
 
 func initConfig() {

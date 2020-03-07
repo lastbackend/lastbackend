@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,33 +19,21 @@
 package http
 
 import (
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/util/http/cors"
 	"io/ioutil"
 	"net/http"
-)
 
-const (
-	MethodGet     = http.MethodGet
-	MethodHead    = http.MethodHead
-	MethodPost    = http.MethodPost
-	MethodPut     = http.MethodPut
-	MethodPatch   = http.MethodPatch
-	MethodDelete  = http.MethodDelete
-	MethodConnect = http.MethodConnect
-	MethodOptions = http.MethodOptions
-	MethodTrace   = http.MethodTrace
+	"github.com/lastbackend/lastbackend/internal/util/http/cors"
 )
 
 type NotFoundHandler struct {
 	http.Handler
 }
 
-func (NotFoundHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+func (NotFoundHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	cors.Headers(w, r)
 	w.WriteHeader(http.StatusNotFound)
 	w.Write([]byte(`{"code": 404, "status": "Not Found", "message": "Not Found"}`))
 }
@@ -54,23 +42,23 @@ type MethodNotAllowedHandler struct {
 	http.Handler
 }
 
-func (MethodNotAllowedHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+func (MethodNotAllowedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	cors.Headers(w, r)
 	w.WriteHeader(http.StatusMethodNotAllowed)
 	w.Write([]byte(`{"code": 405, "status": "Method Not Allowed", "message": "Method Not Allowed"}`))
 }
 
-func Handle(ctx context.Context, h http.HandlerFunc, middleware ...Middleware) http.HandlerFunc {
+func Handle(h http.HandlerFunc, middleware ...Middleware) http.HandlerFunc {
 	headers := func(h http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			cors.Headers(w, r)
+			cors.Headers(http.ResponseWriter(w), r)
 			h.ServeHTTP(w, r)
 		}
 	}
 
 	h = headers(h)
 	for _, m := range middleware {
-		h = m(ctx, h)
+		h = m(h)
 	}
 
 	return h
@@ -79,6 +67,7 @@ func Handle(ctx context.Context, h http.HandlerFunc, middleware ...Middleware) h
 func Listen(host string, port int, router http.Handler) error {
 	return http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), router)
 }
+
 
 func ListenWithTLS(host string, port int, caFile, certFile, keyFile string, router http.Handler) error {
 
@@ -108,12 +97,13 @@ func configTLS(caFile string) *tls.Config {
 	TLSConfig := &tls.Config{
 		// Reject any TLS certificate that cannot be validated
 		ClientAuth: tls.RequireAndVerifyClientCert,
-		// Ensure that we only use our "FileCA" to validate certificates
+		// Ensure that we only use our "CA" to validate certificates
 		ClientCAs: caCertPool,
 		// Force it server side
 		PreferServerCipherSuites: true,
 		// TLS 1.2 because we can
 		MinVersion: tls.VersionTLS12,
 	}
+
 	return TLSConfig
 }
