@@ -20,12 +20,12 @@ package job
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/master/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"strings"
 	"time"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/internal/util/generator"
 	"github.com/lastbackend/lastbackend/tools/log"
@@ -154,8 +154,8 @@ func handlePodStateDestroyed(js *JobState, p *types.Pod) error {
 }
 
 // podCreate function creates new pod based on task spec
-func podCreate(t *types.Task) (*types.Pod, error) {
-	pm := model.NewPodModel(context.Background(), envs.Get().GetStorage())
+func podCreate(stg storage.Storage, t *types.Task) (*types.Pod, error) {
+	pm := model.NewPodModel(context.Background(), stg)
 
 	pod := types.NewPod()
 	pod.Meta.SetDefault()
@@ -179,7 +179,7 @@ func podProvision(js *JobState, p *types.Pod) (err error) {
 
 	defer func() {
 		if err == nil {
-			err = podUpdate(p, t)
+			err = podUpdate(js.storage, p, t)
 		}
 	}()
 
@@ -209,7 +209,7 @@ func podProvision(js *JobState, p *types.Pod) (err error) {
 		p.Meta.Updated = time.Now()
 	}
 
-	if err = podManifestPut(p); err != nil {
+	if err = podManifestPut(js.storage, p); err != nil {
 		log.Errorf("%s:> pod manifest create err: %s", logPrefix, err.Error())
 		return err
 	}
@@ -223,7 +223,7 @@ func podDestroy(js *JobState, p *types.Pod) (err error) {
 	t := p.Meta.Updated
 	defer func() {
 		if err == nil {
-			err = podUpdate(p, t)
+			err = podUpdate(js.storage, p, t)
 		}
 	}()
 
@@ -244,7 +244,7 @@ func podDestroy(js *JobState, p *types.Pod) (err error) {
 
 	p.Spec.State.Destroy = true
 
-	if err = podManifestSet(p); err != nil {
+	if err = podManifestSet(js.storage, p); err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			if p.Meta.Node != types.EmptyString {
 				if _, err := js.cluster.PodRelease(p); err != nil {
@@ -275,12 +275,12 @@ func podDestroy(js *JobState, p *types.Pod) (err error) {
 // podRemove function removes pod from storage if node is released
 func podRemove(js *JobState, p *types.Pod) (err error) {
 
-	pm := model.NewPodModel(context.Background(), envs.Get().GetStorage())
+	pm := model.NewPodModel(context.Background(), js.storage)
 	if _, err = js.cluster.PodRelease(p); err != nil {
 		return err
 	}
 
-	if err = podManifestDel(p); err != nil {
+	if err = podManifestDel(js.storage, p); err != nil {
 		return err
 	}
 
@@ -296,10 +296,10 @@ func podRemove(js *JobState, p *types.Pod) (err error) {
 	return nil
 }
 
-func podUpdate(p *types.Pod, timestamp time.Time) error {
+func podUpdate(stg storage.Storage, p *types.Pod, timestamp time.Time) error {
 
 	if timestamp.Before(p.Meta.Updated) {
-		pm := model.NewPodModel(context.Background(), envs.Get().GetStorage())
+		pm := model.NewPodModel(context.Background(), stg)
 		if err := pm.Update(p); err != nil {
 			log.Errorf("pod update %s", err.Error())
 			return err
@@ -309,9 +309,9 @@ func podUpdate(p *types.Pod, timestamp time.Time) error {
 	return nil
 }
 
-func podManifestPut(p *types.Pod) error {
+func podManifestPut(stg storage.Storage, p *types.Pod) error {
 
-	mm := model.NewPodModel(context.Background(), envs.Get().GetStorage())
+	mm := model.NewPodModel(context.Background(), stg)
 	m, err := mm.ManifestGet(p.Meta.Node, p.Meta.SelfLink.String())
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
@@ -332,14 +332,14 @@ func podManifestPut(p *types.Pod) error {
 	return nil
 }
 
-func podManifestSet(p *types.Pod) error {
+func podManifestSet(stg storage.Storage, p *types.Pod) error {
 
 	var (
 		m   *types.PodManifest
 		err error
 	)
 
-	mm := model.NewPodModel(context.Background(), envs.Get().GetStorage())
+	mm := model.NewPodModel(context.Background(), stg)
 	m, err = mm.ManifestGet(p.Meta.Node, p.Meta.SelfLink.String())
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
@@ -363,14 +363,14 @@ func podManifestSet(p *types.Pod) error {
 	return nil
 }
 
-func podManifestDel(p *types.Pod) error {
+func podManifestDel(stg storage.Storage,  p *types.Pod) error {
 
 	if p.Meta.Node == types.EmptyString {
 		return nil
 	}
 
 	// Remove manifest
-	mm := model.NewPodModel(context.Background(), envs.Get().GetStorage())
+	mm := model.NewPodModel(context.Background(), stg)
 	err := mm.ManifestDel(p.Meta.Node, p.SelfLink().String())
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {

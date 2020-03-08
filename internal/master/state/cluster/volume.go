@@ -20,11 +20,11 @@ package cluster
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/master/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"time"
 
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
@@ -143,10 +143,10 @@ func handleVolumeStateDestroyed(cs *ClusterState, v *types.Volume) error {
 	return nil
 }
 
-func volumeUpdate(v *types.Volume, timestamp time.Time) error {
+func volumeUpdate(stg storage.Storage, v *types.Volume, timestamp time.Time) error {
 
 	if timestamp.Before(v.Meta.Updated) {
-		vm := model.NewVolumeModel(context.Background(), envs.Get().GetStorage())
+		vm := model.NewVolumeModel(context.Background(), stg)
 		if err := vm.Update(v); err != nil {
 			log.Errorf("%s", err.Error())
 			return err
@@ -162,13 +162,13 @@ func volumeProvision(cs *ClusterState, volume *types.Volume) (err error) {
 
 	defer func() {
 		if err == nil {
-			err = volumeUpdate(volume, t)
+			err = volumeUpdate(cs.storage, volume, t)
 		}
 	}()
 
 	if volume.Meta.Node != types.EmptyString {
 		log.Debugf("%s:> volume manifest create: %s", logPrefixVolume, volume.SelfLink())
-		vm := model.NewVolumeModel(context.Background(), envs.Get().GetStorage())
+		vm := model.NewVolumeModel(context.Background(), cs.storage)
 		mf, err := vm.ManifestGet(volume.Meta.Node, volume.SelfLink().String())
 		if err != nil {
 			log.Errorf("%s:> volume manifest create err: %s", logPrefixVolume, err.Error())
@@ -177,13 +177,13 @@ func volumeProvision(cs *ClusterState, volume *types.Volume) (err error) {
 
 		if mf != nil {
 			if !volumeManifestCheckEqual(mf, volume) {
-				if err := volumeManifestSet(volume); err != nil {
+				if err := volumeManifestSet(cs.storage, volume); err != nil {
 					log.Errorf("%s:> volume manifest set err: %s", logPrefixVolume, err.Error())
 					return err
 				}
 			}
 		} else {
-			if err := volumeManifestAdd(volume); err != nil {
+			if err := volumeManifestAdd(cs.storage, volume); err != nil {
 				log.Errorf("%s:> volume manifest add err: %s", logPrefixVolume, err.Error())
 				return err
 			}
@@ -221,7 +221,7 @@ func volumeProvision(cs *ClusterState, volume *types.Volume) (err error) {
 		volume.Meta.Updated = time.Now()
 	}
 
-	if err := volumeManifestAdd(volume); err != nil {
+	if err := volumeManifestAdd(cs.storage, volume); err != nil {
 		log.Errorf("%s:> volume manifest set err: %s", logPrefixVolume, err.Error())
 		return err
 	}
@@ -240,7 +240,7 @@ func volumeDestroy(cs *ClusterState, volume *types.Volume) (err error) {
 
 	defer func() {
 		if err == nil {
-			err = volumeUpdate(volume, t)
+			err = volumeUpdate(cs.storage, volume, t)
 		}
 	}()
 
@@ -261,7 +261,7 @@ func volumeDestroy(cs *ClusterState, volume *types.Volume) (err error) {
 		volume.Meta.Updated = time.Now()
 	}
 
-	if err = volumeManifestSet(volume); err != nil {
+	if err = volumeManifestSet(cs.storage, volume); err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			if volume.Meta.Node != types.EmptyString {
 				if _, err := cs.VolumeRelease(volume); err != nil {
@@ -291,12 +291,12 @@ func volumeDestroy(cs *ClusterState, volume *types.Volume) (err error) {
 
 func volumeRemove(cs *ClusterState, volume *types.Volume) (err error) {
 
-	vm := model.NewVolumeModel(context.Background(), envs.Get().GetStorage())
+	vm := model.NewVolumeModel(context.Background(), cs.storage)
 	if _, err = cs.VolumeRelease(volume); err != nil {
 		return err
 	}
 
-	if err = volumeManifestDel(volume); err != nil {
+	if err = volumeManifestDel(cs.storage, volume); err != nil {
 		return err
 	}
 
@@ -312,7 +312,7 @@ func volumeRemove(cs *ClusterState, volume *types.Volume) (err error) {
 	return nil
 }
 
-func volumeManifestAdd(vol *types.Volume) error {
+func volumeManifestAdd(stg storage.Storage, vol *types.Volume) error {
 
 	log.V(logLevel).Debugf("%s: create volume manifest for node: %s", logPrefixVolume, vol.SelfLink().String())
 
@@ -324,7 +324,7 @@ func volumeManifestAdd(vol *types.Volume) error {
 	vm.HostPath = vol.Spec.HostPath
 	vm.Capacity.Storage = vol.Spec.Capacity.Storage
 
-	im := model.NewVolumeModel(context.Background(), envs.Get().GetStorage())
+	im := model.NewVolumeModel(context.Background(), stg)
 	if err := im.ManifestAdd(vol.Meta.Node, vol.SelfLink().String(), vm); err != nil {
 		log.Errorf("%s:> volume manifest create err: %s", logPrefixVolume, err.Error())
 		return err
@@ -333,14 +333,14 @@ func volumeManifestAdd(vol *types.Volume) error {
 	return nil
 }
 
-func volumeManifestSet(vol *types.Volume) error {
+func volumeManifestSet(stg storage.Storage, vol *types.Volume) error {
 
 	var (
 		m   *types.VolumeManifest
 		err error
 	)
 
-	im := model.NewVolumeModel(context.Background(), envs.Get().GetStorage())
+	im := model.NewVolumeModel(context.Background(), stg)
 
 	m, err = im.ManifestGet(vol.Meta.Node, vol.Meta.SelfLink.String())
 	if err != nil {
@@ -363,14 +363,14 @@ func volumeManifestSet(vol *types.Volume) error {
 	return nil
 }
 
-func volumeManifestDel(vol *types.Volume) error {
+func volumeManifestDel(stg storage.Storage, vol *types.Volume) error {
 
 	if vol.Meta.Node == types.EmptyString {
 		return nil
 	}
 
 	// Remove manifest
-	vm := model.NewVolumeModel(context.Background(), envs.Get().GetStorage())
+	vm := model.NewVolumeModel(context.Background(), stg)
 	err := vm.ManifestDel(vol.Meta.Node, vol.SelfLink().String())
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {

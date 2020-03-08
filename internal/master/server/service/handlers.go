@@ -34,10 +34,15 @@ const (
 
 // Handler represent the http handler for service
 type Handler struct {
+	Config Config
+}
+
+type Config struct {
+	SecretToken string
 }
 
 // NewServiceHandler will initialize the service resources endpoint
-func NewServiceHandler(r *mux.Router, mw middleware.Middleware) {
+func NewServiceHandler(r *mux.Router, mw middleware.Middleware, cfg Config) {
 
 	ctx := logger.NewContext(context.Background(), nil)
 	log := logger.WithContext(ctx)
@@ -45,6 +50,7 @@ func NewServiceHandler(r *mux.Router, mw middleware.Middleware) {
 	log.Infof("%s:> init service routes", logPrefix)
 
 	handler := &Handler{
+		Config: cfg,
 	}
 
 	r.Handle("/namespace/{namespace}/service", h.Handle(mw.Authenticate(handler.ServiceCreateH))).Methods(http.MethodPost)
@@ -505,6 +511,8 @@ func (handler Handler) ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 	ctx := logger.NewContext(context.Background(), nil)
 	log := logger.WithContext(ctx)
 
+	log.Infof("%s:> get service logs", logPrefix)
+
 	//nid := util.Vars(r)["namespace"]
 	//sid := util.Vars(r)["service"]
 	//tail := util.QueryInt(r, "tail")
@@ -588,7 +596,7 @@ func (handler Handler) ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 	//}
 	//
 	//req.WithContext(cx)
-	//req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", envs.Get().GetAccessToken()))
+	//req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", handler.Config.SecretToken))
 	//
 	//res, err := http.DefaultClient.Do(req)
 	//if err != nil {

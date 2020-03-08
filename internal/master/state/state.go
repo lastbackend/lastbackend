@@ -20,12 +20,13 @@ package state
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/master/envs"
+
+	"github.com/lastbackend/lastbackend/internal/master/ipam"
 	"github.com/lastbackend/lastbackend/internal/master/state/cluster"
 	"github.com/lastbackend/lastbackend/internal/master/state/job"
 	"github.com/lastbackend/lastbackend/internal/master/state/service"
-
 	"github.com/lastbackend/lastbackend/internal/pkg/model"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
@@ -33,6 +34,9 @@ import (
 const logLevel = 3
 
 type State struct {
+	storage storage.Storage
+	ipam    ipam.IPAM
+
 	Cluster *cluster.ClusterState
 	Service map[string]*service.ServiceState
 	Job     map[string]*job.JobState
@@ -47,15 +51,15 @@ func (s *State) Loop() {
 	log.Info("finish cluster restore\n\n")
 
 	log.Info("start namespace restore")
-	nm := model.NewNamespaceModel(context.Background(), envs.Get().GetStorage())
-	sm := model.NewServiceModel(context.Background(), envs.Get().GetStorage())
-	jm := model.NewJobModel(context.Background(), envs.Get().GetStorage())
-	vm := model.NewVolumeModel(context.Background(), envs.Get().GetStorage())
-	dm := model.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
-	tm := model.NewTaskModel(context.Background(), envs.Get().GetStorage())
-	pm := model.NewPodModel(context.Background(), envs.Get().GetStorage())
-	cm := model.NewConfigModel(context.Background(), envs.Get().GetStorage())
-	sc := model.NewSecretModel(context.Background(), envs.Get().GetStorage())
+	nm := model.NewNamespaceModel(context.Background(), s.storage)
+	sm := model.NewServiceModel(context.Background(), s.storage)
+	jm := model.NewJobModel(context.Background(), s.storage)
+	vm := model.NewVolumeModel(context.Background(), s.storage)
+	dm := model.NewDeploymentModel(context.Background(), s.storage)
+	tm := model.NewTaskModel(context.Background(), s.storage)
+	pm := model.NewPodModel(context.Background(), s.storage)
+	cm := model.NewConfigModel(context.Background(), s.storage)
+	sc := model.NewSecretModel(context.Background(), s.storage)
 
 	dr, err := dm.Runtime()
 	if err != nil {
@@ -123,7 +127,7 @@ func (s *State) Loop() {
 
 			log.V(logLevel).Debugf("restore service state: %s \n", svc.SelfLink())
 			if _, ok := s.Service[svc.SelfLink().String()]; !ok {
-				s.Service[svc.SelfLink().String()] = service.NewServiceState(s.Cluster, svc)
+				s.Service[svc.SelfLink().String()] = service.NewServiceState(s.storage, s.ipam, s.Cluster, svc)
 			}
 
 			if err := s.Service[svc.SelfLink().String()].Restore(); err != nil {
@@ -141,7 +145,7 @@ func (s *State) Loop() {
 
 			log.V(logLevel).Debugf("restore jobs state: %s \n", jb.SelfLink())
 			if _, ok := s.Job[jb.SelfLink().String()]; !ok {
-				s.Job[jb.SelfLink().String()] = job.NewJobState(s.Cluster, jb)
+				s.Job[jb.SelfLink().String()] = job.NewJobState(s.storage, s.Cluster, jb)
 			}
 
 			if err := s.Job[jb.SelfLink().String()].Restore(); err != nil {
@@ -181,7 +185,7 @@ func (s *State) watchServices(ctx context.Context, rev *int64) {
 		svc = make(chan types.ServiceEvent)
 	)
 
-	sm := model.NewServiceModel(ctx, envs.Get().GetStorage())
+	sm := model.NewServiceModel(ctx, s.storage)
 
 	go func() {
 		for {
@@ -204,7 +208,7 @@ func (s *State) watchServices(ctx context.Context, rev *int64) {
 
 				_, ok := s.Service[w.Data.SelfLink().String()]
 				if !ok {
-					s.Service[w.Data.SelfLink().String()] = service.NewServiceState(s.Cluster, w.Data)
+					s.Service[w.Data.SelfLink().String()] = service.NewServiceState(s.storage, s.ipam, s.Cluster, w.Data)
 				}
 
 				s.Service[w.Data.SelfLink().String()].SetService(w.Data)
@@ -223,7 +227,7 @@ func (s *State) watchJobs(ctx context.Context, rev *int64) {
 		je = make(chan types.JobEvent)
 	)
 
-	jm := model.NewJobModel(ctx, envs.Get().GetStorage())
+	jm := model.NewJobModel(ctx, s.storage)
 
 	go func() {
 		for {
@@ -246,7 +250,7 @@ func (s *State) watchJobs(ctx context.Context, rev *int64) {
 
 				_, ok := s.Job[e.Data.SelfLink().String()]
 				if !ok {
-					s.Job[e.Data.SelfLink().String()] = job.NewJobState(s.Cluster, e.Data)
+					s.Job[e.Data.SelfLink().String()] = job.NewJobState(s.storage, s.Cluster, e.Data)
 				}
 
 				s.Job[e.Data.SelfLink().String()].SetJob(e.Data)
@@ -266,7 +270,7 @@ func (s *State) watchDeployments(ctx context.Context, rev *int64) {
 		d = make(chan types.DeploymentEvent)
 	)
 
-	dm := model.NewDeploymentModel(ctx, envs.Get().GetStorage())
+	dm := model.NewDeploymentModel(ctx, s.storage)
 
 	go func() {
 		for {
@@ -310,7 +314,7 @@ func (s *State) watchTasks(ctx context.Context, rev *int64) {
 		d = make(chan types.TaskEvent)
 	)
 
-	tm := model.NewTaskModel(ctx, envs.Get().GetStorage())
+	tm := model.NewTaskModel(ctx, s.storage)
 
 	go func() {
 		for {
@@ -354,7 +358,7 @@ func (s *State) watchPods(ctx context.Context, rev *int64) {
 		p = make(chan types.PodEvent)
 	)
 
-	pm := model.NewPodModel(ctx, envs.Get().GetStorage())
+	pm := model.NewPodModel(ctx, s.storage)
 
 	go func() {
 		for {
@@ -431,7 +435,7 @@ func (s *State) watchVolumes(ctx context.Context, rev *int64) {
 		vl = make(chan types.VolumeEvent)
 	)
 
-	vm := model.NewVolumeModel(ctx, envs.Get().GetStorage())
+	vm := model.NewVolumeModel(ctx, s.storage)
 
 	go func() {
 		for {
@@ -490,7 +494,7 @@ func (s *State) watchSecrets(ctx context.Context, rev *int64) {
 		vl = make(chan types.SecretEvent)
 	)
 
-	sm := model.NewSecretModel(ctx, envs.Get().GetStorage())
+	sm := model.NewSecretModel(ctx, s.storage)
 
 	go func() {
 		for {
@@ -541,7 +545,7 @@ func (s *State) watchConfigs(ctx context.Context, rev *int64) {
 		vl = make(chan types.ConfigEvent)
 	)
 
-	sm := model.NewConfigModel(ctx, envs.Get().GetStorage())
+	sm := model.NewConfigModel(ctx, s.storage)
 
 	go func() {
 		for {
@@ -586,9 +590,11 @@ func (s *State) watchConfigs(ctx context.Context, rev *int64) {
 	}
 }
 
-func NewState() *State {
+func NewState(stg storage.Storage, ipam ipam.IPAM) *State {
 	var state = new(State)
-	state.Cluster = cluster.NewClusterState()
+	state.storage = stg
+	state.ipam = ipam
+	state.Cluster = cluster.NewClusterState(stg, ipam)
 	state.Service = make(map[string]*service.ServiceState)
 	state.Job = make(map[string]*job.JobState)
 	return state

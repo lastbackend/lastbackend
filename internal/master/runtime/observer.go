@@ -19,7 +19,7 @@
 package runtime
 
 import (
-	"github.com/lastbackend/lastbackend/internal/master/envs"
+	"github.com/lastbackend/lastbackend/internal/master/ipam"
 	"github.com/lastbackend/lastbackend/internal/master/state"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 )
@@ -29,9 +29,9 @@ const (
 )
 
 type Observer struct {
-	rev   *int64
-	stg   storage.Storage
-	state *state.State
+	rev     *int64
+	storage storage.Storage
+	state   *state.State
 }
 
 func (o *Observer) Loop() {
@@ -42,12 +42,12 @@ func (o *Observer) Stop() {
 	o.state = nil
 }
 
-func NewObserver() *Observer {
+func NewObserver(stg storage.Storage, ipam ipam.IPAM) *Observer {
 
 	o := new(Observer)
 
-	o.stg = envs.Get().GetStorage()
-	o.state = state.NewState()
+	o.storage = stg
+	o.state = state.NewState(stg, ipam)
 
 	return o
 }

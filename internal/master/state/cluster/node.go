@@ -20,7 +20,7 @@ package cluster
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/master/envs"
+
 	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 )
@@ -117,7 +117,7 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 			node.Status.Allocated.CPU += allocated.CPU
 			node.Status.Allocated.Storage += allocated.Storage
 
-			nm := model.NewNodeModel(context.Background(), envs.Get().GetStorage())
+			nm := model.NewNodeModel(context.Background(), cs.storage)
 			if err := nm.Set(n); err != nil {
 				return err
 			}
@@ -158,6 +158,6 @@ func handleNodeRelease(cs *ClusterState, nl *NodeLease) error {
 		n.Status.Allocated.Storage -= *nl.Request.Storage
 	}
 
-	nm := model.NewNodeModel(context.Background(), envs.Get().GetStorage())
+	nm := model.NewNodeModel(context.Background(), cs.storage)
 	return nm.Set(n)
 }

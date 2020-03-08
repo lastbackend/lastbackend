@@ -35,10 +35,16 @@ const (
 
 // Handler represent the http handler for namespace
 type Handler struct {
+	Config Config
+}
+
+type Config struct {
+	DomainExternal string
+	DomainInternal string
 }
 
 // NewNamespaceHandler will initialize the namespace resources endpoint
-func NewNamespaceHandler(r *mux.Router, mw middleware.Middleware) {
+func NewNamespaceHandler(r *mux.Router, mw middleware.Middleware, cfg Config) {
 
 	ctx := logger.NewContext(context.Background(), nil)
 	log := logger.WithContext(ctx)
@@ -46,6 +52,7 @@ func NewNamespaceHandler(r *mux.Router, mw middleware.Middleware) {
 	log.Infof("%s:> init namespace routes", logPrefix)
 
 	handler := &Handler{
+		Config: cfg,
 	}
 
 	r.Handle("/namespace", h.Handle(mw.Authenticate(handler.NamespaceListH))).Methods(http.MethodGet)
@@ -218,7 +225,7 @@ func (handler Handler) NamespaceCreateH(w http.ResponseWriter, r *http.Request) 
 	//ns.Meta.SetDefault()
 	//opts.SetNamespaceMeta(ns)
 	//
-	//internal, _ := envs.Get().GetDomain()
+	//internal, external := handler.Config.DomainInternal, handler.Config.DomainExternal
 	//ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", ns.Meta.Name, internal))
 	//
 	//if err := opts.SetNamespaceSpec(ns); err != nil {
@@ -227,7 +234,7 @@ func (handler Handler) NamespaceCreateH(w http.ResponseWriter, r *http.Request) 
 	//	return
 	//}
 	//
-	//internal, external := envs.Get().GetDomain()
+
 	//
 	//ns.Spec.Domain.Internal = internal
 	//
@@ -325,10 +332,8 @@ func (handler Handler) NamespaceUpdateH(w http.ResponseWriter, r *http.Request) 
 	//	return
 	//}
 	//
-	//internal, _ := envs.Get().GetDomain()
+	//internal, external := handler.Config.DomainInternal, handler.Config.DomainExternal
 	//ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", ns.Meta.Name, internal))
-	//
-	//internal, external := envs.Get().GetDomain()
 	//
 	//ns.Spec.Domain.Internal = internal
 	//

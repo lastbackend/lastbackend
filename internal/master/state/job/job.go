@@ -20,10 +20,9 @@ package job
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/master/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"time"
 
+	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
@@ -111,11 +110,11 @@ func handleJobStateDestroy(js *JobState, job *types.Job) (err error) {
 
 	log.V(logLevel).Debugf("%s:> handleJobStateDestroy: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 
-	tm := model.NewTaskModel(context.Background(), envs.Get().GetStorage())
+	tm := model.NewTaskModel(context.Background(), js.storage)
 
 	if len(js.task.list) == 0 {
 
-		jm := model.NewJobModel(context.Background(), envs.Get().GetStorage())
+		jm := model.NewJobModel(context.Background(), js.storage)
 
 		job.Status.State = types.StateDestroyed
 		job.Meta.Updated = time.Now()
@@ -148,7 +147,7 @@ func handleJobStateDestroyed(js *JobState, job *types.Job) (err error) {
 	log.V(logLevel).Debugf("%s:> handleJobStateDestroyed: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 
 	if len(js.task.list) > 0 {
-		tm := model.NewTaskModel(context.Background(), envs.Get().GetStorage())
+		tm := model.NewTaskModel(context.Background(), js.storage)
 		for _, task := range js.task.list {
 
 			if task.Status.State != types.StateDestroy {
@@ -174,8 +173,8 @@ func handleJobStateDestroyed(js *JobState, job *types.Job) (err error) {
 	job.Status.State = types.StateDestroyed
 	job.Meta.Updated = time.Now()
 
-	jm := model.NewJobModel(context.Background(), envs.Get().GetStorage())
-	nm := model.NewNamespaceModel(context.Background(), envs.Get().GetStorage())
+	jm := model.NewJobModel(context.Background(), js.storage)
+	nm := model.NewNamespaceModel(context.Background(), js.storage)
 
 	ns, err := nm.Get(job.Meta.Namespace)
 	if err != nil {
@@ -204,7 +203,7 @@ func jobTaskProvision(js *JobState) error {
 	// run task if no one task are currently running and there is at least one in queue
 	var (
 		limit = defaultConcurrentTaskLimit
-		jm    = model.NewJobModel(context.Background(), envs.Get().GetStorage())
+		jm    = model.NewJobModel(context.Background(), js.storage)
 	)
 
 	if len(js.task.queue) == 0 {
@@ -243,7 +242,7 @@ func jobTaskProvision(js *JobState) error {
 
 	t.Status.State = types.StateProvision
 
-	tm := model.NewTaskModel(context.Background(), envs.Get().GetStorage())
+	tm := model.NewTaskModel(context.Background(), js.storage)
 	if err := tm.Set(t); err != nil {
 		log.Errorf("%s:jobTaskProvision:> set task to provision state err: %s", logJobPrefix, err.Error())
 		return err

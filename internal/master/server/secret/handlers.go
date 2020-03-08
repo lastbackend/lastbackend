@@ -20,6 +20,7 @@ package secret
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -34,10 +35,15 @@ const (
 
 // Handler represent the http handler for secret
 type Handler struct {
+	Vault *types.Vault
+}
+
+type Config struct {
+	Vault *types.Vault
 }
 
 // NewSecretHandler will initialize the secret resources endpoint
-func NewSecretHandler(r *mux.Router, mw middleware.Middleware) {
+func NewSecretHandler(r *mux.Router, mw middleware.Middleware, cfg Config) {
 
 	ctx := logger.NewContext(context.Background(), nil)
 	log := logger.WithContext(ctx)
@@ -45,6 +51,7 @@ func NewSecretHandler(r *mux.Router, mw middleware.Middleware) {
 	log.Infof("%s:> init secret routes", logPrefix)
 
 	handler := &Handler{
+		Vault: cfg.Vault,
 	}
 
 	r.Handle("/namespace/{namespace}/secret", h.Handle(mw.Authenticate(handler.SecretCreateH))).Methods(http.MethodPost)

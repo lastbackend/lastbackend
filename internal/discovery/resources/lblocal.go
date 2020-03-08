@@ -20,12 +20,12 @@ package resources
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/discovery/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"net"
 	"regexp"
 	"time"
 
+	"github.com/lastbackend/lastbackend/internal/discovery/envs"
+	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"github.com/lastbackend/lastbackend/internal/util"
 	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/miekg/dns"

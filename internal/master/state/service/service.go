@@ -21,10 +21,9 @@ package service
 import (
 	"context"
 	"errors"
-	envs2 "github.com/lastbackend/lastbackend/internal/master/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"time"
 
+	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
@@ -187,7 +186,7 @@ func handleServiceStateDestroy(ss *ServiceState, svc *types.Service) (err error)
 		}
 	}
 
-	dm := model.NewDeploymentModel(context.Background(), envs2.Get().GetStorage())
+	dm := model.NewDeploymentModel(context.Background(), ss.storage)
 
 	for _, d := range ss.deployment.list {
 
@@ -224,7 +223,7 @@ func handleServiceStateDestroyed(ss *ServiceState, svc *types.Service) (err erro
 	svc.Meta.Updated = time.Now()
 
 	if len(ss.deployment.list) > 0 {
-		dm := model.NewDeploymentModel(context.Background(), envs2.Get().GetStorage())
+		dm := model.NewDeploymentModel(context.Background(), ss.storage)
 		for _, d := range ss.deployment.list {
 
 			if d.Status.State == types.StateDestroyed {
@@ -247,8 +246,8 @@ func handleServiceStateDestroyed(ss *ServiceState, svc *types.Service) (err erro
 		return nil
 	}
 
-	sm := model.NewServiceModel(context.Background(), envs2.Get().GetStorage())
-	nm := model.NewNamespaceModel(context.Background(), envs2.Get().GetStorage())
+	sm := model.NewServiceModel(context.Background(), ss.storage)
+	nm := model.NewNamespaceModel(context.Background(), ss.storage)
 
 	ns, err := nm.Get(svc.Meta.Namespace)
 	if err != nil {
@@ -318,7 +317,7 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 	// if deployment found for provision: check and update replicas
 	if d != nil {
 		if d.Spec.Replicas != svc.Spec.Replicas {
-			if err := deploymentScale(d, svc.Spec.Replicas); err != nil {
+			if err := deploymentScale(ss.storage, d, svc.Spec.Replicas); err != nil {
 				log.Errorf("%s:> deployment scale err: %s", logServicePrefix, err.Error())
 				return err
 			}
@@ -335,7 +334,7 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 
 		ss.deployment.index++
 
-		d, err := deploymentCreate(svc, ss.deployment.index)
+		d, err := deploymentCreate(ss.storage, svc, ss.deployment.index)
 		if err != nil {
 			ss.deployment.index--
 			log.Errorf("%s:> deployment create err: %s", logServicePrefix, err.Error())
@@ -377,7 +376,7 @@ func serviceStatusState(ss *ServiceState) (err error) {
 		}
 
 		ss.service.Meta.Updated = time.Now()
-		sm := model.NewServiceModel(context.Background(), envs2.Get().GetStorage())
+		sm := model.NewServiceModel(context.Background(), ss.storage)
 		if err := sm.Set(ss.service); err != nil {
 			log.Errorf("%s", err.Error())
 			return
@@ -387,7 +386,7 @@ func serviceStatusState(ss *ServiceState) (err error) {
 	}()
 
 	if ss.service.Status.State == types.StateDestroyed {
-		sm := model.NewServiceModel(context.Background(), envs2.Get().GetStorage())
+		sm := model.NewServiceModel(context.Background(), ss.storage)
 		if err := sm.Set(ss.service); err != nil {
 			log.Errorf("%s", err.Error())
 			return err

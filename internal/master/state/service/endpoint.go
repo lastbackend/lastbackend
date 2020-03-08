@@ -20,10 +20,9 @@ package service
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/master/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
@@ -64,10 +63,9 @@ func endpointRestore(ss *ServiceState) error {
 
 	var (
 		err error
-		stg = envs.Get().GetStorage()
 	)
 
-	em := model.NewEndpointModel(context.Background(), stg)
+	em := model.NewEndpointModel(context.Background(), ss.storage)
 	ss.endpoint.endpoint, err = em.Get(ss.service.Meta.Namespace, ss.service.Meta.Name)
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
@@ -130,11 +128,11 @@ func endpointAdd(ss *ServiceState, svc *types.Service) error {
 
 	var (
 		err error
-		em  = model.NewEndpointModel(context.Background(), envs.Get().GetStorage())
+		em  = model.NewEndpointModel(context.Background(), ss.storage)
 	)
 
 	if svc.Spec.Network.IP == types.EmptyString {
-		ip, err := envs.Get().GetIPAM().Lease()
+		ip, err := ss.ipam.Lease()
 		if err != nil {
 			log.Errorf("%s", err.Error())
 			return err
@@ -169,7 +167,7 @@ func endpointSet(ss *ServiceState, svc *types.Service) error {
 
 	var (
 		err error
-		em  = model.NewEndpointModel(context.Background(), envs.Get().GetStorage())
+		em  = model.NewEndpointModel(context.Background(), ss.storage)
 	)
 
 	opts := types.EndpointUpdateOptions{
@@ -190,7 +188,7 @@ func endpointSet(ss *ServiceState, svc *types.Service) error {
 
 func endpointDel(ss *ServiceState) error {
 
-	em := model.NewEndpointModel(context.Background(), envs.Get().GetStorage())
+	em := model.NewEndpointModel(context.Background(), ss.storage)
 	if ss.endpoint.endpoint != nil {
 		if err := em.Remove(ss.endpoint.endpoint); err != nil {
 			log.Errorf("%s> del endpoint error: %s", logEndpointPrefix, err.Error())
@@ -329,7 +327,7 @@ func endpointManifestAdd(ss *ServiceState) error {
 
 	var (
 		err error
-		em  = model.NewEndpointModel(context.Background(), envs.Get().GetStorage())
+		em  = model.NewEndpointModel(context.Background(), ss.storage)
 		pl  = make(map[string]*types.Pod)
 	)
 
@@ -382,7 +380,7 @@ func endpointManifestSet(ss *ServiceState) error {
 
 	var (
 		err error
-		em  = model.NewEndpointModel(context.Background(), envs.Get().GetStorage())
+		em  = model.NewEndpointModel(context.Background(), ss.storage)
 		pl  = make(map[string]*types.Pod)
 	)
 
@@ -410,7 +408,7 @@ func endpointManifestSet(ss *ServiceState) error {
 
 func endpointManifestDel(ss *ServiceState) error {
 
-	em := model.NewEndpointModel(context.Background(), envs.Get().GetStorage())
+	em := model.NewEndpointModel(context.Background(), ss.storage)
 
 	if ss.endpoint.manifest != nil {
 		if err := em.ManifestDel(em.ManifestGetSelfLink(ss.service.Meta.Namespace, ss.service.Meta.Name)); err != nil {

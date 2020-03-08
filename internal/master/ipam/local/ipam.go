@@ -20,7 +20,6 @@ package local
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/master/envs"
 	"net"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
@@ -122,15 +121,14 @@ func (i *IPAM) save() error {
 }
 
 // New IPAM object initializing and returning
-func New(cidr string) (*IPAM, error) {
+func New(stg storage.Storage, cidr string) (*IPAM, error) {
 
 	var (
 		skip = true
 		ipam = new(IPAM)
-		stg  = envs.Get().GetStorage()
 	)
 
-	ipam.storage = envs.Get().GetStorage()
+	ipam.storage = stg
 	ipam.leased = make(map[string]bool, 0)
 	ipam.released = make(map[string]bool, 0)
 

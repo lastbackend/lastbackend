@@ -21,12 +21,11 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/master/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"time"
 
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
@@ -121,7 +120,7 @@ func handleDeploymentStateCreated(ss *ServiceState, d *types.Deployment) error {
 
 	if !check {
 		d.Status.State = types.StateWaiting
-		dm := model.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
+		dm := model.NewDeploymentModel(context.Background(), ss.storage)
 		if err := dm.Update(d); err != nil {
 			log.Errorf("%s:> handle deployment create, deps update: %s, err: %s", logDeploymentPrefix, d.SelfLink(), err.Error())
 			return err
@@ -132,7 +131,7 @@ func handleDeploymentStateCreated(ss *ServiceState, d *types.Deployment) error {
 	if err := deploymentCheckSelectors(ss, d); err != nil {
 		d.Status.State = types.StateError
 		d.Status.Message = err.Error()
-		dm := model.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
+		dm := model.NewDeploymentModel(context.Background(), ss.storage)
 		if err := dm.Update(d); err != nil {
 			log.Errorf("%s:> handle deployment create, deps update: %s, err: %s", logDeploymentPrefix, d.SelfLink(), err.Error())
 			return err
@@ -288,11 +287,11 @@ func handleDeploymentStateDestroyed(ss *ServiceState, d *types.Deployment) error
 		}
 
 		d.Status.State = types.StateDestroy
-		dm := model.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
+		dm := model.NewDeploymentModel(context.Background(), ss.storage)
 		return dm.Update(d)
 	}
 
-	if err := deploymentRemove(d); err != nil {
+	if err := deploymentRemove(ss.storage, d); err != nil {
 		log.Errorf("%s", err.Error())
 		return err
 	}
@@ -310,7 +309,7 @@ func deploymentCheckDependencies(ss *ServiceState, d *types.Deployment) (bool, e
 
 	var (
 		ctx  = context.Background()
-		stg  = envs.Get().GetStorage()
+		stg  = ss.storage
 		vm   = model.NewVolumeModel(ctx, stg)
 		sm   = model.NewSecretModel(ctx, stg)
 		cm   = model.NewConfigModel(ctx, stg)
@@ -458,8 +457,7 @@ func deploymentCheckSelectors(ss *ServiceState, d *types.Deployment) (err error)
 
 	var (
 		ctx = context.Background()
-		stg = envs.Get().GetStorage()
-		vm  = model.NewVolumeModel(ctx, stg)
+		vm  = model.NewVolumeModel(ctx, ss.storage)
 		vc  = make(map[string]string, 0)
 	)
 
@@ -546,7 +544,7 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 
 	defer func() {
 		if err == nil {
-			err = deploymentUpdate(d, t)
+			err = deploymentUpdate(ss.storage, d, t)
 		}
 	}()
 
@@ -558,7 +556,7 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 			types.StateProvision,
 			types.StateReady,
 		}
-		pm = model.NewPodModel(context.Background(), envs.Get().GetStorage())
+		pm = model.NewPodModel(context.Background(), ss.storage)
 	)
 
 	pods, ok := ss.pod.list[d.SelfLink().String()]
@@ -586,7 +584,7 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 					}
 
 					if m == nil {
-						if err = podManifestPut(p); err != nil {
+						if err = podManifestPut(ss.storage, p); err != nil {
 							return err
 						}
 					}
@@ -615,7 +613,7 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 
 		if d.Spec.Replicas > total {
 			log.V(logLevel).Debugf("create additional replica: %d -> %d", total, d.Spec.Replicas)
-			p, err := podCreate(d)
+			p, err := podCreate(ss.storage, d)
 			if err != nil {
 				log.Errorf("%s", err.Error())
 				return err
@@ -656,9 +654,9 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 	return nil
 }
 
-func deploymentCreate(svc *types.Service, version int) (*types.Deployment, error) {
+func deploymentCreate(stg storage.Storage, svc *types.Service, version int) (*types.Deployment, error) {
 
-	dm := model.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
+	dm := model.NewDeploymentModel(context.Background(), stg)
 	d, err := dm.Create(svc, fmt.Sprintf("v%d", version))
 	if err != nil {
 		return nil, err
@@ -667,9 +665,9 @@ func deploymentCreate(svc *types.Service, version int) (*types.Deployment, error
 	return d, nil
 }
 
-func deploymentUpdate(d *types.Deployment, timestamp time.Time) error {
+func deploymentUpdate(stg storage.Storage, d *types.Deployment, timestamp time.Time) error {
 	if timestamp.Before(d.Meta.Updated) {
-		dm := model.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
+		dm := model.NewDeploymentModel(context.Background(), stg)
 		if err := dm.Update(d); err != nil {
 			log.Errorf("%s", err.Error())
 			return err
@@ -685,7 +683,7 @@ func deploymentDestroy(ss *ServiceState, d *types.Deployment) (err error) {
 
 	defer func() {
 		if err == nil {
-			err = deploymentUpdate(d, t)
+			err = deploymentUpdate(ss.storage, d, t)
 		}
 	}()
 
@@ -725,8 +723,8 @@ func deploymentDestroy(ss *ServiceState, d *types.Deployment) (err error) {
 	return nil
 }
 
-func deploymentRemove(d *types.Deployment) error {
-	dm := model.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
+func deploymentRemove(stg storage.Storage, d *types.Deployment) error {
+	dm := model.NewDeploymentModel(context.Background(), stg)
 	if err := dm.Remove(d); err != nil {
 		return err
 	}
@@ -734,21 +732,21 @@ func deploymentRemove(d *types.Deployment) error {
 	return nil
 }
 
-func deploymentScale(d *types.Deployment, replicas int) error {
+func deploymentScale(stg storage.Storage, d *types.Deployment, replicas int) error {
 	d.Status.State = types.StateProvision
 	d.Spec.Replicas = replicas
-	dm := model.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
+	dm := model.NewDeploymentModel(context.Background(), stg)
 	return dm.Update(d)
 }
 
-func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err error) {
+func deploymentStatusState(stg storage.Storage, d *types.Deployment, pl map[string]*types.Pod) (err error) {
 
 	log.V(logLevel).Debugf("%s:> deploymentStatusState: start: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	t := d.Meta.Updated
 	defer func() {
 		if err == nil {
-			err = deploymentUpdate(d, t)
+			err = deploymentUpdate(stg, d, t)
 		}
 	}()
 

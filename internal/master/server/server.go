@@ -38,6 +38,7 @@ import (
 	"github.com/lastbackend/lastbackend/internal/master/server/task"
 	"github.com/lastbackend/lastbackend/internal/master/server/volume"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
+	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/internal/util/http"
 	"github.com/lastbackend/lastbackend/internal/util/http/cors"
 	"github.com/spf13/viper"
@@ -82,20 +83,23 @@ func NewServer(stg storage.Storage, v *viper.Viper) *HttpServer {
 
 	mw := middleware.New(stg, v)
 
-	cluster.NewClusterHandler(r, mw)
+	cluster.NewClusterHandler(r, mw, cluster.Config{ClusterName: v.GetString("name"), ClusterDescription: v.GetString("description")})
 	config.NewConfigHandler(r, mw)
 	deployment.NewDeploymentHandler(r, mw)
 	discovery.NewDiscoveryHandler(r, mw)
 	events.NewEventHandler(r, mw)
 	exporter.NewExporterHandler(r, mw)
 	ingress.NewIngressHandler(r, mw)
-	job.NewJobHandler(r, mw)
-	namespace.NewNamespaceHandler(r, mw)
+	job.NewJobHandler(r, mw, job.Config{SecretToken: v.GetString("security.token")})
+	namespace.NewNamespaceHandler(r, mw, namespace.Config{DomainInternal: v.GetString("domain.internal"), DomainExternal: v.GetString("domain.external")})
 	node.NewNodeHandler(r, mw)
 	pod.NewPodHandler(r, mw)
 	route.NewRouteHandler(r, mw)
-	secret.NewSecretHandler(r, mw)
-	service.NewServiceHandler(r, mw)
+	secret.NewSecretHandler(r, mw, secret.Config{Vault: &types.Vault{
+		Endpoint: v.GetString("vault.endpoint"),
+		Token:    v.GetString("vault.token"),
+	}})
+	service.NewServiceHandler(r, mw, service.Config{SecretToken: v.GetString("security.token")})
 	task.NewTaskHandler(r, mw)
 	volume.NewVolumeHandler(r, mw)
 

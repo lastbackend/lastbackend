@@ -35,10 +35,15 @@ const (
 
 // Handler represent the http handler for job
 type Handler struct {
+	Config Config
+}
+
+type Config struct {
+	SecretToken string
 }
 
 // NewJobHandler will initialize the job resources endpoint
-func NewJobHandler(r *mux.Router, mw middleware.Middleware) {
+func NewJobHandler(r *mux.Router, mw middleware.Middleware, cfg Config) {
 
 	ctx := logger.NewContext(context.Background(), nil)
 	log := logger.WithContext(ctx)
@@ -46,6 +51,7 @@ func NewJobHandler(r *mux.Router, mw middleware.Middleware) {
 	log.Infof("%s:> init job routes", logPrefix)
 
 	handler := &Handler{
+		Config: cfg,
 	}
 
 	r.Handle("/namespace/{namespace}/job", h.Handle(mw.Authenticate(handler.JobCreateH))).Methods(http.MethodPost)
@@ -625,7 +631,7 @@ func (handler Handler) JobLogsH(w http.ResponseWriter, r *http.Request) {
 	//}
 	//
 	//req.WithContext(cx)
-	//req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", envs.Get().GetAccessToken()))
+	//req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", handler.Config.SecretToken))
 	//
 	//res, err := http.DefaultClient.Do(req)
 	//if err != nil {
