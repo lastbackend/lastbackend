@@ -20,19 +20,16 @@ package job
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/master/envs"
-	"github.com/lastbackend/lastbackend/internal/master/state/cluster"
-
-	"github.com/lastbackend/lastbackend/internal/master/state/job/hook/hook"
-
-	"github.com/lastbackend/lastbackend/internal/master/state/job/provider/provider"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"sync"
 	"time"
 
+	"github.com/lastbackend/lastbackend/internal/master/state/cluster"
 	h "github.com/lastbackend/lastbackend/internal/master/state/job/hook"
+	"github.com/lastbackend/lastbackend/internal/master/state/job/hook/hook"
 	p "github.com/lastbackend/lastbackend/internal/master/state/job/provider"
-
+	"github.com/lastbackend/lastbackend/internal/master/state/job/provider/provider"
+	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
@@ -44,6 +41,8 @@ const (
 
 type JobState struct {
 	lock sync.Mutex
+
+	storage storage.Storage
 
 	cluster *cluster.ClusterState
 	job     *types.Job
@@ -90,11 +89,10 @@ func (js *JobState) Restore() error {
 
 	var (
 		err error
-		stg = envs.Get().GetStorage()
 	)
 
 	// Get all pods
-	pm := model.NewPodModel(context.Background(), stg)
+	pm := model.NewPodModel(context.Background(), js.storage)
 	pl, err := pm.ListByJob(js.job.Meta.Namespace, js.job.Meta.Name)
 	if err != nil {
 		log.Errorf("%s:restore:> get pod map error: %v", logPrefix, err)
@@ -113,7 +111,7 @@ func (js *JobState) Restore() error {
 	js.lock.Unlock()
 
 	// Get all tasks
-	tm := model.NewTaskModel(context.Background(), stg)
+	tm := model.NewTaskModel(context.Background(), js.storage)
 	tl, err := tm.ListByJob(js.job.Meta.Namespace, js.job.Meta.Name)
 	if err != nil {
 		log.Errorf("%s:restore:> get task map error: %v", logPrefix, err)
@@ -307,7 +305,7 @@ func (js *JobState) Provider() {
 					continue
 				}
 
-				task, err := taskCreate(js.job, manifest)
+				task, err := taskCreate(js.storage, js.job, manifest)
 				if err != nil {
 					log.Errorf("%s:> create task err: %v", logPrefix, err)
 					continue
@@ -358,10 +356,11 @@ func (js *JobState) Hook(task *types.Task) error {
 	return nil
 }
 
-func NewJobState(cs *cluster.ClusterState, job *types.Job) *JobState {
+func NewJobState(stg storage.Storage, cs *cluster.ClusterState, job *types.Job) *JobState {
 
 	var js = new(JobState)
 
+	js.storage = stg
 	js.job = job
 	js.cluster = cs
 

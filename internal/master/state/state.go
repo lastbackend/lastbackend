@@ -20,6 +20,7 @@ package state
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 )
 
 const (
@@ -29,14 +30,19 @@ const (
 
 // State main structure
 type State struct {
+	storage storage.Storage
+
 	Namespace *NamespaceController
 	Service   *ServiceController
 }
 
 // NewState function returns new instance of state
-func NewState(ctx context.Context) *State {
+func NewState(ctx context.Context, stg storage.Storage) *State {
 
 	var state = new(State)
+
+	state.storage = stg
+
 	state.Namespace = NewNamespaceController(ctx)
 	state.Service = NewServiceController(ctx)
 

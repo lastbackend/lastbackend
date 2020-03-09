@@ -20,13 +20,14 @@ package service
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/master/envs"
-	"github.com/lastbackend/lastbackend/internal/master/state/cluster"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
+	"github.com/lastbackend/lastbackend/internal/master/ipam"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/lastbackend/lastbackend/internal/master/state/cluster"
+	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
@@ -38,6 +39,9 @@ const (
 
 type ServiceState struct {
 	lock sync.Mutex
+
+	storage storage.Storage
+	ipam    ipam.IPAM
 
 	cluster  *cluster.ClusterState
 	service  *types.Service
@@ -73,11 +77,10 @@ func (ss *ServiceState) Restore() error {
 
 	var (
 		err error
-		stg = envs.Get().GetStorage()
 	)
 
 	// Get all pods
-	pm := model.NewPodModel(context.Background(), stg)
+	pm := model.NewPodModel(context.Background(), ss.storage)
 	pl, err := pm.ListByService(ss.service.Meta.Namespace, ss.service.Meta.Name)
 	if err != nil {
 		log.Errorf("%s:restore:> get pod map error: %v", logPrefix, err)
@@ -98,7 +101,7 @@ func (ss *ServiceState) Restore() error {
 	}
 
 	// Get all deployments
-	dm := model.NewDeploymentModel(context.Background(), stg)
+	dm := model.NewDeploymentModel(context.Background(), ss.storage)
 	dl, err := dm.ListByService(ss.service.Meta.Namespace, ss.service.Meta.Name)
 	if err != nil {
 		log.Errorf("%s:restore:> get deployment map error: %v", logPrefix, err)
@@ -322,10 +325,12 @@ func (ss *ServiceState) CheckDeps(dep types.StatusDependency) {
 	}
 }
 
-func NewServiceState(cs *cluster.ClusterState, s *types.Service) *ServiceState {
+func NewServiceState(stg storage.Storage, ipam ipam.IPAM, cs *cluster.ClusterState, s *types.Service) *ServiceState {
 
 	var ss = new(ServiceState)
 
+	ss.storage = stg
+	ss.ipam = ipam
 	ss.service = s
 	ss.cluster = cs
 

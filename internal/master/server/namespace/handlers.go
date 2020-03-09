@@ -216,7 +216,7 @@ func (handler Handler) NamespaceCreateH(w http.ResponseWriter, r *http.Request) 
 	//ns.Meta.SetDefault()
 	//opts.SetNamespaceMeta(ns)
 	//
-	//internal, _ := envs.Get().GetDomain()
+	//internal, external := handler.Config.DomainInternal, handler.Config.DomainExternal
 	//ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", ns.Meta.Name, internal))
 	//
 	//if err := opts.SetNamespaceSpec(ns); err != nil {
@@ -225,7 +225,7 @@ func (handler Handler) NamespaceCreateH(w http.ResponseWriter, r *http.Request) 
 	//	return
 	//}
 	//
-	//internal, external := envs.Get().GetDomain()
+
 	//
 	//ns.Spec.Domain.Internal = internal
 	//
@@ -323,10 +323,8 @@ func (handler Handler) NamespaceUpdateH(w http.ResponseWriter, r *http.Request) 
 	//	return
 	//}
 	//
-	//internal, _ := envs.Get().GetDomain()
+	//internal, external := handler.Config.DomainInternal, handler.Config.DomainExternal
 	//ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", ns.Meta.Name, internal))
-	//
-	//internal, external := envs.Get().GetDomain()
 	//
 	//ns.Spec.Domain.Internal = internal
 	//

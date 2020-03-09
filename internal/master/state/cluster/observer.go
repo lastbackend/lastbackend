@@ -20,8 +20,9 @@ package cluster
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/master/envs"
-	"github.com/lastbackend/lastbackend/internal/master/ipam/ipam"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
+
+	"github.com/lastbackend/lastbackend/internal/master/ipam"
 	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/tools/log"
@@ -34,6 +35,9 @@ const (
 
 // ClusterState is cluster current state struct
 type ClusterState struct {
+	storage storage.Storage
+	ipam    ipam.IPAM
+
 	cluster *types.Cluster
 
 	ingress struct {
@@ -108,14 +112,14 @@ func (cs *ClusterState) Loop() error {
 	var err error
 
 	// Get cluster info
-	cm := model.NewClusterModel(context.Background(), envs.Get().GetStorage())
+	cm := model.NewClusterModel(context.Background(), cs.storage)
 	cs.cluster, err = cm.Get()
 	if err != nil {
 		return err
 	}
 
 	// Get all nodes in cluster
-	nm := model.NewNodeModel(context.Background(), envs.Get().GetStorage())
+	nm := model.NewNodeModel(context.Background(), cs.storage)
 	nl, err := nm.List()
 	if err != nil {
 		return err
@@ -129,7 +133,7 @@ func (cs *ClusterState) Loop() error {
 	_ = clusterStatusState(cs)
 
 	// Get all ingress servers in cluster
-	im := model.NewIngressModel(context.Background(), envs.Get().GetStorage())
+	im := model.NewIngressModel(context.Background(), cs.storage)
 	il, err := im.List()
 	if err != nil {
 		return err
@@ -141,7 +145,7 @@ func (cs *ClusterState) Loop() error {
 	}
 
 	// Get all routes in cluster
-	rm := model.NewRouteModel(context.Background(), envs.Get().GetStorage())
+	rm := model.NewRouteModel(context.Background(), cs.storage)
 	rl, err := rm.List()
 	if err != nil {
 		return err
@@ -165,7 +169,7 @@ func (cs *ClusterState) watchNode(ctx context.Context, rev *int64) {
 		p = make(chan types.NodeEvent)
 	)
 
-	nm := model.NewNodeModel(ctx, envs.Get().GetStorage())
+	nm := model.NewNodeModel(ctx, cs.storage)
 
 	go func() {
 		for {
@@ -197,7 +201,7 @@ func (cs *ClusterState) watchIngress(ctx context.Context, rev *int64) {
 		p = make(chan types.IngressEvent)
 	)
 
-	nm := model.NewIngressModel(ctx, envs.Get().GetStorage())
+	nm := model.NewIngressModel(ctx, cs.storage)
 
 	go func() {
 		for {
@@ -228,7 +232,7 @@ func (cs *ClusterState) watchRoute(ctx context.Context, rev *int64) {
 		p = make(chan types.RouteEvent)
 	)
 
-	rm := model.NewRouteModel(ctx, envs.Get().GetStorage())
+	rm := model.NewRouteModel(ctx, cs.storage)
 
 	go func() {
 		for {
@@ -310,7 +314,7 @@ func (cs *ClusterState) releaseSync(opts NodeLeaseOptions) (*types.Node, error) 
 
 // IPAM management
 func (cs *ClusterState) IPAM() ipam.IPAM {
-	return envs.Get().GetIPAM()
+	return cs.ipam
 }
 
 func (cs *ClusterState) SetNode(n *types.Node) {
@@ -430,9 +434,12 @@ func (cs *ClusterState) VolumeRelease(v *types.Volume) (*types.Node, error) {
 }
 
 // NewClusterState returns new cluster state instance
-func NewClusterState() *ClusterState {
+func NewClusterState(stg storage.Storage, ipam ipam.IPAM) *ClusterState {
 
 	var cs = new(ClusterState)
+
+	cs.storage = stg
+	cs.ipam = ipam
 
 	cs.cluster = new(types.Cluster)
 

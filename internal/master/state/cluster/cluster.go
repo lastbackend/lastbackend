@@ -20,7 +20,7 @@ package cluster
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/master/envs"
+
 	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/tools/log"
@@ -46,7 +46,7 @@ func clusterStatusState(cs *ClusterState) error {
 		cs.cluster.Status.Capacity.Pods += n.Status.Capacity.Pods
 	}
 
-	if err := model.NewClusterModel(context.Background(), envs.Get().GetStorage()).Set(cs.cluster); err != nil {
+	if err := model.NewClusterModel(context.Background(), cs.storage).Set(cs.cluster); err != nil {
 		log.Errorf("%s: cluster update status error: %s", logPrefix, err.Error())
 		return err
 	}

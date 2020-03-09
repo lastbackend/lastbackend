@@ -34,10 +34,16 @@ const (
 
 // Handler represent the http handler for cluster
 type Handler struct {
+	Config Config
+}
+
+type Config struct {
+	ClusterName        string
+	ClusterDescription string
 }
 
 // NewClusterHandler will initialize the cluster resources endpoint
-func NewClusterHandler(r *mux.Router, mw middleware.Middleware) {
+func NewClusterHandler(r *mux.Router, mw middleware.Middleware, cfg Config) {
 
 	ctx := logger.NewContext(context.Background(), nil)
 	log := logger.WithContext(ctx)
@@ -45,6 +51,7 @@ func NewClusterHandler(r *mux.Router, mw middleware.Middleware) {
 	log.Infof("%s:> init cluster routes", logPrefix)
 
 	handler := &Handler{
+		Config: cfg,
 	}
 
 	r.Handle("/cluster", h.Handle(mw.Authenticate(handler.ClusterInfoH))).Methods(http.MethodGet)

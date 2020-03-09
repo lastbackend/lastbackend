@@ -20,7 +20,9 @@ package runtime
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/master/envs"
+	"github.com/lastbackend/lastbackend/internal/master/cache"
+	"github.com/lastbackend/lastbackend/internal/master/ipam"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/system"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
@@ -33,21 +35,27 @@ type Runtime struct {
 	ctx      context.Context
 	process  *system.Process
 	observer *Observer
+	cache    *cache.Cache
+	storage  storage.Storage
+	ipam     ipam.IPAM
 	active   bool
 }
 
-func NewRuntime(ctx context.Context) *Runtime {
+func NewRuntime(ctx context.Context, stg storage.Storage, ipam ipam.IPAM, cache *cache.Cache) *Runtime {
 	r := new(Runtime)
 
 	r.ctx = ctx
 	r.process = new(system.Process)
-	_, err := r.process.Register(ctx, types.KindController, envs.Get().GetStorage())
+	_, err := r.process.Register(ctx, types.KindController, stg)
 	if err != nil {
 		log.Error(err)
 		return nil
 	}
 
-	r.observer = NewObserver()
+	r.observer = NewObserver(stg, ipam)
+	r.storage = stg
+	r.ipam = ipam
+	r.cache = cache
 
 	return r
 }

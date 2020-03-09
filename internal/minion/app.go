@@ -21,7 +21,6 @@ package minion
 import (
 	"context"
 	"errors"
-
 	"github.com/lastbackend/lastbackend/tools/logger"
 	"github.com/spf13/viper"
 )
@@ -34,10 +33,10 @@ func New(v *viper.Viper) (*App, error) {
 
 	loggerOpts := logger.Configuration{}
 	loggerOpts.EnableConsole = true
+
 	if v.GetBool("debug") {
 		loggerOpts.ConsoleLevel = logger.Debug
 	}
-
 	if err := logger.NewLogger(loggerOpts); err != nil {
 		return nil, errors.New("logger initialize failed")
 	}
@@ -64,13 +63,10 @@ func (app *App) Stop() {
 
 func (app *App) init() error {
 
-	if !app.v.IsSet("storage") {
-		return errors.New("storage not configured")
-	}
-
 	return nil
 }
 
+//
 //// Daemon - run node daemon
 //func Daemon(v *viper.Viper) {
 //

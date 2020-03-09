@@ -21,12 +21,12 @@ package job
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/master/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"strings"
 	"time"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/internal/util/generator"
 	"github.com/lastbackend/lastbackend/tools/log"
@@ -82,7 +82,7 @@ func handleTaskStateCreated(js *JobState, task *types.Task) error {
 		task.Status.State = types.StateError
 		task.Status.Error = true
 		task.Status.Message = err.Error()
-		tm := model.NewTaskModel(context.Background(), envs.Get().GetStorage())
+		tm := model.NewTaskModel(context.Background(), js.storage)
 		if err := tm.Set(task); err != nil {
 			log.Errorf("%s:handleTaskStateCreated:> handle task create, deps update: %s, err: %s", logTaskPrefix, task.SelfLink(), err.Error())
 			return err
@@ -192,7 +192,7 @@ func handleTaskStateDestroyed(js *JobState, task *types.Task) error {
 		}
 		return nil
 	}
-	if err := taskRemove(task); err != nil {
+	if err := taskRemove(js.storage, task); err != nil {
 		log.Errorf("%s:handleTaskStateDestroyed:> remove task err: %s", logTaskPrefix, err.Error())
 		return err
 	}
@@ -201,12 +201,11 @@ func handleTaskStateDestroyed(js *JobState, task *types.Task) error {
 }
 
 // taskCheckSelectors function - handles provided selectors to match nodes
-func taskCheckSelectors(_ *JobState, task *types.Task) (err error) {
+func taskCheckSelectors(js *JobState, task *types.Task) (err error) {
 
 	var (
 		ctx = context.Background()
-		stg = envs.Get().GetStorage()
-		vm  = model.NewVolumeModel(ctx, stg)
+		vm  = model.NewVolumeModel(ctx, js.storage)
 		vc  = make(map[string]string, 0)
 	)
 
@@ -283,9 +282,9 @@ func taskCheckSelectors(_ *JobState, task *types.Task) (err error) {
 
 // taskCreate - create a new task from current job
 // usually used by cron or other time repeatable jobs
-func taskCreate(job *types.Job, mf *types.TaskManifest) (*types.Task, error) {
+func taskCreate(stg storage.Storage, job *types.Job, mf *types.TaskManifest) (*types.Task, error) {
 
-	tm := model.NewTaskModel(context.Background(), envs.Get().GetStorage())
+	tm := model.NewTaskModel(context.Background(), stg)
 
 	task := new(types.Task)
 	task.Meta.SetDefault()
@@ -334,7 +333,7 @@ func taskQueue(js *JobState, task *types.Task) error {
 
 		task.Status.State = types.StateQueued
 
-		tm := model.NewTaskModel(context.Background(), envs.Get().GetStorage())
+		tm := model.NewTaskModel(context.Background(), js.storage)
 		if err := tm.Set(task); err != nil {
 			log.Errorf("%s:taskQueue:> set task err: %s", logTaskPrefix, err.Error())
 			return err
@@ -366,7 +365,7 @@ func taskProvision(js *JobState, task *types.Task) (err error) {
 
 	var (
 		t  = task.Meta.Updated
-		pm = model.NewPodModel(context.Background(), envs.Get().GetStorage())
+		pm = model.NewPodModel(context.Background(), js.storage)
 	)
 
 	// set a task as provision if it is not right now
@@ -376,7 +375,7 @@ func taskProvision(js *JobState, task *types.Task) (err error) {
 		task.Status.State = types.StateProvision
 		task.Meta.Updated = time.Now()
 
-		if err := taskUpdate(task, t); err != nil {
+		if err := taskUpdate(js.storage, task, t); err != nil {
 			log.Errorf("%s:taskProvision:> set task err: %s", logTaskPrefix, err.Error())
 			return err
 		}
@@ -388,7 +387,7 @@ func taskProvision(js *JobState, task *types.Task) (err error) {
 		task.Status.State = types.StateQueued
 		task.Meta.Updated = time.Now()
 
-		if err := taskUpdate(task, t); err != nil {
+		if err := taskUpdate(js.storage, task, t); err != nil {
 			log.Errorf("%s:taskProvision:> set task err: %s", logTaskPrefix, err.Error())
 			return err
 		}
@@ -417,7 +416,7 @@ func taskProvision(js *JobState, task *types.Task) (err error) {
 		}
 
 		if m == nil {
-			if err := podManifestPut(p); err != nil {
+			if err := podManifestPut(js.storage, p); err != nil {
 				return err
 			}
 		}
@@ -428,7 +427,7 @@ func taskProvision(js *JobState, task *types.Task) (err error) {
 		// then create and move task from queue to active
 		// ==============================================
 
-		pod, err := podCreate(task)
+		pod, err := podCreate(js.storage, task)
 		if err != nil {
 			log.Errorf("%s:taskProvision:> creates new pod based on task spec err:", err.Error())
 			return err
@@ -448,7 +447,7 @@ func taskDestroy(js *JobState, task *types.Task) (err error) {
 	t := task.Meta.Updated
 	defer func() {
 		if err == nil {
-			err = taskUpdate(task, t)
+			err = taskUpdate(js.storage, task, t)
 		}
 	}()
 
@@ -480,10 +479,10 @@ func taskDestroy(js *JobState, task *types.Task) (err error) {
 	return nil
 }
 
-func taskUpdate(task *types.Task, timestamp time.Time) error {
+func taskUpdate(stg storage.Storage, task *types.Task, timestamp time.Time) error {
 
 	if timestamp.Before(task.Meta.Updated) {
-		tm := model.NewTaskModel(context.Background(), envs.Get().GetStorage())
+		tm := model.NewTaskModel(context.Background(), stg)
 		if err := tm.Set(task); err != nil {
 			log.Errorf("%s", err.Error())
 			return err
@@ -493,8 +492,8 @@ func taskUpdate(task *types.Task, timestamp time.Time) error {
 	return nil
 }
 
-func taskRemove(task *types.Task) error {
-	tm := model.NewTaskModel(context.Background(), envs.Get().GetStorage())
+func taskRemove(stg storage.Storage, task *types.Task) error {
+	tm := model.NewTaskModel(context.Background(), stg)
 	if err := tm.Remove(task); err != nil {
 		return err
 	}
@@ -506,7 +505,7 @@ func taskFinish(js *JobState, task *types.Task) (err error) {
 	t := task.Meta.Updated
 	defer func() {
 		if err == nil {
-			err = taskUpdate(task, t)
+			err = taskUpdate(js.storage, task, t)
 		}
 	}()
 
@@ -551,7 +550,7 @@ func taskFinish(js *JobState, task *types.Task) (err error) {
 		break
 	}
 
-	if err = taskUpdate(task, t); err != nil {
+	if err = taskUpdate(js.storage, task, t); err != nil {
 		return err
 	}
 
@@ -571,7 +570,7 @@ func taskStatusState(js *JobState, t *types.Task, p *types.Pod) (err error) {
 		}
 
 		if err == nil {
-			if err := taskUpdate(t, u); err != nil {
+			if err := taskUpdate(js.storage, t, u); err != nil {
 				log.V(logLevel).Infof("%s:task_status_state:> update task %s err: %s", logTaskPrefix, t.Meta.Name, err.Error())
 			}
 		}

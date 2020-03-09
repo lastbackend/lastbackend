@@ -20,7 +20,6 @@ package storage
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/badger"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/etcd"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/etcd/v3"
@@ -67,10 +66,6 @@ type Storage interface {
 }
 
 func Get(v *viper.Viper) (Storage, error) {
-
-	if !v.IsSet("storage.driver") {
-		return nil, errors.New("storage driver not set")
-	}
 
 	switch v.GetString("storage.driver") {
 	case "mock":

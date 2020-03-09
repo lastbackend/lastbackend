@@ -45,7 +45,7 @@ func (sc *ServiceController) loop() {
 func (sc *ServiceController) List(ctx context.Context) []*types.Service {
 
 	log := logger.WithContext(ctx)
-	log.Debugf("%s:list:> get services list", logPrefix)
+	log.Debugf("%s:list:> get service list", logPrefix)
 
 	items := make([]*types.Service, len(sc.items))
 	for _, item := range sc.items {
@@ -59,7 +59,7 @@ func (sc *ServiceController) List(ctx context.Context) []*types.Service {
 func (sc *ServiceController) Map(ctx context.Context, filter *ServiceControllerOpts) map[types.ServiceSelfLink]*types.Service {
 
 	log := logger.WithContext(ctx)
-	log.Debugf("%s:list:> get namespace list", logPrefix)
+	log.Debugf("%s:service:> get service map", logPrefix)
 
 	return sc.items
 }
@@ -67,7 +67,7 @@ func (sc *ServiceController) Map(ctx context.Context, filter *ServiceControllerO
 // Set service to state
 func (sc *ServiceController) Set(ctx context.Context, mf types.ServiceManifest) (*types.Service, error) {
 	log := logger.WithContext(ctx)
-	log.Debugf("%s:list:> set service", logPrefix)
+	log.Debugf("%s:set:> set service", logPrefix)
 
 	// TODO: fill service manifest set logic
 

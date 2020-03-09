@@ -22,17 +22,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/master/envs"
-	"github.com/lastbackend/lastbackend/internal/master/state/cluster"
-	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/util/generator"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 
+	"github.com/lastbackend/lastbackend/internal/master/state/cluster"
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/util/generator"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 )
 
 func testTaskObserver(t *testing.T, name, werr string, wjs *JobState, js *JobState, task *types.Task) {

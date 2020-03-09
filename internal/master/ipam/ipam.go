@@ -19,10 +19,19 @@
 package ipam
 
 import (
-	"github.com/lastbackend/lastbackend/internal/master/ipam/ipam"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
+	"net"
+
 	"github.com/lastbackend/lastbackend/internal/master/ipam/local"
 )
 
-func New(cidr string) (ipam.IPAM, error) {
-	return local.New(cidr)
+type IPAM interface {
+	Lease() (*net.IP, error)
+	Release(ip *net.IP) error
+	Available() int
+	Reserved() int
+}
+
+func New(stg storage.Storage, cidr string) (IPAM, error) {
+	return local.New(stg, cidr)
 }
