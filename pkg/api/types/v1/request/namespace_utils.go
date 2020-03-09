@@ -21,6 +21,7 @@ package request
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/internal/util/validator"
 	"io"
 	"io/ioutil"
@@ -30,6 +31,21 @@ type NamespaceRequest struct{}
 
 func (NamespaceRequest) Manifest() *NamespaceManifest {
 	return new(NamespaceManifest)
+}
+
+func (NamespaceRequest) ReadManifest(reader io.Reader) (types.NamespaceResourceManifest, *errors.Err) {
+
+	if reader == nil {
+		err := errors.New("data body can not be null")
+		return nil, errors.New("namespace").IncorrectJSON(err)
+	}
+
+	_, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, errors.New("namespace").Unknown(err)
+	}
+
+	return nil, nil
 }
 
 func (NamespaceRequest) ApplyManifest() *NamespaceApplyManifest {
@@ -56,28 +72,35 @@ func (s *NamespaceManifest) Validate() *errors.Err {
 	return nil
 }
 
-func (s *NamespaceManifest) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (s *NamespaceManifest) DecodeAndValidate(reader io.Reader) (*types.NamespaceManifest, *errors.Err) {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
-		return errors.New("namespace").IncorrectJSON(err)
+		return nil, errors.New("namespace").IncorrectJSON(err)
 	}
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return errors.New("namespace").Unknown(err)
+		return nil, errors.New("namespace").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
-		return errors.New("namespace").IncorrectJSON(err)
+		return nil, errors.New("namespace").IncorrectJSON(err)
 	}
 
 	if err := s.Validate(); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	ns := new(types.NamespaceManifest)
+
+	s.SetNamespaceMeta(ns)
+	if err := s.SetNamespaceSpec(ns); err != nil {
+		return nil, errors.New("namespace").IncorrectJSON(err)
+	}
+
+	return ns, nil
 }
 
 func (s *NamespaceApplyManifest) Init() {

@@ -39,6 +39,15 @@ type SelfLink interface {
 	Name() string
 }
 
+func NewSelfLink(namespace, kind, name string) SelfLink {
+	switch kind {
+	case KindNamespace:
+		return NewNamespaceSelfLink(name)
+	}
+
+	return nil
+}
+
 type SelfLinkParent struct {
 	Kind     string
 	SelfLink SelfLink
@@ -92,6 +101,71 @@ func NewNamespaceSelfLink(name string) *NamespaceSelfLink {
 
 	var sl = new(NamespaceSelfLink)
 	sl.string = name
+	return sl
+}
+
+type ResourceSelfLink struct {
+	string
+	SelfLink
+	namespace *NamespaceSelfLink
+	name      string
+	kind      string
+}
+
+func (sl *ResourceSelfLink) Parse(selflink string) error {
+
+	parts := strings.Split(selflink, ":")
+	sl.string = selflink
+	if len(parts) < 2 {
+		sl.namespace = NewNamespaceSelfLink(DefaultNamespace)
+		sl.name = parts[0]
+		return nil
+	}
+
+	sl.namespace = NewNamespaceSelfLink(parts[0])
+	sl.name = parts[1]
+	return nil
+}
+
+func (sl *ResourceSelfLink) String() string {
+	return sl.string
+}
+
+func (sl *ResourceSelfLink) Namespace() *NamespaceSelfLink {
+	return sl.namespace
+}
+
+func (sl *ResourceSelfLink) Name() string {
+	return sl.name
+}
+
+func (sl ResourceSelfLink) MarshalJSON() ([]byte, error) {
+	buffer := bytes.NewBufferString("\"")
+	buffer.WriteString(sl.string)
+	buffer.WriteString("\"")
+	return buffer.Bytes(), nil
+}
+
+func (sl *ResourceSelfLink) UnmarshalJSON(b []byte) error {
+	var link string
+	if err := json.Unmarshal(b, &link); err != nil {
+		return err
+	}
+
+	return sl.Parse(link)
+}
+
+func NewResourceSelfLink(namespace, kind, resource string) *ResourceSelfLink {
+
+	sl := new(ResourceSelfLink)
+
+	link := fmt.Sprintf("%s:%s:%s", namespace, kind, resource)
+
+	sl.string = link
+	sl.namespace = NewNamespaceSelfLink(namespace)
+	sl.name = resource
+	sl.kind = kind
+
 	return sl
 }
 

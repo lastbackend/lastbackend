@@ -80,6 +80,33 @@ func (nv *NamespaceView) NewApplyStatus(status struct {
 	return &n
 }
 
+func (nv NamespaceView) NewList(items []*types.Namespace) *NamespaceList {
+
+	n := make(NamespaceList, 0)
+	for _, v := range items {
+		n = append(n, nv.New(v))
+	}
+	return &n
+}
+
+func (n *NamespaceView) NewResource(obj types.NamespaceResource) NamespaceResource {
+	switch obj.Kind() {
+	case types.KindService:
+		return new(ServiceView).New(obj.(*types.Service))
+	}
+	return nil
+}
+
+func (n *NamespaceView) NewResourceList(objs types.NamespaceResourceList) NamespaceResourceList {
+
+	switch objs.Kind() {
+	case types.KindService:
+		return new(ServiceView).NewList(objs.(*types.ServiceList))
+	}
+
+	return nil
+}
+
 func (r *Namespace) ToMeta(obj types.NamespaceMeta) NamespaceMeta {
 	meta := NamespaceMeta{}
 	meta.Name = obj.Name
@@ -99,7 +126,7 @@ func (r *Namespace) ToMeta(obj types.NamespaceMeta) NamespaceMeta {
 
 func (r *Namespace) ToSpec(spec types.NamespaceSpec) NamespaceSpec {
 	return NamespaceSpec{
-		Resources: NamespaceResources{
+		Resources: NamespaceQuotas{
 			Limits:  r.ToResources(spec.Resources.Limits),
 			Request: r.ToResources(spec.Resources.Request),
 		},
@@ -127,13 +154,13 @@ func (r *Namespace) ToEnv(obj types.NamespaceEnvs) NamespaceEnvs {
 	return envs
 }
 
-func (r *Namespace) ToResources(obj types.ResourceItem) *NamespaceResource {
+func (r *Namespace) ToResources(obj types.ResourceItem) *NamespaceQuota {
 
 	if obj.RAM == 0 || obj.CPU == 0 || obj.Storage == 0 {
 		return nil
 	}
 
-	return &NamespaceResource{
+	return &NamespaceQuota{
 		RAM:     resource.EncodeMemoryResource(obj.RAM),
 		CPU:     resource.EncodeCpuResource(obj.CPU),
 		Storage: resource.EncodeMemoryResource(obj.Storage),
@@ -142,15 +169,6 @@ func (r *Namespace) ToResources(obj types.ResourceItem) *NamespaceResource {
 
 func (r *Namespace) ToJson() ([]byte, error) {
 	return json.Marshal(r)
-}
-
-func (nv NamespaceView) NewList(items []*types.Namespace) *NamespaceList {
-
-	n := make(NamespaceList, 0)
-	for _, v := range items {
-		n = append(n, nv.New(v))
-	}
-	return &n
 }
 
 func (n *NamespaceList) ToJson() ([]byte, error) {

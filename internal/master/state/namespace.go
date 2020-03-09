@@ -49,6 +49,7 @@ func (ns *NamespaceController) List(ctx context.Context) []*types.Namespace {
 	return items
 }
 
+// Map all namespaces in state
 func (ns *NamespaceController) Map(ctx context.Context) map[*types.NamespaceSelfLink]*types.Namespace {
 
 	log := logger.WithContext(ctx)
@@ -58,7 +59,31 @@ func (ns *NamespaceController) Map(ctx context.Context) map[*types.NamespaceSelf
 }
 
 // Set namespace to state
-func (ns *NamespaceController) Set(ctx context.Context, mf *types.NamespaceManifest) (*types.Namespace, error) {
+func (ns *NamespaceController) Put(ctx context.Context, item *types.NamespaceManifest) (*types.Namespace, error) {
+	log := logger.WithContext(ctx)
+	log.Debugf("%s:list:> put namespace", logPrefix)
+
+	/*
+		internal, external := handler.Config.DomainInternal, handler.Config.DomainExternal
+			ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", ns.Meta.Name, internal))
+
+
+			ns.Spec.Domain.Internal = internal
+
+			if opts.Spec.Domain != nil {
+				if len(*opts.Spec.Domain) == 0 {
+					ns.Spec.Domain.External = external
+				} else {
+					ns.Spec.Domain.External = *opts.Spec.Domain
+				}
+			}
+	*/
+
+	return nil, nil
+}
+
+// Set namespace to state
+func (ns *NamespaceController) Set(ctx context.Context, item *types.NamespaceManifest) (*types.Namespace, error) {
 	log := logger.WithContext(ctx)
 	log.Debugf("%s:list:> set namespace", logPrefix)
 

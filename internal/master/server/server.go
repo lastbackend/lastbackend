@@ -21,25 +21,15 @@ package server
 import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/internal/master/server/cluster"
-	"github.com/lastbackend/lastbackend/internal/master/server/config"
-	"github.com/lastbackend/lastbackend/internal/master/server/deployment"
 	"github.com/lastbackend/lastbackend/internal/master/server/discovery"
 	"github.com/lastbackend/lastbackend/internal/master/server/events"
 	"github.com/lastbackend/lastbackend/internal/master/server/exporter"
 	"github.com/lastbackend/lastbackend/internal/master/server/ingress"
-	"github.com/lastbackend/lastbackend/internal/master/server/job"
 	"github.com/lastbackend/lastbackend/internal/master/server/middleware"
 	"github.com/lastbackend/lastbackend/internal/master/server/namespace"
 	"github.com/lastbackend/lastbackend/internal/master/server/node"
-	"github.com/lastbackend/lastbackend/internal/master/server/pod"
-	"github.com/lastbackend/lastbackend/internal/master/server/route"
-	"github.com/lastbackend/lastbackend/internal/master/server/secret"
-	"github.com/lastbackend/lastbackend/internal/master/server/service"
-	"github.com/lastbackend/lastbackend/internal/master/server/task"
-	"github.com/lastbackend/lastbackend/internal/master/server/volume"
 	"github.com/lastbackend/lastbackend/internal/master/state"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/internal/util/http"
 	"github.com/lastbackend/lastbackend/internal/util/http/cors"
 	"github.com/spf13/viper"
@@ -85,24 +75,25 @@ func NewServer(state *state.State, stg storage.Storage, v *viper.Viper) *HttpSer
 	mw := middleware.New(stg, v)
 
 	cluster.NewClusterHandler(r, mw, cluster.Config{ClusterName: v.GetString("name"), ClusterDescription: v.GetString("description")})
-	config.NewConfigHandler(r, mw)
-	deployment.NewDeploymentHandler(r, mw)
+	//config.NewConfigHandler(r, mw)
+	//deployment.NewDeploymentHandler(r, mw)
 	discovery.NewDiscoveryHandler(r, mw)
 	events.NewEventHandler(r, mw)
 	exporter.NewExporterHandler(r, mw)
 	ingress.NewIngressHandler(r, mw)
-	job.NewJobHandler(r, mw, job.Config{SecretToken: v.GetString("security.token")})
+	//job.NewJobHandler(r, mw, job.Config{SecretToken: v.GetString("security.token")})
 	namespace.NewNamespaceHandler(r, mw, state)
 	node.NewNodeHandler(r, mw)
-	pod.NewPodHandler(r, mw)
-	route.NewRouteHandler(r, mw)
-	secret.NewSecretHandler(r, mw, secret.Config{Vault: &types.Vault{
-		Endpoint: v.GetString("vault.endpoint"),
-		Token:    v.GetString("vault.token"),
-	}})
-	service.NewServiceHandler(r, mw, service.Config{SecretToken: v.GetString("security.token")})
-	task.NewTaskHandler(r, mw)
-	volume.NewVolumeHandler(r, mw)
+
+	//pod.NewPodHandler(r, mw)
+	//route.NewRouteHandler(r, mw)
+	//secret.NewSecretHandler(r, mw, secret.Config{Vault: &types.Vault{
+	//	Endpoint: v.GetString("vault.endpoint"),
+	//	Token:    v.GetString("vault.token"),
+	//}})
+	//service.NewServiceHandler(r, mw, service.Config{SecretToken: v.GetString("security.token")})
+	//task.NewTaskHandler(r, mw)
+	//volume.NewVolumeHandler(r, mw)
 
 	hs.router = r
 

@@ -55,7 +55,7 @@ func (s *NamespaceManifest) ToYaml() ([]byte, error) {
 	return yaml.Marshal(s)
 }
 
-func (s *NamespaceManifest) SetNamespaceMeta(ns *types.Namespace) {
+func (s *NamespaceManifest) SetNamespaceMeta(ns *types.NamespaceManifest) {
 
 	if ns.Meta.Name == types.EmptyString {
 		ns.Meta.Name = *s.Meta.Name
@@ -73,7 +73,7 @@ func (s *NamespaceManifest) SetNamespaceMeta(ns *types.Namespace) {
 	}
 }
 
-func (s *NamespaceManifest) SetNamespaceSpec(ns *types.Namespace) error {
+func (s *NamespaceManifest) SetNamespaceSpec(ns *types.NamespaceManifest) error {
 
 	if s.Spec.Resources != nil {
 

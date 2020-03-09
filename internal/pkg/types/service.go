@@ -184,6 +184,18 @@ func (s *ServiceSpec) GetResourceRequest() ResourceRequest {
 	return rr
 }
 
+func (s *Service) Kind() string {
+	return KindService
+}
+
+func (s *Service) Namespace() *NamespaceSelfLink {
+	return s.Meta.SelfLink.Namespace()
+}
+
+func (s *ServiceList) Kind() string {
+	return KindService
+}
+
 func NewServiceList() *ServiceList {
 	dm := new(ServiceList)
 	dm.Items = make([]*Service, 0)

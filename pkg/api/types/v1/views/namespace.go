@@ -43,29 +43,29 @@ type NamespaceMeta struct {
 
 // swagger:model views_namespace_spec
 type NamespaceSpec struct {
-	Env       NamespaceEnvs      `json:"env"`
-	Domain    NamespaceDomain    `json:"domain"`
-	Resources NamespaceResources `json:"resources"`
+	Env       NamespaceEnvs   `json:"env"`
+	Domain    NamespaceDomain `json:"domain"`
+	Resources NamespaceQuotas `json:"resources"`
 }
 
 type NamespaceStatus struct {
-	Resources NamespaceStatusResources `json:"resources"`
+	Resources NamespaceStatusResources `json:"quotas"`
 }
 
 type NamespaceStatusResources struct {
-	Allocated *NamespaceResource `json:"allocated"`
+	Allocated *NamespaceQuota `json:"allocated"`
 }
 
 // swagger:model views_namespace_envs
 type NamespaceEnvs []string
 
-type NamespaceResources struct {
-	Request *NamespaceResource `json:"request,omitempty"`
-	Limits  *NamespaceResource `json:"limits,omitempty"`
+type NamespaceQuotas struct {
+	Request *NamespaceQuota `json:"request,omitempty"`
+	Limits  *NamespaceQuota `json:"limits,omitempty"`
 }
 
 // swagger:model views_namespace_resource
-type NamespaceResource struct {
+type NamespaceQuota struct {
 	RAM     string `json:"ram"`
 	CPU     string `json:"cpu"`
 	Storage string `json:"storage"`
@@ -86,4 +86,12 @@ type NamespaceApplyStatus struct {
 	Services map[string]bool `json:"services,omitempty"`
 	Routes   map[string]bool `json:"routes,omitempty"`
 	Jobs     map[string]bool `json:"jobs,omitempty"`
+}
+
+type NamespaceResource interface {
+	ToJson() ([]byte, error)
+}
+
+type NamespaceResourceList interface {
+	ToJson() ([]byte, error)
 }

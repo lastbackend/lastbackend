@@ -36,6 +36,12 @@ type State struct {
 	Service   *ServiceController
 }
 
+// Resource wrapper for namespace
+func (s *State) Resource() *ResourceController {
+	rc := new(ResourceController)
+	return rc
+}
+
 // NewState function returns new instance of state
 func NewState(ctx context.Context, stg storage.Storage) *State {
 

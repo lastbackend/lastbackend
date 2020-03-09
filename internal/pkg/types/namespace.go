@@ -45,6 +45,21 @@ type Namespace struct {
 
 // swagger:ignore
 type NamespaceManifest struct {
+	Meta NamespaceMeta `json:"meta"`
+	Spec NamespaceSpec `json:"spec"`
+}
+
+type NamespaceResourceManifest interface {
+	SetNamespace(string)
+}
+
+type NamespaceResource interface {
+	Namespace() *NamespaceSelfLink
+	Kind() string
+}
+
+type NamespaceResourceList interface {
+	Kind() string
 }
 
 // swagger:ignore
