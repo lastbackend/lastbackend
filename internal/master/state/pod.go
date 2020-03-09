@@ -1,4 +1,3 @@
-//
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
@@ -17,28 +16,3 @@
 //
 
 package state
-
-import (
-	"context"
-)
-
-const (
-	logLevel  = 3
-	logPrefix = "state"
-)
-
-// State main structure
-type State struct {
-	Namespace *NamespaceController
-	Service   *ServiceController
-}
-
-// NewState function returns new instance of state
-func NewState(ctx context.Context) *State {
-
-	var state = new(State)
-	state.Namespace = NewNamespaceController(ctx)
-	state.Service = NewServiceController(ctx)
-
-	return state
-}

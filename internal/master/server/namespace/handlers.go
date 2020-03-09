@@ -24,7 +24,10 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/internal/master/server/middleware"
+	"github.com/lastbackend/lastbackend/internal/master/state"
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	h "github.com/lastbackend/lastbackend/internal/util/http"
+	v1 "github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/tools/logger"
 )
 
@@ -35,10 +38,11 @@ const (
 
 // Handler represent the http handler for namespace
 type Handler struct {
+	state *state.State
 }
 
 // NewNamespaceHandler will initialize the namespace resources endpoint
-func NewNamespaceHandler(r *mux.Router, mw middleware.Middleware) {
+func NewNamespaceHandler(r *mux.Router, mw middleware.Middleware, state *state.State) {
 
 	ctx := logger.NewContext(context.Background(), nil)
 	log := logger.WithContext(ctx)
@@ -46,6 +50,7 @@ func NewNamespaceHandler(r *mux.Router, mw middleware.Middleware) {
 	log.Infof("%s:> init namespace routes", logPrefix)
 
 	handler := &Handler{
+		state: state,
 	}
 
 	r.Handle("/namespace", h.Handle(mw.Authenticate(handler.NamespaceListH))).Methods(http.MethodGet)
@@ -56,6 +61,7 @@ func NewNamespaceHandler(r *mux.Router, mw middleware.Middleware) {
 	r.Handle("/namespace/{namespace}", h.Handle(mw.Authenticate(handler.NamespaceRemoveH))).Methods(http.MethodDelete)
 }
 
+// NamespaceListH handler returns namespaces from state
 func (handler Handler) NamespaceListH(w http.ResponseWriter, r *http.Request) {
 
 	// swagger:operation GET /namespace namespace namespaceList
@@ -76,27 +82,16 @@ func (handler Handler) NamespaceListH(w http.ResponseWriter, r *http.Request) {
 	ctx := logger.NewContext(r.Context(), nil)
 	log := logger.WithContext(ctx)
 
-	//log.Debugf("%s:list:> get namespace list", logPrefix)
-	//
-	//var (
-	//	nsm = model.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-	//)
-	//
-	//items, err := nsm.List()
-	//if err != nil {
-	//	log.Errorf("%s:list:> find p list err: %s", logPrefix, err.Error())
-	//	errors.HTTP.InternalServerError(w)
-	//	return
-	//}
-	//
-	//response, err := v1.View().Namespace().NewList(items).ToJson()
-	//if err != nil {
-	//	log.Errorf("%s:list:> convert struct to json err: %s", logPrefix, err.Error())
-	//	errors.HTTP.InternalServerError(w)
-	//	return
-	//}
+	log.Debugf("%s:list:> get namespace list", logPrefix)
 
-	response := []byte{}
+	items := handler.state.Namespace.List(ctx)
+
+	response, err := v1.View().Namespace().NewList(items).ToJson()
+	if err != nil {
+		log.Errorf("%s:list:> convert struct to json err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
@@ -105,6 +100,7 @@ func (handler Handler) NamespaceListH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// NamespaceInfoH handler returns particular namespace info
 func (handler Handler) NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	// swagger:operation GET /namespace/{namespace} namespace namespaceInfo
@@ -132,6 +128,8 @@ func (handler Handler) NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	ctx := logger.NewContext(r.Context(), nil)
 	log := logger.WithContext(ctx)
+
+	handler.state.Namespace.Get(ctx)
 
 	//nid := util.Vars(r)["namespace"]
 	//

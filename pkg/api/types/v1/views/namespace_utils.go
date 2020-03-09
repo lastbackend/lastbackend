@@ -21,6 +21,7 @@ package views
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/lastbackend/lastbackend/internal/util/resource"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
@@ -143,13 +144,10 @@ func (r *Namespace) ToJson() ([]byte, error) {
 	return json.Marshal(r)
 }
 
-func (nv NamespaceView) NewList(obj *types.NamespaceList) *NamespaceList {
-	if obj == nil {
-		return nil
-	}
+func (nv NamespaceView) NewList(items []*types.Namespace) *NamespaceList {
 
 	n := make(NamespaceList, 0)
-	for _, v := range obj.Items {
+	for _, v := range items {
 		n = append(n, nv.New(v))
 	}
 	return &n

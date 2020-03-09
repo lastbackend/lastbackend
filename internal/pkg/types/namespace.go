@@ -20,6 +20,7 @@ package types
 
 import (
 	"encoding/json"
+
 	errors2 "github.com/lastbackend/lastbackend/internal/pkg/errors"
 )
 
@@ -40,6 +41,10 @@ type Namespace struct {
 	Meta   NamespaceMeta   `json:"meta"`
 	Status NamespaceStatus `json:"status"`
 	Spec   NamespaceSpec   `json:"spec"`
+}
+
+// swagger:ignore
+type NamespaceManifest struct {
 }
 
 // swagger:ignore
