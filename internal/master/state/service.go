@@ -29,7 +29,7 @@ import (
 // ServiceController structure
 type ServiceController struct {
 	lock  sync.Mutex
-	items map[types.ServiceSelfLink]*types.Service
+	items map[*types.ServiceSelfLink]*types.Service
 }
 
 // ServiceControllerOpts struct for filtering queries to state
@@ -37,12 +37,20 @@ type ServiceControllerOpts struct {
 	namespace *types.NamespaceSelfLink
 }
 
+func (sco *ServiceControllerOpts) WithNamespace(ns string) {
+
+}
+
+func (sco *ServiceControllerOpts) WithNamespaceSelfLink(ns types.ServiceSelfLink) {
+
+}
+
 func (sc *ServiceController) loop() {
 
 }
 
 // List all namespaces in state
-func (sc *ServiceController) List(ctx context.Context) []*types.Service {
+func (sc *ServiceController) List(ctx context.Context, filter *ServiceControllerOpts) []*types.Service {
 
 	log := logger.WithContext(ctx)
 	log.Debugf("%s:list:> get service list", logPrefix)
@@ -56,7 +64,7 @@ func (sc *ServiceController) List(ctx context.Context) []*types.Service {
 }
 
 // Map all service in state
-func (sc *ServiceController) Map(ctx context.Context, filter *ServiceControllerOpts) map[types.ServiceSelfLink]*types.Service {
+func (sc *ServiceController) Map(ctx context.Context, filter *ServiceControllerOpts) map[*types.ServiceSelfLink]*types.Service {
 
 	log := logger.WithContext(ctx)
 	log.Debugf("%s:service:> get service map", logPrefix)
@@ -75,7 +83,7 @@ func (sc *ServiceController) Set(ctx context.Context, mf types.ServiceManifest) 
 }
 
 // Get particular service from state
-func (sc *ServiceController) Get(ctx context.Context, selflink types.ServiceSelfLink) (*types.Service, error) {
+func (sc *ServiceController) Get(ctx context.Context, selflink *types.ServiceSelfLink) (*types.Service, error) {
 	log := logger.WithContext(ctx)
 	log.Debugf("%s:list:> get service from state", logPrefix)
 
@@ -91,7 +99,7 @@ func (sc *ServiceController) Get(ctx context.Context, selflink types.ServiceSelf
 }
 
 // Del service from state
-func (sc *ServiceController) Del(ctx context.Context, selflink types.ServiceSelfLink) error {
+func (sc *ServiceController) Del(ctx context.Context, selflink *types.ServiceSelfLink) error {
 	log := logger.WithContext(ctx)
 	log.Debugf("%s:list:> delete service from state", logPrefix)
 

@@ -20,6 +20,8 @@ package namespace
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/util/http/util"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -89,7 +91,7 @@ func (handler Handler) NamespaceListH(w http.ResponseWriter, r *http.Request) {
 	response, err := v1.View().Namespace().NewList(items).ToJson()
 	if err != nil {
 		log.Errorf("%s:list:> convert struct to json err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
+		errors.HTTP.NotFound(w)
 		return
 	}
 
@@ -129,26 +131,22 @@ func (handler Handler) NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 	ctx := logger.NewContext(r.Context(), nil)
 	log := logger.WithContext(ctx)
 
-	handler.state.Namespace.Get(ctx)
+	nid := util.Vars(r)["namespace"]
 
-	//nid := util.Vars(r)["namespace"]
-	//
-	//log.Debugf("%s:info:> get namespace `%s`", logPrefix, nid)
-	//
-	//ns, e := namespace.FetchFromRequest(r.Context(), nid)
-	//if e != nil {
-	//	e.Http(w)
-	//	return
-	//}
-	//
-	//response, err := v1.View().Namespace().New(ns).ToJson()
-	//if err != nil {
-	//	log.Errorf("%s:info:> convert struct to json err: %s", logPrefix, err.Error())
-	//	errors.HTTP.InternalServerError(w)
-	//	return
-	//}
+	log.Debugf("%s:info:> get namespace `%s`", logPrefix, nid)
 
-	response := []byte{}
+	item, err := handler.state.Namespace.Get(ctx, types.NewNamespaceSelfLink(nid))
+	if err != nil {
+		errors.HTTP.NotFound(w)
+		return
+	}
+
+	response, err := v1.View().Namespace().New(item).ToJson()
+	if err != nil {
+		log.Errorf("%s:info:> convert struct to json err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
