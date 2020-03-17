@@ -31,7 +31,6 @@ import (
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/internal/util"
 	"github.com/lastbackend/lastbackend/internal/util/cleaner"
 	"github.com/lastbackend/lastbackend/internal/util/filesystem"
 	"github.com/lastbackend/lastbackend/tools/log"
@@ -380,7 +379,8 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *types.PodM
 			svc.Network.Mode = fmt.Sprintf("container:%s", primary)
 		} else {
 			primary = svc.Name
-			svc.ExtraHosts = util.RemoveDuplicates(append(svc.ExtraHosts, envs.Get().GetConfig().Container.ExtraHosts...))
+			// TODO: Set default container extra hosts
+			//svc.ExtraHosts = util.RemoveDuplicates(append(svc.ExtraHosts, envs.Get().GetConfig().Container.ExtraHosts...))
 		}
 
 		if err := r.serviceStart(ctx, key, svc, status); err != nil {
@@ -441,8 +441,8 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *types.PodM
 			script := fmt.Sprintf(logScript, escaped, buf.String())
 
 			rootPath := defaultRootLocalStorgePath
-			if len(envs.Get().GetConfig().Workdir) != 0 {
-				rootPath = envs.Get().GetConfig().Workdir
+			if len(r.workdir) != 0 {
+				rootPath = r.workdir
 			}
 
 			filepath := path.Join(rootPath, strings.Replace(key, ":", "-", -1), "init")
@@ -574,8 +574,8 @@ func (r Runtime) PodDestroy(ctx context.Context, pod string, status *types.PodSt
 	}
 
 	rootPath := defaultRootLocalStorgePath
-	if len(envs.Get().GetConfig().Workdir) != 0 {
-		rootPath = envs.Get().GetConfig().Workdir
+	if len(r.workdir) != 0 {
+		rootPath = r.workdir
 	}
 
 	dirPath := path.Join(rootPath, strings.Replace(pod, ":", "-", -1), "init")

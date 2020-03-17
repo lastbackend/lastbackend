@@ -46,13 +46,14 @@ func (r Runtime) NodeInfo() types.NodeInfo {
 		_ = fmt.Errorf("get hostname err: %s", err)
 	}
 
-	ip, err := system.GetHostIP(envs.Get().GetConfig().Network.Interface)
-	if err != nil {
-		_ = fmt.Errorf("get ip err: %s", err)
-	}
+	// TODO: Set default network interface
+	//ip, err := system.GetHostIP(envs.Get().GetConfig().Network.Interface)
+	//if err != nil {
+	//	_ = fmt.Errorf("get ip err: %s", err)
+	//}
 
+	//info.ExternalIP = ip
 	info.Hostname = hostname
-	info.ExternalIP = ip
 	info.OSType = osInfo.GoOS
 	info.OSName = fmt.Sprintf("%s %s", osInfo.OS, osInfo.Core)
 	info.Architecture = osInfo.Platform
@@ -91,7 +92,8 @@ func (r Runtime) NodeCapacity() types.NodeResources {
 
 	var stat syscall.Statfs_t
 
-	syscall.Statfs(envs.Get().GetConfig().Container.Csi.Dir.Root, &stat)
+	// TODO: Set default container storage interface
+	//syscall.Statfs(envs.Get().GetConfig().Container.Csi.Dir.Root, &stat)
 
 	// Available blocks * size per block = available space in bytes
 	storage := stat.Blocks * uint64(stat.Bsize)

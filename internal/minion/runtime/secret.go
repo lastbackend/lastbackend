@@ -38,7 +38,7 @@ func (r Runtime) SecretGet(ctx context.Context, namespace, name string) (*types.
 		return secret, nil
 	}
 
-	sr, err := cli.Namespace(namespace).Secret(name).Get(ctx)
+	sr, err := cli.V1().Namespace(namespace).Secret(name).Get(ctx)
 	if err != nil {
 		log.Errorf("can not receive secret from api, err: %s", err.Error())
 		return nil, err
@@ -59,7 +59,7 @@ func (r Runtime) SecretCreate(ctx context.Context, namespace, name string) error
 		return nil
 	}
 
-	secret, err := cli.Namespace(namespace).Secret(name).Get(ctx)
+	secret, err := cli.V1().Namespace(namespace).Secret(name).Get(ctx)
 	if err != nil {
 		log.Errorf("get secret err: %s", err.Error())
 		return err
@@ -79,7 +79,7 @@ func (r Runtime) SecretUpdate(ctx context.Context, selflink string) error {
 
 	namespace, name := r.parseSecretSelflink(selflink)
 
-	secret, err := cli.Namespace(namespace).Secret(name).Get(ctx)
+	secret, err := cli.V1().Namespace(namespace).Secret(name).Get(ctx)
 	if err != nil {
 		log.Errorf("get secret err: %s", err.Error())
 		return err

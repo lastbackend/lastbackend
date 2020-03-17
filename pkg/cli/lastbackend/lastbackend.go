@@ -127,6 +127,8 @@ func NewRootCommand() *cobra.Command {
 
 	global.StringVarP(&cfgFile, "config", "c", "", "Path for the configuration file")
 	global.IntP("verbose", "v", 0, "Set log level from 0 to 7")
+	global.BoolP("agent", "", false, "Only agent mode")
+	global.BoolP("no-schedule", "", false, "Disable schedule mode")
 
 	// keep cleanFlagSet separate, so Cobra doesn't pollute it with the global flags
 	masterFlags.AddFlags(cleanFlagSet)

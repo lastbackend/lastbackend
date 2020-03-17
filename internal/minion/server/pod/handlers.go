@@ -23,8 +23,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/internal/minion/runtime"
 	"github.com/lastbackend/lastbackend/internal/minion/server/middleware"
+	"github.com/lastbackend/lastbackend/internal/minion/state"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	h "github.com/lastbackend/lastbackend/internal/util/http"
 	"github.com/lastbackend/lastbackend/tools/logger"
@@ -36,10 +36,11 @@ const (
 
 // Handler represent the http handler for pod
 type Handler struct {
+	state *state.State
 }
 
 // NewPodHandler will initialize the pod resources endpoint
-func NewPodHandler(r *mux.Router, mw middleware.Middleware) {
+func NewPodHandler(r *mux.Router, mw middleware.Middleware, state *state.State) {
 
 	ctx := logger.NewContext(context.Background(), nil)
 	log := logger.WithContext(ctx)
@@ -47,6 +48,7 @@ func NewPodHandler(r *mux.Router, mw middleware.Middleware) {
 	log.Infof("%s:> init pod routes", logPrefix)
 
 	handler := &Handler{
+		state: state,
 	}
 
 	r.Handle("/pod/{pod}", h.Handle(mw.Authenticate(handler.PodGetH))).Methods(http.MethodGet)
@@ -67,7 +69,7 @@ func (handler Handler) PodLogsH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		c      = mux.Vars(r)["container"]
-		p      = envs.Get().GetState().Pods().GetPod(mux.Vars(r)["pod"])
+		p      = handler.state.Pods().GetPod(mux.Vars(r)["pod"])
 		notify = w.(http.CloseNotifier).CloseNotify()
 		done   = make(chan bool, 1)
 	)
@@ -90,9 +92,10 @@ func (handler Handler) PodLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := runtime.PodLogs(r.Context(), c, true, w, done); err != nil {
-		log.Errorf("node:http:pod:get:> get pod logs err: %s", err.Error())
-	}
+	// TODO: Get stream for pod logs
+	//if err := runtime.PodLogs(r.Context(), c, true, w, done); err != nil {
+	//	log.Errorf("node:http:pod:get:> get pod logs err: %s", err.Error())
+	//}
 
 	return
 }

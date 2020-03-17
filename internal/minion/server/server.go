@@ -70,7 +70,7 @@ func NewServer(state *state.State, stg storage.Storage, v *viper.Viper) *HttpSer
 	mw := middleware.New(stg, v)
 
 	node.NewNodeHandler(r, mw)
-	pod.NewPodHandler(r, mw)
+	pod.NewPodHandler(r, mw, state)
 
 	hs.router = r
 

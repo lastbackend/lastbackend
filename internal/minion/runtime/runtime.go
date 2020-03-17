@@ -21,7 +21,7 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/coreos/etcd/client"
+	"github.com/lastbackend/lastbackend/pkg/client"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"path/filepath"
@@ -49,19 +49,20 @@ type Runtime struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	csi      map[string]csi.CSI
-	cri      cri.CRI
-	cii      cii.CII
-	network  *network.Network
-	state    *state.State
-	exporter *exporter.Exporter
-	retClient *client.Client
+	csi       map[string]csi.CSI
+	cri       cri.CRI
+	cii       cii.CII
+	network   *network.Network
+	state     *state.State
+	exporter  *exporter.Exporter
+	retClient client.IClient
+	workdir   string
 
 	spec chan *types.NodeManifest
 }
 
 // NewRuntime method return new runtime pointer
-func New(cri cri.CRI, cii cii.CII, csi map[string]csi.CSI, ntw *network.Network, stt *state.State, exp *exporter.Exporter) (*Runtime, error) {
+func New(cri cri.CRI, cii cii.CII, csi map[string]csi.CSI, ntw *network.Network, stt *state.State, exp *exporter.Exporter, workdir string) (*Runtime, error) {
 
 	r := new(Runtime)
 	r.ctx, r.cancel = context.WithCancel(context.Background())
@@ -71,6 +72,7 @@ func New(cri cri.CRI, cii cii.CII, csi map[string]csi.CSI, ntw *network.Network,
 	r.network = ntw
 	r.state = stt
 	r.exporter = exp
+	r.workdir = workdir
 
 	r.spec = make(chan *types.NodeManifest, 0)
 	return r, nil

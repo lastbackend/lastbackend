@@ -115,8 +115,9 @@ func (app *App) init() error {
 	}
 
 	_state := state.New()
-	_state.Node().Info = runtime.NodeInfo()
-	_state.Node().Status = runtime.NodeStatus()
+	// TODO: Need implement logic
+	//_state.Node().Info = runtime.NodeInfo()
+	//_state.Node().Status = runtime.NodeStatus()
 
 	_exporter, err := exporter.NewExporter(_state.Node().Info.Hostname, types.EmptyString)
 	if err != nil {
@@ -124,7 +125,7 @@ func (app *App) init() error {
 		return err
 	}
 
-	r, err := runtime.New(_cri, _cii, _csi, _net, _state, _exporter)
+	r, err := runtime.New(_cri, _cii, _csi, _net, _state, _exporter, app.v.GetString("workdir"))
 	if err != nil {
 		log.Errorf("can not initialize runtime: %s", err.Error())
 		return err
