@@ -33,6 +33,7 @@ type IStorage interface {
 	List(collection string, listOutPtr interface{}) error
 	Get(collection, key string, outPtr interface{}) error
 	Set(collection, key string, obj interface{}) error
+	Put(collection, key string, obj interface{}) error
 	Del(collection, key string) error
 	Close() error
 }
