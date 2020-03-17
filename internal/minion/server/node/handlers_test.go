@@ -15,16 +15,5 @@
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
-// +build !linux
 
-package cpi
-
-import (
-	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cpi/local"
-	"github.com/spf13/viper"
-)
-
-func New(_ *viper.Viper) (cpi.CPI, error) {
-	return local.New()
-}
+package node_test

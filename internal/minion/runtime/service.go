@@ -20,24 +20,24 @@ package runtime
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/minion/envs"
+	"time"
+
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/tools/log"
-	"time"
 )
 
 const (
 	logServicePrefix = "node:runtime:service"
 )
 
-func serviceStart(ctx context.Context, pod string, m *types.ContainerManifest, status *types.PodStatus) error {
+func (r Runtime) serviceStart(ctx context.Context, pod string, m *types.ContainerManifest, status *types.PodStatus) error {
 
 	var (
 		err error
 		c   = new(types.PodContainer)
 	)
 
-	c.ID, err = envs.Get().GetCRI().Create(ctx, m)
+	c.ID, err = r.cri.Create(ctx, m)
 	if err != nil {
 		switch err {
 		case context.Canceled:
@@ -59,9 +59,9 @@ func serviceStart(ctx context.Context, pod string, m *types.ContainerManifest, s
 
 	status.Runtime.Services[c.ID] = c
 
-	if err := containerInspect(context.Background(), c); err != nil {
+	if err := r.containerInspect(context.Background(), c); err != nil {
 		log.Errorf("%s inspect container after create: err %s", logServicePrefix, err.Error())
-		PodClean(context.Background(), status)
+		r.PodClean(context.Background(), status)
 		return err
 	}
 
@@ -73,10 +73,10 @@ func serviceStart(ctx context.Context, pod string, m *types.ContainerManifest, s
 		Created: time.Now().UTC(),
 	}
 
-	envs.Get().GetState().Pods().SetPod(pod, status)
+	r.state.Pods().SetPod(pod, status)
 	log.V(logLevel).Debugf("%s container created: %s", logServicePrefix, c.ID)
 
-	if err := envs.Get().GetCRI().Start(ctx, c.ID); err != nil {
+	if err := r.cri.Start(ctx, c.ID); err != nil {
 
 		log.Errorf("%s can-not start container: %s", logServicePrefix, err)
 
@@ -99,7 +99,7 @@ func serviceStart(ctx context.Context, pod string, m *types.ContainerManifest, s
 
 	log.V(logLevel).Debugf("%s container started: %s", logServicePrefix, c.ID)
 
-	if err := containerInspect(context.Background(), c); err != nil {
+	if err := r.containerInspect(context.Background(), c); err != nil {
 		log.Errorf("%s inspect container after create: err %s", logServicePrefix, err.Error())
 		return err
 	}
@@ -110,7 +110,7 @@ func serviceStart(ctx context.Context, pod string, m *types.ContainerManifest, s
 		Timestamp: time.Now().UTC(),
 	}
 
-	info, err := envs.Get().GetCRI().Inspect(ctx, c.ID)
+	info, err := r.cri.Inspect(ctx, c.ID)
 	if err != nil {
 		switch err {
 		case context.Canceled:
@@ -125,20 +125,20 @@ func serviceStart(ctx context.Context, pod string, m *types.ContainerManifest, s
 		status.Network.PodIP = info.Network.IPAddress
 	}
 
-	envs.Get().GetState().Pods().SetPod(pod, status)
+	r.state.Pods().SetPod(pod, status)
 	return nil
 }
 
-func serviceStop() error {
-
-	return nil
-}
-
-func serviceRestart() error {
+func (r Runtime) serviceStop() error {
 
 	return nil
 }
 
-func serviceRemove() error {
+func (r Runtime) serviceRestart() error {
+
+	return nil
+}
+
+func (r Runtime) serviceRemove() error {
 	return nil
 }

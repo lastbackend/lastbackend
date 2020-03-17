@@ -23,7 +23,6 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/minion/envs"
 	"os"
 	"syscall"
 
@@ -35,7 +34,7 @@ import (
 
 const MinContainerMemory uint64 = 32
 
-func NodeInfo() types.NodeInfo {
+func (r Runtime) NodeInfo() types.NodeInfo {
 
 	var (
 		info = types.NodeInfo{}
@@ -58,7 +57,7 @@ func NodeInfo() types.NodeInfo {
 	info.OSName = fmt.Sprintf("%s %s", osInfo.OS, osInfo.Core)
 	info.Architecture = osInfo.Platform
 
-	net := envs.Get().GetNet()
+	net := r.network
 	if net != nil {
 		nt := net.Info(context.Background())
 		info.InternalIP = nt.IP
@@ -68,17 +67,17 @@ func NodeInfo() types.NodeInfo {
 	return info
 }
 
-func NodeStatus() types.NodeStatus {
+func (r Runtime) NodeStatus() types.NodeStatus {
 
 	var state = types.NodeStatus{}
 
-	state.Capacity = NodeCapacity()
-	state.Allocated = NodeAllocation()
+	state.Capacity = r.NodeCapacity()
+	state.Allocated = r.NodeAllocation()
 
 	return state
 }
 
-func NodeCapacity() types.NodeResources {
+func (r Runtime) NodeCapacity() types.NodeResources {
 
 	vmStat, err := mem.VirtualMemory()
 	if err != nil {
@@ -107,9 +106,9 @@ func NodeCapacity() types.NodeResources {
 	}
 }
 
-func NodeAllocation() types.NodeResources {
+func (r Runtime) NodeAllocation() types.NodeResources {
 
-	s := envs.Get().GetState().Pods()
+	s := r.state.Pods()
 
 	return types.NodeResources{
 		RAM:        0,

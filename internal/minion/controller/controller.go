@@ -20,16 +20,19 @@ package controller
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/minion/envs"
-	"github.com/lastbackend/lastbackend/internal/minion/runtime"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/tools/log"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"sync"
 	"time"
+
+	"github.com/lastbackend/lastbackend/internal/minion/runtime"
+	"github.com/lastbackend/lastbackend/internal/minion/state"
+	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/client"
+	"github.com/lastbackend/lastbackend/pkg/network"
+	"github.com/lastbackend/lastbackend/tools/log"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -38,9 +41,12 @@ const (
 )
 
 type Controller struct {
-	ctx     context.Context
-	runtime *runtime.Runtime
-	cache   struct {
+	ctx        context.Context
+	runtime    *runtime.Runtime
+	state      *state.State
+	restClient client.IClient
+	network    *network.Network
+	cache      struct {
 		lock      sync.RWMutex
 		resources types.NodeStatus
 		pods      map[string]*types.PodStatus
@@ -48,16 +54,21 @@ type Controller struct {
 	}
 }
 
-func New(r *runtime.Runtime) *Controller {
+func New(r *runtime.Runtime, rest client.IClient, network *network.Network, state *state.State) *Controller {
 	var c = new(Controller)
 	c.ctx = context.Background()
 	c.runtime = r
+	c.state = state
+	c.restClient = rest
+	c.network = network
 	c.cache.pods = make(map[string]*types.PodStatus)
 	c.cache.volumes = make(map[string]*types.VolumeStatus)
 
-	for p, st := range envs.Get().GetState().Pods().GetPods() {
+	pods := state.Pods().GetPods()
+	for p, st := range pods {
 		c.cache.pods[p] = st
 	}
+
 	return c
 }
 
@@ -66,13 +77,14 @@ func (c *Controller) Connect(v *viper.Viper) error {
 	log.V(logLevel).Debugf("%s:connect:> connect init", logPrefix)
 
 	opts := v1.Request().Node().NodeConnectOptions()
-	opts.Info = envs.Get().GetState().Node().Info
+	opts.Info = c.state.Node().Info
 
-	opts.Status = envs.Get().GetState().Node().Status
-	var network = envs.Get().GetNet()
-	if network != nil {
-		opts.Network = *envs.Get().GetNet().Info(c.ctx)
+	opts.Status = c.state.Node().Status
+
+	if c.network != nil {
+		opts.Network = c.network.Info(c.ctx)
 	}
+
 	if v.IsSet("node.tls") {
 		opts.TLS = !v.GetBool("node.tls.insecure")
 
@@ -104,7 +116,7 @@ func (c *Controller) Connect(v *viper.Viper) error {
 
 	for {
 		log.V(logLevel).Debugf("%s:connect:> establish connection", logPrefix)
-		if err := envs.Get().GetNodeClient().Connect(c.ctx, opts); err == nil {
+		if err := c.restClient.V1().Cluster().Node(c.state.Node().Info.Hostname).Connect(c.ctx, opts); err == nil {
 			return nil
 		} else {
 			log.V(logLevel).Errorf("%s:connect:> establish connection err: %s", logPrefix, err.Error())
@@ -124,8 +136,8 @@ func (c *Controller) Sync() error {
 		opts.Pods = make(map[string]*request.NodePodStatusOptions)
 		opts.Volumes = make(map[string]*request.NodeVolumeStatusOptions)
 
-		opts.Resources.Capacity = envs.Get().GetState().Node().Status.Capacity
-		opts.Resources.Allocated = envs.Get().GetState().Node().Status.Allocated
+		opts.Resources.Capacity = c.state.Node().Status.Capacity
+		opts.Resources.Allocated = c.state.Node().Status.Allocated
 
 		c.cache.lock.Lock()
 		var i = 0
@@ -135,7 +147,7 @@ func (c *Controller) Sync() error {
 				break
 			}
 
-			if !envs.Get().GetState().Pods().IsLocal(p) && status != nil {
+			if !c.state.Pods().IsLocal(p) && status != nil {
 				opts.Pods[p] = getPodOptions(status)
 			} else {
 				delete(c.cache.pods, p)
@@ -149,7 +161,7 @@ func (c *Controller) Sync() error {
 				break
 			}
 
-			if !envs.Get().GetState().Volumes().IsLocal(v) && status != nil {
+			if !c.state.Volumes().IsLocal(v) && status != nil {
 				opts.Volumes[v] = getVolumeOptions(status)
 			} else {
 				delete(c.cache.volumes, v)
@@ -166,7 +178,7 @@ func (c *Controller) Sync() error {
 
 		c.cache.lock.Unlock()
 
-		spec, err := envs.Get().GetNodeClient().SetStatus(c.ctx, opts)
+		spec, err := c.restClient.V1().Cluster().Node(c.state.Node().Info.Hostname).SetStatus(c.ctx, opts)
 		if err != nil {
 			log.Errorf("%s node:exporter:dispatch err: %s", logPrefix, err.Error())
 		}
@@ -198,13 +210,13 @@ func (c *Controller) Subscribe() {
 			case p := <-pods:
 				log.Debugf("%s pod changed: %s", logPrefix, p)
 				c.cache.lock.Lock()
-				c.cache.pods[p] = envs.Get().GetState().Pods().GetPod(p)
+				c.cache.pods[p] = c.state.Pods().GetPod(p)
 				c.cache.lock.Unlock()
 				break
 			case v := <-volumes:
 				log.Debugf("%s volume changed: %s", logPrefix, v)
 				c.cache.lock.Lock()
-				c.cache.volumes[v] = envs.Get().GetState().Volumes().GetVolume(v)
+				c.cache.volumes[v] = c.state.Volumes().GetVolume(v)
 				c.cache.lock.Unlock()
 				break
 			}
@@ -212,8 +224,8 @@ func (c *Controller) Subscribe() {
 
 	}()
 
-	go envs.Get().GetState().Pods().Watch(pods, done)
-	go envs.Get().GetState().Volumes().Watch(volumes, done)
+	go c.state.Pods().Watch(pods, done)
+	go c.state.Volumes().Watch(volumes, done)
 
 	<-done
 }

@@ -16,14 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package pod
-
-import (
-	"github.com/lastbackend/lastbackend/internal/util/http"
-	"github.com/lastbackend/lastbackend/internal/util/http/middleware"
-)
-
-var Routes = []http.Route{
-	{Path: "/pod/{pod}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: PodGetH},
-	{Path: "/pod/{pod}/{container}/logs", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: PodLogsH},
-}
+package pod_test

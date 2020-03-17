@@ -20,12 +20,12 @@ package lastbackend
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/master"
-	"github.com/lastbackend/lastbackend/internal/minion"
-	"github.com/lastbackend/lastbackend/pkg/cli/lastbackend/options"
 	"os"
 	"strings"
 
+	"github.com/lastbackend/lastbackend/internal/master"
+	"github.com/lastbackend/lastbackend/internal/minion"
+	"github.com/lastbackend/lastbackend/pkg/cli/lastbackend/options"
 	mo "github.com/lastbackend/lastbackend/pkg/cli/master/options"
 	no "github.com/lastbackend/lastbackend/pkg/cli/minion/options"
 	"github.com/spf13/cobra"

@@ -24,7 +24,6 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
 	"github.com/lastbackend/lastbackend/tools/log"
 	"io"
 	"io/ioutil"
@@ -34,7 +33,6 @@ import (
 )
 
 type Storage struct {
-	csi.CSI
 	root string
 }
 

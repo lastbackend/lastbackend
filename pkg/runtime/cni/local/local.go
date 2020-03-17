@@ -22,7 +22,6 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/internal/util/system"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
 	"net"
 )
 
@@ -31,8 +30,6 @@ const DefaultContainerDevice = "docker0"
 const localIP = "127.0.0.1"
 
 type Network struct {
-	cni.CNI
-
 	ExtIface *NetworkInterface
 	Network  *net.IPNet
 	CIDR     *net.IPNet

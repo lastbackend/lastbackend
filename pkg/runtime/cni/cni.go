@@ -15,17 +15,29 @@
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
+// +build !linux
 
-package cpi
+package cni
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cni/local"
+	"github.com/spf13/viper"
 )
 
-type CPI interface {
-	Info(ctx context.Context) (map[string]*types.EndpointState, error)
-	Create(ctx context.Context, manifest *types.EndpointManifest) (*types.EndpointState, error)
-	Destroy(ctx context.Context, state *types.EndpointState) error
-	Update(ctx context.Context, state *types.EndpointState, manifest *types.EndpointManifest) (*types.EndpointState, error)
+type CNI interface {
+	Info(ctx context.Context) *types.NetworkState
+	Create(ctx context.Context, network *types.SubnetManifest) (*types.NetworkState, error)
+	Destroy(ctx context.Context, network *types.NetworkState) error
+	Replace(ctx context.Context, state *types.NetworkState, manifest *types.SubnetManifest) (*types.NetworkState, error)
+	Subnets(ctx context.Context) (map[string]*types.NetworkState, error)
+}
+
+func New(v *viper.Viper) (CNI, error) {
+	switch v.GetString("network.cni.type") {
+	default:
+		return local.New()
+	}
 }

@@ -112,12 +112,6 @@ func (f *MasterFlags) AddFlags(mainfs *pflag.FlagSet) {
 	fs.StringVarP(&f.Vault.Endpoint, "vault-endpoint", "", "", "Vault access endpoint")
 	fs.StringVarP(&f.Domain.Internal, "domain-internal", "", "lb.local", "Default external domain for cluster")
 	fs.StringVarP(&f.Domain.External, "domain-external", "", "", "Internal domain name for cluster")
-	fs.StringVarP(&f.Storage.Driver, "storage", "", "etcd", "Set storage driver (Allow: etcd, mock)")
-	fs.StringVarP(&f.Storage.Etcd.TLS.FileCert, "etcd-cert-file", "", "", "ETCD database cert file path")
-	fs.StringVarP(&f.Storage.Etcd.TLS.FileKey, "etcd-private-key-file", "", "", "ETCD database private key file path")
-	fs.StringVarP(&f.Storage.Etcd.TLS.FileCA, "etcd-ca-file", "", "", "ETCD database certificate authority file")
-	fs.StringSliceVarP(&f.Storage.Etcd.Endpoints, "etcd-endpoints", "", []string{"127.0.0.1:2379"}, "ETCD database endpoints list")
-	fs.StringVarP(&f.Storage.Etcd.Prefix, "etcd-prefix", "", "lastbackend", "ETCD database prefix")
 	fs.StringVarP(&f.CIDR, "services-cidr", "", "172.0.0.0/24", "Services IP CIDR for internal IPAM service")
 
 }

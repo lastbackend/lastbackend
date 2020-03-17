@@ -19,10 +19,12 @@
 package cii
 
 import (
+	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cii"
+	"io"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cii/docker"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/spf13/viper"
 )
 
@@ -31,10 +33,21 @@ const (
 	dockerDriver = "docker"
 )
 
-func New(v *viper.Viper) (cii.CII, error) {
+// IMI - Image System Interface
+type CII interface {
+	Auth(ctx context.Context, secret *types.SecretAuthData) (string, error)
+	Pull(ctx context.Context, spec *types.ImageManifest, out io.Writer) (*types.Image, error)
+	Remove(ctx context.Context, image string) error
+	Push(ctx context.Context, spec *types.ImageManifest, out io.Writer) (*types.Image, error)
+	Build(ctx context.Context, stream io.Reader, spec *types.SpecBuildImage, out io.Writer) (*types.Image, error)
+	List(ctx context.Context) ([]*types.Image, error)
+	Inspect(ctx context.Context, id string) (*types.Image, error)
+	Subscribe(ctx context.Context) (chan *types.Image, error)
+}
+
+func New(v *viper.Viper) (CII, error) {
 	switch v.GetString("container.iri.type") {
 	case dockerDriver:
-		log.V(logLevel).Debugf("Use docker runtime interface for cii")
 		cfg := docker.Config{}
 		cfg.Host = v.GetString("container.iri.docker.host")
 		cfg.Version = v.GetString("container.iri.docker.version")

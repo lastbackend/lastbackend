@@ -21,11 +21,13 @@ package local
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
 )
 
 type Proxy struct {
-	cpi.CPI
+}
+
+func New() (*Proxy, error) {
+	return &Proxy{}, nil
 }
 
 func (p *Proxy) Info(ctx context.Context) (map[string]*types.EndpointState, error) {
@@ -43,8 +45,4 @@ func (p *Proxy) Destroy(ctx context.Context, endpoint *types.EndpointState) erro
 
 func (p *Proxy) Update(ctx context.Context, endpoint *types.EndpointState, spec *types.EndpointManifest) (*types.EndpointState, error) {
 	return new(types.EndpointState), nil
-}
-
-func New() (*Proxy, error) {
-	return &Proxy{}, nil
 }

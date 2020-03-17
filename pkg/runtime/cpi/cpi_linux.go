@@ -15,18 +15,30 @@
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
+// +build linux
 
-package csi
+package cpi
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
-	"github.com/lastbackend/lastbackend/pkg/runtime/csi/dir"
+	"context"
+
+	"github.com/lastbackend/lastbackend/pkg/runtime/cpi/ipvs"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cpi/local"
 	"github.com/spf13/viper"
 )
 
-func New(kind string, v *viper.Viper) (csi.CSI, error) {
-	switch kind {
+type CPI interface {
+	Info(ctx context.Context) (map[string]*types.EndpointState, error)
+	Create(ctx context.Context, manifest *types.EndpointManifest) (*types.EndpointState, error)
+	Destroy(ctx context.Context, state *types.EndpointState) error
+	Update(ctx context.Context, state *types.EndpointState, manifest *types.EndpointManifest) (*types.EndpointState, error)
+}
+
+func New(v *viper.Viper) (CPI, error) {
+	switch v.GetString("network.cpi.type") {
+	case "ipvs":
+		return ipvs.New(v)
 	default:
-		return dir.Get(v.GetString("container.csi.dir.root"))
+		return local.New()
 	}
 }

@@ -20,20 +20,20 @@ package runtime
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/minion/envs"
+	"strings"
+
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/tools/log"
-	"strings"
 )
 
-func SecretGet(ctx context.Context, namespace, name string) (*types.Secret, error) {
+func (r Runtime) SecretGet(ctx context.Context, namespace, name string) (*types.Secret, error) {
 
-	cli := envs.Get().GetRestClient()
+	cli := r.retClient
 	if cli == nil {
 		return nil, nil
 	}
 
-	secret := envs.Get().GetState().Secrets().GetSecret(types.NewSecretSelfLink(namespace, name).String())
+	secret := r.state.Secrets().GetSecret(types.NewSecretSelfLink(namespace, name).String())
 	if secret != nil {
 		return secret, nil
 	}
@@ -47,14 +47,14 @@ func SecretGet(ctx context.Context, namespace, name string) (*types.Secret, erro
 	return sr.Decode(), nil
 }
 
-func SecretCreate(ctx context.Context, namespace, name string) error {
+func (r Runtime) SecretCreate(ctx context.Context, namespace, name string) error {
 
-	cli := envs.Get().GetRestClient()
+	cli := r.retClient
 	if cli == nil {
 		return nil
 	}
 
-	ok := envs.Get().GetState().Secrets().GetSecret(types.NewSecretSelfLink(namespace, name).String())
+	ok := r.state.Secrets().GetSecret(types.NewSecretSelfLink(namespace, name).String())
 	if ok != nil {
 		return nil
 	}
@@ -65,19 +65,19 @@ func SecretCreate(ctx context.Context, namespace, name string) error {
 		return err
 	}
 
-	envs.Get().GetState().Secrets().AddSecret(secret.Meta.SelfLink, secret.Decode())
+	r.state.Secrets().AddSecret(secret.Meta.SelfLink, secret.Decode())
 
 	return nil
 }
 
-func SecretUpdate(ctx context.Context, selflink string) error {
+func (r Runtime) SecretUpdate(ctx context.Context, selflink string) error {
 
-	cli := envs.Get().GetRestClient()
+	cli := r.retClient
 	if cli == nil {
 		return nil
 	}
 
-	namespace, name := parseSecretSelflink(selflink)
+	namespace, name := r.parseSecretSelflink(selflink)
 
 	secret, err := cli.Namespace(namespace).Secret(name).Get(ctx)
 	if err != nil {
@@ -85,17 +85,17 @@ func SecretUpdate(ctx context.Context, selflink string) error {
 		return err
 	}
 
-	envs.Get().GetState().Secrets().AddSecret(secret.Meta.SelfLink, secret.Decode())
+	r.state.Secrets().AddSecret(secret.Meta.SelfLink, secret.Decode())
 
 	return nil
 
 }
 
-func SecretRemove(ctx context.Context, selflink string) {
-	envs.Get().GetState().Secrets().DelSecret(selflink)
+func (r Runtime) SecretRemove(ctx context.Context, selflink string) {
+	r.state.Secrets().DelSecret(selflink)
 }
 
-func parseSecretSelflink(selflink string) (string, string) {
+func (r Runtime) parseSecretSelflink(selflink string) (string, string) {
 	var namespace, name string
 
 	parts := strings.SplitN(selflink, ":", 1)

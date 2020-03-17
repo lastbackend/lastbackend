@@ -19,26 +19,51 @@
 package pod
 
 import (
-	"github.com/lastbackend/lastbackend/internal/minion/envs"
-	"github.com/lastbackend/lastbackend/internal/minion/runtime"
+	"context"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/lastbackend/lastbackend/internal/minion/runtime"
+	"github.com/lastbackend/lastbackend/internal/minion/server/middleware"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/tools/log"
+	h "github.com/lastbackend/lastbackend/internal/util/http"
+	"github.com/lastbackend/lastbackend/tools/logger"
 )
 
-const logLevel = 2
+const (
+	logPrefix = "api:handler:pod"
+)
 
-func PodGetH(w http.ResponseWriter, _ *http.Request) {
+// Handler represent the http handler for pod
+type Handler struct {
+}
 
-	log.V(logLevel).Debug("node:http:pod:get:> get pod info")
+// NewPodHandler will initialize the pod resources endpoint
+func NewPodHandler(r *mux.Router, mw middleware.Middleware) {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
+	log.Infof("%s:> init pod routes", logPrefix)
+
+	handler := &Handler{
+	}
+
+	r.Handle("/pod/{pod}", h.Handle(mw.Authenticate(handler.PodGetH))).Methods(http.MethodGet)
+	r.Handle("/pod/{pod}/{container}/logs", h.Handle(mw.Authenticate(handler.PodLogsH))).Methods(http.MethodGet)
+}
+
+func (handler Handler) PodGetH(w http.ResponseWriter, r *http.Request) {
+	ctx := logger.NewContext(r.Context(), nil)
+	log := logger.WithContext(ctx)
+	log.Debug("node:http:pod:get:> get pod info")
 }
 
 // PodLogsH handler streams pod logs into response writer
-func PodLogsH(w http.ResponseWriter, r *http.Request) {
-
-	log.V(logLevel).Debug("node:http:pod:get:> get pod logs")
+func (handler Handler) PodLogsH(w http.ResponseWriter, r *http.Request) {
+	ctx := logger.NewContext(r.Context(), nil)
+	log := logger.WithContext(ctx)
+	log.Debug("node:http:pod:get:> get pod logs")
 
 	var (
 		c      = mux.Vars(r)["container"]
@@ -49,7 +74,7 @@ func PodLogsH(w http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		<-notify
-		log.V(logLevel).Debug("HTTP connection just closed.")
+		log.Debug("HTTP connection just closed.")
 		done <- true
 	}()
 

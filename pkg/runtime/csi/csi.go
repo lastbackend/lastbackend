@@ -16,22 +16,27 @@
 // from Last.Backend LLC.
 //
 
-package cii
+package csi
 
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"io"
+	"github.com/lastbackend/lastbackend/pkg/runtime/csi/dir"
+	"github.com/spf13/viper"
 )
 
-// IMI - Image System Interface
-type CII interface {
-	Auth(ctx context.Context, secret *types.SecretAuthData) (string, error)
-	Pull(ctx context.Context, spec *types.ImageManifest, out io.Writer) (*types.Image, error)
-	Remove(ctx context.Context, image string) error
-	Push(ctx context.Context, spec *types.ImageManifest, out io.Writer) (*types.Image, error)
-	Build(ctx context.Context, stream io.Reader, spec *types.SpecBuildImage, out io.Writer) (*types.Image, error)
-	List(ctx context.Context) ([]*types.Image, error)
-	Inspect(ctx context.Context, id string) (*types.Image, error)
-	Subscribe(ctx context.Context) (chan *types.Image, error)
+type CSI interface {
+	List(ctx context.Context) (map[string]*types.VolumeState, error)
+	Create(ctx context.Context, name string, manifest *types.VolumeManifest) (*types.VolumeState, error)
+	FilesPut(ctx context.Context, state *types.VolumeState, files map[string]string) error
+	FilesCheck(ctx context.Context, state *types.VolumeState, files map[string]string) (bool, error)
+	FilesDel(ctx context.Context, state *types.VolumeState, files []string) error
+	Remove(ctx context.Context, state *types.VolumeState) error
+}
+
+func New(kind string, v *viper.Viper) (CSI, error) {
+	switch kind {
+	default:
+		return dir.Get(v.GetString("container.csi.dir.root"))
+	}
 }

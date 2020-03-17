@@ -21,7 +21,6 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/minion/envs"
 	"path"
 	"strings"
 	"time"
@@ -30,8 +29,8 @@ import (
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
-func containerInspect(ctx context.Context, container *types.PodContainer) error {
-	info, err := envs.Get().GetCRI().Inspect(ctx, container.ID)
+func (r Runtime) containerInspect(ctx context.Context, container *types.PodContainer) error {
+	info, err := r.cri.Inspect(ctx, container.ID)
 	if err != nil {
 		switch err {
 		case context.Canceled:
@@ -55,13 +54,13 @@ func containerInspect(ctx context.Context, container *types.PodContainer) error 
 	return nil
 }
 
-func containerSubscribe(ctx context.Context) error {
+func (r Runtime) containerSubscribe(ctx context.Context) error {
 
-	state := envs.Get().GetState().Pods()
+	state := r.state.Pods()
 
 	cs := make(chan *types.Container)
 
-	go envs.Get().GetCRI().Subscribe(ctx, cs)
+	go r.cri.Subscribe(ctx, cs)
 
 	for c := range cs {
 
@@ -132,7 +131,7 @@ func containerSubscribe(ctx context.Context) error {
 	return nil
 }
 
-func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTemplateContainer) (*types.ContainerManifest, error) {
+func (r Runtime) containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTemplateContainer) (*types.ContainerManifest, error) {
 
 	mf := types.NewContainerManifest(spec)
 
@@ -167,7 +166,7 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 
 		case s.Secret.Name != types.EmptyString && s.Secret.Key != types.EmptyString:
 
-			secret, err := SecretGet(ctx, namespace, s.Secret.Name)
+			secret, err := r.SecretGet(ctx, namespace, s.Secret.Name)
 			if err != nil {
 				log.Errorf("Can not get secret for container: %s", err.Error())
 				return nil, err
@@ -192,7 +191,7 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 
 		case s.Config.Name != types.EmptyString && s.Config.Key != types.EmptyString:
 			configSelfLink := fmt.Sprintf("%s:%s", namespace, s.Config.Name)
-			config := envs.Get().GetState().Configs().GetConfig(configSelfLink)
+			config := r.state.Configs().GetConfig(configSelfLink)
 			if config == nil {
 				log.Errorf("Can not get config for container: %s", configSelfLink)
 				continue
@@ -217,13 +216,13 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 			continue
 		}
 
-		claim := envs.Get().GetState().Volumes().GetClaim(podVolumeClaimNameCreate(pod, v.Name))
+		claim := r.state.Volumes().GetClaim(r.podVolumeClaimNameCreate(pod, v.Name))
 		if claim == nil {
-			log.Debugf("volume claim %s not found in volumes state", podVolumeClaimNameCreate(pod, v.Name))
+			log.Debugf("volume claim %s not found in volumes state", r.podVolumeClaimNameCreate(pod, v.Name))
 			continue
 		}
 
-		vol := envs.Get().GetState().Volumes().GetVolume(claim.Volume)
+		vol := r.state.Volumes().GetVolume(claim.Volume)
 		if vol == nil {
 			log.Debugf("volume %s not found in volumes state", claim.Volume)
 			continue
@@ -246,7 +245,7 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 
 	// TODO: Add dns search option only for LB domains
 
-	net := envs.Get().GetNet()
+	net := r.network
 	if net != nil {
 		if net.GetResolverIP() != types.EmptyString {
 			mf.DNS.Server = append(mf.DNS.Server, net.GetResolverIP())

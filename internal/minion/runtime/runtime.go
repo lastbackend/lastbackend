@@ -21,15 +21,21 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/minion/envs"
+	"github.com/coreos/etcd/client"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
 
+	"github.com/lastbackend/lastbackend/internal/minion/exporter"
+	"github.com/lastbackend/lastbackend/internal/minion/state"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/internal/util/decoder"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/network"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cii"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cri"
+	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -42,14 +48,31 @@ const (
 type Runtime struct {
 	ctx    context.Context
 	cancel context.CancelFunc
-	spec   chan *types.NodeManifest
+
+	csi      map[string]csi.CSI
+	cri      cri.CRI
+	cii      cii.CII
+	network  *network.Network
+	state    *state.State
+	exporter *exporter.Exporter
+	retClient *client.Client
+
+	spec chan *types.NodeManifest
 }
 
 // NewRuntime method return new runtime pointer
-func New() (*Runtime, error) {
+func New(cri cri.CRI, cii cii.CII, csi map[string]csi.CSI, ntw *network.Network, stt *state.State, exp *exporter.Exporter) (*Runtime, error) {
+
 	r := new(Runtime)
 	r.ctx, r.cancel = context.WithCancel(context.Background())
-	r.spec = make(chan *types.NodeManifest)
+	r.csi = csi
+	r.cri = cri
+	r.cii = cii
+	r.network = ntw
+	r.state = stt
+	r.exporter = exp
+
+	r.spec = make(chan *types.NodeManifest, 0)
 	return r, nil
 }
 
@@ -57,35 +80,33 @@ func New() (*Runtime, error) {
 func (r *Runtime) Restore() error {
 	log.V(logLevel).Debugf("%s:restore:> restore init", logNodeRuntimePrefix)
 
-	var network = envs.Get().GetNet()
-
-	if network != nil {
-		if err := network.SubnetRestore(r.ctx); err != nil {
+	if r.network != nil {
+		if err := r.network.SubnetRestore(r.ctx); err != nil {
 			log.Errorf("can not restore subnets: %s", err.Error())
 			return err
 		}
 
-		if err := network.EndpointRestore(r.ctx); err != nil {
+		if err := r.network.EndpointRestore(r.ctx); err != nil {
 			log.Errorf("can not restore endpoint: %s", err.Error())
 			return err
 		}
 
-		if err := network.ResolverManage(r.ctx); err != nil {
+		if err := r.network.ResolverManage(r.ctx); err != nil {
 			log.Errorf("%s:> can not manage resolver:%s", logNodeRuntimePrefix, err.Error())
 		}
 	}
 
-	if err := VolumeRestore(r.ctx); err != nil {
+	if err := r.VolumeRestore(r.ctx); err != nil {
 		log.Errorf("can not restore volumes: %s", err.Error())
 		return err
 	}
 
-	if err := ImageRestore(r.ctx); err != nil {
+	if err := r.ImageRestore(r.ctx); err != nil {
 		log.Errorf("Can not restore images: %s", err.Error())
 		return err
 	}
 
-	if err := PodRestore(r.ctx); err != nil {
+	if err := r.PodRestore(r.ctx); err != nil {
 		log.Errorf("Can not restore pods: %s", err.Error())
 		return err
 	}
@@ -164,7 +185,7 @@ func (r *Runtime) Provision(dir string) error {
 				}
 				log.Debugf("Add Pod Manifest: %s", *m.Meta.Name)
 				mf.Pods[*m.Meta.Name] = m.GetManifest()
-				envs.Get().GetState().Pods().SetLocal(*m.Meta.Name)
+				r.state.Pods().SetLocal(*m.Meta.Name)
 				break
 			case types.KindVolume:
 
@@ -201,8 +222,6 @@ func (r *Runtime) Loop() {
 
 	go func(ctx context.Context) {
 
-		var network = envs.Get().GetNet()
-
 		for {
 			select {
 			case spec := <-r.spec:
@@ -211,79 +230,79 @@ func (r *Runtime) Loop() {
 
 				if spec.Meta.Initial {
 
-					if network != nil {
+					if r.network != nil {
 
 						log.V(logLevel).Debugf("%s:> clean up endpoints", logNodeRuntimePrefix)
-						endpoints := network.Endpoints().GetEndpoints()
+						endpoints := r.network.Endpoints().GetEndpoints()
 						for e := range endpoints {
 
 							// skip resolver endpoint
-							if e == network.GetResolverEndpointKey() {
+							if e == r.network.GetResolverEndpointKey() {
 								continue
 							}
 
 							if _, ok := spec.Endpoints[e]; !ok {
-								network.EndpointDestroy(context.Background(), e, endpoints[e])
+								r.network.EndpointDestroy(context.Background(), e, endpoints[e])
 							}
 						}
 					}
 
 					log.V(logLevel).Debugf("%s:> clean up pods", logNodeRuntimePrefix)
-					pods := envs.Get().GetState().Pods().GetPods()
+					pods := r.state.Pods().GetPods()
 
 					for k := range pods {
 						if _, ok := spec.Pods[k]; !ok {
-							if !envs.Get().GetState().Pods().IsLocal(k) {
-								PodDestroy(context.Background(), k, pods[k])
+							if !r.state.Pods().IsLocal(k) {
+								r.PodDestroy(context.Background(), k, pods[k])
 							}
 						}
 					}
 
 					log.V(logLevel).Debugf("%s:> clean up volumes", logNodeRuntimePrefix)
-					volumes := envs.Get().GetState().Volumes().GetVolumes()
+					volumes := r.state.Volumes().GetVolumes()
 
 					for k := range volumes {
 						if _, ok := spec.Volumes[k]; !ok {
-							if !envs.Get().GetState().Volumes().IsLocal(k) {
-								VolumeDestroy(context.Background(), k)
+							if !r.state.Volumes().IsLocal(k) {
+								r.VolumeDestroy(context.Background(), k)
 							}
 						}
 					}
 
-					if network != nil {
+					if r.network != nil {
 						log.V(logLevel).Debugf("%s:> clean up subnets", logNodeRuntimePrefix)
-						nets := network.Subnets().GetSubnets()
+						nets := r.network.Subnets().GetSubnets()
 
 						for cidr := range nets {
 							if _, ok := spec.Network[cidr]; !ok {
-								network.SubnetDestroy(ctx, cidr)
+								r.network.SubnetDestroy(ctx, cidr)
 							}
 						}
 					}
 				}
 
-				if network != nil {
+				if r.network != nil {
 					if len(spec.Resolvers) != 0 {
 						log.V(logLevel).Debugf("%s:> set cluster dns ips: %#v", logNodeRuntimePrefix, spec.Resolvers)
 						for key, res := range spec.Resolvers {
-							network.Resolvers().SetResolver(key, res)
-							network.ResolverManage(ctx)
+							r.network.Resolvers().SetResolver(key, res)
+							r.network.ResolverManage(ctx)
 						}
 					}
 				}
 
 				if spec.Exporter != nil {
 					log.V(logLevel).Debugf("%s:> set cluster exporter endpoint: %s", logNodeRuntimePrefix, spec.Exporter.Endpoint)
-					envs.Get().GetExporter().Reconnect(spec.Exporter.Endpoint)
+					r.exporter.Reconnect(spec.Exporter.Endpoint)
 				}
 
 				log.V(logLevel).Debugf("%s:> provision init", logNodeRuntimePrefix)
 
-				if network != nil {
+				if r.network != nil {
 					log.V(logLevel).Debugf("%s:> provision networks", logNodeRuntimePrefix)
 					for cidr, n := range spec.Network {
 						log.V(logLevel).Debugf("network: %v", n)
-						if err := network.SubnetManage(ctx, cidr, n); err != nil {
+						if err := r.network.SubnetManage(ctx, cidr, n); err != nil {
 							log.Errorf("Subnet [%s] create err: %s", n.CIDR, err.Error())
 						}
 					}
@@ -297,7 +316,7 @@ func (r *Runtime) Loop() {
 				log.V(logLevel).Debugf("%s:> provision configs %d", logNodeRuntimePrefix, len(spec.Configs))
 				for s, spec := range spec.Configs {
 					log.V(logLevel).Debugf("config: %s > %s", s, spec.State)
-					if err := ConfigManage(ctx, s, spec); err != nil {
+					if err := r.ConfigManage(ctx, s, spec); err != nil {
 						log.Errorf("Config [%s] manage err: %s", s, err.Error())
 					}
 				}
@@ -305,16 +324,16 @@ func (r *Runtime) Loop() {
 				log.V(logLevel).Debugf("%s:> provision pods", logNodeRuntimePrefix)
 				for p, spec := range spec.Pods {
 					log.V(logLevel).Debugf("pod: %v", p)
-					if err := PodManage(ctx, p, spec); err != nil {
+					if err := r.PodManage(ctx, p, spec); err != nil {
 						log.Errorf("Pod [%s] manage err: %s", p, err.Error())
 					}
 				}
 
-				if network != nil {
+				if r.network != nil {
 					log.V(logLevel).Debugf("%s:> provision endpoints", logNodeRuntimePrefix)
 					for e, spec := range spec.Endpoints {
 						log.V(logLevel).Debugf("endpoint: %v", e)
-						if err := network.EndpointManage(ctx, e, spec); err != nil {
+						if err := r.network.EndpointManage(ctx, e, spec); err != nil {
 							log.Errorf("Endpoint [%s] manage err: %s", e, err.Error())
 						}
 					}
@@ -323,7 +342,7 @@ func (r *Runtime) Loop() {
 				log.V(logLevel).Debugf("%s:> provision volumes", logNodeRuntimePrefix)
 				for v, spec := range spec.Volumes {
 					log.V(logLevel).Debugf("volume: %v", v)
-					if err := VolumeManage(ctx, v, spec); err != nil {
+					if err := r.VolumeManage(ctx, v, spec); err != nil {
 						log.Errorf("Volume [%s] manage err: %s", v, err.Error())
 					}
 				}
@@ -337,7 +356,7 @@ func (r *Runtime) Subscribe() {
 
 	log.V(logLevel).Debugf("%s:subscribe:> subscribe init", logNodeRuntimePrefix)
 	go func() {
-		if err := containerSubscribe(r.ctx); err != nil {
+		if err := r.containerSubscribe(r.ctx); err != nil {
 			log.Errorf("container subscribe err: %v", err)
 		}
 	}()

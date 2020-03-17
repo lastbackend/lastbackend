@@ -29,7 +29,7 @@ type NodeMetaOptions struct {
 type NodeConnectOptions struct {
 	Info    types.NodeInfo     `json:"info"`
 	Status  types.NodeStatus   `json:"status"`
-	Network types.NetworkState `json:"network"`
+	Network *types.NetworkState `json:"network"`
 	TLS     bool               `json:"tls"`
 	SSL     *SSL               `json:"ssl"`
 }

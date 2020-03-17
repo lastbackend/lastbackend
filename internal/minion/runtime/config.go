@@ -20,59 +20,59 @@ package runtime
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/minion/envs"
+	"strings"
+
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/tools/log"
-	"strings"
 )
 
-func ConfigManage(ctx context.Context, name string, cfg *types.ConfigManifest) error {
+func (r Runtime) ConfigManage(ctx context.Context, name string, cfg *types.ConfigManifest) error {
 
 	log.V(logLevel).Debugf("Manage config: %s", name)
 
 	if cfg.State == types.StateDestroyed {
-		ConfigRemove(ctx, name)
+		r.ConfigRemove(ctx, name)
 		return nil
 	}
 
-	ok := envs.Get().GetState().Configs().GetConfig(name)
+	ok := r.state.Configs().GetConfig(name)
 	if ok != nil {
-		return ConfigUpdate(ctx, name, cfg)
+		return r.ConfigUpdate(ctx, name, cfg)
 	}
 
-	return ConfigCreate(ctx, name, cfg)
+	return r.ConfigCreate(ctx, name, cfg)
 }
 
-func ConfigCreate(ctx context.Context, name string, cfg *types.ConfigManifest) error {
+func (r Runtime) ConfigCreate(ctx context.Context, name string, cfg *types.ConfigManifest) error {
 
 	log.V(logLevel).Debugf("create config: %s", name)
 
-	ok := envs.Get().GetState().Configs().GetConfig(name)
+	ok := r.state.Configs().GetConfig(name)
 	if ok != nil {
 		return nil
 	}
 
-	envs.Get().GetState().Configs().AddConfig(name, cfg)
+	r.state.Configs().AddConfig(name, cfg)
 	return nil
 }
 
-func ConfigUpdate(ctx context.Context, name string, cfg *types.ConfigManifest) error {
+func (r Runtime) ConfigUpdate(ctx context.Context, name string, cfg *types.ConfigManifest) error {
 
 	log.V(logLevel).Debugf("update config: %s", name)
 
-	envs.Get().GetState().Configs().SetConfig(name, cfg)
+	r.state.Configs().SetConfig(name, cfg)
 	return nil
 
 }
 
-func ConfigRemove(ctx context.Context, name string) {
+func (r Runtime) ConfigRemove(ctx context.Context, name string) {
 
 	log.V(logLevel).Debugf("remove config: %s", name)
 
-	envs.Get().GetState().Configs().DelConfig(name)
+	r.state.Configs().DelConfig(name)
 }
 
-func parseConfigSelflink(selflink string) (string, string) {
+func (r Runtime) parseConfigSelflink(selflink string) (string, string) {
 	var namespace, name string
 
 	parts := strings.Split(selflink, ":")

@@ -22,9 +22,7 @@ import (
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/pkg/network/state"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
-	ni "github.com/lastbackend/lastbackend/pkg/runtime/cni/cni"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
-	pi "github.com/lastbackend/lastbackend/pkg/runtime/cpi/cpi"
 	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/spf13/viper"
 )
@@ -56,12 +54,12 @@ func New(v *viper.Viper) (*Network, error) {
 	}
 
 	net.state = state.New()
-	if net.cni, err = ni.New(v); err != nil {
+	if net.cni, err = cni.New(v); err != nil {
 		log.Errorf("Cannot initialize cni: %v", err)
 		return nil, err
 	}
 
-	if net.cpi, err = pi.New(v); err != nil {
+	if net.cpi, err = cpi.New(v); err != nil {
 		log.Errorf("Cannot initialize cni: %v", err)
 		return nil, err
 	}

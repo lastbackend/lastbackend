@@ -20,9 +20,10 @@ package options
 
 import (
 	"fmt"
-	"github.com/spf13/pflag"
 	"os"
 	"strings"
+
+	"github.com/spf13/pflag"
 )
 
 func AddGlobalFlags(fs *pflag.FlagSet) {
@@ -33,6 +34,8 @@ func AddGlobalFlags(fs *pflag.FlagSet) {
 
 	pflagRegister(global, local, "verbose", "v")
 	pflagRegister(global, local, "config", "c")
+	pflagRegister(global, local, "agent", "")
+	pflagRegister(global, local, "no-schedule", "")
 
 	fs.AddFlagSet(local)
 }
@@ -50,4 +53,3 @@ func pflagRegister(global, local *pflag.FlagSet, globalName string, shortName st
 func normalize(s string) string {
 	return strings.Replace(s, "_", "-", -1)
 }
-

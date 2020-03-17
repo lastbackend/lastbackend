@@ -15,19 +15,31 @@
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
+// +build linux
 
-package csi
+package cni
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cni/local"
+	"github.com/spf13/viper"
 )
 
-type CSI interface {
-	List(ctx context.Context) (map[string]*types.VolumeState, error)
-	Create(ctx context.Context, name string, manifest *types.VolumeManifest) (*types.VolumeState, error)
-	FilesPut(ctx context.Context, state *types.VolumeState, files map[string]string) error
-	FilesCheck(ctx context.Context, state *types.VolumeState, files map[string]string) (bool, error)
-	FilesDel(ctx context.Context, state *types.VolumeState, files []string) error
-	Remove(ctx context.Context, state *types.VolumeState) error
+type CNI interface {
+	Info(ctx context.Context) *types.NetworkState
+	Create(ctx context.Context, network *types.SubnetManifest) (*types.NetworkState, error)
+	Destroy(ctx context.Context, network *types.NetworkState) error
+	Replace(ctx context.Context, state *types.NetworkState, manifest *types.SubnetManifest) (*types.NetworkState, error)
+	Subnets(ctx context.Context) (map[string]*types.NetworkState, error)
+}
+
+func New(v *viper.Viper) (CNI, error) {
+	switch v.GetString("network.cni.type") {
+	case "vxlan":
+		return vxlan.New(v.GetString("network.interface"))
+	default:
+		return local.New()
+	}
 }

@@ -23,20 +23,19 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/minion/envs"
-	"github.com/shirou/gopsutil/cpu"
 	"os"
 	"syscall"
 	"unsafe"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/internal/util/system"
+	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
 )
 
 const MinContainerMemory = 32
 
-func NodeInfo() types.NodeInfo {
+func (r Runtime) NodeInfo() types.NodeInfo {
 
 	var (
 		info = types.NodeInfo{}
@@ -69,7 +68,7 @@ func NodeInfo() types.NodeInfo {
 	return info
 }
 
-func NodeStatus() types.NodeStatus {
+func (r Runtime) NodeStatus() types.NodeStatus {
 
 	var state = types.NodeStatus{}
 
@@ -79,7 +78,7 @@ func NodeStatus() types.NodeStatus {
 	return state
 }
 
-func NodeCapacity() types.NodeResources {
+func (r Runtime) NodeCapacity() types.NodeResources {
 
 	vmStat, err := mem.VirtualMemory()
 	if err != nil {
@@ -110,7 +109,7 @@ func NodeCapacity() types.NodeResources {
 	}
 }
 
-func NodeAllocation() types.NodeResources {
+func (r Runtime) NodeAllocation() types.NodeResources {
 
 	vmStat, err := mem.VirtualMemory()
 	if err != nil {

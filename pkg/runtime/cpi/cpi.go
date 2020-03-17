@@ -15,14 +15,25 @@
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
+// +build !linux
 
-package node
+package cpi
 
 import (
-	"github.com/lastbackend/lastbackend/internal/util/http"
-	"github.com/lastbackend/lastbackend/internal/util/http/middleware"
+	"context"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cpi/local"
+	"github.com/spf13/viper"
 )
 
-var Routes = []http.Route{
-	{Path: "/", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeGetH},
+type CPI interface {
+	Info(ctx context.Context) (map[string]*types.EndpointState, error)
+	Create(ctx context.Context, manifest *types.EndpointManifest) (*types.EndpointState, error)
+	Destroy(ctx context.Context, state *types.EndpointState) error
+	Update(ctx context.Context, state *types.EndpointState, manifest *types.EndpointManifest) (*types.EndpointState, error)
+}
+
+func New(_ *viper.Viper) (CPI, error) {
+	return local.New()
 }

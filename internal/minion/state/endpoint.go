@@ -19,9 +19,10 @@
 package state
 
 import (
+	"sync"
+
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/tools/log"
-	"sync"
 )
 
 const logEndpointPrefix = "state:endpoints:>"
