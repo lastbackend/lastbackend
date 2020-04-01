@@ -20,11 +20,12 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"gopkg.in/yaml.v2"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type ServiceManifest struct {
@@ -60,9 +61,9 @@ func (s *ServiceManifest) ToYaml() ([]byte, error) {
 	return yaml.Marshal(s)
 }
 
-func (s *ServiceManifest) SetServiceMeta(svc *types.Service) {
+func (s *ServiceManifest) SetServiceMeta(svc *models.Service) {
 
-	if svc.Meta.Name == types.EmptyString {
+	if svc.Meta.Name == models.EmptyString {
 		svc.Meta.Name = *s.Meta.Name
 	}
 
@@ -76,19 +77,19 @@ func (s *ServiceManifest) SetServiceMeta(svc *types.Service) {
 
 }
 
-func (s *ServiceManifest) SetServiceSpec(svc *types.Service) (err error) {
+func (s *ServiceManifest) SetServiceSpec(svc *models.Service) (err error) {
 
 	tn := svc.Spec.Network.Updated
 	tc := svc.Spec.Template.Updated
 
 	defer func() {
 		if s.Spec.Replicas != nil {
-			svc.Status.State = types.StateProvision
+			svc.Status.State = models.StateProvision
 			return
 		}
 
 		if tn.Before(svc.Spec.Network.Updated) || tc.Before(svc.Spec.Template.Updated) {
-			svc.Status.State = types.StateProvision
+			svc.Status.State = models.StateProvision
 			return
 		}
 	}()
@@ -152,8 +153,8 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) (err error) {
 	return nil
 }
 
-func (s *ServiceManifest) GetManifest() *types.ServiceManifest {
-	sm := new(types.ServiceManifest)
+func (s *ServiceManifest) GetManifest() *models.ServiceManifest {
+	sm := new(models.ServiceManifest)
 	return sm
 }
 

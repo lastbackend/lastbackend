@@ -38,7 +38,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -59,13 +59,13 @@ func TestVolumeInfo(t *testing.T) {
 	vl2 := getVolumeAsset(ns2.Meta.Name, "test")
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		volume    *types.Volume
+		namespace *models.Namespace
+		volume    *models.Volume
 	}
 
 	tests := []struct {
@@ -109,10 +109,10 @@ func TestVolumeInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := stg.Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := stg.Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Del(context.Background(), stg.Collection().Volume(), types.EmptyString)
+		err = stg.Del(context.Background(), stg.Collection().Volume(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -195,16 +195,16 @@ func TestVolumeList(t *testing.T) {
 	vl1 := getVolumeAsset(ns1.Meta.Name, "demo")
 	vl2 := getVolumeAsset(ns1.Meta.Name, "test")
 
-	vl := types.NewVolumeList()
+	vl := models.NewVolumeList()
 	vl.Items = append(vl.Items, vl1, vl2)
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
+		namespace *models.Namespace
 	}
 
 	tests := []struct {
@@ -214,7 +214,7 @@ func TestVolumeList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         *types.VolumeList
+		want         *models.VolumeList
 		wantErr      bool
 		expectedCode int
 	}{
@@ -239,10 +239,10 @@ func TestVolumeList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Del(context.Background(), stg.Collection().Volume(), types.EmptyString)
+		err = stg.Del(context.Background(), stg.Collection().Volume(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -331,12 +331,12 @@ func TestVolumeCreate(t *testing.T) {
 	mf1, _ := mf.ToJson()
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
+		namespace *models.Namespace
 	}
 
 	tests := []struct {
@@ -386,13 +386,13 @@ func TestVolumeCreate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Del(context.Background(), stg.Collection().Volume(), types.EmptyString)
+		err = stg.Del(context.Background(), stg.Collection().Volume(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -444,7 +444,7 @@ func TestVolumeCreate(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect code message")
 			} else {
 
-				got := new(types.Volume)
+				got := new(models.Volume)
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Volume(), tc.want.Meta.SelfLink, got, nil)
 				assert.NoError(t, err)
 				if assert.NotEmpty(t, got, "volume is empty") {
@@ -493,13 +493,13 @@ func TestVolumeUpdate(t *testing.T) {
 	mf3, _ := getVolumeManifest(sv3.Meta.Name).ToJson()
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		volume    *types.Volume
+		namespace *models.Namespace
+		volume    *models.Volume
 	}
 
 	tests := []struct {
@@ -557,13 +557,13 @@ func TestVolumeUpdate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := stg.Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := stg.Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Del(context.Background(), stg.Collection().Service(), types.EmptyString)
+		err = stg.Del(context.Background(), stg.Collection().Service(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Del(context.Background(), stg.Collection().Volume(), types.EmptyString)
+		err = stg.Del(context.Background(), stg.Collection().Volume(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -620,7 +620,7 @@ func TestVolumeUpdate(t *testing.T) {
 			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect code message")
 			} else {
-				got := new(types.Volume)
+				got := new(models.Volume)
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Volume(), tc.want.Meta.SelfLink, got, nil)
 				assert.NoError(t, err)
 				if assert.NotEmpty(t, got, "volume is empty") {
@@ -658,13 +658,13 @@ func TestVolumeRemove(t *testing.T) {
 	vl2 := getVolumeAsset(ns1.Meta.Name, "test")
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		volume    *types.Volume
+		namespace *models.Namespace
+		volume    *models.Volume
 	}
 
 	tests := []struct {
@@ -708,10 +708,10 @@ func TestVolumeRemove(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Del(context.Background(), stg.Collection().Volume(), types.EmptyString)
+		err = stg.Del(context.Background(), stg.Collection().Volume(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -763,7 +763,7 @@ func TestVolumeRemove(t *testing.T) {
 			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
-				got := new(types.Volume)
+				got := new(models.Volume)
 
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Volume(), tc.args.volume.SelfLink().String(), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
@@ -771,7 +771,7 @@ func TestVolumeRemove(t *testing.T) {
 				}
 
 				if got != nil {
-					assert.Equal(t, got.Status.State, types.StateDestroy, "can not be set to destroy")
+					assert.Equal(t, got.Status.State, models.StateDestroy, "can not be set to destroy")
 				}
 
 				assert.Equal(t, tc.want, string(body), "response not empty")
@@ -781,36 +781,36 @@ func TestVolumeRemove(t *testing.T) {
 
 }
 
-func getNamespaceAsset(name, desc string) *types.Namespace {
-	var n = types.Namespace{}
+func getNamespaceAsset(name, desc string) *models.Namespace {
+	var n = models.Namespace{}
 	n.Meta.SetDefault()
 	n.Meta.Name = name
 	n.Meta.Description = desc
 	n.Meta.Endpoint = fmt.Sprintf("%s", name)
-	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
+	n.Meta.SelfLink = *models.NewNamespaceSelfLink(name)
 	return &n
 }
 
-func getServiceAsset(namespace, name, desc string) *types.Service {
-	var s = types.Service{}
+func getServiceAsset(namespace, name, desc string) *models.Service {
+	var s = models.Service{}
 	s.Meta.SetDefault()
 	s.Meta.Namespace = namespace
 	s.Meta.Name = name
 	s.Meta.Description = desc
 	s.Meta.Endpoint = fmt.Sprintf("%s.%s", namespace, name)
-	s.Meta.SelfLink = *types.NewServiceSelfLink(namespace, name)
+	s.Meta.SelfLink = *models.NewServiceSelfLink(namespace, name)
 	return &s
 }
 
-func getVolumeAsset(namespace, name string) *types.Volume {
-	var r = types.Volume{}
+func getVolumeAsset(namespace, name string) *models.Volume {
+	var r = models.Volume{}
 	r.Meta.SetDefault()
 	r.Meta.Namespace = namespace
 	r.Meta.Name = name
 	r.Spec.Selector.Node = ""
 	r.Spec.HostPath = "/"
 	r.Spec.Capacity.Storage, _ = resource.DecodeMemoryResource("128MB")
-	r.Meta.SelfLink = *types.NewVolumeSelfLink(namespace, name)
+	r.Meta.SelfLink = *models.NewVolumeSelfLink(namespace, name)
 	return &r
 }
 
@@ -818,7 +818,7 @@ func getVolumeManifest(name string) *request.VolumeManifest {
 	var mf = new(request.VolumeManifest)
 
 	mf.Meta.Name = &name
-	mf.Spec.Type = types.KindVolumeHostDir
+	mf.Spec.Type = models.KindVolumeHostDir
 	mf.Spec.Selector.Node = "node"
 	mf.Spec.Capacity.Storage = "256MBi"
 

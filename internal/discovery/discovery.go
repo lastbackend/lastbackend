@@ -25,12 +25,12 @@ import (
 	"github.com/lastbackend/lastbackend/internal/discovery/envs"
 	"github.com/lastbackend/lastbackend/internal/discovery/runtime"
 	"github.com/lastbackend/lastbackend/internal/discovery/state"
+	"github.com/lastbackend/lastbackend/pkg/client/cluster"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/client"
 	l "github.com/lastbackend/lastbackend/tools/log"
 	"github.com/spf13/viper"
 )
@@ -72,11 +72,11 @@ func Daemon(v *viper.Viper) bool {
 
 	if v.IsSet("api") {
 
-		cfg := client.NewConfig()
+		cfg := cluster.NewConfig()
 		cfg.BearerToken = v.GetString("token")
 
 		if v.IsSet("api.tls") && !v.GetBool("api.tls.insecure") {
-			cfg.TLS = client.NewTLSConfig()
+			cfg.TLS = cluster.NewTLSConfig()
 			cfg.TLS.CertFile = v.GetString("api.tls.cert")
 			cfg.TLS.KeyFile = v.GetString("api.tls.key")
 			cfg.TLS.CAFile = v.GetString("api.tls.ca")
@@ -84,7 +84,7 @@ func Daemon(v *viper.Viper) bool {
 
 		endpoint := v.GetString("api.uri")
 
-		rest, err := client.New(client.ClientHTTP, endpoint, cfg)
+		rest, err := cluster.New(cluster.ClientHTTP, endpoint, cfg)
 		if err != nil {
 			log.Errorf("Init client err: %s", err)
 		}

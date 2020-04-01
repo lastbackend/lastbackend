@@ -22,18 +22,18 @@ import (
 	"context"
 	"strings"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
-func (r Runtime) SecretGet(ctx context.Context, namespace, name string) (*types.Secret, error) {
+func (r Runtime) SecretGet(ctx context.Context, namespace, name string) (*models.Secret, error) {
 
 	cli := r.retClient
 	if cli == nil {
 		return nil, nil
 	}
 
-	secret := r.state.Secrets().GetSecret(types.NewSecretSelfLink(namespace, name).String())
+	secret := r.state.Secrets().GetSecret(models.NewSecretSelfLink(namespace, name).String())
 	if secret != nil {
 		return secret, nil
 	}
@@ -54,7 +54,7 @@ func (r Runtime) SecretCreate(ctx context.Context, namespace, name string) error
 		return nil
 	}
 
-	ok := r.state.Secrets().GetSecret(types.NewSecretSelfLink(namespace, name).String())
+	ok := r.state.Secrets().GetSecret(models.NewSecretSelfLink(namespace, name).String())
 	if ok != nil {
 		return nil
 	}
@@ -101,7 +101,7 @@ func (r Runtime) parseSecretSelflink(selflink string) (string, string) {
 	parts := strings.SplitN(selflink, ":", 1)
 
 	if len(parts) == 1 {
-		namespace = types.DefaultNamespace
+		namespace = models.DEFAULT_NAMESPACE
 		name = parts[0]
 	}
 

@@ -22,8 +22,7 @@ import (
 	"context"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -31,7 +30,7 @@ const logEndpointPrefix = "state:observer:endpoint"
 
 // endpointEqual - validate endpoint spec
 // return true if spec is valid
-func endpointEqual(e *types.Endpoint, svc *types.Service) bool {
+func endpointEqual(e *models.Endpoint, svc *models.Service) bool {
 
 	if e == nil {
 		return false
@@ -65,7 +64,7 @@ func endpointRestore(ss *ServiceState) error {
 		err error
 	)
 
-	em := model.NewEndpointModel(context.Background(), ss.storage)
+	em := service.NewEndpointModel(context.Background(), ss.storage)
 	ss.endpoint.endpoint, err = em.Get(ss.service.Meta.Namespace, ss.service.Meta.Name)
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
@@ -88,7 +87,7 @@ func endpointRestore(ss *ServiceState) error {
 	return nil
 }
 
-func endpointProvision(ss *ServiceState, svc *types.Service) error {
+func endpointProvision(ss *ServiceState, svc *models.Service) error {
 
 	if len(svc.Spec.Network.Ports) == 0 {
 
@@ -124,14 +123,14 @@ func endpointProvision(ss *ServiceState, svc *types.Service) error {
 	return nil
 }
 
-func endpointAdd(ss *ServiceState, svc *types.Service) error {
+func endpointAdd(ss *ServiceState, svc *models.Service) error {
 
 	var (
 		err error
-		em  = model.NewEndpointModel(context.Background(), ss.storage)
+		em  = service.NewEndpointModel(context.Background(), ss.storage)
 	)
 
-	if svc.Spec.Network.IP == types.EmptyString {
+	if svc.Spec.Network.IP == models.EmptyString {
 		ip, err := ss.ipam.Lease()
 		if err != nil {
 			log.Errorf("%s", err.Error())
@@ -140,7 +139,7 @@ func endpointAdd(ss *ServiceState, svc *types.Service) error {
 		svc.Spec.Network.IP = ip.String()
 	}
 
-	opts := types.EndpointCreateOptions{
+	opts := models.EndpointCreateOptions{
 		IP:            svc.Spec.Network.IP,
 		Ports:         svc.Spec.Network.Ports,
 		Policy:        svc.Spec.Network.Policy,
@@ -163,14 +162,14 @@ func endpointAdd(ss *ServiceState, svc *types.Service) error {
 
 }
 
-func endpointSet(ss *ServiceState, svc *types.Service) error {
+func endpointSet(ss *ServiceState, svc *models.Service) error {
 
 	var (
 		err error
-		em  = model.NewEndpointModel(context.Background(), ss.storage)
+		em  = service.NewEndpointModel(context.Background(), ss.storage)
 	)
 
-	opts := types.EndpointUpdateOptions{
+	opts := models.EndpointUpdateOptions{
 		Ports:         svc.Spec.Network.Ports,
 		Policy:        svc.Spec.Network.Policy,
 		BindStrategy:  svc.Spec.Network.Strategy.Bind,
@@ -188,7 +187,7 @@ func endpointSet(ss *ServiceState, svc *types.Service) error {
 
 func endpointDel(ss *ServiceState) error {
 
-	em := model.NewEndpointModel(context.Background(), ss.storage)
+	em := service.NewEndpointModel(context.Background(), ss.storage)
 	if ss.endpoint.endpoint != nil {
 		if err := em.Remove(ss.endpoint.endpoint); err != nil {
 			log.Errorf("%s> del endpoint error: %s", logEndpointPrefix, err.Error())
@@ -204,7 +203,7 @@ func endpointDel(ss *ServiceState) error {
 func endpointCheck(ss *ServiceState) error {
 
 	if ss.deployment.active != nil {
-		if ss.deployment.active.Status.State == types.StateReady {
+		if ss.deployment.active.Status.State == models.StateReady {
 			if err := endpointManifestProvision(ss); err != nil {
 				return err
 			}
@@ -214,7 +213,7 @@ func endpointCheck(ss *ServiceState) error {
 	return nil
 }
 
-func endpointManifestSpecEqual(e *types.Endpoint, m *types.EndpointManifest) bool {
+func endpointManifestSpecEqual(e *models.Endpoint, m *models.EndpointManifest) bool {
 
 	if e.Spec.IP != m.IP {
 		return false
@@ -266,7 +265,7 @@ func endpointManifestSpecEqual(e *types.Endpoint, m *types.EndpointManifest) boo
 	return true
 }
 
-func endpointManifestUpstreamsEqual(m *types.EndpointManifest, pl map[string]*types.Pod) bool {
+func endpointManifestUpstreamsEqual(m *models.EndpointManifest, pl map[string]*models.Pod) bool {
 
 	var (
 		ips = endpointManifestGetUpstreams(pl)
@@ -298,7 +297,7 @@ func endpointManifestProvision(ss *ServiceState) error {
 
 	if ss.endpoint.manifest != nil {
 
-		var pl = make(map[string]*types.Pod)
+		var pl = make(map[string]*models.Pod)
 
 		if ss.deployment.active != nil {
 			if _, ok := ss.pod.list[ss.deployment.active.SelfLink().String()]; ok {
@@ -327,8 +326,8 @@ func endpointManifestAdd(ss *ServiceState) error {
 
 	var (
 		err error
-		em  = model.NewEndpointModel(context.Background(), ss.storage)
-		pl  = make(map[string]*types.Pod)
+		em  = service.NewEndpointModel(context.Background(), ss.storage)
+		pl  = make(map[string]*models.Pod)
 	)
 
 	if ss.endpoint.endpoint == nil {
@@ -348,7 +347,7 @@ func endpointManifestAdd(ss *ServiceState) error {
 	}
 
 	if epm == nil {
-		ss.endpoint.manifest = &types.EndpointManifest{}
+		ss.endpoint.manifest = &models.EndpointManifest{}
 		ss.endpoint.manifest.EndpointSpec = ss.endpoint.endpoint.Spec
 		ss.endpoint.manifest.Upstreams = endpointManifestGetUpstreams(pl)
 
@@ -380,8 +379,8 @@ func endpointManifestSet(ss *ServiceState) error {
 
 	var (
 		err error
-		em  = model.NewEndpointModel(context.Background(), ss.storage)
-		pl  = make(map[string]*types.Pod)
+		em  = service.NewEndpointModel(context.Background(), ss.storage)
+		pl  = make(map[string]*models.Pod)
 	)
 
 	if ss.endpoint.endpoint == nil {
@@ -408,7 +407,7 @@ func endpointManifestSet(ss *ServiceState) error {
 
 func endpointManifestDel(ss *ServiceState) error {
 
-	em := model.NewEndpointModel(context.Background(), ss.storage)
+	em := service.NewEndpointModel(context.Background(), ss.storage)
 
 	if ss.endpoint.manifest != nil {
 		if err := em.ManifestDel(em.ManifestGetSelfLink(ss.service.Meta.Namespace, ss.service.Meta.Name)); err != nil {
@@ -422,12 +421,12 @@ func endpointManifestDel(ss *ServiceState) error {
 	return nil
 }
 
-func endpointManifestGetUpstreams(pl map[string]*types.Pod) []string {
+func endpointManifestGetUpstreams(pl map[string]*models.Pod) []string {
 
 	ips := make([]string, 0)
 
 	for _, p := range pl {
-		if p.Status.State == types.StateReady && p.Status.Network.PodIP != types.EmptyString {
+		if p.Status.State == models.StateReady && p.Status.Network.PodIP != models.EmptyString {
 			ips = append(ips, p.Status.Network.PodIP)
 		}
 	}

@@ -21,10 +21,6 @@ package node_test
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/api/envs"
-	"github.com/lastbackend/lastbackend/internal/master/cache"
-	"github.com/lastbackend/lastbackend/internal/master/http/node"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -32,8 +28,12 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/lastbackend/lastbackend/internal/api/envs"
+	"github.com/lastbackend/lastbackend/internal/master/cache"
+	"github.com/lastbackend/lastbackend/internal/master/http/node"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
@@ -51,7 +51,7 @@ func TestNodeListH(t *testing.T) {
 	var (
 		n1 = getNodeAsset("test1", "", true)
 		n2 = getNodeAsset("test2", "", false)
-		nl = types.NewNodeList()
+		nl = models.NewNodeList()
 	)
 
 	nl.Items = append(nl.Items, &n1)
@@ -77,7 +77,7 @@ func TestNodeListH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), models.EmptyString)
 		assert.NoError(t, err)
 
 		for _, n := range nl.Items {
@@ -169,7 +169,7 @@ func TestNodeGetH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), models.EmptyString)
 		assert.NoError(t, err)
 
 		err = stg.Put(context.Background(), stg.Collection().Node().Info(), n1.SelfLink().String(), &n1, nil)
@@ -229,18 +229,18 @@ func TestNodeGetManifestH(t *testing.T) {
 		p1 = "test1"
 		p2 = "test2"
 
-		nm = new(types.NodeManifest)
+		nm = new(models.NodeManifest)
 	)
 
 	nm.Meta.Initial = true
-	nm.Exporter = new(types.ExporterManifest)
-	nm.Resolvers = make(map[string]*types.ResolverManifest, 0)
-	nm.Network = make(map[string]*types.SubnetManifest, 0)
-	nm.Pods = make(map[string]*types.PodManifest, 0)
+	nm.Exporter = new(models.ExporterManifest)
+	nm.Resolvers = make(map[string]*models.ResolverManifest, 0)
+	nm.Network = make(map[string]*models.SubnetManifest, 0)
+	nm.Pods = make(map[string]*models.PodManifest, 0)
 	nm.Pods[p1] = getPodManifest()
 	nm.Pods[p2] = getPodManifest()
-	nm.Volumes = make(map[string]*types.VolumeManifest, 0)
-	nm.Endpoints = make(map[string]*types.EndpointManifest, 0)
+	nm.Volumes = make(map[string]*models.VolumeManifest, 0)
+	nm.Endpoints = make(map[string]*models.EndpointManifest, 0)
 
 	view, err := v1.View().Node().NewManifest(nm).ToJson()
 	assert.NoError(t, err)
@@ -273,10 +273,10 @@ func TestNodeGetManifestH(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 
-			err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
+			err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), models.EmptyString)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Manifest().Pod(n1.Meta.Name), types.EmptyString)
+			err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Manifest().Pod(n1.Meta.Name), models.EmptyString)
 			assert.NoError(t, err)
 
 			err = stg.Put(context.Background(), stg.Collection().Node().Info(), n1.SelfLink().String(), &n1, nil)
@@ -366,7 +366,7 @@ func TestNodeRemoveH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), models.EmptyString)
 		assert.NoError(t, err)
 
 		err = stg.Put(context.Background(), stg.Collection().Node().Info(), n1.SelfLink().String(), &n1, nil)
@@ -427,7 +427,7 @@ func TestNodeSetMetaH(t *testing.T) {
 
 	n1.Meta.Architecture = "test"
 
-	uo.Meta = &types.NodeUpdateMetaOptions{}
+	uo.Meta = &models.NodeUpdateMetaOptions{}
 	uo.Meta.Architecture = strPointer("test")
 
 	view, err := v1.View().Node().New(&n1).ToJson()
@@ -467,7 +467,7 @@ func TestNodeSetMetaH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), models.EmptyString)
 		assert.NoError(t, err)
 
 		err = stg.Put(context.Background(), stg.Collection().Node().Info(), n1.SelfLink().String(), &n1, nil)
@@ -506,7 +506,7 @@ func TestNodeSetMetaH(t *testing.T) {
 			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 
 			if tc.expectedCode == http.StatusOK {
-				got := new(types.Node)
+				got := new(models.Node)
 				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node().Info(), tc.args.node, got, nil)
 				assert.NoError(t, err)
 				if !assert.NotNil(t, got, "node should not be empty") {
@@ -573,7 +573,7 @@ func TestNodeConnectH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), models.EmptyString)
 		assert.NoError(t, err)
 
 		err = stg.Put(context.Background(), stg.Collection().Node().Info(), n1.SelfLink().String(), &n1, nil)
@@ -612,7 +612,7 @@ func TestNodeConnectH(t *testing.T) {
 			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 
 			if tc.expectedCode == http.StatusOK {
-				got := new(types.Node)
+				got := new(models.Node)
 				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node().Info(), tc.args.node, got, nil)
 				if assert.NoError(t, err) {
 					assert.Equal(t, uo.Info.Hostname, got.Meta.Hostname, "hostname not equal")
@@ -645,12 +645,12 @@ func TestNodeSetStatusH(t *testing.T) {
 		n1 = getNodeAsset("test1", "", true)
 		n2 = getNodeAsset("test2", "", true)
 		uo = v1.Request().Node().NodeStatusOptions()
-		nm = new(types.NodeManifest)
+		nm = new(models.NodeManifest)
 	)
 
 	nm.Meta.Initial = true
-	nm.Exporter = new(types.ExporterManifest)
-	nm.Resolvers = make(map[string]*types.ResolverManifest, 0)
+	nm.Exporter = new(models.ExporterManifest)
+	nm.Resolvers = make(map[string]*models.ResolverManifest, 0)
 	uo.Resources.Capacity.Pods = 20
 
 	type args struct {
@@ -689,7 +689,7 @@ func TestNodeSetStatusH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), models.EmptyString)
 		assert.NoError(t, err)
 
 		err = stg.Put(context.Background(), stg.Collection().Node().Info(), n1.SelfLink().String(), &n1, nil)
@@ -728,7 +728,7 @@ func TestNodeSetStatusH(t *testing.T) {
 			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 
 			if tc.expectedCode == http.StatusOK {
-				got := new(types.Node)
+				got := new(models.Node)
 				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node().Info(), tc.args.node, got, nil)
 				assert.NoError(t, err)
 				assert.Equal(t, uo.Resources.Capacity.Pods, got.Status.Capacity.Pods, "pods not equal")
@@ -746,19 +746,19 @@ func setRequestVars(r *mux.Router, req *http.Request) {
 	req = mux.SetURLVars(req, match.Vars)
 }
 
-func getNodeAsset(name, desc string, online bool) types.Node {
-	var n = types.Node{
-		Meta: types.NodeMeta{},
-		Status: types.NodeStatus{
+func getNodeAsset(name, desc string, online bool) models.Node {
+	var n = models.Node{
+		Meta: models.NodeMeta{},
+		Status: models.NodeStatus{
 			Online: true,
-			Capacity: types.NodeResources{
+			Capacity: models.NodeResources{
 				Containers: 2,
 				Pods:       2,
 				RAM:        1024,
 				CPU:        2,
 				Storage:    512,
 			},
-			Allocated: types.NodeResources{
+			Allocated: models.NodeResources{
 				Containers: 1,
 				Pods:       1,
 				RAM:        512,
@@ -766,18 +766,18 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 				Storage:    256,
 			},
 		},
-		Spec: types.NodeSpec{},
+		Spec: models.NodeSpec{},
 	}
 
 	n.Meta.Name = name
 	n.Meta.Description = desc
 	n.Meta.Hostname = name
-	n.Meta.SelfLink = *types.NewNodeSelfLink(n.Meta.Hostname)
+	n.Meta.SelfLink = *models.NewNodeSelfLink(n.Meta.Hostname)
 
 	return n
 }
 
-func getPodManifest() *types.PodManifest {
-	p := types.PodManifest{}
+func getPodManifest() *models.PodManifest {
+	p := models.PodManifest{}
 	return &p
 }

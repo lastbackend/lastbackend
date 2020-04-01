@@ -19,7 +19,7 @@
 package views
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"time"
 )
 
@@ -49,12 +49,12 @@ type SecretMap map[string]*Secret
 // swagger:model views_secret_list
 type SecretList []*Secret
 
-func (s *Secret) Decode() *types.Secret {
+func (s *Secret) Decode() *models.Secret {
 
-	o := new(types.Secret)
+	o := new(models.Secret)
 	o.Meta.Name = s.Meta.Name
 
-	o.Meta.SelfLink = *types.NewSecretSelfLink(s.Meta.Namespace, s.Meta.Name)
+	o.Meta.SelfLink = *models.NewSecretSelfLink(s.Meta.Namespace, s.Meta.Name)
 	o.Meta.Updated = s.Meta.Updated
 	o.Meta.Created = s.Meta.Created
 

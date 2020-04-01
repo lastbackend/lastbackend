@@ -20,13 +20,13 @@ package volume
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/lastbackend/lastbackend/internal/api/envs"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/tools/log"
-	"net/http"
 )
 
 const (
@@ -34,9 +34,9 @@ const (
 	logLevel  = 3
 )
 
-func Fetch(ctx context.Context, namespace, name string) (*types.Volume, *errors.Err) {
+func Fetch(ctx context.Context, namespace, name string) (*models.Volume, *errors.Err) {
 
-	vm := model.NewVolumeModel(ctx, envs.Get().GetStorage())
+	vm := service.NewVolumeModel(ctx, envs.Get().GetStorage())
 	vol, err := vm.Get(namespace, name)
 
 	if err != nil {
@@ -53,7 +53,7 @@ func Fetch(ctx context.Context, namespace, name string) (*types.Volume, *errors.
 	return vol, nil
 }
 
-func Apply(ctx context.Context, ns *types.Namespace, mf *request.VolumeManifest) (*types.Volume, *errors.Err) {
+func Apply(ctx context.Context, ns *models.Namespace, mf *request.VolumeManifest) (*models.Volume, *errors.Err) {
 
 	if mf.Meta.Name == nil {
 		return nil, errors.New("volume").BadParameter("meta.name")
@@ -73,9 +73,9 @@ func Apply(ctx context.Context, ns *types.Namespace, mf *request.VolumeManifest)
 	return Update(ctx, ns, vol, mf)
 }
 
-func Create(ctx context.Context, ns *types.Namespace, mf *request.VolumeManifest) (*types.Volume, *errors.Err) {
+func Create(ctx context.Context, ns *models.Namespace, mf *request.VolumeManifest) (*models.Volume, *errors.Err) {
 
-	vm := model.NewVolumeModel(ctx, envs.Get().GetStorage())
+	vm := service.NewVolumeModel(ctx, envs.Get().GetStorage())
 	if mf.Meta.Name != nil {
 
 		srv, err := vm.Get(ns.Meta.Name, *mf.Meta.Name)
@@ -90,9 +90,9 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.VolumeManifest
 		}
 	}
 
-	vol := new(types.Volume)
+	vol := new(models.Volume)
 	vol.Meta.SetDefault()
-	vol.Meta.SelfLink = *types.NewVolumeSelfLink(ns.Meta.Name, *mf.Meta.Name)
+	vol.Meta.SelfLink = *models.NewVolumeSelfLink(ns.Meta.Name, *mf.Meta.Name)
 	vol.Meta.Namespace = ns.Meta.Name
 
 	mf.SetVolumeMeta(vol)
@@ -107,9 +107,9 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.VolumeManifest
 }
 
 //
-func Update(ctx context.Context, ns *types.Namespace, vol *types.Volume, mf *request.VolumeManifest) (*types.Volume, *errors.Err) {
+func Update(ctx context.Context, ns *models.Namespace, vol *models.Volume, mf *request.VolumeManifest) (*models.Volume, *errors.Err) {
 
-	vm := model.NewVolumeModel(ctx, envs.Get().GetStorage())
+	vm := service.NewVolumeModel(ctx, envs.Get().GetStorage())
 
 	mf.SetVolumeMeta(vol)
 	mf.SetVolumeSpec(vol)

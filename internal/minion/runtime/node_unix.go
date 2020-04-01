@@ -26,7 +26,7 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/system"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
@@ -34,10 +34,10 @@ import (
 
 const MinContainerMemory uint64 = 32
 
-func (r Runtime) NodeInfo() types.NodeInfo {
+func (r Runtime) NodeInfo() models.NodeInfo {
 
 	var (
-		info = types.NodeInfo{}
+		info = models.NodeInfo{}
 	)
 
 	osInfo := system.GetOsInfo()
@@ -68,9 +68,9 @@ func (r Runtime) NodeInfo() types.NodeInfo {
 	return info
 }
 
-func (r Runtime) NodeStatus() types.NodeStatus {
+func (r Runtime) NodeStatus() models.NodeStatus {
 
-	var state = types.NodeStatus{}
+	var state = models.NodeStatus{}
 
 	state.Capacity = r.NodeCapacity()
 	state.Allocated = r.NodeAllocation()
@@ -78,7 +78,7 @@ func (r Runtime) NodeStatus() types.NodeStatus {
 	return state
 }
 
-func (r Runtime) NodeCapacity() types.NodeResources {
+func (r Runtime) NodeCapacity() models.NodeResources {
 
 	vmStat, err := mem.VirtualMemory()
 	if err != nil {
@@ -99,7 +99,7 @@ func (r Runtime) NodeCapacity() types.NodeResources {
 	storage := stat.Blocks * uint64(stat.Bsize)
 	m := vmStat.Total
 
-	return types.NodeResources{
+	return models.NodeResources{
 		Storage:    int64(storage),
 		RAM:        int64(m),
 		CPU:        int64(cpuStat[0].Mhz) * int64(1e6) * int64(cpuStat[0].Cores),
@@ -108,11 +108,11 @@ func (r Runtime) NodeCapacity() types.NodeResources {
 	}
 }
 
-func (r Runtime) NodeAllocation() types.NodeResources {
+func (r Runtime) NodeAllocation() models.NodeResources {
 
 	s := r.state.Pods()
 
-	return types.NodeResources{
+	return models.NodeResources{
 		RAM:        0,
 		CPU:        0, // TODO: need get cpu resource value
 		Pods:       s.GetPodsCount(),

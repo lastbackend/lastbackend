@@ -21,19 +21,19 @@ package views
 import (
 	"encoding/json"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type APIView struct{}
 
-func (nv *APIView) New(obj *types.API) *API {
+func (nv *APIView) New(obj *models.API) *API {
 	n := API{}
 	n.Meta = nv.ToAPIMeta(obj.Meta)
 	n.Status = nv.ToAPIStatus(obj.Status)
 	return &n
 }
 
-func (nv *APIView) ToAPIMeta(meta types.APIMeta) APIMeta {
+func (nv *APIView) ToAPIMeta(meta models.APIMeta) APIMeta {
 	m := APIMeta{}
 	m.Name = meta.Name
 	m.Description = meta.Description
@@ -42,7 +42,7 @@ func (nv *APIView) ToAPIMeta(meta types.APIMeta) APIMeta {
 	return m
 }
 
-func (nv *APIView) ToAPIStatus(status types.APIStatus) APIStatus {
+func (nv *APIView) ToAPIStatus(status models.APIStatus) APIStatus {
 	return APIStatus{
 		Ready: status.Ready,
 	}
@@ -52,7 +52,7 @@ func (obj *API) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func (nv *APIView) NewList(obj *types.APIList) *APIList {
+func (nv *APIView) NewList(obj *models.APIList) *APIList {
 	if obj == nil {
 		return nil
 	}

@@ -18,7 +18,7 @@
 
 package views
 
-import "github.com/lastbackend/lastbackend/internal/pkg/types"
+import "github.com/lastbackend/lastbackend/internal/pkg/models"
 
 // Discovery - default node structure
 // swagger:model views_ingress
@@ -46,8 +46,8 @@ type DiscoveryStatus struct {
 
 // swagger:model views_ingress_spec
 type DiscoveryManifest struct {
-	Meta    DiscoveryManifestMeta            `json:"meta"`
-	Subnets map[string]*types.SubnetManifest `json:"subnets"`
+	Meta    DiscoveryManifestMeta             `json:"meta"`
+	Subnets map[string]*models.SubnetManifest `json:"subnets"`
 }
 
 type DiscoveryManifestMeta struct {

@@ -19,7 +19,7 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 const logLevel = 3
@@ -29,8 +29,8 @@ type State struct {
 }
 
 type ExporterState struct {
-	Info   types.ExporterInfo
-	Status types.ExporterStatus
+	Info   models.ExporterInfo
+	Status models.ExporterStatus
 }
 
 func (s *State) Exporter() *ExporterState {

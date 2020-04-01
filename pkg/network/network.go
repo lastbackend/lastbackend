@@ -19,7 +19,7 @@
 package network
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/network/state"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
@@ -47,8 +47,8 @@ func New(v *viper.Viper) (*Network, error) {
 
 	net := new(Network)
 
-	if v.GetString("network.cni.type") == types.EmptyString &&
-		v.GetString("network.cpi.type") == types.EmptyString {
+	if v.GetString("network.cni.type") == models.EmptyString &&
+		v.GetString("network.cpi.type") == models.EmptyString {
 		log.Debug("run without network management")
 		return nil, nil
 	}
@@ -65,7 +65,7 @@ func New(v *viper.Viper) (*Network, error) {
 	}
 
 	rip := v.GetString("network.resolver.ip")
-	if rip == types.EmptyString {
+	if rip == models.EmptyString {
 		rip = DefaultResolverIP
 	}
 

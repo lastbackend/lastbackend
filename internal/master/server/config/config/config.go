@@ -20,13 +20,13 @@ package config
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/lastbackend/lastbackend/internal/api/envs"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/tools/log"
-	"net/http"
 )
 
 const (
@@ -34,9 +34,9 @@ const (
 	logLevel  = 3
 )
 
-func Fetch(ctx context.Context, namespace, name string) (*types.Config, *errors.Err) {
+func Fetch(ctx context.Context, namespace, name string) (*models.Config, *errors.Err) {
 
-	cm := model.NewConfigModel(ctx, envs.Get().GetStorage())
+	cm := service.NewConfigModel(ctx, envs.Get().GetStorage())
 	cfg, err := cm.Get(namespace, name)
 
 	if err != nil {
@@ -53,7 +53,7 @@ func Fetch(ctx context.Context, namespace, name string) (*types.Config, *errors.
 	return cfg, nil
 }
 
-func Apply(ctx context.Context, ns *types.Namespace, mf *request.ConfigManifest) (*types.Config, *errors.Err) {
+func Apply(ctx context.Context, ns *models.Namespace, mf *request.ConfigManifest) (*models.Config, *errors.Err) {
 
 	if mf.Meta.Name == nil {
 		return nil, errors.New("config").BadParameter("meta.name")
@@ -73,9 +73,9 @@ func Apply(ctx context.Context, ns *types.Namespace, mf *request.ConfigManifest)
 	return Update(ctx, ns, cfg, mf)
 }
 
-func Create(ctx context.Context, ns *types.Namespace, mf *request.ConfigManifest) (*types.Config, *errors.Err) {
+func Create(ctx context.Context, ns *models.Namespace, mf *request.ConfigManifest) (*models.Config, *errors.Err) {
 
-	cm := model.NewConfigModel(ctx, envs.Get().GetStorage())
+	cm := service.NewConfigModel(ctx, envs.Get().GetStorage())
 	if mf.Meta.Name != nil {
 
 		cf, err := cm.Get(ns.Meta.Name, *mf.Meta.Name)
@@ -90,10 +90,10 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.ConfigManifest
 		}
 	}
 
-	cfg := new(types.Config)
+	cfg := new(models.Config)
 	cfg.Meta.SetDefault()
 	cfg.Meta.Namespace = ns.Meta.Name
-	cfg.Meta.SelfLink = *types.NewConfigSelfLink(ns.Meta.Name, *mf.Meta.Name)
+	cfg.Meta.SelfLink = *models.NewConfigSelfLink(ns.Meta.Name, *mf.Meta.Name)
 
 	mf.SetConfigMeta(cfg)
 	mf.SetConfigSpec(cfg)
@@ -106,9 +106,9 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.ConfigManifest
 	return cfg, nil
 }
 
-func Update(ctx context.Context, ns *types.Namespace, cfg *types.Config, mf *request.ConfigManifest) (*types.Config, *errors.Err) {
+func Update(ctx context.Context, ns *models.Namespace, cfg *models.Config, mf *request.ConfigManifest) (*models.Config, *errors.Err) {
 
-	cm := model.NewConfigModel(ctx, envs.Get().GetStorage())
+	cm := service.NewConfigModel(ctx, envs.Get().GetStorage())
 
 	mf.SetConfigMeta(cfg)
 	mf.SetConfigSpec(cfg)

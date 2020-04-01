@@ -23,24 +23,24 @@ import (
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"sync"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/logger"
 )
 
 // NamespaceController structure
 type NamespaceController struct {
 	lock  sync.Mutex
-	items map[*types.NamespaceSelfLink]*types.Namespace
+	items map[*models.NamespaceSelfLink]*models.Namespace
 }
 
 // List all namespaces in state
-func (ns *NamespaceController) List(ctx context.Context) []*types.Namespace {
+func (ns *NamespaceController) List(ctx context.Context) []*models.Namespace {
 
 	log := logger.WithContext(ctx)
 	log.Debugf("%s:list:> get namespace list", logPrefix)
 
 	ns.lock.Lock()
-	items := make([]*types.Namespace, len(ns.items))
+	items := make([]*models.Namespace, len(ns.items))
 	for _, item := range ns.items {
 		items = append(items, item)
 	}
@@ -49,7 +49,7 @@ func (ns *NamespaceController) List(ctx context.Context) []*types.Namespace {
 	return items
 }
 
-func (ns *NamespaceController) Map(ctx context.Context) map[*types.NamespaceSelfLink]*types.Namespace {
+func (ns *NamespaceController) Map(ctx context.Context) map[*models.NamespaceSelfLink]*models.Namespace {
 
 	log := logger.WithContext(ctx)
 	log.Debugf("%s:list:> get namespace list", logPrefix)
@@ -58,7 +58,7 @@ func (ns *NamespaceController) Map(ctx context.Context) map[*types.NamespaceSelf
 }
 
 // Set namespace to state
-func (ns *NamespaceController) Set(ctx context.Context, mf *types.NamespaceManifest) (*types.Namespace, error) {
+func (ns *NamespaceController) Set(ctx context.Context, mf *models.NamespaceManifest) (*models.Namespace, error) {
 	log := logger.WithContext(ctx)
 	log.Debugf("%s:list:> set namespace", logPrefix)
 
@@ -66,7 +66,7 @@ func (ns *NamespaceController) Set(ctx context.Context, mf *types.NamespaceManif
 }
 
 // Get particular namespace from state
-func (ns *NamespaceController) Get(ctx context.Context, selflink *types.NamespaceSelfLink) (*types.Namespace, error) {
+func (ns *NamespaceController) Get(ctx context.Context, selflink *models.NamespaceSelfLink) (*models.Namespace, error) {
 	log := logger.WithContext(ctx)
 	log.Debugf("%s:list:> get namespace from state", logPrefix)
 
@@ -82,7 +82,7 @@ func (ns *NamespaceController) Get(ctx context.Context, selflink *types.Namespac
 }
 
 // Del namespace in state
-func (ns *NamespaceController) Del(ctx context.Context, selflink *types.NamespaceSelfLink) error {
+func (ns *NamespaceController) Del(ctx context.Context, selflink *models.NamespaceSelfLink) error {
 	log := logger.WithContext(ctx)
 	log.Debugf("%s:list:> delete namespace from state", logPrefix)
 

@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -30,21 +30,21 @@ const logCacheNode = "api:cache:node"
 
 type CacheNodeManifest struct {
 	lock      sync.RWMutex
-	nodes     map[string]*types.Node
-	ingress   map[string]*types.Ingress
-	exporter  map[string]*types.Exporter
-	discovery map[string]*types.Discovery
-	configs   map[string]*types.ConfigManifest
-	manifests map[string]*types.NodeManifest
+	nodes     map[string]*models.Node
+	ingress   map[string]*models.Ingress
+	exporter  map[string]*models.Exporter
+	discovery map[string]*models.Discovery
+	configs   map[string]*models.ConfigManifest
+	manifests map[string]*models.NodeManifest
 }
 
 func (c *CacheNodeManifest) checkNode(node string) {
 	if _, ok := c.manifests[node]; !ok {
-		c.manifests[node] = new(types.NodeManifest)
+		c.manifests[node] = new(models.NodeManifest)
 	}
 }
 
-func (c *CacheNodeManifest) SetPodManifest(node, pod string, s *types.PodManifest) {
+func (c *CacheNodeManifest) SetPodManifest(node, pod string, s *models.PodManifest) {
 	log.Infof("%s:PodManifestSet:> %s, %s, %#v", logCacheNode, node, pod, s)
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -53,7 +53,7 @@ func (c *CacheNodeManifest) SetPodManifest(node, pod string, s *types.PodManifes
 
 	if c.manifests[node].Pods == nil {
 		sp := c.manifests[node]
-		sp.Pods = make(map[string]*types.PodManifest, 0)
+		sp.Pods = make(map[string]*models.PodManifest, 0)
 	}
 
 	c.manifests[node].Pods[pod] = s
@@ -71,7 +71,7 @@ func (c *CacheNodeManifest) DelPodManifest(node, pod string) {
 	delete(c.manifests[node].Pods, pod)
 }
 
-func (c *CacheNodeManifest) SetVolumeManifest(node, volume string, s *types.VolumeManifest) {
+func (c *CacheNodeManifest) SetVolumeManifest(node, volume string, s *models.VolumeManifest) {
 
 	log.Infof("%s:SetVolumeManifest:> %s, %s", logCacheNode, node, volume)
 
@@ -82,7 +82,7 @@ func (c *CacheNodeManifest) SetVolumeManifest(node, volume string, s *types.Volu
 
 	if c.manifests[node].Volumes == nil {
 		sp := c.manifests[node]
-		sp.Volumes = make(map[string]*types.VolumeManifest, 0)
+		sp.Volumes = make(map[string]*models.VolumeManifest, 0)
 	}
 
 	c.manifests[node].Volumes[volume] = s
@@ -102,49 +102,49 @@ func (c *CacheNodeManifest) DelVolumeManifest(node, volume string) {
 	delete(c.manifests[node].Volumes, volume)
 }
 
-func (c *CacheNodeManifest) SetSubnetManifest(cidr string, s *types.SubnetManifest) {
+func (c *CacheNodeManifest) SetSubnetManifest(cidr string, s *models.SubnetManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
 	for n := range c.manifests {
 
 		if _, ok := c.manifests[n].Network[cidr]; !ok {
-			c.manifests[n].Network = make(map[string]*types.SubnetManifest)
+			c.manifests[n].Network = make(map[string]*models.SubnetManifest)
 		}
 
 		c.manifests[n].Network[cidr] = s
 	}
 }
 
-func (c *CacheNodeManifest) SetSecretManifest(name string, s *types.SecretManifest) {
+func (c *CacheNodeManifest) SetSecretManifest(name string, s *models.SecretManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
 	for n := range c.manifests {
 
 		if _, ok := c.manifests[n].Secrets[name]; !ok {
-			c.manifests[n].Secrets = make(map[string]*types.SecretManifest)
+			c.manifests[n].Secrets = make(map[string]*models.SecretManifest)
 		}
 
 		c.manifests[n].Secrets[name] = s
 	}
 }
 
-func (c *CacheNodeManifest) SetConfigManifest(name string, s *types.ConfigManifest) {
+func (c *CacheNodeManifest) SetConfigManifest(name string, s *models.ConfigManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
 	c.configs[name] = s
 	for n := range c.manifests {
 		if _, ok := c.manifests[n].Configs[name]; !ok {
-			c.manifests[n].Configs = make(map[string]*types.ConfigManifest)
+			c.manifests[n].Configs = make(map[string]*models.ConfigManifest)
 		}
 
 		c.manifests[n].Configs[name] = s
 	}
 }
 
-func (c *CacheNodeManifest) SetEndpointManifest(addr string, s *types.EndpointManifest) {
+func (c *CacheNodeManifest) SetEndpointManifest(addr string, s *models.EndpointManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -152,13 +152,13 @@ func (c *CacheNodeManifest) SetEndpointManifest(addr string, s *types.EndpointMa
 
 	for _, n := range c.manifests {
 		if n.Endpoints == nil {
-			n.Endpoints = make(map[string]*types.EndpointManifest, 0)
+			n.Endpoints = make(map[string]*models.EndpointManifest, 0)
 		}
 		n.Endpoints[addr] = s
 	}
 }
 
-func (c *CacheNodeManifest) SetIngress(ingress *types.Ingress) {
+func (c *CacheNodeManifest) SetIngress(ingress *models.Ingress) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.ingress[ingress.SelfLink().String()] = ingress
@@ -170,7 +170,7 @@ func (c *CacheNodeManifest) DelIngress(selflink string) {
 	delete(c.ingress, selflink)
 }
 
-func (c *CacheNodeManifest) SetDiscovery(discovery *types.Discovery) {
+func (c *CacheNodeManifest) SetDiscovery(discovery *models.Discovery) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -206,11 +206,11 @@ func (c *CacheNodeManifest) DelDiscovery(selflink string) {
 	defer c.lock.Unlock()
 	delete(c.discovery, selflink)
 
-	resolvers := make(map[string]*types.ResolverManifest, 0)
+	resolvers := make(map[string]*models.ResolverManifest, 0)
 
 	for _, d := range c.discovery {
 		if d.Status.Ready {
-			resolvers[d.Status.IP] = &types.ResolverManifest{
+			resolvers[d.Status.IP] = &models.ResolverManifest{
 				IP:   d.Status.IP,
 				Port: d.Status.Port,
 			}
@@ -222,7 +222,7 @@ func (c *CacheNodeManifest) DelDiscovery(selflink string) {
 	}
 }
 
-func (c *CacheNodeManifest) SetExporter(exporter *types.Exporter) {
+func (c *CacheNodeManifest) SetExporter(exporter *models.Exporter) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -265,7 +265,7 @@ func (c *CacheNodeManifest) DelExporter(selflink string) {
 	for _, d := range c.exporter {
 		if d.Status.Ready {
 
-			exporter := &types.ExporterManifest{
+			exporter := &models.ExporterManifest{
 				Endpoint: fmt.Sprintf("%s:%d", d.Status.Listener.IP, d.Status.Listener.Port),
 			}
 
@@ -287,7 +287,7 @@ func (c *CacheNodeManifest) SetExporterEndpoint() {
 	for _, d := range c.exporter {
 		if d.Status.Ready {
 
-			exporter := &types.ExporterManifest{
+			exporter := &models.ExporterManifest{
 				Endpoint: fmt.Sprintf("%s:%d", d.Status.Listener.IP, d.Status.Listener.Port),
 			}
 
@@ -300,12 +300,12 @@ func (c *CacheNodeManifest) SetExporterEndpoint() {
 	}
 }
 
-func (c *CacheNodeManifest) GetExporterEndpoint() *types.ExporterManifest {
+func (c *CacheNodeManifest) GetExporterEndpoint() *models.ExporterManifest {
 
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	exporter := new(types.ExporterManifest)
+	exporter := new(models.ExporterManifest)
 
 	for _, d := range c.exporter {
 		if d.Status.Ready {
@@ -317,11 +317,11 @@ func (c *CacheNodeManifest) GetExporterEndpoint() *types.ExporterManifest {
 }
 
 func (c *CacheNodeManifest) SetResolvers() {
-	resolvers := make(map[string]*types.ResolverManifest, 0)
+	resolvers := make(map[string]*models.ResolverManifest, 0)
 
 	for _, d := range c.discovery {
 		if d.Status.Ready {
-			resolvers[d.Status.IP] = &types.ResolverManifest{
+			resolvers[d.Status.IP] = &models.ResolverManifest{
 				IP:   d.Status.IP,
 				Port: d.Status.Port,
 			}
@@ -333,13 +333,13 @@ func (c *CacheNodeManifest) SetResolvers() {
 	}
 }
 
-func (c *CacheNodeManifest) GetResolvers() map[string]*types.ResolverManifest {
+func (c *CacheNodeManifest) GetResolvers() map[string]*models.ResolverManifest {
 
-	resolvers := make(map[string]*types.ResolverManifest, 0)
+	resolvers := make(map[string]*models.ResolverManifest, 0)
 
 	for _, d := range c.discovery {
 		if d.Status.Ready {
-			resolvers[d.Status.IP] = &types.ResolverManifest{
+			resolvers[d.Status.IP] = &models.ResolverManifest{
 				IP:   d.Status.IP,
 				Port: d.Status.Port,
 			}
@@ -349,24 +349,24 @@ func (c *CacheNodeManifest) GetResolvers() map[string]*types.ResolverManifest {
 	return resolvers
 }
 
-func (c *CacheNodeManifest) GetConfigs() map[string]*types.ConfigManifest {
+func (c *CacheNodeManifest) GetConfigs() map[string]*models.ConfigManifest {
 	return c.configs
 }
 
-func (c *CacheNodeManifest) SetNode(node *types.Node) {
+func (c *CacheNodeManifest) SetNode(node *models.Node) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.nodes[node.SelfLink().String()] = node
 }
 
-func (c *CacheNodeManifest) DelNode(node *types.Node) {
+func (c *CacheNodeManifest) DelNode(node *models.Node) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	delete(c.nodes, node.SelfLink().String())
 	delete(c.manifests, node.SelfLink().String())
 }
 
-func (c *CacheNodeManifest) Get(node string) *types.NodeManifest {
+func (c *CacheNodeManifest) Get(node string) *models.NodeManifest {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if s, ok := c.manifests[node]; !ok {
@@ -379,7 +379,7 @@ func (c *CacheNodeManifest) Get(node string) *types.NodeManifest {
 func (c *CacheNodeManifest) Flush(node string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	c.manifests[node] = new(types.NodeManifest)
+	c.manifests[node] = new(models.NodeManifest)
 }
 
 func (c *CacheNodeManifest) Clear(node string) {
@@ -390,10 +390,10 @@ func (c *CacheNodeManifest) Clear(node string) {
 
 func NewCacheNodeManifest() *CacheNodeManifest {
 	c := new(CacheNodeManifest)
-	c.exporter = make(map[string]*types.Exporter, 0)
-	c.manifests = make(map[string]*types.NodeManifest, 0)
-	c.ingress = make(map[string]*types.Ingress, 0)
-	c.discovery = make(map[string]*types.Discovery, 0)
-	c.configs = make(map[string]*types.ConfigManifest, 0)
+	c.exporter = make(map[string]*models.Exporter, 0)
+	c.manifests = make(map[string]*models.NodeManifest, 0)
+	c.ingress = make(map[string]*models.Ingress, 0)
+	c.discovery = make(map[string]*models.Discovery, 0)
+	c.configs = make(map[string]*models.ConfigManifest, 0)
 	return c
 }

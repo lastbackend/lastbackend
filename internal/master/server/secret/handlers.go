@@ -20,11 +20,11 @@ package secret
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/internal/master/server/middleware"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	h "github.com/lastbackend/lastbackend/internal/util/http"
 	"github.com/lastbackend/lastbackend/tools/logger"
 )
@@ -35,11 +35,11 @@ const (
 
 // Handler represent the http handler for secret
 type Handler struct {
-	Vault *types.Vault
+	Vault *models.Vault
 }
 
 type Config struct {
-	Vault *types.Vault
+	Vault *models.Vault
 }
 
 // NewSecretHandler will initialize the secret resources endpoint

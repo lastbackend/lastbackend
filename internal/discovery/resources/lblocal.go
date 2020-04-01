@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/lastbackend/lastbackend/internal/discovery/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
 	"github.com/lastbackend/lastbackend/internal/util"
 	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/miekg/dns"
@@ -45,7 +44,7 @@ func lbLocal(w dns.ResponseWriter, r *dns.Msg) {
 	m.SetReply(r)
 	m.Compress = false
 
-	em := model.NewEndpointModel(context.Background(), envs.Get().GetStorage())
+	em := service.NewEndpointModel(context.Background(), envs.Get().GetStorage())
 
 	switch r.Opcode {
 	case dns.OpcodeQuery:

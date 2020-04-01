@@ -20,17 +20,17 @@ package exporter
 
 import (
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/lastbackend/lastbackend/internal/exporter/controller"
 	"github.com/lastbackend/lastbackend/internal/exporter/envs"
 	"github.com/lastbackend/lastbackend/internal/exporter/http"
 	"github.com/lastbackend/lastbackend/internal/exporter/logger"
 	"github.com/lastbackend/lastbackend/internal/exporter/runtime"
 	"github.com/lastbackend/lastbackend/internal/exporter/state"
-	"os"
-	"os/signal"
-	"syscall"
-
-	"github.com/lastbackend/lastbackend/pkg/client"
+	"github.com/lastbackend/lastbackend/pkg/client/cluster"
 	l "github.com/lastbackend/lastbackend/tools/log"
 	"github.com/spf13/viper"
 )
@@ -88,11 +88,11 @@ func Daemon(v *viper.Viper) {
 
 	if v.IsSet("api") {
 
-		cfg := client.NewConfig()
+		cfg := cluster.NewConfig()
 		cfg.BearerToken = v.GetString("token")
 
 		if v.IsSet("api.tls") && !v.GetBool("api.tls.insecure") {
-			cfg.TLS = client.NewTLSConfig()
+			cfg.TLS = cluster.NewTLSConfig()
 			cfg.TLS.CertFile = v.GetString("api.tls.cert")
 			cfg.TLS.KeyFile = v.GetString("api.tls.key")
 			cfg.TLS.CAFile = v.GetString("api.tls.ca")
@@ -103,7 +103,7 @@ func Daemon(v *viper.Viper) {
 			log.Fatalf("Api endpoint is not set")
 		}
 
-		rest, err := client.New(client.ClientHTTP, endpoint, cfg)
+		rest, err := cluster.New(cluster.ClientHTTP, endpoint, cfg)
 		if err != nil {
 			log.Errorf("Init client err: %s", err)
 		}

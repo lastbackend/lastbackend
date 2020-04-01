@@ -22,17 +22,17 @@ package cni
 import (
 	"context"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni/local"
 	"github.com/spf13/viper"
 )
 
 type CNI interface {
-	Info(ctx context.Context) *types.NetworkState
-	Create(ctx context.Context, network *types.SubnetManifest) (*types.NetworkState, error)
-	Destroy(ctx context.Context, network *types.NetworkState) error
-	Replace(ctx context.Context, state *types.NetworkState, manifest *types.SubnetManifest) (*types.NetworkState, error)
-	Subnets(ctx context.Context) (map[string]*types.NetworkState, error)
+	Info(ctx context.Context) *models.NetworkState
+	Create(ctx context.Context, network *models.SubnetManifest) (*models.NetworkState, error)
+	Destroy(ctx context.Context, network *models.NetworkState) error
+	Replace(ctx context.Context, state *models.NetworkState, manifest *models.SubnetManifest) (*models.NetworkState, error)
+	Subnets(ctx context.Context) (map[string]*models.NetworkState, error)
 }
 
 func New(v *viper.Viper) (CNI, error) {

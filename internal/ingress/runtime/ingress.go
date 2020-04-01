@@ -20,15 +20,15 @@ package runtime
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/system"
 	"os"
 )
 
-func (r Runtime) IngressInfo() types.IngressInfo {
+func (r Runtime) IngressInfo() models.IngressInfo {
 
 	var (
-		info = types.IngressInfo{}
+		info = models.IngressInfo{}
 	)
 
 	osInfo := system.GetOsInfo()
@@ -51,8 +51,8 @@ func (r Runtime) IngressInfo() types.IngressInfo {
 	return info
 }
 
-func (r Runtime) IngressStatus() types.IngressStatus {
+func (r Runtime) IngressStatus() models.IngressStatus {
 
-	var state = types.IngressStatus{}
+	var state = models.IngressStatus{}
 	return state
 }

@@ -20,9 +20,10 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/internal/util/resource"
 	"gopkg.in/yaml.v2"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/util/resource"
 )
 
 type NamespaceManifest struct {
@@ -55,9 +56,9 @@ func (s *NamespaceManifest) ToYaml() ([]byte, error) {
 	return yaml.Marshal(s)
 }
 
-func (s *NamespaceManifest) SetNamespaceMeta(ns *types.Namespace) {
+func (s *NamespaceManifest) SetNamespaceMeta(ns *models.Namespace) {
 
-	if ns.Meta.Name == types.EmptyString {
+	if ns.Meta.Name == models.EmptyString {
 		ns.Meta.Name = *s.Meta.Name
 	}
 
@@ -73,7 +74,7 @@ func (s *NamespaceManifest) SetNamespaceMeta(ns *types.Namespace) {
 	}
 }
 
-func (s *NamespaceManifest) SetNamespaceSpec(ns *types.Namespace) error {
+func (s *NamespaceManifest) SetNamespaceSpec(ns *models.Namespace) error {
 
 	if s.Spec.Resources != nil {
 

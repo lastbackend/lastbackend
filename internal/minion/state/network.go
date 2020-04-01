@@ -19,26 +19,27 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"sync"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 type NetworkState struct {
 	lock    sync.RWMutex
-	subnets map[string]types.NetworkState
+	subnets map[string]models.NetworkState
 }
 
-func (n *NetworkState) GetSubnets() map[string]types.NetworkState {
+func (n *NetworkState) GetSubnets() map[string]models.NetworkState {
 	return n.subnets
 }
 
-func (n *NetworkState) AddSubnet(cidr string, sn *types.NetworkState) {
+func (n *NetworkState) AddSubnet(cidr string, sn *models.NetworkState) {
 	log.V(logLevel).Debugf("Stage: NetworkState: add subnet: %s", cidr)
 	n.SetSubnet(cidr, sn)
 }
 
-func (n *NetworkState) SetSubnet(cidr string, sn *types.NetworkState) {
+func (n *NetworkState) SetSubnet(cidr string, sn *models.NetworkState) {
 	log.V(logLevel).Debugf("Stage: NetworkState: set subnet: %s", cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
@@ -50,7 +51,7 @@ func (n *NetworkState) SetSubnet(cidr string, sn *types.NetworkState) {
 	n.subnets[cidr] = *sn
 }
 
-func (n *NetworkState) GetSubnet(cidr string) *types.NetworkState {
+func (n *NetworkState) GetSubnet(cidr string) *models.NetworkState {
 	log.V(logLevel).Debugf("Stage: NetworkState: get subnet: %s", cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()

@@ -20,18 +20,18 @@ package csi
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi/dir"
 	"github.com/spf13/viper"
 )
 
 type CSI interface {
-	List(ctx context.Context) (map[string]*types.VolumeState, error)
-	Create(ctx context.Context, name string, manifest *types.VolumeManifest) (*types.VolumeState, error)
-	FilesPut(ctx context.Context, state *types.VolumeState, files map[string]string) error
-	FilesCheck(ctx context.Context, state *types.VolumeState, files map[string]string) (bool, error)
-	FilesDel(ctx context.Context, state *types.VolumeState, files []string) error
-	Remove(ctx context.Context, state *types.VolumeState) error
+	List(ctx context.Context) (map[string]*models.VolumeState, error)
+	Create(ctx context.Context, name string, manifest *models.VolumeManifest) (*models.VolumeState, error)
+	FilesPut(ctx context.Context, state *models.VolumeState, files map[string]string) error
+	FilesCheck(ctx context.Context, state *models.VolumeState, files map[string]string) (bool, error)
+	FilesDel(ctx context.Context, state *models.VolumeState, files []string) error
+	Remove(ctx context.Context, state *models.VolumeState) error
 }
 
 func New(kind string, v *viper.Viper) (CSI, error) {

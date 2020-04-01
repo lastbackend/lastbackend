@@ -24,15 +24,15 @@ import (
 	"strings"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 	"golang.org/x/net/context"
 )
 
-func (r Runtime) ImagePull(ctx context.Context, namespace string, image *types.SpecTemplateContainerImage) error {
+func (r Runtime) ImagePull(ctx context.Context, namespace string, image *models.SpecTemplateContainerImage) error {
 
 	var (
-		mf = new(types.ImageManifest)
+		mf = new(models.ImageManifest)
 	)
 
 	mf.Name = image.Name
@@ -40,7 +40,7 @@ func (r Runtime) ImagePull(ctx context.Context, namespace string, image *types.S
 		mf.Name = fmt.Sprintf("%s@%s", strings.Split(image.Name, ":")[0], image.Sha)
 	}
 
-	if image.Secret.Name != types.EmptyString {
+	if image.Secret.Name != models.EmptyString {
 
 		secret, err := r.SecretGet(ctx, namespace, image.Secret.Name)
 		if err != nil {
@@ -65,7 +65,7 @@ func (r Runtime) ImagePull(ctx context.Context, namespace string, image *types.S
 			return errors.New("docker auth secret format is invalid")
 		}
 
-		data := types.SecretAuthData{
+		data := models.SecretAuthData{
 			Username: pair[0],
 			Password: pair[1],
 		}

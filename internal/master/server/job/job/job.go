@@ -20,14 +20,15 @@ package job
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/lastbackend/lastbackend/internal/api/envs"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/pkg/service"
 	"github.com/lastbackend/lastbackend/internal/util/resource"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/tools/log"
-	"net/http"
 )
 
 const (
@@ -35,9 +36,9 @@ const (
 	logLevel  = 3
 )
 
-func Fetch(ctx context.Context, namespace, name string) (*types.Job, *errors.Err) {
-	jm := model.NewJobModel(ctx, envs.Get().GetStorage())
-	job, err := jm.Get(types.NewJobSelfLink(namespace, name).String())
+func Fetch(ctx context.Context, namespace, name string) (*models.Job, *errors.Err) {
+	jm := service.NewJobModel(ctx, envs.Get().GetStorage())
+	job, err := jm.Get(models.NewJobSelfLink(namespace, name).String())
 
 	if err != nil {
 		log.Errorf("%s:fetch:> err: %s", logPrefix, err.Error())
@@ -53,7 +54,7 @@ func Fetch(ctx context.Context, namespace, name string) (*types.Job, *errors.Err
 	return job, nil
 }
 
-func Apply(ctx context.Context, ns *types.Namespace, mf *request.JobManifest) (*types.Job, *errors.Err) {
+func Apply(ctx context.Context, ns *models.Namespace, mf *request.JobManifest) (*models.Job, *errors.Err) {
 
 	if mf.Meta.Name == nil {
 		return nil, errors.New("job").BadParameter("meta.name")
@@ -73,14 +74,14 @@ func Apply(ctx context.Context, ns *types.Namespace, mf *request.JobManifest) (*
 	return Update(ctx, ns, job, mf)
 }
 
-func Create(ctx context.Context, ns *types.Namespace, mf *request.JobManifest) (*types.Job, *errors.Err) {
+func Create(ctx context.Context, ns *models.Namespace, mf *request.JobManifest) (*models.Job, *errors.Err) {
 
-	jm := model.NewJobModel(ctx, envs.Get().GetStorage())
-	nm := model.NewNamespaceModel(ctx, envs.Get().GetStorage())
+	jm := service.NewJobModel(ctx, envs.Get().GetStorage())
+	nm := service.NewNamespaceModel(ctx, envs.Get().GetStorage())
 
 	if mf.Meta.Name != nil {
 
-		job, err := jm.Get(types.NewJobSelfLink(ns.Meta.Name, *mf.Meta.Name).String())
+		job, err := jm.Get(models.NewJobSelfLink(ns.Meta.Name, *mf.Meta.Name).String())
 		if err != nil {
 			log.Errorf("%s:create:> get job by name `%s` in namespace `%s` err: %s", logPrefix, mf.Meta.Name, ns.Meta.Name, err.Error())
 			return nil, errors.New("job").InternalServerError()
@@ -94,11 +95,11 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.JobManifest) (
 		}
 	}
 
-	job := new(types.Job)
+	job := new(models.Job)
 	mf.SetJobMeta(job)
-	job.Meta.SelfLink = *types.NewJobSelfLink(ns.Meta.Name, *mf.Meta.Name)
+	job.Meta.SelfLink = *models.NewJobSelfLink(ns.Meta.Name, *mf.Meta.Name)
 	job.Meta.Namespace = ns.Meta.Name
-	job.Status.State = types.StateCreated
+	job.Status.State = models.StateCreated
 
 	if err := mf.SetJobSpec(job); err != nil {
 		return nil, errors.New("job").BadRequest(err.Error())
@@ -107,10 +108,10 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.JobManifest) (
 	if ns.Spec.Resources.Limits.RAM != 0 || ns.Spec.Resources.Limits.CPU != 0 {
 		for _, c := range job.Spec.Task.Template.Containers {
 			if c.Resources.Limits.RAM == 0 {
-				c.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(types.DEFAULT_RESOURCE_LIMITS_RAM)
+				c.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(models.DEFAULT_RESOURCE_LIMITS_RAM)
 			}
 			if c.Resources.Limits.CPU == 0 {
-				c.Resources.Limits.CPU, _ = resource.DecodeCpuResource(types.DEFAULT_RESOURCE_LIMITS_CPU)
+				c.Resources.Limits.CPU, _ = resource.DecodeCpuResource(models.DEFAULT_RESOURCE_LIMITS_CPU)
 			}
 		}
 	}
@@ -135,10 +136,10 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.JobManifest) (
 	return job, nil
 }
 
-func Update(ctx context.Context, ns *types.Namespace, job *types.Job, mf *request.JobManifest) (*types.Job, *errors.Err) {
+func Update(ctx context.Context, ns *models.Namespace, job *models.Job, mf *request.JobManifest) (*models.Job, *errors.Err) {
 
-	jm := model.NewJobModel(ctx, envs.Get().GetStorage())
-	nm := model.NewNamespaceModel(ctx, envs.Get().GetStorage())
+	jm := service.NewJobModel(ctx, envs.Get().GetStorage())
+	nm := service.NewNamespaceModel(ctx, envs.Get().GetStorage())
 
 	resources := job.Spec.GetResourceRequest()
 

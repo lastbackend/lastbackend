@@ -22,7 +22,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -32,8 +32,8 @@ type PodState struct {
 	lock       sync.RWMutex
 	stats      PodStateStats
 	local      map[string]bool
-	containers map[string]*types.PodContainer
-	pods       map[string]*types.PodStatus
+	containers map[string]*models.PodContainer
+	pods       map[string]*models.PodStatus
 	watchers   map[chan string]bool
 }
 
@@ -64,12 +64,12 @@ func (s *PodState) GetContainersCount() int {
 	return s.stats.containers
 }
 
-func (s *PodState) GetPods() map[string]*types.PodStatus {
+func (s *PodState) GetPods() map[string]*models.PodStatus {
 	log.V(logLevel).Debugf("%s: get pods", logPodPrefix)
 	return s.pods
 }
 
-func (s *PodState) SetPods(pods map[string]*types.PodStatus) {
+func (s *PodState) SetPods(pods map[string]*models.PodStatus) {
 	log.V(logLevel).Debugf("%s: set pods: %d", logPodPrefix, len(pods))
 	for key, pod := range pods {
 		state(pod)
@@ -78,7 +78,7 @@ func (s *PodState) SetPods(pods map[string]*types.PodStatus) {
 	}
 }
 
-func (s *PodState) GetPod(key string) *types.PodStatus {
+func (s *PodState) GetPod(key string) *models.PodStatus {
 	log.V(logLevel).Debugf("%s: get pod: %s", logPodPrefix, key)
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -89,7 +89,7 @@ func (s *PodState) GetPod(key string) *types.PodStatus {
 	return pod
 }
 
-func (s *PodState) AddPod(key string, pod *types.PodStatus) {
+func (s *PodState) AddPod(key string, pod *models.PodStatus) {
 	log.V(logLevel).Debugf("%s: add pod: %s: %s ", logPodPrefix, key, pod.Status)
 	s.SetPod(key, pod)
 }
@@ -112,7 +112,7 @@ func (s *PodState) IsLocal(key string) bool {
 	return false
 }
 
-func (s *PodState) SetPod(key string, pod *types.PodStatus) {
+func (s *PodState) SetPod(key string, pod *models.PodStatus) {
 	log.V(logLevel).Debugf("%s: set pod %s: %s", logPodPrefix, key, pod.Status)
 
 	s.lock.Lock()
@@ -146,7 +146,7 @@ func (s *PodState) DelPod(key string) {
 	s.dispatch(key)
 }
 
-func (s *PodState) GetContainer(id string) *types.PodContainer {
+func (s *PodState) GetContainer(id string) *models.PodContainer {
 	log.V(logLevel).Debugf("%s: get container: %s", logPodPrefix, id)
 	c, ok := s.containers[id]
 	if !ok {
@@ -155,7 +155,7 @@ func (s *PodState) GetContainer(id string) *types.PodContainer {
 	return c
 }
 
-func (s *PodState) AddContainer(c *types.PodContainer) {
+func (s *PodState) AddContainer(c *models.PodContainer) {
 	log.V(logLevel).Debugf("%s: add container: %s", logPodPrefix, c.ID)
 	s.lock.Lock()
 	if _, ok := s.containers[c.ID]; !ok {
@@ -166,7 +166,7 @@ func (s *PodState) AddContainer(c *types.PodContainer) {
 	s.lock.Unlock()
 }
 
-func (s *PodState) SetContainer(c *types.PodContainer) {
+func (s *PodState) SetContainer(c *models.PodContainer) {
 	log.V(logLevel).Debugf("%s: set container: %s", logPodPrefix, c.ID)
 	s.lock.Lock()
 
@@ -178,7 +178,7 @@ func (s *PodState) SetContainer(c *types.PodContainer) {
 	s.lock.Unlock()
 }
 
-func (s *PodState) DelContainer(c *types.PodContainer) {
+func (s *PodState) DelContainer(c *models.PodContainer) {
 	log.V(logLevel).Debugf("%s: del container: %s", logPodPrefix, c.ID)
 	s.lock.Lock()
 	if _, ok := s.containers[c.ID]; ok {
@@ -197,28 +197,28 @@ func (s *PodState) DelContainer(c *types.PodContainer) {
 	s.lock.Unlock()
 }
 
-func state(s *types.PodStatus) {
+func state(s *models.PodStatus) {
 
 	var sts = make(map[string]int)
 	var ems string
 
 	switch s.State {
-	case types.StateExited:
+	case models.StateExited:
 		return
-	case types.StateDestroyed:
+	case models.StateDestroyed:
 		return
-	case types.StateError:
+	case models.StateError:
 		return
-	case types.StateProvision:
+	case models.StateProvision:
 		return
-	case types.StateCreated:
+	case models.StateCreated:
 		return
-	case types.StatusPull:
+	case models.StatusPull:
 		return
 	}
 
 	if len(s.Runtime.Services) == 0 {
-		s.State = types.StateDegradation
+		s.State = models.StateDegradation
 		return
 	}
 
@@ -226,26 +226,26 @@ func state(s *types.PodStatus) {
 
 		switch true {
 		case cn.State.Error.Error:
-			sts[types.StateError] += 1
+			sts[models.StateError] += 1
 			ems = cn.State.Error.Message
 			break
 		case cn.State.Stopped.Stopped:
-			sts[types.StatusStopped] += 1
+			sts[models.StatusStopped] += 1
 			break
 		case cn.State.Started.Started:
-			sts[types.StateStarted] += 1
+			sts[models.StateStarted] += 1
 			break
 		}
 	}
 
 	switch true {
-	case len(s.Runtime.Services) == sts[types.StateError]:
+	case len(s.Runtime.Services) == sts[models.StateError]:
 		s.SetError(errors.New(ems))
 		break
-	case len(s.Runtime.Services) == sts[types.StateStarted]:
+	case len(s.Runtime.Services) == sts[models.StateStarted]:
 		s.SetRunning()
 		break
-	case len(s.Runtime.Services) == sts[types.StatusStopped]:
+	case len(s.Runtime.Services) == sts[models.StatusStopped]:
 		s.SetStopped()
 		break
 	}

@@ -21,19 +21,19 @@ package cluster_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/internal/api/envs"
-	"github.com/lastbackend/lastbackend/internal/master/http/cluster"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/lastbackend/lastbackend/internal/api/envs"
+	"github.com/lastbackend/lastbackend/internal/master/http/cluster"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -51,12 +51,12 @@ func TestClusterInfo(t *testing.T) {
 	c := getClusterAsset(4096)
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx     context.Context
-		cluster *types.Cluster
+		cluster *models.Cluster
 	}
 
 	tests := []struct {
@@ -82,7 +82,7 @@ func TestClusterInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Cluster(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Cluster(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -93,7 +93,7 @@ func TestClusterInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := stg.Put(context.Background(), stg.Collection().Cluster(), types.EmptyString, c, nil)
+			err := stg.Put(context.Background(), stg.Collection().Cluster(), models.EmptyString, c, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -143,9 +143,9 @@ func TestClusterInfo(t *testing.T) {
 	}
 }
 
-func getClusterAsset(memory int64) *types.Cluster {
-	var c = types.Cluster{}
-	c.Meta.SelfLink = *types.NewClusterSelfLink(types.EmptyString)
+func getClusterAsset(memory int64) *models.Cluster {
+	var c = models.Cluster{}
+	c.Meta.SelfLink = *models.NewClusterSelfLink(models.EmptyString)
 	c.Status.Capacity.RAM = memory
 	return &c
 }

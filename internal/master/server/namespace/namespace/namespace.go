@@ -20,10 +20,11 @@ package namespace
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/internal/api/envs"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/pkg/service"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -32,9 +33,9 @@ const (
 	logLevel  = 3
 )
 
-func FetchFromRequest(ctx context.Context, selflink string) (*types.Namespace, *errors.Err) {
+func FetchFromRequest(ctx context.Context, selflink string) (*models.Namespace, *errors.Err) {
 
-	nm := model.NewNamespaceModel(ctx, envs.Get().GetStorage())
+	nm := service.NewNamespaceModel(ctx, envs.Get().GetStorage())
 	ns, err := nm.Get(selflink)
 
 	if err != nil {

@@ -39,7 +39,7 @@ import (
 	"github.com/lastbackend/lastbackend/internal/master/server/volume"
 	"github.com/lastbackend/lastbackend/internal/master/state"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/http"
 	"github.com/lastbackend/lastbackend/internal/util/http/cors"
 	"github.com/spf13/viper"
@@ -58,7 +58,7 @@ type HttpServer struct {
 	router *mux.Router
 }
 
-func NewServer(state *state.State, stg storage.Storage, v *viper.Viper) *HttpServer {
+func NewServer(state *state.State, stg storage.IStorage, v *viper.Viper) *HttpServer {
 
 	hs := new(HttpServer)
 
@@ -96,7 +96,7 @@ func NewServer(state *state.State, stg storage.Storage, v *viper.Viper) *HttpSer
 	node.NewNodeHandler(r, mw)
 	pod.NewPodHandler(r, mw)
 	route.NewRouteHandler(r, mw)
-	secret.NewSecretHandler(r, mw, secret.Config{Vault: &types.Vault{
+	secret.NewSecretHandler(r, mw, secret.Config{Vault: &models.Vault{
 		Endpoint: v.GetString("vault.endpoint"),
 		Token:    v.GetString("vault.token"),
 	}})

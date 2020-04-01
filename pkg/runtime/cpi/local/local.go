@@ -20,7 +20,7 @@ package local
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type Proxy struct {
@@ -30,19 +30,19 @@ func New() (*Proxy, error) {
 	return &Proxy{}, nil
 }
 
-func (p *Proxy) Info(ctx context.Context) (map[string]*types.EndpointState, error) {
-	es := make(map[string]*types.EndpointState)
+func (p *Proxy) Info(ctx context.Context) (map[string]*models.EndpointState, error) {
+	es := make(map[string]*models.EndpointState)
 	return es, nil
 }
 
-func (p *Proxy) Create(ctx context.Context, endpoint *types.EndpointManifest) (*types.EndpointState, error) {
-	return new(types.EndpointState), nil
+func (p *Proxy) Create(ctx context.Context, endpoint *models.EndpointManifest) (*models.EndpointState, error) {
+	return new(models.EndpointState), nil
 }
 
-func (p *Proxy) Destroy(ctx context.Context, endpoint *types.EndpointState) error {
+func (p *Proxy) Destroy(ctx context.Context, endpoint *models.EndpointState) error {
 	return nil
 }
 
-func (p *Proxy) Update(ctx context.Context, endpoint *types.EndpointState, spec *types.EndpointManifest) (*types.EndpointState, error) {
-	return new(types.EndpointState), nil
+func (p *Proxy) Update(ctx context.Context, endpoint *models.EndpointState, spec *models.EndpointManifest) (*models.EndpointState, error) {
+	return new(models.EndpointState), nil
 }

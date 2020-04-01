@@ -32,6 +32,6 @@ type IPAM interface {
 	Reserved() int
 }
 
-func New(stg storage.Storage, cidr string) (IPAM, error) {
+func New(stg storage.IStorage, cidr string) (IPAM, error) {
 	return local.New(stg, cidr)
 }

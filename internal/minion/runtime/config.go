@@ -22,15 +22,15 @@ import (
 	"context"
 	"strings"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
-func (r Runtime) ConfigManage(ctx context.Context, name string, cfg *types.ConfigManifest) error {
+func (r Runtime) ConfigManage(ctx context.Context, name string, cfg *models.ConfigManifest) error {
 
 	log.V(logLevel).Debugf("Manage config: %s", name)
 
-	if cfg.State == types.StateDestroyed {
+	if cfg.State == models.StateDestroyed {
 		r.ConfigRemove(ctx, name)
 		return nil
 	}
@@ -43,7 +43,7 @@ func (r Runtime) ConfigManage(ctx context.Context, name string, cfg *types.Confi
 	return r.ConfigCreate(ctx, name, cfg)
 }
 
-func (r Runtime) ConfigCreate(ctx context.Context, name string, cfg *types.ConfigManifest) error {
+func (r Runtime) ConfigCreate(ctx context.Context, name string, cfg *models.ConfigManifest) error {
 
 	log.V(logLevel).Debugf("create config: %s", name)
 
@@ -56,7 +56,7 @@ func (r Runtime) ConfigCreate(ctx context.Context, name string, cfg *types.Confi
 	return nil
 }
 
-func (r Runtime) ConfigUpdate(ctx context.Context, name string, cfg *types.ConfigManifest) error {
+func (r Runtime) ConfigUpdate(ctx context.Context, name string, cfg *models.ConfigManifest) error {
 
 	log.V(logLevel).Debugf("update config: %s", name)
 
@@ -78,7 +78,7 @@ func (r Runtime) parseConfigSelflink(selflink string) (string, string) {
 	parts := strings.Split(selflink, ":")
 
 	if len(parts) == 1 {
-		namespace = types.DefaultNamespace
+		namespace = models.DEFAULT_NAMESPACE
 		name = parts[0]
 	}
 

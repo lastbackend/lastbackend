@@ -22,8 +22,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -33,28 +32,28 @@ const (
 )
 
 // jobObserve manage handlers based on job state
-func jobObserve(js *JobState, job *types.Job) (err error) {
+func jobObserve(js *JobState, job *models.Job) (err error) {
 
 	log.V(logLevel).Debugf("%s:> observe start: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 
 	switch job.Status.State {
 	// Check job created state triggers
-	case types.StateCreated:
+	case models.StateCreated:
 		err = handleJobStateCreated(js, job)
 	// Check job provision state triggers
-	case types.StateRunning:
+	case models.StateRunning:
 		err = handleJobStateRunning(js, job)
 	// Check job ready state triggers
-	case types.StatePaused:
+	case models.StatePaused:
 		err = handleJobStatePaused(js, job)
 	// Check job error state triggers
-	case types.StateError:
+	case models.StateError:
 		err = handleJobStateError(js, job)
 	// Run job destroy process
-	case types.StateDestroy:
+	case models.StateDestroy:
 		err = handleJobStateDestroy(js, job)
 	// Remove job from storage if it is already destroyed
-	case types.StateDestroyed:
+	case models.StateDestroyed:
 		err = handleJobStateDestroyed(js, job)
 	}
 	if err != nil {
@@ -72,7 +71,7 @@ func jobObserve(js *JobState, job *types.Job) (err error) {
 }
 
 // handleJobStateCreated handles job created state
-func handleJobStateCreated(js *JobState, job *types.Job) error {
+func handleJobStateCreated(js *JobState, job *models.Job) error {
 	log.V(logLevel).Debugf("%s:> handleJobStateCreated: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 
 	if js.provider != nil {
@@ -88,35 +87,35 @@ func handleJobStateCreated(js *JobState, job *types.Job) error {
 }
 
 // handleJobStateRunning handles job provision state
-func handleJobStateRunning(js *JobState, job *types.Job) error {
+func handleJobStateRunning(js *JobState, job *models.Job) error {
 	log.V(logLevel).Debugf("%s:> handleJobStateRunning: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 	return nil
 }
 
 // handleJobStatePaused handles job ready state
-func handleJobStatePaused(js *JobState, job *types.Job) error {
+func handleJobStatePaused(js *JobState, job *models.Job) error {
 	log.V(logLevel).Debugf("%s:> handleJobStatePaused: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 	return nil
 }
 
 // handleJobStateError handles job error state
-func handleJobStateError(js *JobState, job *types.Job) error {
+func handleJobStateError(js *JobState, job *models.Job) error {
 	log.V(logLevel).Debugf("%s:> handleJobStateError: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 	return nil
 }
 
 // handleJobStateDestroy handles job destroy state
-func handleJobStateDestroy(js *JobState, job *types.Job) (err error) {
+func handleJobStateDestroy(js *JobState, job *models.Job) (err error) {
 
 	log.V(logLevel).Debugf("%s:> handleJobStateDestroy: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 
-	tm := model.NewTaskModel(context.Background(), js.storage)
+	tm := service.NewTaskModel(context.Background(), js.storage)
 
 	if len(js.task.list) == 0 {
 
-		jm := model.NewJobModel(context.Background(), js.storage)
+		jm := service.NewJobModel(context.Background(), js.storage)
 
-		job.Status.State = types.StateDestroyed
+		job.Status.State = models.StateDestroyed
 		job.Meta.Updated = time.Now()
 
 		if err := jm.Set(job); err != nil {
@@ -128,7 +127,7 @@ func handleJobStateDestroy(js *JobState, job *types.Job) (err error) {
 
 	for _, task := range js.task.list {
 
-		if task.Status.State == types.StateDestroyed || task.Status.State == types.StateDestroy {
+		if task.Status.State == models.StateDestroyed || task.Status.State == models.StateDestroy {
 			continue
 		}
 
@@ -142,21 +141,21 @@ func handleJobStateDestroy(js *JobState, job *types.Job) (err error) {
 }
 
 // handleJobStateDestroyed handles job destroyed state
-func handleJobStateDestroyed(js *JobState, job *types.Job) (err error) {
+func handleJobStateDestroyed(js *JobState, job *models.Job) (err error) {
 
 	log.V(logLevel).Debugf("%s:> handleJobStateDestroyed: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 
 	if len(js.task.list) > 0 {
-		tm := model.NewTaskModel(context.Background(), js.storage)
+		tm := service.NewTaskModel(context.Background(), js.storage)
 		for _, task := range js.task.list {
 
-			if task.Status.State != types.StateDestroy {
+			if task.Status.State != models.StateDestroy {
 				if err = tm.Destroy(task); err != nil {
 					return err
 				}
 			}
 
-			if task.Status.State == types.StateDestroyed {
+			if task.Status.State == models.StateDestroyed {
 				if err = tm.Remove(task); err != nil {
 					return err
 				}
@@ -164,17 +163,17 @@ func handleJobStateDestroyed(js *JobState, job *types.Job) (err error) {
 
 		}
 
-		job.Status.State = types.StateDestroy
+		job.Status.State = models.StateDestroy
 		job.Meta.Updated = time.Now()
 
 		return nil
 	}
 
-	job.Status.State = types.StateDestroyed
+	job.Status.State = models.StateDestroyed
 	job.Meta.Updated = time.Now()
 
-	jm := model.NewJobModel(context.Background(), js.storage)
-	nm := model.NewNamespaceModel(context.Background(), js.storage)
+	jm := service.NewJobModel(context.Background(), js.storage)
+	nm := service.NewNamespaceModel(context.Background(), js.storage)
 
 	ns, err := nm.Get(job.Meta.Namespace)
 	if err != nil {
@@ -203,13 +202,13 @@ func jobTaskProvision(js *JobState) error {
 	// run task if no one task are currently running and there is at least one in queue
 	var (
 		limit = defaultConcurrentTaskLimit
-		jm    = model.NewJobModel(context.Background(), js.storage)
+		jm    = service.NewJobModel(context.Background(), js.storage)
 	)
 
 	if len(js.task.queue) == 0 {
 		log.Debugf("%s:jobTaskProvision:> there are no jobs in queue: %d", logJobPrefix, len(js.task.queue))
-		if js.job.Status.State != types.StateWaiting {
-			js.job.Status.State = types.StateWaiting
+		if js.job.Status.State != models.StateWaiting {
+			js.job.Status.State = models.StateWaiting
 			if err := jm.Set(js.job); err != nil {
 				log.Errorf("%s:jobTaskProvision:> set job to waiting state err: %s", logJobPrefix, err.Error())
 				return err
@@ -228,7 +227,7 @@ func jobTaskProvision(js *JobState) error {
 	}
 
 	// choose the older task task
-	var t *types.Task
+	var t *models.Task
 	for _, task := range js.task.queue {
 		if t == nil {
 			t = task
@@ -240,16 +239,16 @@ func jobTaskProvision(js *JobState) error {
 		}
 	}
 
-	t.Status.State = types.StateProvision
+	t.Status.State = models.StateProvision
 
-	tm := model.NewTaskModel(context.Background(), js.storage)
+	tm := service.NewTaskModel(context.Background(), js.storage)
 	if err := tm.Set(t); err != nil {
 		log.Errorf("%s:jobTaskProvision:> set task to provision state err: %s", logJobPrefix, err.Error())
 		return err
 	}
 
-	if js.job.Status.State != types.StateRunning {
-		js.job.Status.State = types.StateRunning
+	if js.job.Status.State != models.StateRunning {
+		js.job.Status.State = models.StateRunning
 		if err := jm.Set(js.job); err != nil {
 			log.Errorf("%s:jobTaskProvision:> set job to running state err: %s", logJobPrefix, err.Error())
 		}

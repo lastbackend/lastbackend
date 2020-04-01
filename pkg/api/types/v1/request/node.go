@@ -18,20 +18,22 @@
 
 package request
 
-import "github.com/lastbackend/lastbackend/internal/pkg/types"
+import (
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+)
 
 // swagger:model request_node_meta
 type NodeMetaOptions struct {
-	Meta *types.NodeUpdateMetaOptions `json:"meta"`
+	Meta *models.NodeUpdateMetaOptions `json:"meta"`
 }
 
 // swagger:model request_node_connect
 type NodeConnectOptions struct {
-	Info    types.NodeInfo     `json:"info"`
-	Status  types.NodeStatus   `json:"status"`
-	Network *types.NetworkState `json:"network"`
-	TLS     bool               `json:"tls"`
-	SSL     *SSL               `json:"ssl"`
+	Info    models.NodeInfo      `json:"info"`
+	Status  models.NodeStatus    `json:"status"`
+	Network *models.NetworkState `json:"network"`
+	TLS     bool                 `json:"tls"`
+	SSL     *SSL                 `json:"ssl"`
 }
 
 type SSL struct {
@@ -43,7 +45,7 @@ type SSL struct {
 // swagger:model request_node_status
 type NodeStatusOptions struct {
 	// Node interface options
-	State types.NodeStatusState `json:"state"`
+	State models.NodeStatusState `json:"state"`
 	// Pods statuses
 	Pods map[string]*NodePodStatusOptions `json:"pods"`
 	// Volumes statuses
@@ -55,9 +57,9 @@ type NodeStatusOptions struct {
 // swagger:model request_node_resources
 type NodeResourcesOptions struct {
 	// Node state capacity
-	Capacity types.NodeResources `json:"capacity"`
+	Capacity models.NodeResources `json:"capacity"`
 	// Node state allocated
-	Allocated types.NodeResources `json:"allocated"`
+	Allocated models.NodeResources `json:"allocated"`
 }
 
 // swagger:model request_node_pod_status
@@ -71,11 +73,11 @@ type NodePodStatusOptions struct {
 	// Pod state message
 	Message string `json:"message" yaml:"message"`
 	// Pod steps
-	Steps types.PodSteps `json:"steps" yaml:"steps"`
+	Steps models.PodSteps `json:"steps" yaml:"steps"`
 	// Pod network
-	Network types.PodNetwork `json:"network" yaml:"network"`
+	Network models.PodNetwork `json:"network" yaml:"network"`
 	// Pod containers
-	Runtime types.PodStatusRuntime `json:"runtime" yaml:"runtime"`
+	Runtime models.PodStatusRuntime `json:"runtime" yaml:"runtime"`
 }
 
 // swagger:model request_node_volume_status

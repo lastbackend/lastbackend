@@ -20,14 +20,14 @@ package views
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/resource"
 	"strings"
 )
 
 type ManifestView struct{}
 
-func (mv *ManifestView) NewManifestSpecTemplate(obj types.SpecTemplate) ManifestSpecTemplate {
+func (mv *ManifestView) NewManifestSpecTemplate(obj models.SpecTemplate) ManifestSpecTemplate {
 
 	mst := ManifestSpecTemplate{
 		Containers: make([]ManifestSpecTemplateContainer, 0),
@@ -127,14 +127,14 @@ func (mv *ManifestView) NewManifestSpecTemplate(obj types.SpecTemplate) Manifest
 	return mst
 }
 
-func (mv *ManifestView) NewManifestSpecSelector(obj types.SpecSelector) ManifestSpecSelector {
+func (mv *ManifestView) NewManifestSpecSelector(obj models.SpecSelector) ManifestSpecSelector {
 	return ManifestSpecSelector{
 		Node:   obj.Node,
 		Labels: obj.Labels,
 	}
 }
 
-func (mv *ManifestView) NewManifestSpecRuntime(obj types.SpecRuntime) ManifestSpecRuntime {
+func (mv *ManifestView) NewManifestSpecRuntime(obj models.SpecRuntime) ManifestSpecRuntime {
 
 	mfr := ManifestSpecRuntime{}
 	mfr.Services = obj.Services

@@ -21,7 +21,7 @@ package views
 import (
 	"time"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 // Node - default node structure
@@ -108,15 +108,15 @@ type NodeResources struct {
 
 // swagger:model views_node_spec
 type NodeManifest struct {
-	Meta      NodeManifestMeta                   `json:"meta"`
-	Discovery map[string]*types.ResolverManifest `json:"discovery,omitempty"`
-	Exporter  *types.ExporterManifest            `json:"exporter,omitempty"`
-	Configs   map[string]*types.ConfigManifest   `json:"configs,omitempty"`
-	Secrets   map[string]*types.SecretManifest   `json:"secrets,omitempty"`
-	Network   map[string]*types.SubnetManifest   `json:"network,omitempty"`
-	Pods      map[string]*types.PodManifest      `json:"pods,omitempty"`
-	Volumes   map[string]*types.VolumeManifest   `json:"volumes,omitempty"`
-	Endpoints map[string]*types.EndpointManifest `json:"endpoints,omitempty"`
+	Meta      NodeManifestMeta                    `json:"meta"`
+	Discovery map[string]*models.ResolverManifest `json:"discovery,omitempty"`
+	Exporter  *models.ExporterManifest            `json:"exporter,omitempty"`
+	Configs   map[string]*models.ConfigManifest   `json:"configs,omitempty"`
+	Secrets   map[string]*models.SecretManifest   `json:"secrets,omitempty"`
+	Network   map[string]*models.SubnetManifest   `json:"network,omitempty"`
+	Pods      map[string]*models.PodManifest      `json:"pods,omitempty"`
+	Volumes   map[string]*models.VolumeManifest   `json:"volumes,omitempty"`
+	Endpoints map[string]*models.EndpointManifest `json:"endpoints,omitempty"`
 }
 
 type NodeManifestMeta struct {

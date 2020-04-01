@@ -30,7 +30,7 @@ import (
 	"time"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/cleaner"
 	"github.com/lastbackend/lastbackend/internal/util/filesystem"
 	"github.com/lastbackend/lastbackend/tools/log"
@@ -58,7 +58,7 @@ const tplScript = `
 %s
 `
 
-func (r Runtime) PodManage(ctx context.Context, key string, manifest *types.PodManifest) error {
+func (r Runtime) PodManage(ctx context.Context, key string, manifest *models.PodManifest) error {
 	log.V(logLevel).Debugf("%s provision pod: %s", logPodPrefix, key)
 
 	//==========================================================================
@@ -76,7 +76,7 @@ func (r Runtime) PodManage(ctx context.Context, key string, manifest *types.PodM
 		p := r.state.Pods().GetPod(key)
 		if p == nil {
 
-			ps := types.NewPodStatus()
+			ps := models.NewPodStatus()
 			ps.SetDestroyed()
 			r.state.Pods().AddPod(key, ps)
 
@@ -111,7 +111,7 @@ func (r Runtime) PodManage(ctx context.Context, key string, manifest *types.PodM
 			log.Debugf("%s volumes data changed: %s", logPodPrefix, key)
 			for _, v := range manifest.Template.Volumes {
 
-				if v.Volume.Name != types.EmptyString {
+				if v.Volume.Name != models.EmptyString {
 
 					log.Debugf("%s attach volume %s for pod %s", logPodPrefix, v.Name, key)
 
@@ -140,7 +140,7 @@ func (r Runtime) PodManage(ctx context.Context, key string, manifest *types.PodM
 							return err
 						}
 
-						pv := &types.VolumeClaim{
+						pv := &models.VolumeClaim{
 							Name:   r.podVolumeClaimNameCreate(key, v.Name),
 							Volume: name,
 							Path:   vs.Status.Path,
@@ -170,7 +170,7 @@ func (r Runtime) PodManage(ctx context.Context, key string, manifest *types.PodM
 	log.V(logLevel).Debugf("%s pod not found > create it: %s", logPodPrefix, key)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	r.state.Tasks().AddTask(key, &types.NodeTask{Cancel: cancel})
+	r.state.Tasks().AddTask(key, &models.NodeTask{Cancel: cancel})
 
 	go func() {
 
@@ -204,13 +204,13 @@ func (r Runtime) PodRestart(ctx context.Context, key string) error {
 	return nil
 }
 
-func (r Runtime) PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*types.PodStatus, error) {
+func (r Runtime) PodCreate(ctx context.Context, key string, manifest *models.PodManifest) (*models.PodStatus, error) {
 
 	var (
-		status    = types.NewPodStatus()
+		status    = models.NewPodStatus()
 		namespace = r.getPodNamespace(key)
 
-		setError = func(err error) (*types.PodStatus, error) {
+		setError = func(err error) (*models.PodStatus, error) {
 			log.Errorf("%s can not pull image: %s", logPodPrefix, err)
 			status.SetError(err)
 			r.state.Pods().SetPod(key, status)
@@ -233,7 +233,7 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *types.PodM
 	for _, v := range manifest.Template.Volumes {
 
 		var name string
-		if v.Volume.Name != types.EmptyString {
+		if v.Volume.Name != models.EmptyString {
 			name = fmt.Sprintf("%s:%s", r.getPodNamespace(key), v.Volume.Name)
 		} else {
 			name = r.podVolumeKeyCreate(key, v.Name)
@@ -249,7 +249,7 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *types.PodM
 				return status, err
 			}
 
-			pv := &types.VolumeClaim{
+			pv := &models.VolumeClaim{
 				Name:   r.podVolumeClaimNameCreate(key, v.Name),
 				Volume: name,
 				Path:   vs.Status.Path,
@@ -268,7 +268,7 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *types.PodM
 
 			claim := r.state.Volumes().GetClaim(r.podVolumeClaimNameCreate(key, v.Name))
 			if claim == nil {
-				pv := &types.VolumeClaim{
+				pv := &models.VolumeClaim{
 					Name:   r.podVolumeClaimNameCreate(key, v.Name),
 					Volume: name,
 					Path:   vol.Status.Path,
@@ -285,8 +285,8 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *types.PodM
 
 	if len(manifest.Runtime.Tasks) > 0 {
 		for _, t := range manifest.Runtime.Tasks {
-			pst := new(types.PodStatusPipelineStep)
-			pst.Status = types.StateProvision
+			pst := new(models.PodStatusPipelineStep)
+			pst.Status = models.StateProvision
 			pst.Error = false
 			status.Runtime.Pipeline[t.Name] = pst
 		}
@@ -309,7 +309,7 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *types.PodM
 	//==========================================================================
 
 	status.SetStarting()
-	status.Steps[types.StepPull] = types.PodStep{
+	status.Steps[models.StepPull] = models.PodStep{
 		Ready:     true,
 		Timestamp: time.Now().UTC(),
 	}
@@ -318,7 +318,7 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *types.PodM
 
 	for _, s := range manifest.Template.Containers {
 		for _, e := range s.EnvVars {
-			if e.Secret.Name != types.EmptyString {
+			if e.Secret.Name != models.EmptyString {
 				log.V(logLevel).Debugf("%s get secret info from api", logPodPrefix)
 				if err := r.SecretCreate(ctx, namespace, e.Secret.Name); err != nil {
 					log.Errorf("%s can not fetch secret from api", logPodPrefix)
@@ -329,13 +329,13 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *types.PodM
 
 	var (
 		primary  string
-		services = make([]*types.ContainerManifest, 0)
+		services = make([]*models.ContainerManifest, 0)
 	)
 
 	if len(manifest.Runtime.Services) == 0 {
 
 		if len(manifest.Runtime.Tasks) > 0 {
-			tpl := types.GetPauseContainerTemplate()
+			tpl := models.GetPauseContainerTemplate()
 			manifest.Runtime.Services = append(manifest.Runtime.Services, tpl.Name)
 			manifest.Template.Containers = append(manifest.Template.Containers, tpl)
 		} else {
@@ -375,7 +375,7 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *types.PodM
 	// run services
 	for _, svc := range services {
 
-		if primary != types.EmptyString {
+		if primary != models.EmptyString {
 			svc.Network.Mode = fmt.Sprintf("container:%s", primary)
 		} else {
 			primary = svc.Name
@@ -391,7 +391,7 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *types.PodM
 	}
 
 	status.SetRunning()
-	status.Steps[types.StepReady] = types.PodStep{
+	status.Steps[models.StepReady] = models.PodStep{
 		Ready:     true,
 		Timestamp: time.Now().UTC(),
 	}
@@ -463,7 +463,7 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *types.PodM
 				return setError(err)
 			}
 
-			if primary != types.EmptyString {
+			if primary != models.EmptyString {
 				m.Network.Mode = fmt.Sprintf("container:%s", primary)
 			}
 
@@ -500,7 +500,7 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *types.PodM
 	return status, nil
 }
 
-func (r Runtime) PodClean(ctx context.Context, status *types.PodStatus) {
+func (r Runtime) PodClean(ctx context.Context, status *models.PodStatus) {
 
 	for _, c := range status.Runtime.Services {
 		log.V(logLevel).Debugf("%s remove unnecessary container: %s", logPodPrefix, c.ID)
@@ -519,7 +519,7 @@ func (r Runtime) PodClean(ctx context.Context, status *types.PodStatus) {
 
 }
 
-func (r Runtime) PodExit(ctx context.Context, pod string, status *types.PodStatus, clean bool) {
+func (r Runtime) PodExit(ctx context.Context, pod string, status *models.PodStatus, clean bool) {
 	log.V(logLevel).Debugf("%s exit pod: %s", logPodPrefix, pod)
 
 	timeout := time.Duration(3 * time.Second)
@@ -536,21 +536,21 @@ func (r Runtime) PodExit(ctx context.Context, pod string, status *types.PodStatu
 			break
 		}
 
-		c.State.Stopped = types.PodContainerStateStopped{
+		c.State.Stopped = models.PodContainerStateStopped{
 			Stopped: true,
-			Exit: types.PodContainerStateExit{
+			Exit: models.PodContainerStateExit{
 				Code:      0,
 				Timestamp: time.Now(),
 			},
 		}
 	}
 
-	status.Steps[types.StateExited] = types.PodStep{
+	status.Steps[models.StateExited] = models.PodStep{
 		Ready:     true,
 		Timestamp: time.Now(),
 	}
 
-	if status.Status != types.StateError {
+	if status.Status != models.StateError {
 		status.SetExited()
 	}
 
@@ -562,7 +562,7 @@ func (r Runtime) PodExit(ctx context.Context, pod string, status *types.PodStatu
 	}
 }
 
-func (r Runtime) PodDestroy(ctx context.Context, pod string, status *types.PodStatus) {
+func (r Runtime) PodDestroy(ctx context.Context, pod string, status *models.PodStatus) {
 	log.V(logLevel).Debugf("%s try to remove pod: %s", logPodPrefix, pod)
 
 	r.PodClean(ctx, status)
@@ -599,7 +599,7 @@ func (r Runtime) PodRestore(ctx context.Context) error {
 
 	for _, c := range cl {
 
-		if c.Pod == types.EmptyString {
+		if c.Pod == models.EmptyString {
 			continue
 		}
 
@@ -607,15 +607,15 @@ func (r Runtime) PodRestore(ctx context.Context) error {
 
 		status := r.state.Pods().GetPod(c.Pod)
 		if status == nil {
-			status = types.NewPodStatus()
+			status = models.NewPodStatus()
 		}
 
 		key := c.Pod
 
-		cs := &types.PodContainer{
+		cs := &models.PodContainer{
 			ID:   c.ID,
 			Name: c.Name,
-			Image: types.PodContainerImage{
+			Image: models.PodContainerImage{
 				Name: c.Image,
 			},
 			Envs:  c.Envs,
@@ -628,48 +628,48 @@ func (r Runtime) PodRestore(ctx context.Context) error {
 		cs.Exec = c.Exec
 
 		switch c.State {
-		case types.StateCreated:
-			cs.State = types.PodContainerState{
-				Created: types.PodContainerStateCreated{
+		case models.StateCreated:
+			cs.State = models.PodContainerState{
+				Created: models.PodContainerStateCreated{
 					Created: time.Now().UTC(),
 				},
 			}
-		case types.StateStarted:
-			cs.State = types.PodContainerState{
-				Started: types.PodContainerStateStarted{
+		case models.StateStarted:
+			cs.State = models.PodContainerState{
+				Started: models.PodContainerStateStarted{
 					Started:   true,
 					Timestamp: time.Now().UTC(),
 				},
 			}
 			cs.State.Stopped.Stopped = false
-		case types.StatusStopped:
+		case models.StatusStopped:
 			cs.State.Stopped.Stopped = true
-			cs.State.Stopped.Exit = types.PodContainerStateExit{
+			cs.State.Stopped.Exit = models.PodContainerStateExit{
 				Code:      c.ExitCode,
 				Timestamp: time.Now().UTC(),
 			}
 			cs.State.Started.Started = false
-		case types.StateError:
+		case models.StateError:
 
 			cs.State.Error.Error = true
 			cs.State.Error.Message = c.Status
-			cs.State.Error.Exit = types.PodContainerStateExit{
+			cs.State.Error.Exit = models.PodContainerStateExit{
 				Code:      c.ExitCode,
 				Timestamp: time.Now().UTC(),
 			}
 			cs.State.Started.Started = false
 			cs.State.Stopped.Stopped = false
-			cs.State.Stopped.Exit = types.PodContainerStateExit{
+			cs.State.Stopped.Exit = models.PodContainerStateExit{
 				Code:      c.ExitCode,
 				Timestamp: time.Now().UTC(),
 			}
 			cs.State.Started.Started = false
 		}
 
-		if c.Status == types.StatusStopped {
-			cs.State.Stopped = types.PodContainerStateStopped{
+		if c.Status == models.StatusStopped {
+			cs.State.Stopped = models.PodContainerStateStopped{
 				Stopped: true,
-				Exit: types.PodContainerStateExit{
+				Exit: models.PodContainerStateExit{
 					Code:      c.ExitCode,
 					Timestamp: time.Now().UTC(),
 				},
@@ -762,14 +762,14 @@ func (r Runtime) PodLogs(ctx context.Context, id string, follow bool, s io.Write
 	return nil
 }
 
-func (r Runtime) PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) bool {
+func (r Runtime) PodSpecCheck(ctx context.Context, key string, manifest *models.PodManifest) bool {
 
 	log.V(logLevel).Infof("%s pod check spec pod: %s", logPodPrefix, key)
 
 	state := r.state.Pods().GetPod(key)
 
-	var statec = make(map[string]*types.ContainerManifest, 0)
-	var specc = make(map[string]*types.ContainerManifest, 0)
+	var statec = make(map[string]*models.ContainerManifest, 0)
+	var specc = make(map[string]*models.ContainerManifest, 0)
 
 	for _, c := range manifest.Template.Containers {
 		mf, err := r.containerManifestCreate(ctx, key, c)
@@ -842,7 +842,7 @@ func (r Runtime) PodSpecCheck(ctx context.Context, key string, manifest *types.P
 			}
 		}
 
-		if mf.Exec.Workdir == types.EmptyString {
+		if mf.Exec.Workdir == models.EmptyString {
 			if c.Exec.Workdir != img.Status.Container.Exec.Workdir {
 				log.Debugf("%s workdir changed: %s != %s", logPodPrefix, c.Exec.Workdir, img.Status.Container.Exec.Workdir)
 				return false
@@ -936,7 +936,7 @@ func (r Runtime) PodSpecCheck(ctx context.Context, key string, manifest *types.P
 		for _, e := range mf.Ports {
 			var f = false
 			for _, ie := range c.Ports {
-				if e.HostIP != types.EmptyString {
+				if e.HostIP != models.EmptyString {
 					if e.HostIP != ie.HostIP {
 						log.Debugf("%s port map check failed: \t\t %s:%d:%d/%s == %s:%d:%d/%s", logPodPrefix,
 							e.HostIP, e.HostPort, e.ContainerPort, e.Protocol,
@@ -945,7 +945,7 @@ func (r Runtime) PodSpecCheck(ctx context.Context, key string, manifest *types.P
 					}
 				}
 
-				if e.Protocol != types.EmptyString {
+				if e.Protocol != models.EmptyString {
 					if e.Protocol != ie.Protocol {
 						log.Debugf("%s port map check failed: \t\t %s:%d:%d/%s == %s:%d:%d/%s", logPodPrefix,
 							e.HostIP, e.HostPort, e.ContainerPort, e.Protocol,
@@ -1008,19 +1008,19 @@ func (r Runtime) PodSpecCheck(ctx context.Context, key string, manifest *types.P
 
 }
 
-func (r Runtime) PodVolumesCheck(ctx context.Context, pod string, spec []*types.SpecTemplateVolume) bool {
+func (r Runtime) PodVolumesCheck(ctx context.Context, pod string, spec []*models.SpecTemplateVolume) bool {
 
 	log.V(logLevel).Debugf("%s check pod volumes: %s: %d", logPodPrefix, pod, len(spec))
 
 	for _, v := range spec {
 
-		if v.Volume.Name != types.EmptyString {
+		if v.Volume.Name != models.EmptyString {
 			continue
 		}
 
 		name := r.podVolumeKeyCreate(pod, v.Name)
 
-		if v.Config.Name != types.EmptyString && len(v.Config.Binds) > 0 {
+		if v.Config.Name != models.EmptyString && len(v.Config.Binds) > 0 {
 			equal, err := r.VolumeCheckConfigData(ctx, name, v.Config.Name)
 			if err != nil {
 				return false
@@ -1028,7 +1028,7 @@ func (r Runtime) PodVolumesCheck(ctx context.Context, pod string, spec []*types.
 			return equal
 		}
 
-		if v.Secret.Name != types.EmptyString && len(v.Secret.Binds) > 0 {
+		if v.Secret.Name != models.EmptyString && len(v.Secret.Binds) > 0 {
 			equal, err := r.VolumeCheckSecretData(ctx, name, v.Config.Name)
 			if err != nil {
 				return false
@@ -1040,7 +1040,7 @@ func (r Runtime) PodVolumesCheck(ctx context.Context, pod string, spec []*types.
 	return true
 }
 
-func (r Runtime) PodVolumeUpdate(ctx context.Context, pod string, spec *types.SpecTemplateVolume) (*types.VolumeStatus, error) {
+func (r Runtime) PodVolumeUpdate(ctx context.Context, pod string, spec *models.SpecTemplateVolume) (*models.VolumeStatus, error) {
 
 	log.V(logLevel).Debugf("%s update pod volume: %s: %s", logPodPrefix, pod, spec.Name)
 
@@ -1053,14 +1053,14 @@ func (r Runtime) PodVolumeUpdate(ctx context.Context, pod string, spec *types.Sp
 
 	status := r.state.Volumes().GetVolume(name)
 
-	if spec.Secret.Name != types.EmptyString && len(spec.Secret.Binds) > 0 {
+	if spec.Secret.Name != models.EmptyString && len(spec.Secret.Binds) > 0 {
 		if err := r.VolumeSetSecretData(ctx, name, spec.Secret.Name); err != nil {
 			log.Errorf("%s can not set config data to volume: %s", logPodPrefix, err.Error())
 			return status, err
 		}
 	}
 
-	if spec.Secret.Name == types.EmptyString && spec.Config.Name != types.EmptyString && len(spec.Config.Binds) > 0 {
+	if spec.Secret.Name == models.EmptyString && spec.Config.Name != models.EmptyString && len(spec.Config.Binds) > 0 {
 		if err := r.VolumeSetConfigData(ctx, name, spec.Config.Name); err != nil {
 			log.Errorf("%s can not set config data to volume: %s", logPodPrefix, err.Error())
 			return status, err
@@ -1070,7 +1070,7 @@ func (r Runtime) PodVolumeUpdate(ctx context.Context, pod string, spec *types.Sp
 	return status, nil
 }
 
-func (r Runtime) PodVolumeAttach(ctx context.Context, pod string, spec *types.SpecTemplateVolume) (*types.VolumeClaim, error) {
+func (r Runtime) PodVolumeAttach(ctx context.Context, pod string, spec *models.SpecTemplateVolume) (*models.VolumeClaim, error) {
 
 	log.V(logLevel).Debugf("%s attach pod volume: %s: %s", logPodPrefix, pod, spec.Name)
 
@@ -1081,7 +1081,7 @@ func (r Runtime) PodVolumeAttach(ctx context.Context, pod string, spec *types.Sp
 		return nil, errors.New("volume not found on node")
 	}
 
-	pv := &types.VolumeClaim{
+	pv := &models.VolumeClaim{
 		Name:   r.podVolumeClaimNameCreate(pod, spec.Name),
 		Volume: name,
 		Path:   volume.Status.Path,
@@ -1092,7 +1092,7 @@ func (r Runtime) PodVolumeAttach(ctx context.Context, pod string, spec *types.Sp
 	return pv, nil
 }
 
-func (r Runtime) PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVolume) (*types.VolumeStatus, error) {
+func (r Runtime) PodVolumeCreate(ctx context.Context, pod string, spec *models.SpecTemplateVolume) (*models.VolumeStatus, error) {
 
 	log.V(logLevel).Debugf("%s create pod volume: %s:%s", logPodPrefix, pod, spec.Name)
 
@@ -1101,9 +1101,9 @@ func (r Runtime) PodVolumeCreate(ctx context.Context, pod string, spec *types.Sp
 
 	var (
 		name = r.podVolumeKeyCreate(pod, spec.Name)
-		vm   = types.VolumeManifest{
+		vm   = models.VolumeManifest{
 			HostPath: hostPath,
-			Type:     types.KindVolumeHostDir,
+			Type:     models.KindVolumeHostDir,
 		}
 	)
 
@@ -1113,14 +1113,14 @@ func (r Runtime) PodVolumeCreate(ctx context.Context, pod string, spec *types.Sp
 		return nil, err
 	}
 
-	if spec.Secret.Name != types.EmptyString && len(spec.Secret.Binds) > 0 {
+	if spec.Secret.Name != models.EmptyString && len(spec.Secret.Binds) > 0 {
 		if err := r.VolumeSetSecretData(ctx, name, spec.Secret.Name); err != nil {
 			log.Errorf("%s can not set secret data to volume: %s", logPodPrefix, err.Error())
 			return st, err
 		}
 	}
 
-	if spec.Secret.Name == types.EmptyString && spec.Config.Name != types.EmptyString && len(spec.Config.Binds) > 0 {
+	if spec.Secret.Name == models.EmptyString && spec.Config.Name != models.EmptyString && len(spec.Config.Binds) > 0 {
 		if err := r.VolumeSetConfigData(ctx, name, spec.Config.Name); err != nil {
 			log.Errorf("%s can not set config data to volume: %s", logPodPrefix, err.Error())
 			return st, err
@@ -1137,7 +1137,7 @@ func (r Runtime) PodVolumeDestroy(ctx context.Context, pod, volume string) error
 	return r.VolumeDestroy(ctx, r.podVolumeKeyCreate(pod, volume))
 }
 
-func (r Runtime) podVolumeClaimRestore(key string, manifest *types.PodManifest) {
+func (r Runtime) podVolumeClaimRestore(key string, manifest *models.PodManifest) {
 
 	pod := r.state.Pods().GetPod(key)
 	if pod == nil {
@@ -1147,7 +1147,7 @@ func (r Runtime) podVolumeClaimRestore(key string, manifest *types.PodManifest) 
 	for _, v := range manifest.Template.Volumes {
 
 		var name string
-		if v.Volume.Name != types.EmptyString {
+		if v.Volume.Name != models.EmptyString {
 			name = fmt.Sprintf("%s:%s", r.getPodNamespace(key), v.Volume.Name)
 		} else {
 			name = r.podVolumeKeyCreate(key, v.Name)
@@ -1160,7 +1160,7 @@ func (r Runtime) podVolumeClaimRestore(key string, manifest *types.PodManifest) 
 
 		claim := r.state.Volumes().GetClaim(r.podVolumeClaimNameCreate(key, v.Name))
 		if claim == nil {
-			pv := &types.VolumeClaim{
+			pv := &models.VolumeClaim{
 				Name:   r.podVolumeClaimNameCreate(key, v.Name),
 				Volume: name,
 				Path:   vol.Status.Path,
@@ -1192,7 +1192,7 @@ func (r Runtime) podLocalFileDestroy(path string) error {
 
 // TODO: move to distribution
 func (r Runtime) getPodNamespace(key string) string {
-	var namespace = types.DefaultNamespace
+	var namespace = models.DEFAULT_NAMESPACE
 
 	parts := strings.Split(key, ":")
 

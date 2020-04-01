@@ -22,7 +22,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 	"net/http"
 
@@ -82,20 +82,20 @@ func (l *Logger) Listen() error {
 	return l.server.Listen(l.Handle)
 }
 
-func (l *Logger) Handle(msg types.ProxyMessage) error {
+func (l *Logger) Handle(msg models.ProxyMessage) error {
 
 	var (
 		stream *File
 		err    error
 	)
 
-	m := types.LogMessage{}
+	m := models.LogMessage{}
 	if err := json.Unmarshal(msg.Line, &m); err != nil {
 		_ = fmt.Errorf("%s:>unmarshal json: %s", logPrefix, err.Error())
 		return nil
 	}
 
-	pod := types.PodSelfLink{}
+	pod := models.PodSelfLink{}
 	if err := pod.Parse(m.Selflink); err != nil {
 		return nil
 	}
@@ -103,10 +103,10 @@ func (l *Logger) Handle(msg types.ProxyMessage) error {
 	k, parent := pod.Parent()
 
 	switch k {
-	case types.KindDeployment:
+	case models.KindDeployment:
 		kind, p := parent.Parent()
 		stream, err = l.storage.GetStream(kind, p.String(), false)
-	case types.KindTask:
+	case models.KindTask:
 		stream, err = l.storage.GetStream(k, parent.String(), false)
 	}
 	if err != nil {

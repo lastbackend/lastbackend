@@ -21,7 +21,7 @@ package runtime
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/internal/ingress/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -32,7 +32,7 @@ const (
 
 type Runtime struct {
 	ctx     context.Context
-	spec    chan *types.IngressManifest
+	spec    chan *models.IngressManifest
 	process *Process
 	config  *conf
 	iface   string
@@ -41,7 +41,7 @@ type Runtime struct {
 func New(iface string, cfg *conf) *Runtime {
 	r := new(Runtime)
 	r.ctx = context.Background()
-	r.spec = make(chan *types.IngressManifest)
+	r.spec = make(chan *models.IngressManifest)
 	r.process = new(Process)
 	r.iface = iface
 	r.config = cfg
@@ -79,7 +79,7 @@ func (r *Runtime) Restore() {
 }
 
 // Sync node runtime with new spec
-func (r *Runtime) Sync(spec *types.IngressManifest) error {
+func (r *Runtime) Sync(spec *models.IngressManifest) error {
 	log.V(logLevel).Debugf("%s:sync:> sync runtime state", logRuntimePrefix)
 	r.spec <- spec
 	return nil
@@ -184,8 +184,8 @@ func (r *Runtime) Loop() {
 								continue
 							}
 
-							if st.State == types.StateProvision {
-								st.State = types.StateReady
+							if st.State == models.StateProvision {
+								st.State = models.StateReady
 								envs.Get().GetState().Routes().SetRouteStatus(r, st)
 							}
 						}

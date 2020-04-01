@@ -25,11 +25,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
-func (r Runtime) containerInspect(ctx context.Context, container *types.PodContainer) error {
+func (r Runtime) containerInspect(ctx context.Context, container *models.PodContainer) error {
 	info, err := r.cri.Inspect(ctx, container.ID)
 	if err != nil {
 		switch err {
@@ -47,7 +47,7 @@ func (r Runtime) containerInspect(ctx context.Context, container *types.PodConta
 	container.Envs = info.Envs
 	container.Binds = info.Binds
 
-	container.Image = types.PodContainerImage{
+	container.Image = models.PodContainerImage{
 		Name: info.Image,
 	}
 
@@ -58,7 +58,7 @@ func (r Runtime) containerSubscribe(ctx context.Context) error {
 
 	state := r.state.Pods()
 
-	cs := make(chan *types.Container)
+	cs := make(chan *models.Container)
 
 	go r.cri.Subscribe(ctx, cs)
 
@@ -72,49 +72,49 @@ func (r Runtime) containerSubscribe(ctx context.Context) error {
 		container.Pod = c.Pod
 
 		switch c.State {
-		case types.StateDestroyed:
+		case models.StateDestroyed:
 			state.DelContainer(container)
 			break
-		case types.StateCreated:
-			container.State = types.PodContainerState{
-				Created: types.PodContainerStateCreated{
+		case models.StateCreated:
+			container.State = models.PodContainerState{
+				Created: models.PodContainerStateCreated{
 					Created: time.Now().UTC(),
 				},
 			}
-		case types.StateStarted:
+		case models.StateStarted:
 			if container.State.Started.Started {
 				continue
 			}
-			container.State = types.PodContainerState{
-				Started: types.PodContainerStateStarted{
+			container.State = models.PodContainerState{
+				Started: models.PodContainerStateStarted{
 					Started:   true,
 					Timestamp: time.Now().UTC(),
 				},
 			}
 			container.State.Stopped.Stopped = false
-		case types.StatusStopped:
+		case models.StatusStopped:
 			if container.State.Stopped.Stopped {
 				continue
 			}
 			container.State.Stopped.Stopped = true
-			container.State.Stopped.Exit = types.PodContainerStateExit{
+			container.State.Stopped.Exit = models.PodContainerStateExit{
 				Code:      c.ExitCode,
 				Timestamp: time.Now().UTC(),
 			}
 			container.State.Started.Started = false
-		case types.StateError:
+		case models.StateError:
 			if container.State.Error.Error {
 				continue
 			}
 			container.State.Error.Error = true
 			container.State.Error.Message = c.Status
-			container.State.Error.Exit = types.PodContainerStateExit{
+			container.State.Error.Exit = models.PodContainerStateExit{
 				Code:      c.ExitCode,
 				Timestamp: time.Now().UTC(),
 			}
 			container.State.Started.Started = false
 			container.State.Stopped.Stopped = false
-			container.State.Stopped.Exit = types.PodContainerStateExit{
+			container.State.Stopped.Exit = models.PodContainerStateExit{
 				Code:      c.ExitCode,
 				Timestamp: time.Now().UTC(),
 			}
@@ -131,9 +131,9 @@ func (r Runtime) containerSubscribe(ctx context.Context) error {
 	return nil
 }
 
-func (r Runtime) containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTemplateContainer) (*types.ContainerManifest, error) {
+func (r Runtime) containerManifestCreate(ctx context.Context, pod string, spec *models.SpecTemplateContainer) (*models.ContainerManifest, error) {
 
-	mf := types.NewContainerManifest(spec)
+	mf := models.NewContainerManifest(spec)
 
 	var (
 		namespace, name string
@@ -142,7 +142,7 @@ func (r Runtime) containerManifestCreate(ctx context.Context, pod string, spec *
 	parts := strings.Split(pod, ":")
 
 	if len(parts) == 1 {
-		namespace = types.SYSTEM_NAMESPACE
+		namespace = models.SYSTEM_NAMESPACE
 		name = parts[0]
 	}
 
@@ -157,14 +157,14 @@ func (r Runtime) containerManifestCreate(ctx context.Context, pod string, spec *
 		mf.Labels[n] = v
 	}
 
-	mf.Labels[types.ContainerTypeLBC] = pod
-	mf.Labels[types.ContainerTypeRuntime] = types.ContainerTypeRuntimeService
+	mf.Labels[models.ContainerTypeLBC] = pod
+	mf.Labels[models.ContainerTypeRuntime] = models.ContainerTypeRuntimeService
 
 	for _, s := range spec.EnvVars {
 
 		switch true {
 
-		case s.Secret.Name != types.EmptyString && s.Secret.Key != types.EmptyString:
+		case s.Secret.Name != models.EmptyString && s.Secret.Key != models.EmptyString:
 
 			secret, err := r.SecretGet(ctx, namespace, s.Secret.Name)
 			if err != nil {
@@ -189,7 +189,7 @@ func (r Runtime) containerManifestCreate(ctx context.Context, pod string, spec *
 
 			mf.Envs = append(mf.Envs, env)
 
-		case s.Config.Name != types.EmptyString && s.Config.Key != types.EmptyString:
+		case s.Config.Name != models.EmptyString && s.Config.Key != models.EmptyString:
 			configSelfLink := fmt.Sprintf("%s:%s", namespace, s.Config.Name)
 			config := r.state.Configs().GetConfig(configSelfLink)
 			if config == nil {
@@ -212,7 +212,7 @@ func (r Runtime) containerManifestCreate(ctx context.Context, pod string, spec *
 
 	for _, v := range spec.Volumes {
 
-		if v.Name == types.EmptyString || v.MountPath == types.EmptyString {
+		if v.Name == models.EmptyString || v.MountPath == models.EmptyString {
 			continue
 		}
 
@@ -234,7 +234,7 @@ func (r Runtime) containerManifestCreate(ctx context.Context, pod string, spec *
 
 		hostPath := vol.Status.Path
 
-		if v.SubPath != types.EmptyString {
+		if v.SubPath != models.EmptyString {
 			hostPath = path.Join(hostPath, v.SubPath)
 		}
 
@@ -247,7 +247,7 @@ func (r Runtime) containerManifestCreate(ctx context.Context, pod string, spec *
 
 	net := r.network
 	if net != nil {
-		if net.GetResolverIP() != types.EmptyString {
+		if net.GetResolverIP() != models.EmptyString {
 			mf.DNS.Server = append(mf.DNS.Server, net.GetResolverIP())
 		}
 

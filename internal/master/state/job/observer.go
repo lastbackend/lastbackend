@@ -20,7 +20,6 @@ package job
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"sync"
 	"time"
 
@@ -29,8 +28,8 @@ import (
 	"github.com/lastbackend/lastbackend/internal/master/state/job/hook/hook"
 	p "github.com/lastbackend/lastbackend/internal/master/state/job/provider"
 	"github.com/lastbackend/lastbackend/internal/master/state/job/provider/provider"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -42,26 +41,26 @@ const (
 type JobState struct {
 	lock sync.Mutex
 
-	storage storage.Storage
+	storage storage.IStorage
 
 	cluster *cluster.ClusterState
-	job     *types.Job
+	job     *models.Job
 
 	task struct {
-		active   map[string]*types.Task
-		queue    map[string]*types.Task
-		list     map[string]*types.Task
-		finished []*types.Task
+		active   map[string]*models.Task
+		queue    map[string]*models.Task
+		list     map[string]*models.Task
+		finished []*models.Task
 	}
 
 	pod struct {
-		list map[string]*types.Pod
+		list map[string]*models.Pod
 	}
 
 	observers struct {
-		job  chan *types.Job
-		task chan *types.Task
-		pod  chan *types.Pod
+		job  chan *models.Job
+		task chan *models.Task
+		pod  chan *models.Pod
 	}
 
 	provider p.JobProvider
@@ -92,7 +91,7 @@ func (js *JobState) Restore() error {
 	)
 
 	// Get all pods
-	pm := model.NewPodModel(context.Background(), js.storage)
+	pm := service.NewPodModel(context.Background(), js.storage)
 	pl, err := pm.ListByJob(js.job.Meta.Namespace, js.job.Meta.Name)
 	if err != nil {
 		log.Errorf("%s:restore:> get pod map error: %v", logPrefix, err)
@@ -111,7 +110,7 @@ func (js *JobState) Restore() error {
 	js.lock.Unlock()
 
 	// Get all tasks
-	tm := model.NewTaskModel(context.Background(), js.storage)
+	tm := service.NewTaskModel(context.Background(), js.storage)
 	tl, err := tm.ListByJob(js.job.Meta.Namespace, js.job.Meta.Name)
 	if err != nil {
 		log.Errorf("%s:restore:> get task map error: %v", logPrefix, err)
@@ -186,15 +185,15 @@ func (js *JobState) Observe() {
 	}
 }
 
-func (js *JobState) SetJob(job *types.Job) {
+func (js *JobState) SetJob(job *models.Job) {
 	js.observers.job <- job
 }
 
-func (js *JobState) SetTask(task *types.Task) {
+func (js *JobState) SetTask(task *models.Task) {
 	js.observers.task <- task
 }
 
-func (js *JobState) DelTask(t *types.Task) {
+func (js *JobState) DelTask(t *models.Task) {
 	js.lock.Lock()
 	delete(js.task.list, t.SelfLink().String())
 	delete(js.task.queue, t.SelfLink().String())
@@ -203,11 +202,11 @@ func (js *JobState) DelTask(t *types.Task) {
 	js.lock.Unlock()
 }
 
-func (js *JobState) SetPod(pod *types.Pod) {
+func (js *JobState) SetPod(pod *models.Pod) {
 	js.observers.pod <- pod
 }
 
-func (js *JobState) DelPod(pod *types.Pod) {
+func (js *JobState) DelPod(pod *models.Pod) {
 
 	_, sl := pod.SelfLink().Parent()
 	if _, ok := js.pod.list[sl.String()]; !ok {
@@ -219,11 +218,11 @@ func (js *JobState) DelPod(pod *types.Pod) {
 	js.lock.Unlock()
 }
 
-func (js *JobState) CheckJobDeps(dep types.StatusDependency) {
+func (js *JobState) CheckJobDeps(dep models.StatusDependency) {
 	log.Debugf("%s:> check job dependency: %s", logPrefix, dep.Name)
 }
 
-func (js *JobState) CheckTaskDeps(task *types.Task, dep types.StatusDependency) {
+func (js *JobState) CheckTaskDeps(task *models.Task, dep models.StatusDependency) {
 
 	log.Debugf("%s:> check dependency: %s", logPrefix, dep.Name)
 
@@ -232,38 +231,38 @@ func (js *JobState) CheckTaskDeps(task *types.Task, dep types.StatusDependency) 
 		return
 	}
 
-	if task.Status.State == types.StateWaiting {
+	if task.Status.State == models.StateWaiting {
 
 		switch dep.Type {
-		case types.KindVolume:
+		case models.KindVolume:
 			if _, ok := task.Status.Dependencies.Volumes[dep.Name]; !ok {
 				return
 			}
 
 			task.Status.Dependencies.Volumes[dep.Name] = dep
 			if task.Status.CheckDeps() {
-				task.Status.State = types.StateCreated
+				task.Status.State = models.StateCreated
 				js.observers.task <- task
 			}
-		case types.KindSecret:
+		case models.KindSecret:
 			if _, ok := task.Status.Dependencies.Secrets[dep.Name]; !ok {
 				return
 			}
 
 			task.Status.Dependencies.Secrets[dep.Name] = dep
 			if task.Status.CheckDeps() {
-				task.Status.State = types.StateCreated
+				task.Status.State = models.StateCreated
 				js.observers.task <- task
 			}
 
-		case types.KindConfig:
+		case models.KindConfig:
 			if _, ok := task.Status.Dependencies.Configs[dep.Name]; !ok {
 				return
 			}
 
 			task.Status.Dependencies.Configs[dep.Name] = dep
 			if task.Status.CheckDeps() {
-				task.Status.State = types.StateCreated
+				task.Status.State = models.StateCreated
 				js.observers.task <- task
 			}
 		}
@@ -327,7 +326,7 @@ func (js *JobState) Provider() {
 			fetch <- true
 		}
 
-		if js.job.Spec.Provider.Timeout == types.EmptyString {
+		if js.job.Spec.Provider.Timeout == models.EmptyString {
 			js.job.Spec.Provider.Timeout = "5s"
 		}
 
@@ -344,7 +343,7 @@ func (js *JobState) Provider() {
 
 }
 
-func (js *JobState) Hook(task *types.Task) error {
+func (js *JobState) Hook(task *models.Task) error {
 
 	if js.hook != nil {
 		if err := js.hook.Execute(task); err != nil {
@@ -356,7 +355,7 @@ func (js *JobState) Hook(task *types.Task) error {
 	return nil
 }
 
-func NewJobState(stg storage.Storage, cs *cluster.ClusterState, job *types.Job) *JobState {
+func NewJobState(stg storage.IStorage, cs *cluster.ClusterState, job *models.Job) *JobState {
 
 	var js = new(JobState)
 
@@ -364,16 +363,16 @@ func NewJobState(stg storage.Storage, cs *cluster.ClusterState, job *types.Job) 
 	js.job = job
 	js.cluster = cs
 
-	js.observers.job = make(chan *types.Job)
-	js.observers.task = make(chan *types.Task)
-	js.observers.pod = make(chan *types.Pod)
+	js.observers.job = make(chan *models.Job)
+	js.observers.task = make(chan *models.Task)
+	js.observers.pod = make(chan *models.Pod)
 
-	js.task.list = make(map[string]*types.Task, 0)
-	js.task.queue = make(map[string]*types.Task, 0)
-	js.task.active = make(map[string]*types.Task, 0)
-	js.task.finished = make([]*types.Task, 0)
+	js.task.list = make(map[string]*models.Task, 0)
+	js.task.queue = make(map[string]*models.Task, 0)
+	js.task.active = make(map[string]*models.Task, 0)
+	js.task.finished = make([]*models.Task, 0)
 
-	js.pod.list = make(map[string]*types.Pod, 0)
+	js.pod.list = make(map[string]*models.Pod, 0)
 	js.provider, _ = provider.New(job.Spec.Provider)
 	js.hook, _ = hook.New(job.Spec.Hook)
 

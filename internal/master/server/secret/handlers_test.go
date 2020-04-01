@@ -38,7 +38,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -61,12 +61,12 @@ func TestSecretList(t *testing.T) {
 	s1.Spec.Data["demo"] = []byte("demo")
 	s2.Spec.Data["test"] = []byte("test")
 
-	rl := types.NewSecretMap()
+	rl := models.NewSecretMap()
 	rl.Items[s1.SelfLink().String()] = s1
 	rl.Items[s2.SelfLink().String()] = s2
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
@@ -80,7 +80,7 @@ func TestSecretList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         *types.SecretMap
+		want         *models.SecretMap
 		wantErr      bool
 		expectedCode int
 	}{
@@ -96,10 +96,10 @@ func TestSecretList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -181,13 +181,13 @@ func TestSecretCreate(t *testing.T) {
 	ns1 := getNamespaceAsset("demo", "")
 
 	s1 := getSecretAsset(ns1, "demo")
-	s1.Spec.Type = types.KindSecretOpaque
+	s1.Spec.Type = models.KindSecretOpaque
 	s1.Spec.Data["demo"] = []byte(base64.StdEncoding.EncodeToString([]byte("demo")))
 
 	mf1, _ := getSecretManifest(s1).ToJson()
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
@@ -230,10 +230,10 @@ func TestSecretCreate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -281,7 +281,7 @@ func TestSecretCreate(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got := new(types.Secret)
+				got := new(models.Secret)
 
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Secret(), tc.want.Meta.SelfLink, got, nil)
 				if !assert.NoError(t, err) {
@@ -330,12 +330,12 @@ func TestSecretUpdate(t *testing.T) {
 	mf2, _ := getSecretManifest(s2).ToJson()
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx    context.Context
-		secret *types.Secret
+		secret *models.Secret
 	}
 
 	tests := []struct {
@@ -364,10 +364,10 @@ func TestSecretUpdate(t *testing.T) {
 
 	clear := func() {
 
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -449,12 +449,12 @@ func TestSecretRemove(t *testing.T) {
 	s2.Spec.Data["test"] = []byte("test")
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx    context.Context
-		secret *types.Secret
+		secret *models.Secret
 	}
 
 	tests := []struct {
@@ -490,10 +490,10 @@ func TestSecretRemove(t *testing.T) {
 
 	clear := func() {
 
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -546,7 +546,7 @@ func TestSecretRemove(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got := new(types.Secret)
+				got := new(models.Secret)
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Secret(), tc.args.secret.SelfLink().String(), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
@@ -559,7 +559,7 @@ func TestSecretRemove(t *testing.T) {
 
 }
 
-func getSecretManifest(s *types.Secret) *request.SecretManifest {
+func getSecretManifest(s *models.Secret) *request.SecretManifest {
 
 	smf := new(request.SecretManifest)
 
@@ -577,23 +577,23 @@ func getSecretManifest(s *types.Secret) *request.SecretManifest {
 	return smf
 }
 
-func getNamespaceAsset(name, desc string) *types.Namespace {
-	var n = types.Namespace{}
+func getNamespaceAsset(name, desc string) *models.Namespace {
+	var n = models.Namespace{}
 	n.Meta.SetDefault()
 	n.Meta.Name = name
 	n.Meta.Description = desc
-	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
+	n.Meta.SelfLink = *models.NewNamespaceSelfLink(name)
 	return &n
 }
 
-func getSecretAsset(namespace *types.Namespace, name string) *types.Secret {
-	var s = types.Secret{}
+func getSecretAsset(namespace *models.Namespace, name string) *models.Secret {
+	var s = models.Secret{}
 	s.Meta.SetDefault()
 	s.Meta.Name = name
 	s.Meta.Namespace = namespace.Meta.Name
-	s.Meta.SelfLink = *types.NewSecretSelfLink(namespace.Meta.Name, name)
+	s.Meta.SelfLink = *models.NewSecretSelfLink(namespace.Meta.Name, name)
 
-	s.Spec.Type = types.KindSecretOpaque
+	s.Spec.Type = models.KindSecretOpaque
 	s.Spec.Data = make(map[string][]byte, 0)
 
 	return &s

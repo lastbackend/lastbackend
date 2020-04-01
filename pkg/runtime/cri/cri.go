@@ -21,7 +21,7 @@ package cri
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri/docker"
 	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/spf13/viper"
@@ -36,19 +36,19 @@ const (
 
 // CRI - Container System Interface
 type CRI interface {
-	List(ctx context.Context, all bool) ([]*types.Container, error)
-	Create(ctx context.Context, spec *types.ContainerManifest) (string, error)
+	List(ctx context.Context, all bool) ([]*models.Container, error)
+	Create(ctx context.Context, spec *models.ContainerManifest) (string, error)
 	Start(ctx context.Context, ID string) error
 	Restart(ctx context.Context, ID string, timeout *time.Duration) error
 	Stop(ctx context.Context, ID string, timeout *time.Duration) error
 	Pause(ctx context.Context, ID string) error
 	Resume(ctx context.Context, ID string) error
 	Remove(ctx context.Context, ID string, clean bool, force bool) error
-	Inspect(ctx context.Context, ID string) (*types.Container, error)
+	Inspect(ctx context.Context, ID string) (*models.Container, error)
 	Logs(ctx context.Context, ID string, stdout, stderr, follow bool) (io.ReadCloser, error)
 	Copy(ctx context.Context, ID, path string, content io.Reader) error
 	Wait(ctx context.Context, ID string) error
-	Subscribe(ctx context.Context, container chan *types.Container) error
+	Subscribe(ctx context.Context, container chan *models.Container) error
 }
 
 func New(v *viper.Viper) (CRI, error) {

@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cii/docker"
 	"github.com/spf13/viper"
 )
@@ -35,14 +35,14 @@ const (
 
 // IMI - Image System Interface
 type CII interface {
-	Auth(ctx context.Context, secret *types.SecretAuthData) (string, error)
-	Pull(ctx context.Context, spec *types.ImageManifest, out io.Writer) (*types.Image, error)
+	Auth(ctx context.Context, secret *models.SecretAuthData) (string, error)
+	Pull(ctx context.Context, spec *models.ImageManifest, out io.Writer) (*models.Image, error)
 	Remove(ctx context.Context, image string) error
-	Push(ctx context.Context, spec *types.ImageManifest, out io.Writer) (*types.Image, error)
-	Build(ctx context.Context, stream io.Reader, spec *types.SpecBuildImage, out io.Writer) (*types.Image, error)
-	List(ctx context.Context) ([]*types.Image, error)
-	Inspect(ctx context.Context, id string) (*types.Image, error)
-	Subscribe(ctx context.Context) (chan *types.Image, error)
+	Push(ctx context.Context, spec *models.ImageManifest, out io.Writer) (*models.Image, error)
+	Build(ctx context.Context, stream io.Reader, spec *models.SpecBuildImage, out io.Writer) (*models.Image, error)
+	List(ctx context.Context) ([]*models.Image, error)
+	Inspect(ctx context.Context, id string) (*models.Image, error)
+	Subscribe(ctx context.Context) (chan *models.Image, error)
 }
 
 func New(v *viper.Viper) (CII, error) {

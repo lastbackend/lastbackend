@@ -25,8 +25,8 @@ import (
 	"time"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/internal/util/system"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
@@ -38,19 +38,19 @@ const logLevel = 7
 
 type Process struct {
 	// Process storage
-	storage storage.Storage
+	storage storage.IStorage
 	// Managed process
-	process *types.Process
+	process *models.Process
 }
 
 // Process register function
 // The main purpose is to register process in the system
 // If we need to distribution and need master/replicas, use WaitElected function
-func (c *Process) Register(ctx context.Context, kind string, stg storage.Storage) (*types.Process, error) {
+func (c *Process) Register(ctx context.Context, kind string, stg storage.IStorage) (*models.Process, error) {
 
 	var (
 		err  error
-		item = new(types.Process)
+		item = new(models.Process)
 	)
 
 	log.V(logLevel).Debugf("System: Process: Register: %s", kind)
@@ -72,7 +72,7 @@ func (c *Process) Register(ctx context.Context, kind string, stg storage.Storage
 	opts.Ttl = systemLeadTTL
 	opts.Force = true
 
-	sl := types.NewProcessSelfLink(kind, c.process.Meta.Hostname, c.process.Meta.PID).String()
+	sl := models.NewProcessSelfLink(kind, c.process.Meta.Hostname, c.process.Meta.PID).String()
 
 	if err := c.storage.Set(ctx, c.storage.Collection().System(), sl, c.process, opts); err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
@@ -102,7 +102,7 @@ func (c *Process) HeartBeat(ctx context.Context, lead chan bool) {
 		l := false
 		opts := storage.GetOpts()
 		opts.Ttl = systemLeadTTL
-		var process types.Process
+		var process models.Process
 
 		leadKey := fmt.Sprintf("%s/lead", c.process.Meta.Kind)
 
@@ -136,7 +136,7 @@ func (c *Process) HeartBeat(ctx context.Context, lead chan bool) {
 			c.process.Meta.Slave = true
 		}
 
-		sl := types.NewProcessSelfLink(c.process.Meta.Kind, c.process.Meta.Hostname, c.process.Meta.PID).String()
+		sl := models.NewProcessSelfLink(c.process.Meta.Kind, c.process.Meta.Hostname, c.process.Meta.PID).String()
 		if err := c.storage.Set(ctx, c.storage.Collection().System(), sl, c.process, opts); err != nil {
 			log.Errorf("System: Process: Register: %s", err.Error())
 			return
@@ -159,7 +159,7 @@ func (c *Process) HeartBeat(ctx context.Context, lead chan bool) {
 }
 
 // Encode unique ID from pid and process hostname
-func encodeID(c *types.Process) string {
+func encodeID(c *models.Process) string {
 	key := fmt.Sprintf("%s|%d", c.Meta.Hostname, c.Meta.PID)
 	return base64.StdEncoding.EncodeToString([]byte(key))
 }

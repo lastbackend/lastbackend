@@ -39,7 +39,7 @@ type IPAM struct {
 	released  map[string]bool
 	available int
 	reserved  int
-	storage   storage.Storage
+	storage   storage.IStorage
 }
 
 // Lease IP from range
@@ -121,7 +121,7 @@ func (i *IPAM) save() error {
 }
 
 // New IPAM object initializing and returning
-func New(stg storage.Storage, cidr string) (*IPAM, error) {
+func New(stg storage.IStorage, cidr string) (*IPAM, error) {
 
 	var (
 		skip = true

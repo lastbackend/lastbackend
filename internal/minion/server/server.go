@@ -43,7 +43,7 @@ type HttpServer struct {
 	router *mux.Router
 }
 
-func NewServer(state *state.State, stg storage.Storage, v *viper.Viper) *HttpServer {
+func NewServer(state *state.State, stg storage.IStorage, v *viper.Viper) *HttpServer {
 
 	hs := new(HttpServer)
 

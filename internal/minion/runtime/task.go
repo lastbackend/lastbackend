@@ -22,7 +22,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -30,7 +30,7 @@ const (
 	logTaskPrefix = "node:runtime:task"
 )
 
-func (r Runtime) taskExecute(ctx context.Context, pod string, task types.SpecRuntimeTask, m types.ContainerManifest, ps *types.PodStatus) error {
+func (r Runtime) taskExecute(ctx context.Context, pod string, task models.SpecRuntimeTask, m models.ContainerManifest, ps *models.PodStatus) error {
 
 	status := ps.AddTask(task.Name)
 	status.SetStarted()
@@ -39,10 +39,10 @@ func (r Runtime) taskExecute(ctx context.Context, pod string, task types.SpecRun
 	log.V(logLevel).Debugf("%s task %s start", logTaskPrefix, task.Name)
 
 	m.Name = ""
-	m.Labels[types.ContainerTypeRuntime] = types.ContainerTypeRuntimeTask
+	m.Labels[models.ContainerTypeRuntime] = models.ContainerTypeRuntimeTask
 
 	var (
-		c   types.PodContainer
+		c   models.PodContainer
 		err error
 	)
 
@@ -68,7 +68,7 @@ func (r Runtime) taskExecute(ctx context.Context, pod string, task types.SpecRun
 
 	}
 
-	c.State.Created = types.PodContainerStateCreated{
+	c.State.Created = models.PodContainerStateCreated{
 		Created: time.Now().UTC(),
 	}
 
@@ -86,10 +86,10 @@ func (r Runtime) taskExecute(ctx context.Context, pod string, task types.SpecRun
 		}
 
 		log.Errorf("%s can-not start container: %s", logTaskPrefix, err)
-		c.State.Error = types.PodContainerStateError{
+		c.State.Error = models.PodContainerStateError{
 			Error:   true,
 			Message: err.Error(),
-			Exit: types.PodContainerStateExit{
+			Exit: models.PodContainerStateExit{
 				Timestamp: time.Now().UTC(),
 			},
 		}
@@ -100,7 +100,7 @@ func (r Runtime) taskExecute(ctx context.Context, pod string, task types.SpecRun
 	}
 
 	c.Ready = true
-	c.State.Started = types.PodContainerStateStarted{
+	c.State.Started = models.PodContainerStateStarted{
 		Started:   true,
 		Timestamp: time.Now().UTC(),
 	}
@@ -122,10 +122,10 @@ func (r Runtime) taskExecute(ctx context.Context, pod string, task types.SpecRun
 	log.V(logLevel).Debugf("%s container wait: %s", logTaskPrefix, c.ID)
 	if err := r.cri.Wait(ctx, c.ID); err != nil {
 		log.Errorf("%s error: %s", logTaskPrefix, err.Error())
-		c.State.Error = types.PodContainerStateError{
+		c.State.Error = models.PodContainerStateError{
 			Error:   true,
 			Message: err.Error(),
-			Exit: types.PodContainerStateExit{
+			Exit: models.PodContainerStateExit{
 				Timestamp: time.Now().UTC(),
 			},
 		}
@@ -137,10 +137,10 @@ func (r Runtime) taskExecute(ctx context.Context, pod string, task types.SpecRun
 	info, err := r.cri.Inspect(ctx, c.ID)
 	if err != nil {
 		log.Errorf("%s error: %s", logTaskPrefix, err.Error())
-		c.State.Error = types.PodContainerStateError{
+		c.State.Error = models.PodContainerStateError{
 			Error:   true,
 			Message: err.Error(),
-			Exit: types.PodContainerStateExit{
+			Exit: models.PodContainerStateExit{
 				Timestamp: time.Now().UTC(),
 			},
 		}
@@ -155,9 +155,9 @@ func (r Runtime) taskExecute(ctx context.Context, pod string, task types.SpecRun
 	}
 
 	c.Ready = true
-	c.State.Stopped = types.PodContainerStateStopped{
+	c.State.Stopped = models.PodContainerStateStopped{
 		Stopped: true,
-		Exit: types.PodContainerStateExit{
+		Exit: models.PodContainerStateExit{
 			Code:      info.ExitCode,
 			Timestamp: time.Now().UTC(),
 		},
@@ -173,12 +173,12 @@ func (r Runtime) taskExecute(ctx context.Context, pod string, task types.SpecRun
 		log.Errorf("%s task %s cleanup failed: %s", logTaskPrefix, task.Name, err.Error())
 	}
 
-	status.SetExited(false, types.EmptyString)
+	status.SetExited(false, models.EmptyString)
 	r.state.Pods().SetPod(pod, ps)
 	return nil
 }
 
-func (r Runtime) taskCommandFinish(ctx context.Context, c *types.PodContainer) error {
+func (r Runtime) taskCommandFinish(ctx context.Context, c *models.PodContainer) error {
 
 	log.V(logLevel).Debugf("%s container remove: %s", logTaskPrefix, c.ID)
 	if err := r.cri.Remove(ctx, c.ID, true, true); err != nil {

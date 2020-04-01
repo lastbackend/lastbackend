@@ -28,8 +28,8 @@ import (
 	"github.com/lastbackend/lastbackend/internal/minion/runtime"
 	"github.com/lastbackend/lastbackend/internal/minion/server"
 	"github.com/lastbackend/lastbackend/internal/minion/state"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/pkg/client"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	client "github.com/lastbackend/lastbackend/pkg/client/cluster"
 	"github.com/lastbackend/lastbackend/pkg/network"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cii"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri"
@@ -119,7 +119,7 @@ func (app *App) init() error {
 	//_state.Node().Info = runtime.NodeInfo()
 	//_state.Node().Status = runtime.NodeStatus()
 
-	_exporter, err := exporter.NewExporter(_state.Node().Info.Hostname, types.EmptyString)
+	_exporter, err := exporter.NewExporter(_state.Node().Info.Hostname, models.EmptyString)
 	if err != nil {
 		log.Errorf("can not initialize collector: %s", err.Error())
 		return err
@@ -140,7 +140,7 @@ func (app *App) init() error {
 
 	if app.v.IsSet("manifest.dir") {
 		dir := app.v.GetString("manifest.dir")
-		if dir != types.EmptyString {
+		if dir != models.EmptyString {
 			r.Provision(dir)
 		}
 	}

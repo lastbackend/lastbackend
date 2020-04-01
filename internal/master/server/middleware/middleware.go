@@ -10,11 +10,11 @@ const (
 )
 
 type Middleware struct {
-	storage storage.Storage
+	storage storage.IStorage
 	viper   *viper.Viper
 }
 
-func New(stg storage.Storage, v *viper.Viper) Middleware {
+func New(stg storage.IStorage, v *viper.Viper) Middleware {
 	return Middleware{
 		storage: stg,
 		viper:   v,

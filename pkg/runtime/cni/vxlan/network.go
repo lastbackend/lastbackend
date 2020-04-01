@@ -23,7 +23,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
 	"net"
 	"syscall"
@@ -61,7 +61,7 @@ func New(iface string) (*Network, error) {
 
 	nt.ExtIface = new(NetworkInterface)
 
-	if iface == types.EmptyString {
+	if iface == models.EmptyString {
 		log.Debug("Add network to default interface")
 		if nt.ExtIface.Iface, nt.ExtIface.IfaceAddr, err = utils.GetDefaultInterface(); err != nil {
 			log.Errorf("Can not get default interface: %s", err.Error())
@@ -168,12 +168,12 @@ func (n *Network) AddInterface() error {
 	return n.Device.SetIP(*n.CIDR)
 }
 
-func (n *Network) Info(ctx context.Context) *types.NetworkState {
-	state := types.NetworkState{}
+func (n *Network) Info(ctx context.Context) *models.NetworkState {
+	state := models.NetworkState{}
 
 	state.Type = NetworkType
 	state.CIDR = n.CIDR.String()
-	state.IFace = types.NetworkInterface{
+	state.IFace = models.NetworkInterface{
 		Index: n.Device.GetIndex(),
 		Name:  n.Device.GetName(),
 		HAddr: n.Device.GetHardware(),
@@ -184,12 +184,12 @@ func (n *Network) Info(ctx context.Context) *types.NetworkState {
 	return &state
 }
 
-func (n *Network) Destroy(ctx context.Context, network *types.NetworkState) error {
+func (n *Network) Destroy(ctx context.Context, network *models.NetworkState) error {
 
 	return nil
 }
 
-func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*types.NetworkState, error) {
+func (n *Network) Create(ctx context.Context, network *models.SubnetManifest) (*models.NetworkState, error) {
 
 	log.V(logLevel).Debugf("Connect to node to network: %v > %v", network.CIDR, network.IFace.Addr)
 
@@ -255,11 +255,11 @@ func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*t
 		return nil, err
 	}
 
-	state := types.NetworkState{}
+	state := models.NetworkState{}
 
 	state.Type = NetworkType
 	state.CIDR = n.CIDR.String()
-	state.IFace = types.NetworkInterface{
+	state.IFace = models.NetworkInterface{
 		Index: n.Device.GetIndex(),
 		Name:  n.Device.GetName(),
 		HAddr: n.Device.GetHardware(),
@@ -270,7 +270,7 @@ func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*t
 	return &state, nil
 }
 
-func (n *Network) Replace(ctx context.Context, state *types.NetworkState, manifest *types.SubnetManifest) (*types.NetworkState, error) {
+func (n *Network) Replace(ctx context.Context, state *models.NetworkState, manifest *models.SubnetManifest) (*models.NetworkState, error) {
 
 	if state != nil {
 		if err := n.Destroy(ctx, state); err != nil {
@@ -290,12 +290,12 @@ func (n *Network) Replace(ctx context.Context, state *types.NetworkState, manife
 	return state, nil
 }
 
-func (n *Network) Subnets(ctx context.Context) (map[string]*types.NetworkState, error) {
+func (n *Network) Subnets(ctx context.Context) (map[string]*models.NetworkState, error) {
 
 	log.V(logLevel).Debug("Get current subnets list")
 
 	var (
-		subnets = make(map[string]*types.NetworkState)
+		subnets = make(map[string]*models.NetworkState)
 		neighs  = make(map[string]string)
 	)
 
@@ -323,10 +323,10 @@ func (n *Network) Subnets(ctx context.Context) (map[string]*types.NetworkState, 
 
 	for _, r := range routes {
 
-		sn := types.NetworkState{}
+		sn := models.NetworkState{}
 		sn.Type = n.Device.link.Type()
 		sn.CIDR = r.Dst.String()
-		sn.IFace = types.NetworkInterface{
+		sn.IFace = models.NetworkInterface{
 			Index: n.Device.link.Index,
 			Name:  n.Device.link.Name,
 			Addr:  r.Gw.String(),

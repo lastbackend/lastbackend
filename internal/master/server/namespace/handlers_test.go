@@ -22,12 +22,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	envs2 "github.com/lastbackend/lastbackend/internal/api/envs"
-	"github.com/lastbackend/lastbackend/internal/master/http/namespace"
-	"github.com/lastbackend/lastbackend/internal/util/resource"
-	v12 "github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	request2 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	views2 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
@@ -36,9 +30,15 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	envs2 "github.com/lastbackend/lastbackend/internal/api/envs"
+	"github.com/lastbackend/lastbackend/internal/master/http/namespace"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/util/resource"
+	v12 "github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	request2 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	views2 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -56,17 +56,17 @@ func TestNamespaceInfo(t *testing.T) {
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
 
-	nl := make(map[string]*types.Namespace)
+	nl := make(map[string]*models.Namespace)
 	nl[ns1.Meta.Name] = ns1
 	nl[ns2.Meta.Name] = ns2
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
+		namespace *models.Namespace
 	}
 
 	tests := []struct {
@@ -102,7 +102,7 @@ func TestNamespaceInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs2.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs2.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -180,17 +180,17 @@ func TestNamespaceList(t *testing.T) {
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
 
-	nl := make(map[string]*types.Namespace)
+	nl := make(map[string]*models.Namespace)
 	nl[ns1.Meta.Name] = ns1
 	nl[ns2.Meta.Name] = ns2
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
+		namespace *models.Namespace
 	}
 
 	tests := []struct {
@@ -200,7 +200,7 @@ func TestNamespaceList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         map[string]*types.Namespace
+		want         map[string]*models.Namespace
 		wantErr      bool
 		expectedCode int
 	}{
@@ -216,7 +216,7 @@ func TestNamespaceList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs2.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs2.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -296,12 +296,12 @@ func TestNamespaceCreate(t *testing.T) {
 	ns1 := getNamespaceAsset("demo", "")
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
+		namespace *models.Namespace
 	}
 
 	nsm1, _ := createNamespaceManifest("demo", "", nil).ToJson()
@@ -363,7 +363,7 @@ func TestNamespaceCreate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs2.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs2.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -414,7 +414,7 @@ func TestNamespaceCreate(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got := new(types.Namespace)
+				got := new(models.Namespace)
 				err = tc.fields.stg.Get(context.Background(), stg.Collection().Namespace(), tc.args.namespace.Meta.Name, got, nil)
 				assert.NoError(t, err)
 				assert.Equal(t, ns1.Meta.Name, got.Meta.Name, "name not equal")
@@ -445,12 +445,12 @@ func TestNamespaceUpdate(t *testing.T) {
 	nsm3, _ := createNamespaceManifest(ns1.Meta.Name, ns3.Meta.Description, &request2.NamespaceResourcesOptions{Request: &request2.NamespaceResourceOptions{RAM: getStrPtr("512MB")}}).ToJson()
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
+		namespace *models.Namespace
 	}
 
 	tests := []struct {
@@ -499,7 +499,7 @@ func TestNamespaceUpdate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs2.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs2.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -583,12 +583,12 @@ func TestNamespaceRemove(t *testing.T) {
 	ns2 := getNamespaceAsset("test", "")
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
+		namespace *models.Namespace
 	}
 
 	tests := []struct {
@@ -623,7 +623,7 @@ func TestNamespaceRemove(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs2.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs2.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -675,7 +675,7 @@ func TestNamespaceRemove(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "")
 			} else {
 
-				got := new(types.Namespace)
+				got := new(models.Namespace)
 				err = tc.fields.stg.Get(context.Background(), stg.Collection().Namespace(), tc.args.namespace.SelfLink().String(), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
@@ -705,13 +705,13 @@ func getStrPtr(a string) *string {
 	return &a
 }
 
-func getNamespaceAsset(name, desc string) *types.Namespace {
-	var n = types.Namespace{}
+func getNamespaceAsset(name, desc string) *models.Namespace {
+	var n = models.Namespace{}
 
 	n.Meta.Name = name
 	n.Meta.Description = desc
 
-	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
+	n.Meta.SelfLink = *models.NewNamespaceSelfLink(name)
 
 	n.Status.Resources.Allocated.RAM, _ = resource.DecodeMemoryResource("512 MB")
 	n.Status.Resources.Allocated.CPU, _ = resource.DecodeCpuResource("0.1")

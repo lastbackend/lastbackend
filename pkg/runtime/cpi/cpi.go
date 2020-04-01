@@ -22,16 +22,16 @@ package cpi
 import (
 	"context"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi/local"
 	"github.com/spf13/viper"
 )
 
 type CPI interface {
-	Info(ctx context.Context) (map[string]*types.EndpointState, error)
-	Create(ctx context.Context, manifest *types.EndpointManifest) (*types.EndpointState, error)
-	Destroy(ctx context.Context, state *types.EndpointState) error
-	Update(ctx context.Context, state *types.EndpointState, manifest *types.EndpointManifest) (*types.EndpointState, error)
+	Info(ctx context.Context) (map[string]*models.EndpointState, error)
+	Create(ctx context.Context, manifest *models.EndpointManifest) (*models.EndpointState, error)
+	Destroy(ctx context.Context, state *models.EndpointState) error
+	Update(ctx context.Context, state *models.EndpointState, manifest *models.EndpointManifest) (*models.EndpointState, error)
 }
 
 func New(_ *viper.Viper) (CPI, error) {

@@ -20,15 +20,15 @@ package namespace
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/internal/util/http/util"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/internal/master/server/middleware"
 	"github.com/lastbackend/lastbackend/internal/master/state"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	h "github.com/lastbackend/lastbackend/internal/util/http"
+	"github.com/lastbackend/lastbackend/internal/util/http/util"
 	v1 "github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/tools/logger"
 )
@@ -135,7 +135,7 @@ func (handler Handler) NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	log.Debugf("%s:info:> get namespace `%s`", logPrefix, nid)
 
-	item, err := handler.state.Namespace.Get(ctx, types.NewNamespaceSelfLink(nid))
+	item, err := handler.state.Namespace.Get(ctx, models.NewNamespaceSelfLink(nid))
 	if err != nil {
 		errors.HTTP.NotFound(w)
 		return

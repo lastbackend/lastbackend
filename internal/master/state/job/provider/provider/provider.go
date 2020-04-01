@@ -21,13 +21,13 @@ package provider
 import (
 	"github.com/lastbackend/lastbackend/internal/master/state/job/provider"
 	"github.com/lastbackend/lastbackend/internal/master/state/job/provider/http"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
-func New(specProvider types.JobSpecProvider) (provider.JobProvider, error) {
+func New(specProvider models.JobSpecProvider) (provider.JobProvider, error) {
 
 	if specProvider.Http != nil {
-		if specProvider.Http.Endpoint != types.EmptyString {
+		if specProvider.Http.Endpoint != models.EmptyString {
 			return http.New(specProvider.Http)
 		}
 	}

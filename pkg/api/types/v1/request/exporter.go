@@ -18,13 +18,15 @@
 
 package request
 
-import "github.com/lastbackend/lastbackend/internal/pkg/types"
+import (
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+)
 
 // swagger:model request_ingress_connect
 type ExporterConnectOptions struct {
-	Info    types.ExporterInfo   `json:"info"`
-	Status  types.ExporterStatus `json:"status"`
-	Network types.NetworkState   `json:"network"`
+	Info    models.ExporterInfo   `json:"info"`
+	Status  models.ExporterStatus `json:"status"`
+	Network models.NetworkState   `json:"network"`
 }
 
 // swagger:ignore
@@ -33,4 +35,4 @@ type ExporterRemoveOptions struct {
 	Force bool `json:"force"`
 }
 
-type ExporterStatusOptions types.ExporterStatus
+type ExporterStatusOptions models.ExporterStatus

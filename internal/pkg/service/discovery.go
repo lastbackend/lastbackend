@@ -1,0 +1,239 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2020] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
+package service
+
+import (
+	"context"
+	"encoding/json"
+	"time"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
+	"github.com/lastbackend/lastbackend/tools/log"
+)
+
+const (
+	logDiscoveryPrefix = "distribution:discovery"
+	ttlDiscovery       = uint64(5 * time.Second)
+)
+
+type Discovery struct {
+	context context.Context
+	storage storage.IStorage
+}
+
+func (n *Discovery) List() (*models.DiscoveryList, error) {
+	list := models.NewDiscoveryList()
+
+	if err := n.storage.List(n.context, n.storage.Collection().Discovery().Info(), "", list, nil); err != nil {
+		log.V(logLevel).Errorf("%s:list:> get discovery list err: %v", logDiscoveryPrefix, err)
+		return nil, err
+	}
+
+	return list, nil
+}
+
+func (n *Discovery) Put(discovery *models.Discovery) error {
+
+	log.V(logLevel).Debugf("%s:create:> create discovery in cluster", logDiscoveryPrefix)
+
+	if err := n.storage.Put(n.context, n.storage.Collection().Discovery().Info(),
+		discovery.SelfLink().String(), discovery, nil); err != nil {
+		log.V(logLevel).Errorf("%s:create:> insert discovery err: %v", logDiscoveryPrefix, err)
+		return err
+	}
+
+	opts := storage.GetOpts()
+	opts.Ttl = ttlDiscovery
+
+	if err := n.storage.Put(n.context, n.storage.Collection().Discovery().Status(),
+		discovery.SelfLink().String(), discovery.Status, opts); err != nil {
+		log.V(logLevel).Errorf("%s:create:> insert discovery status err: %v", logDiscoveryPrefix, err)
+		return err
+	}
+
+	return nil
+}
+
+func (n *Discovery) Get(name string) (*models.Discovery, error) {
+
+	log.V(logLevel).Debugf("%s:get:> get by name %s", logDiscoveryPrefix, name)
+
+	discovery := new(models.Discovery)
+	discovery.Meta.SelfLink = *models.NewDiscoverySelfLink(name)
+
+	err := n.storage.Get(n.context, n.storage.Collection().Discovery().Info(), discovery.SelfLink().String(), discovery, nil)
+	if err != nil {
+
+		if errors.Storage().IsErrEntityNotFound(err) {
+			log.V(logLevel).Warnf("%s:get:> get: discovery %s not found", logDiscoveryPrefix, name)
+			return nil, nil
+		}
+
+		log.V(logLevel).Debugf("%s:get:> get discovery `%s` err: %v", logDiscoveryPrefix, name, err)
+		return nil, err
+	}
+
+	return discovery, nil
+}
+
+func (n *Discovery) Set(discovery *models.Discovery) error {
+
+	log.V(logLevel).Debugf("%s:get:> get by name %s", logDiscoveryPrefix, discovery.Meta.Name)
+
+	opts := storage.GetOpts()
+	opts.Force = true
+
+	err := n.storage.Set(n.context, n.storage.Collection().Discovery().Info(),
+		discovery.SelfLink().String(), discovery, nil)
+	if err != nil {
+		log.V(logLevel).Debugf("%s:get:> set discovery `%s` err: %v", logDiscoveryPrefix, discovery.Meta.Name, err)
+		return err
+	}
+
+	if err := n.storage.Set(n.context, n.storage.Collection().Discovery().Status(),
+		discovery.SelfLink().String(), discovery.Status, nil); err != nil {
+		log.V(logLevel).Debugf("%s:get:> set discovery status `%s` err: %v", logDiscoveryPrefix, discovery.Meta.Name, err)
+		return err
+	}
+
+	return nil
+}
+
+func (n *Discovery) SetOnline(discovery *models.Discovery) error {
+
+	log.V(logLevel).Debugf("%s:get:> get by name %s", logDiscoveryPrefix, discovery.Meta.Name)
+
+	opts := storage.GetOpts()
+	opts.Force = true
+
+	err := n.storage.Set(n.context, n.storage.Collection().Discovery().Status(),
+		discovery.SelfLink().String(), discovery.Status, nil)
+	if err != nil {
+		log.V(logLevel).Debugf("%s:get:> set discovery `%s` err: %v", logDiscoveryPrefix, discovery.Meta.Name, err)
+		return err
+	}
+
+	return nil
+}
+
+func (n *Discovery) Remove(discovery *models.Discovery) error {
+
+	log.V(logLevel).Debugf("%s:remove:> remove discovery %s", logDiscoveryPrefix, discovery.Meta.Name)
+
+	if err := n.storage.Del(n.context, n.storage.Collection().Discovery().Info(), discovery.SelfLink().String()); err != nil {
+		log.V(logLevel).Debugf("%s:remove:> remove discovery err: %v", logDiscoveryPrefix, err)
+		return err
+	}
+
+	return nil
+}
+
+func (n *Discovery) Watch(ch chan models.DiscoveryEvent, rev *int64) error {
+
+	log.V(logLevel).Debugf("%s:watch:> watch routes", logDiscoveryPrefix)
+
+	done := make(chan bool)
+	watcher := storage.NewWatcher()
+
+	go func() {
+		for {
+			select {
+			case <-n.context.Done():
+				done <- true
+				return
+			case e := <-watcher:
+				if e.Data == nil {
+					continue
+				}
+
+				res := models.DiscoveryEvent{}
+				res.Action = e.Action
+				res.Name = e.Name
+
+				discovery := new(models.Discovery)
+
+				if err := json.Unmarshal(e.Data.([]byte), discovery); err != nil {
+					log.Errorf("%s:> parse data err: %v", logDiscoveryPrefix, err)
+					continue
+				}
+
+				res.Data = discovery
+
+				ch <- res
+			}
+		}
+	}()
+
+	opts := storage.GetOpts()
+	if err := n.storage.Watch(n.context, n.storage.Collection().Discovery().Info(), watcher, opts); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (n *Discovery) WatchOnline(ch chan models.DiscoveryStatusEvent) error {
+
+	log.V(logLevel).Debugf("%s:watch:> watch routes", logDiscoveryPrefix)
+
+	done := make(chan bool)
+	watcher := storage.NewWatcher()
+
+	go func() {
+		for {
+			select {
+			case <-n.context.Done():
+				done <- true
+				return
+			case e := <-watcher:
+				if e.Data == nil {
+					continue
+				}
+
+				res := models.DiscoveryStatusEvent{}
+				res.Action = e.Action
+				res.Name = e.Name
+
+				discovery := new(models.DiscoveryStatus)
+
+				if err := json.Unmarshal(e.Data.([]byte), discovery); err != nil {
+					log.Errorf("%s:> parse data err: %v", logDiscoveryPrefix, err)
+					continue
+				}
+
+				res.Data = discovery
+
+				ch <- res
+			}
+		}
+	}()
+
+	opts := storage.GetOpts()
+	if err := n.storage.Watch(n.context, n.storage.Collection().Discovery().Status(), watcher, opts); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func NewDiscoveryModel(ctx context.Context, stg storage.IStorage) *Discovery {
+	return &Discovery{ctx, stg}
+}

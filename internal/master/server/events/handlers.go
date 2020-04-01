@@ -25,7 +25,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/lastbackend/lastbackend/internal/master/server/middleware"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	h "github.com/lastbackend/lastbackend/internal/util/http"
 	"github.com/lastbackend/lastbackend/internal/util/socket"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
@@ -92,7 +92,7 @@ func (handler Handler) EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 	skt := socket.NewSocket(r.Context(), conn, leave, event)
 
 	var (
-		es = make(chan *types.Event)
+		es = make(chan *models.Event)
 	)
 
 	go func() {

@@ -19,13 +19,13 @@
 package views
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/resource"
 )
 
 type JobView struct{}
 
-func (jw *JobView) New(obj *types.Job) *Job {
+func (jw *JobView) New(obj *models.Job) *Job {
 	j := Job{}
 
 	j.SetMeta(obj.Meta)
@@ -35,7 +35,7 @@ func (jw *JobView) New(obj *types.Job) *Job {
 	return &j
 }
 
-func (j *Job) SetMeta(obj types.JobMeta) {
+func (j *Job) SetMeta(obj models.JobMeta) {
 
 	jm := JobMeta{}
 
@@ -52,7 +52,7 @@ func (j *Job) SetMeta(obj types.JobMeta) {
 	j.Meta = jm
 }
 
-func (j *Job) SetStatus(obj types.JobStatus) {
+func (j *Job) SetStatus(obj models.JobStatus) {
 	js := JobStatus{
 		State:   obj.State,
 		Message: obj.Message,
@@ -76,7 +76,7 @@ func (j *Job) SetStatus(obj types.JobStatus) {
 	j.Status = js
 }
 
-func (j *Job) SetSpec(obj types.JobSpec) {
+func (j *Job) SetSpec(obj models.JobSpec) {
 	mv := new(ManifestView)
 	js := JobSpec{
 		Enabled: obj.Enabled,
@@ -126,7 +126,7 @@ func (j *Job) SetSpec(obj types.JobSpec) {
 	j.Spec = js
 }
 
-func (jw *JobView) NewList(obj *types.JobList) *JobList {
+func (jw *JobView) NewList(obj *models.JobList) *JobList {
 
 	if obj == nil {
 		return nil

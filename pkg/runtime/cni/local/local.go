@@ -20,9 +20,10 @@ package local
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/internal/util/system"
 	"net"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/util/system"
 )
 
 const NetworkType = "local"
@@ -42,7 +43,7 @@ type NetworkInterface struct {
 }
 
 func New() (*Network, error) {
-	ip, _ := system.GetHostIP(types.EmptyString)
+	ip, _ := system.GetHostIP(models.EmptyString)
 
 	iface := getInterface()
 
@@ -69,9 +70,9 @@ func New() (*Network, error) {
 	return nt, nil
 }
 
-func (n *Network) Info(ctx context.Context) *types.NetworkState {
+func (n *Network) Info(ctx context.Context) *models.NetworkState {
 
-	state := types.NetworkState{}
+	state := models.NetworkState{}
 	state.Type = NetworkType
 	state.Addr = n.ExtIface.IfaceAddr.String()
 	if n.CIDR != nil {
@@ -79,7 +80,7 @@ func (n *Network) Info(ctx context.Context) *types.NetworkState {
 	}
 
 	if n.ExtIface.Iface != nil {
-		state.IFace = types.NetworkInterface{
+		state.IFace = models.NetworkInterface{
 			Index: n.ExtIface.Iface.Index,
 			Name:  n.ExtIface.Iface.Name,
 			HAddr: n.ExtIface.Iface.HardwareAddr.String(),
@@ -90,18 +91,18 @@ func (n *Network) Info(ctx context.Context) *types.NetworkState {
 	return &state
 }
 
-func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*types.NetworkState, error) {
+func (n *Network) Create(ctx context.Context, network *models.SubnetManifest) (*models.NetworkState, error) {
 	return n.Info(ctx), nil
 }
 
-func (n *Network) Destroy(ctx context.Context, network *types.NetworkState) error {
+func (n *Network) Destroy(ctx context.Context, network *models.NetworkState) error {
 	return nil
 }
 
-func (n *Network) Replace(ctx context.Context, state *types.NetworkState, manifest *types.SubnetManifest) (*types.NetworkState, error) {
+func (n *Network) Replace(ctx context.Context, state *models.NetworkState, manifest *models.SubnetManifest) (*models.NetworkState, error) {
 	return n.Info(ctx), nil
 }
 
-func (n *Network) Subnets(ctx context.Context) (map[string]*types.NetworkState, error) {
+func (n *Network) Subnets(ctx context.Context) (map[string]*models.NetworkState, error) {
 	return nil, nil
 }

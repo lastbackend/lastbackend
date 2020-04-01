@@ -27,7 +27,7 @@ import (
 	"time"
 
 	protoio "github.com/gogo/protobuf/io"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -45,7 +45,7 @@ type Client struct {
 
 func (p *Client) Connect() error {
 
-	if p.addr == types.EmptyString {
+	if p.addr == models.EmptyString {
 		return nil
 	}
 
@@ -77,7 +77,7 @@ func (p *Client) Connect() error {
 
 	go func() {
 		for {
-			var msg types.ProxyMessage
+			var msg models.ProxyMessage
 
 			err := dec.ReadMsg(&msg)
 			if err != nil {
@@ -138,7 +138,7 @@ func (p *Client) Send(data []byte) error {
 		return nil
 	}
 
-	msg := new(types.ProxyMessage)
+	msg := new(models.ProxyMessage)
 	msg.Type = KindMSG
 	msg.Partial = false
 	msg.Source = p.name
@@ -154,7 +154,7 @@ func (p *Client) Send(data []byte) error {
 
 func (p *Client) Ping() error {
 
-	msg := new(types.ProxyMessage)
+	msg := new(models.ProxyMessage)
 	msg.Type = KindPing
 	msg.Partial = false
 	msg.Source = p.name
@@ -169,7 +169,7 @@ func (p *Client) Ping() error {
 
 func (p *Client) Pong() error {
 
-	msg := new(types.ProxyMessage)
+	msg := new(models.ProxyMessage)
 	msg.Type = KindPong
 	msg.Partial = false
 	msg.Source = p.name
@@ -190,7 +190,7 @@ func (p *Client) updateDeadline() error {
 
 func NewClient(name, addr string, handler Handler) *Client {
 	p := new(Client)
-	if addr == types.EmptyString {
+	if addr == models.EmptyString {
 		addr = fmt.Sprintf("%s:%d", DefaultHost, DefaultPort)
 	}
 	p.name = name
@@ -199,7 +199,7 @@ func NewClient(name, addr string, handler Handler) *Client {
 	p.done = make(chan bool)
 	go func() {
 		for {
-			if p.addr != types.EmptyString {
+			if p.addr != models.EmptyString {
 				_ = p.Connect()
 			}
 			<-time.NewTimer(time.Second).C

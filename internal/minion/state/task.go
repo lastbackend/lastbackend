@@ -19,7 +19,7 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 	"sync"
 )
@@ -28,15 +28,15 @@ const logTaskPrefix = "state:task:>"
 
 type TaskState struct {
 	lock  sync.RWMutex
-	tasks map[string]types.NodeTask
+	tasks map[string]models.NodeTask
 }
 
-func (s *TaskState) AddTask(key string, task *types.NodeTask) {
+func (s *TaskState) AddTask(key string, task *models.NodeTask) {
 	log.V(logLevel).Debugf("%s add cancel func pod: %s", logTaskPrefix, key)
 	s.tasks[key] = *task
 }
 
-func (s *TaskState) GetTask(key string) *types.NodeTask {
+func (s *TaskState) GetTask(key string) *models.NodeTask {
 	log.V(logLevel).Debugf("%s get cancel func pod: %s", logTaskPrefix, key)
 
 	if _, ok := s.tasks[key]; ok {
@@ -47,7 +47,7 @@ func (s *TaskState) GetTask(key string) *types.NodeTask {
 	return nil
 }
 
-func (s *TaskState) DelTask(pod *types.Pod) {
+func (s *TaskState) DelTask(pod *models.Pod) {
 	log.V(logLevel).Debugf("%s del cancel func pod: %s", logTaskPrefix, pod.SelfLink())
 	delete(s.tasks, pod.Meta.Name)
 }

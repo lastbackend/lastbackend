@@ -19,7 +19,7 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type State struct {
@@ -27,8 +27,8 @@ type State struct {
 }
 
 type DiscoveryState struct {
-	Info   types.DiscoveryInfo
-	Status types.DiscoveryStatus
+	Info   models.DiscoveryInfo
+	Status models.DiscoveryStatus
 }
 
 func (s *State) Discovery() *DiscoveryState {

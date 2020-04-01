@@ -32,8 +32,8 @@ _testmain.go
 .DS_Store
 vendor/*/
 docs/output/
-!/build/darwin/
-!/build/linux/
-!/build/arm*/
 coverage.txt
 /profile.out
+/build/darwin/
+/build/linux/
+/build/windows/

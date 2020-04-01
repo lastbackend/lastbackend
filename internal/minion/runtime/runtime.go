@@ -21,7 +21,7 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/client"
+	"github.com/lastbackend/lastbackend/pkg/client/cluster"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"path/filepath"
@@ -29,7 +29,7 @@ import (
 
 	"github.com/lastbackend/lastbackend/internal/minion/exporter"
 	"github.com/lastbackend/lastbackend/internal/minion/state"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/decoder"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/network"
@@ -55,10 +55,10 @@ type Runtime struct {
 	network   *network.Network
 	state     *state.State
 	exporter  *exporter.Exporter
-	retClient client.IClient
+	retClient cluster.IClient
 	workdir   string
 
-	spec chan *types.NodeManifest
+	spec chan *models.NodeManifest
 }
 
 // NewRuntime method return new runtime pointer
@@ -74,7 +74,7 @@ func New(cri cri.CRI, cii cii.CII, csi map[string]csi.CSI, ntw *network.Network,
 	r.exporter = exp
 	r.workdir = workdir
 
-	r.spec = make(chan *types.NodeManifest, 0)
+	r.spec = make(chan *models.NodeManifest, 0)
 	return r, nil
 }
 
@@ -131,11 +131,11 @@ func (r *Runtime) Provision(dir string) error {
 	}
 
 	var (
-		mf = new(types.NodeManifest)
+		mf = new(models.NodeManifest)
 	)
-	mf.Configs = make(map[string]*types.ConfigManifest)
-	mf.Pods = make(map[string]*types.PodManifest)
-	mf.Volumes = make(map[string]*types.VolumeManifest)
+	mf.Configs = make(map[string]*models.ConfigManifest)
+	mf.Pods = make(map[string]*models.PodManifest)
+	mf.Volumes = make(map[string]*models.VolumeManifest)
 
 	for _, f := range files {
 		if f.IsDir() {
@@ -161,7 +161,7 @@ func (r *Runtime) Provision(dir string) error {
 			}
 
 			switch strings.ToLower(m.Kind) {
-			case types.KindConfig:
+			case models.KindConfig:
 				m := new(request.ConfigManifest)
 				err := m.FromYaml(i)
 				if err != nil {
@@ -174,7 +174,7 @@ func (r *Runtime) Provision(dir string) error {
 				log.Debugf("Add config Manifest: %s", *m.Meta.Name)
 				mf.Configs[*m.Meta.Name] = m.GetManifest()
 				break
-			case types.KindPod:
+			case models.KindPod:
 
 				m := new(request.PodManifest)
 				err := m.FromYaml(i)
@@ -189,7 +189,7 @@ func (r *Runtime) Provision(dir string) error {
 				mf.Pods[*m.Meta.Name] = m.GetManifest()
 				r.state.Pods().SetLocal(*m.Meta.Name)
 				break
-			case types.KindVolume:
+			case models.KindVolume:
 
 				m := new(request.VolumeManifest)
 				err := m.FromYaml(i)
@@ -211,7 +211,7 @@ func (r *Runtime) Provision(dir string) error {
 }
 
 // Sync node runtime with new spec
-func (r *Runtime) Sync(spec *types.NodeManifest) error {
+func (r *Runtime) Sync(spec *models.NodeManifest) error {
 	log.V(logLevel).Debugf("%s:sync:> sync runtime state", logNodeRuntimePrefix)
 	r.spec <- spec
 	return nil

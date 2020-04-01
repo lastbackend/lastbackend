@@ -19,7 +19,7 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 	"sync"
 )
@@ -28,10 +28,10 @@ const logVolumePrefix = "state:volume:> "
 
 type VolumesState struct {
 	lock     sync.RWMutex
-	volumes  map[string]types.VolumeStatus
+	volumes  map[string]models.VolumeStatus
 	local    map[string]bool
 	watchers map[chan string]bool
-	claims   map[string]types.VolumeClaim
+	claims   map[string]models.VolumeClaim
 }
 
 func (s *VolumesState) dispatch(pod string) {
@@ -46,19 +46,19 @@ func (s *VolumesState) Watch(watcher chan string, done chan bool) {
 	<-done
 }
 
-func (s *VolumesState) GetVolumes() map[string]types.VolumeStatus {
+func (s *VolumesState) GetVolumes() map[string]models.VolumeStatus {
 	log.V(logLevel).Debugf("%s get volumes", logVolumePrefix)
 	return s.volumes
 }
 
-func (s *VolumesState) SetVolumes(key string, volumes []*types.VolumeStatus) {
+func (s *VolumesState) SetVolumes(key string, volumes []*models.VolumeStatus) {
 	log.V(logLevel).Debugf("%s set volumes: %#v", logVolumePrefix, volumes)
 	for _, vol := range volumes {
 		s.volumes[key] = *vol
 	}
 }
 
-func (s *VolumesState) GetVolume(key string) *types.VolumeStatus {
+func (s *VolumesState) GetVolume(key string) *models.VolumeStatus {
 	log.V(logLevel).Debugf("%s get volume: %s", logVolumePrefix, key)
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -69,12 +69,12 @@ func (s *VolumesState) GetVolume(key string) *types.VolumeStatus {
 	return &v
 }
 
-func (s *VolumesState) AddVolume(key string, v *types.VolumeStatus) {
+func (s *VolumesState) AddVolume(key string, v *models.VolumeStatus) {
 	log.V(logLevel).Debugf("%s add volume: %s > %s", logVolumePrefix, key, v.State)
 	s.SetVolume(key, v)
 }
 
-func (s *VolumesState) SetVolume(key string, v *types.VolumeStatus) {
+func (s *VolumesState) SetVolume(key string, v *models.VolumeStatus) {
 	log.V(logLevel).Debugf("%s set volume: %s > %s", logVolumePrefix, key, v.State)
 	s.lock.Lock()
 	s.volumes[key] = *v
@@ -92,7 +92,7 @@ func (s *VolumesState) DelVolume(key string) {
 	s.dispatch(key)
 }
 
-func (s *VolumesState) GetClaim(key string) *types.VolumeClaim {
+func (s *VolumesState) GetClaim(key string) *models.VolumeClaim {
 	log.V(logLevel).Debugf("%s get claim: %s", logVolumePrefix, key)
 	v, ok := s.claims[key]
 	if !ok {
@@ -101,12 +101,12 @@ func (s *VolumesState) GetClaim(key string) *types.VolumeClaim {
 	return &v
 }
 
-func (s *VolumesState) AddClaim(key string, vc *types.VolumeClaim) {
+func (s *VolumesState) AddClaim(key string, vc *models.VolumeClaim) {
 	log.V(logLevel).Debugf("%s add claim: %s", logVolumePrefix, key)
 	s.SetClaim(key, vc)
 }
 
-func (s *VolumesState) SetClaim(key string, vc *types.VolumeClaim) {
+func (s *VolumesState) SetClaim(key string, vc *models.VolumeClaim) {
 	log.V(logLevel).Debugf("%s set claim: %s", logVolumePrefix, key)
 	s.lock.Lock()
 	s.claims[key] = *vc

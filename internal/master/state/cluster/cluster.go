@@ -21,15 +21,14 @@ package cluster
 import (
 	"context"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 func clusterStatusState(cs *ClusterState) error {
 
-	cs.cluster.Status.Capacity = types.ClusterResources{}
-	cs.cluster.Status.Allocated = types.ClusterResources{}
+	cs.cluster.Status.Capacity = models.ClusterResources{}
+	cs.cluster.Status.Allocated = models.ClusterResources{}
 
 	for _, n := range cs.node.list {
 
@@ -46,7 +45,7 @@ func clusterStatusState(cs *ClusterState) error {
 		cs.cluster.Status.Capacity.Pods += n.Status.Capacity.Pods
 	}
 
-	if err := model.NewClusterModel(context.Background(), cs.storage).Set(cs.cluster); err != nil {
+	if err := service.NewClusterModel(context.Background(), cs.storage).Set(cs.cluster); err != nil {
 		log.Errorf("%s: cluster update status error: %s", logPrefix, err.Error())
 		return err
 	}

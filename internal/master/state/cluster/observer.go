@@ -20,11 +20,10 @@ package cluster
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/internal/master/ipam"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -35,37 +34,37 @@ const (
 
 // ClusterState is cluster current state struct
 type ClusterState struct {
-	storage storage.Storage
+	storage storage.IStorage
 	ipam    ipam.IPAM
 
-	cluster *types.Cluster
+	cluster *models.Cluster
 
 	ingress struct {
-		observer chan *types.Ingress
-		list     map[string]*types.Ingress
+		observer chan *models.Ingress
+		list     map[string]*models.Ingress
 	}
 
 	discovery struct {
-		observer chan *types.Discovery
-		list     map[string]*types.Discovery
+		observer chan *models.Discovery
+		list     map[string]*models.Discovery
 	}
 
 	route struct {
 		ingress  map[string]int
-		observer chan *types.Route
-		list     map[string]*types.Route
+		observer chan *models.Route
+		list     map[string]*models.Route
 	}
 
 	volume struct {
-		observer chan *types.Volume
-		list     map[string]*types.Volume
+		observer chan *models.Volume
+		list     map[string]*models.Volume
 	}
 
 	node struct {
-		observer chan *types.Node
+		observer chan *models.Node
 		lease    chan *NodeLease
 		release  chan *NodeLease
-		list     map[string]*types.Node
+		list     map[string]*models.Node
 	}
 }
 
@@ -112,14 +111,14 @@ func (cs *ClusterState) Loop() error {
 	var err error
 
 	// Get cluster info
-	cm := model.NewClusterModel(context.Background(), cs.storage)
+	cm := service.NewClusterModel(context.Background(), cs.storage)
 	cs.cluster, err = cm.Get()
 	if err != nil {
 		return err
 	}
 
 	// Get all nodes in cluster
-	nm := model.NewNodeModel(context.Background(), cs.storage)
+	nm := service.NewNodeModel(context.Background(), cs.storage)
 	nl, err := nm.List()
 	if err != nil {
 		return err
@@ -133,7 +132,7 @@ func (cs *ClusterState) Loop() error {
 	_ = clusterStatusState(cs)
 
 	// Get all ingress servers in cluster
-	im := model.NewIngressModel(context.Background(), cs.storage)
+	im := service.NewIngressModel(context.Background(), cs.storage)
 	il, err := im.List()
 	if err != nil {
 		return err
@@ -145,7 +144,7 @@ func (cs *ClusterState) Loop() error {
 	}
 
 	// Get all routes in cluster
-	rm := model.NewRouteModel(context.Background(), cs.storage)
+	rm := service.NewRouteModel(context.Background(), cs.storage)
 	rl, err := rm.List()
 	if err != nil {
 		return err
@@ -166,10 +165,10 @@ func (cs *ClusterState) Loop() error {
 func (cs *ClusterState) watchNode(ctx context.Context, rev *int64) {
 
 	var (
-		p = make(chan types.NodeEvent)
+		p = make(chan models.NodeEvent)
 	)
 
-	nm := model.NewNodeModel(ctx, cs.storage)
+	nm := service.NewNodeModel(ctx, cs.storage)
 
 	go func() {
 		for {
@@ -198,10 +197,10 @@ func (cs *ClusterState) watchNode(ctx context.Context, rev *int64) {
 func (cs *ClusterState) watchIngress(ctx context.Context, rev *int64) {
 
 	var (
-		p = make(chan types.IngressEvent)
+		p = make(chan models.IngressEvent)
 	)
 
-	nm := model.NewIngressModel(ctx, cs.storage)
+	nm := service.NewIngressModel(ctx, cs.storage)
 
 	go func() {
 		for {
@@ -229,10 +228,10 @@ func (cs *ClusterState) watchIngress(ctx context.Context, rev *int64) {
 
 func (cs *ClusterState) watchRoute(ctx context.Context, rev *int64) {
 	var (
-		p = make(chan types.RouteEvent)
+		p = make(chan models.RouteEvent)
 	)
 
-	rm := model.NewRouteModel(ctx, cs.storage)
+	rm := service.NewRouteModel(ctx, cs.storage)
 
 	go func() {
 		for {
@@ -259,7 +258,7 @@ func (cs *ClusterState) watchRoute(ctx context.Context, rev *int64) {
 }
 
 // lease new node for requests by parameters
-func (cs *ClusterState) lease(opts NodeLeaseOptions) (*types.Node, error) {
+func (cs *ClusterState) lease(opts NodeLeaseOptions) (*models.Node, error) {
 
 	// Work as node lease requests queue
 	req := new(NodeLease)
@@ -272,7 +271,7 @@ func (cs *ClusterState) lease(opts NodeLeaseOptions) (*types.Node, error) {
 }
 
 // release node
-func (cs *ClusterState) release(opts NodeLeaseOptions) (*types.Node, error) {
+func (cs *ClusterState) release(opts NodeLeaseOptions) (*models.Node, error) {
 	// Work as node release
 	req := new(NodeLease)
 	req.Request = opts
@@ -283,7 +282,7 @@ func (cs *ClusterState) release(opts NodeLeaseOptions) (*types.Node, error) {
 }
 
 // lease node in sync mode
-func (cs *ClusterState) leaseSync(opts NodeLeaseOptions) (*types.Node, error) {
+func (cs *ClusterState) leaseSync(opts NodeLeaseOptions) (*models.Node, error) {
 
 	// Work as node lease requests queue
 	req := new(NodeLease)
@@ -298,7 +297,7 @@ func (cs *ClusterState) leaseSync(opts NodeLeaseOptions) (*types.Node, error) {
 }
 
 // release node in sync mode
-func (cs *ClusterState) releaseSync(opts NodeLeaseOptions) (*types.Node, error) {
+func (cs *ClusterState) releaseSync(opts NodeLeaseOptions) (*models.Node, error) {
 	// Work as node release
 	req := new(NodeLease)
 	req.Request = opts
@@ -317,47 +316,47 @@ func (cs *ClusterState) IPAM() ipam.IPAM {
 	return cs.ipam
 }
 
-func (cs *ClusterState) SetNode(n *types.Node) {
+func (cs *ClusterState) SetNode(n *models.Node) {
 	cs.node.observer <- n
 }
 
-func (cs *ClusterState) DelNode(n *types.Node) {
+func (cs *ClusterState) DelNode(n *models.Node) {
 	delete(cs.node.list, n.SelfLink().String())
 }
 
-func (cs *ClusterState) SetIngress(i *types.Ingress) {
+func (cs *ClusterState) SetIngress(i *models.Ingress) {
 	cs.ingress.observer <- i
 }
 
-func (cs *ClusterState) DelIngress(i *types.Ingress) {
+func (cs *ClusterState) DelIngress(i *models.Ingress) {
 	delete(cs.ingress.list, i.SelfLink().String())
 }
 
-func (cs *ClusterState) SetDiscovery(d *types.Discovery) {
+func (cs *ClusterState) SetDiscovery(d *models.Discovery) {
 	cs.discovery.observer <- d
 }
 
-func (cs *ClusterState) DelDiscovery(d *types.Discovery) {
+func (cs *ClusterState) DelDiscovery(d *models.Discovery) {
 	delete(cs.discovery.list, d.SelfLink().String())
 }
 
-func (cs *ClusterState) SetVolume(v *types.Volume) {
+func (cs *ClusterState) SetVolume(v *models.Volume) {
 	cs.volume.observer <- v
 }
 
-func (cs *ClusterState) DelVolume(v *types.Volume) {
+func (cs *ClusterState) DelVolume(v *models.Volume) {
 	delete(cs.volume.list, v.SelfLink().String())
 }
 
-func (cs *ClusterState) SetRoute(r *types.Route) {
+func (cs *ClusterState) SetRoute(r *models.Route) {
 	cs.route.observer <- r
 }
 
-func (cs *ClusterState) DelRoute(r *types.Route) {
+func (cs *ClusterState) DelRoute(r *models.Route) {
 	delete(cs.route.list, r.SelfLink().String())
 }
 
-func (cs *ClusterState) PodLease(p *types.Pod) (*types.Node, error) {
+func (cs *ClusterState) PodLease(p *models.Pod) (*models.Node, error) {
 
 	var RAM int64
 
@@ -379,7 +378,7 @@ func (cs *ClusterState) PodLease(p *types.Pod) (*types.Node, error) {
 	return node, err
 }
 
-func (cs *ClusterState) PodRelease(p *types.Pod) (*types.Node, error) {
+func (cs *ClusterState) PodRelease(p *models.Pod) (*models.Node, error) {
 	var RAM int64
 
 	for _, s := range p.Spec.Template.Containers {
@@ -400,7 +399,7 @@ func (cs *ClusterState) PodRelease(p *types.Pod) (*types.Node, error) {
 	return node, err
 }
 
-func (cs *ClusterState) VolumeLease(v *types.Volume) (*types.Node, error) {
+func (cs *ClusterState) VolumeLease(v *models.Volume) (*models.Node, error) {
 
 	opts := NodeLeaseOptions{
 		Node:     &v.Spec.Selector.Node,
@@ -417,7 +416,7 @@ func (cs *ClusterState) VolumeLease(v *types.Volume) (*types.Node, error) {
 	return node, err
 }
 
-func (cs *ClusterState) VolumeRelease(v *types.Volume) (*types.Node, error) {
+func (cs *ClusterState) VolumeRelease(v *models.Volume) (*models.Node, error) {
 
 	opts := NodeLeaseOptions{
 		Node:    &v.Meta.Node,
@@ -434,35 +433,35 @@ func (cs *ClusterState) VolumeRelease(v *types.Volume) (*types.Node, error) {
 }
 
 // NewClusterState returns new cluster state instance
-func NewClusterState(stg storage.Storage, ipam ipam.IPAM) *ClusterState {
+func NewClusterState(stg storage.IStorage, ipam ipam.IPAM) *ClusterState {
 
 	var cs = new(ClusterState)
 
 	cs.storage = stg
 	cs.ipam = ipam
 
-	cs.cluster = new(types.Cluster)
+	cs.cluster = new(models.Cluster)
 
-	cs.ingress.observer = make(chan *types.Ingress)
-	cs.ingress.list = make(map[string]*types.Ingress)
+	cs.ingress.observer = make(chan *models.Ingress)
+	cs.ingress.list = make(map[string]*models.Ingress)
 
-	cs.discovery.observer = make(chan *types.Discovery)
-	cs.discovery.list = make(map[string]*types.Discovery)
+	cs.discovery.observer = make(chan *models.Discovery)
+	cs.discovery.list = make(map[string]*models.Discovery)
 
-	cs.volume.list = make(map[string]*types.Volume)
-	cs.volume.observer = make(chan *types.Volume)
+	cs.volume.list = make(map[string]*models.Volume)
+	cs.volume.observer = make(chan *models.Volume)
 
-	cs.node.observer = make(chan *types.Node)
-	cs.node.list = make(map[string]*types.Node)
+	cs.node.observer = make(chan *models.Node)
+	cs.node.list = make(map[string]*models.Node)
 
 	cs.node.lease = make(chan *NodeLease)
 	cs.node.release = make(chan *NodeLease)
 
-	cs.node.observer = make(chan *types.Node)
+	cs.node.observer = make(chan *models.Node)
 
-	cs.route.observer = make(chan *types.Route)
+	cs.route.observer = make(chan *models.Route)
 	cs.route.ingress = make(map[string]int, 0)
-	cs.route.list = make(map[string]*types.Route, 0)
+	cs.route.list = make(map[string]*models.Route, 0)
 
 	go cs.Observe()
 

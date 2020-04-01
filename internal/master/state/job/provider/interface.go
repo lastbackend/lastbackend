@@ -18,8 +18,8 @@
 
 package provider
 
-import "github.com/lastbackend/lastbackend/internal/pkg/types"
+import "github.com/lastbackend/lastbackend/internal/pkg/models"
 
 type JobProvider interface {
-	Fetch() (*types.TaskManifest, error)
+	Fetch() (*models.TaskManifest, error)
 }

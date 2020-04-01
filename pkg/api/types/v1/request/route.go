@@ -20,7 +20,7 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"gopkg.in/yaml.v2"
 )
 
@@ -70,9 +70,9 @@ func (r *RouteManifest) ToYaml() ([]byte, error) {
 	return yaml.Marshal(r)
 }
 
-func (r *RouteManifest) SetRouteMeta(route *types.Route) {
+func (r *RouteManifest) SetRouteMeta(route *models.Route) {
 
-	if route.Meta.Name == types.EmptyString {
+	if route.Meta.Name == models.EmptyString {
 		route.Meta.Name = *r.Meta.Name
 	}
 
@@ -87,9 +87,9 @@ func (r *RouteManifest) SetRouteMeta(route *types.Route) {
 	}
 }
 
-func (r *RouteManifest) SetRouteSpec(route *types.Route, ns *types.Namespace, svc *types.ServiceList) {
+func (r *RouteManifest) SetRouteSpec(route *models.Route, ns *models.Namespace, svc *models.ServiceList) {
 
-	var sl = make(map[string]*types.Service)
+	var sl = make(map[string]*models.Service)
 	for _, s := range svc.Items {
 		sl[s.Meta.Name] = s
 	}
@@ -102,10 +102,10 @@ func (r *RouteManifest) SetRouteSpec(route *types.Route, ns *types.Namespace, sv
 		route.Spec.Port = r.Spec.Port
 	}
 
-	route.Spec.Rules = make([]types.RouteRule, 0)
+	route.Spec.Rules = make([]models.RouteRule, 0)
 	for _, rs := range r.Spec.Rules {
 
-		if rs.Service == types.EmptyString || rs.Port == 0 {
+		if rs.Service == models.EmptyString || rs.Port == 0 {
 			continue
 		}
 
@@ -113,7 +113,7 @@ func (r *RouteManifest) SetRouteSpec(route *types.Route, ns *types.Namespace, sv
 			continue
 		}
 
-		route.Spec.Rules = append(route.Spec.Rules, types.RouteRule{
+		route.Spec.Rules = append(route.Spec.Rules, models.RouteRule{
 			Upstream: sl[rs.Service].Meta.Endpoint,
 			Service:  rs.Service,
 			Port:     rs.Port,
@@ -122,5 +122,5 @@ func (r *RouteManifest) SetRouteSpec(route *types.Route, ns *types.Namespace, sv
 
 	}
 
-	route.Spec.State = types.StateProvision
+	route.Spec.State = models.StateProvision
 }

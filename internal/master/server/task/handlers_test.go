@@ -22,23 +22,24 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/internal/api/envs"
 	"github.com/lastbackend/lastbackend/internal/master/http/task"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/internal/util/resource"
 	v1 "github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
 // Testing TaskInfoH handler
@@ -63,13 +64,13 @@ func TestTaskInfo(t *testing.T) {
 	t3 := getTaskAsset(ns1.Meta.Name, j1.Meta.Name, "task3")
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		task      *types.Task
+		namespace *models.Namespace
+		task      *models.Task
 	}
 
 	tests := []struct {
@@ -122,13 +123,13 @@ func TestTaskInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Task(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Task(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -215,18 +216,18 @@ func TestTaskList(t *testing.T) {
 	t1 := getTaskAsset(ns1.Meta.Name, j1.Meta.Name, "task1")
 	t2 := getTaskAsset(ns1.Meta.Name, j1.Meta.Name, "task2")
 
-	tl := types.NewTaskMap()
+	tl := models.NewTaskMap()
 	tl.Items[t1.SelfLink().String()] = t1
 	tl.Items[t2.SelfLink().String()] = t2
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		job       *types.Job
+		namespace *models.Namespace
+		job       *models.Job
 	}
 
 	tests := []struct {
@@ -236,7 +237,7 @@ func TestTaskList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         *types.TaskMap
+		want         *models.TaskMap
 		wantErr      bool
 		expectedCode int
 	}{
@@ -270,13 +271,13 @@ func TestTaskList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Task(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Task(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -421,15 +422,15 @@ func TestTaskCreate(t *testing.T) {
 	tm7.Spec.Template.Containers[0].Resources.Limits.CPU = ""
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		job       *types.Job
+		namespace *models.Namespace
+		job       *models.Job
 		tmf       *request.TaskManifest
-		task      *types.Task
+		task      *models.Task
 	}
 
 	tests := []struct {
@@ -518,13 +519,13 @@ func TestTaskCreate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Task(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Task(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -583,13 +584,13 @@ func TestTaskCreate(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				job := new(types.Job)
+				job := new(models.Job)
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Job(), tc.args.job.SelfLink().String(), job, nil)
 				if !assert.NoError(t, err) {
 					return
 				}
 
-				got := new(types.Task)
+				got := new(models.Task)
 				err = tc.fields.stg.Get(tc.args.ctx, stg.Collection().Task(), tc.args.task.SelfLink().String(), got, nil)
 				if !assert.NoError(t, err) {
 					return
@@ -631,14 +632,14 @@ func TestTaskCancel(t *testing.T) {
 	t3 := getTaskAsset(ns1.Meta.Name, j1.Meta.Name, "task3")
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		job       *types.Job
-		task      *types.Task
+		namespace *models.Namespace
+		job       *models.Job
+		task      *models.Task
 	}
 
 	tests := []struct {
@@ -692,13 +693,13 @@ func TestTaskCancel(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Task(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Task(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -754,7 +755,7 @@ func TestTaskCancel(t *testing.T) {
 				assert.NoError(t, err)
 
 				assert.Equal(t, tc.want.Meta.Name, s.Meta.Name, "description not equal")
-				assert.Equal(t, types.StateCanceled, s.Status.State, "status state is not canceled")
+				assert.Equal(t, models.StateCanceled, s.Status.State, "status state is not canceled")
 			}
 		})
 	}
@@ -781,20 +782,20 @@ func TestTaskRemove(t *testing.T) {
 	t1 := getTaskAsset(ns1.Meta.Name, j1.Meta.Name, "task1")
 	t2 := getTaskAsset(ns1.Meta.Name, j1.Meta.Name, "task1")
 
-	t2.Status.State = types.StateDestroy
+	t2.Status.State = models.StateDestroy
 	t2.Spec.State.Destroy = true
 
 	t3 := getTaskAsset(ns1.Meta.Name, j1.Meta.Name, "task3")
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		job       *types.Job
-		task      *types.Task
+		namespace *models.Namespace
+		job       *models.Job
+		task      *models.Task
 	}
 
 	tests := []struct {
@@ -848,13 +849,13 @@ func TestTaskRemove(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Task(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Task(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -910,45 +911,45 @@ func TestTaskRemove(t *testing.T) {
 				assert.NoError(t, err)
 
 				assert.Equal(t, tc.want.Meta.Name, s.Meta.Name, "description not equal")
-				assert.Equal(t, types.StateDestroy, s.Status.State, "status state is not canceled")
+				assert.Equal(t, models.StateDestroy, s.Status.State, "status state is not canceled")
 			}
 		})
 	}
 
 }
 
-func getNamespaceAsset(name, desc string) *types.Namespace {
-	var n = types.Namespace{}
+func getNamespaceAsset(name, desc string) *models.Namespace {
+	var n = models.Namespace{}
 	n.Meta.SetDefault()
 	n.Meta.Name = name
 	n.Meta.Description = desc
-	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
+	n.Meta.SelfLink = *models.NewNamespaceSelfLink(name)
 	return &n
 }
 
-func getJobAsset(namespace, name, desc string) *types.Job {
-	var s = types.Job{}
+func getJobAsset(namespace, name, desc string) *models.Job {
+	var s = models.Job{}
 	s.Meta.SetDefault()
 	s.Meta.Namespace = namespace
 	s.Meta.Name = name
 	s.Meta.Description = desc
-	s.Meta.SelfLink = *types.NewJobSelfLink(namespace, name)
-	s.Spec.Task.Template.Containers = make(types.SpecTemplateContainers, 0)
-	s.Spec.Task.Template.Containers = append(s.Spec.Task.Template.Containers, &types.SpecTemplateContainer{
+	s.Meta.SelfLink = *models.NewJobSelfLink(namespace, name)
+	s.Spec.Task.Template.Containers = make(models.SpecTemplateContainers, 0)
+	s.Spec.Task.Template.Containers = append(s.Spec.Task.Template.Containers, &models.SpecTemplateContainer{
 		Name: "demo",
 	})
 	return &s
 }
 
-func getTaskAsset(namespace, job, name string) *types.Task {
-	var s = types.Task{}
+func getTaskAsset(namespace, job, name string) *models.Task {
+	var s = models.Task{}
 	s.Meta.SetDefault()
 	s.Meta.Namespace = namespace
 	s.Meta.Job = job
 	s.Meta.Name = name
-	s.Meta.SelfLink = *types.NewTaskSelfLink(namespace, job, name)
-	s.Spec.Template.Containers = make(types.SpecTemplateContainers, 0)
-	s.Spec.Template.Containers = append(s.Spec.Template.Containers, &types.SpecTemplateContainer{
+	s.Meta.SelfLink = *models.NewTaskSelfLink(namespace, job, name)
+	s.Spec.Template.Containers = make(models.SpecTemplateContainers, 0)
+	s.Spec.Template.Containers = append(s.Spec.Template.Containers, &models.SpecTemplateContainer{
 		Name: "demo",
 	})
 	return &s

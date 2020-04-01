@@ -21,9 +21,6 @@ package runtime
 import (
 	"bytes"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/ingress/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -31,6 +28,10 @@ import (
 	"strconv"
 	"syscall"
 	"time"
+
+	"github.com/lastbackend/lastbackend/internal/ingress/envs"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const (
@@ -92,7 +93,7 @@ func (hp *Process) start() (*os.Process, error) {
 	bin := envs.Get().GetHaproxy()
 	_, path, pid := envs.Get().GetTemplate()
 
-	if pid == types.EmptyString {
+	if pid == models.EmptyString {
 		pid = hPid
 	}
 
@@ -139,7 +140,7 @@ func (hp *Process) reload() error {
 
 	bin := envs.Get().GetHaproxy()
 	_, path, pidpath := envs.Get().GetTemplate()
-	if pidpath == types.EmptyString {
+	if pidpath == models.EmptyString {
 		pidpath = hPid
 	}
 
@@ -166,7 +167,7 @@ func (hp *Process) getPid() int {
 
 	_, _, pidpath := envs.Get().GetTemplate()
 
-	if pidpath == types.EmptyString {
+	if pidpath == models.EmptyString {
 		pidpath = hPid
 	}
 

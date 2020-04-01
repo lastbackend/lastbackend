@@ -19,7 +19,7 @@
 package http
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/tools/log"
 	"net/http"
@@ -33,11 +33,11 @@ const (
 
 type JobHttpProvider struct {
 	timeout time.Time
-	config  *types.JobSpecProviderHTTP
+	config  *models.JobSpecProviderHTTP
 	client  http.Client
 }
 
-func (h *JobHttpProvider) Fetch() (*types.TaskManifest, error) {
+func (h *JobHttpProvider) Fetch() (*models.TaskManifest, error) {
 
 	var (
 		err      error
@@ -71,7 +71,7 @@ func (h *JobHttpProvider) Fetch() (*types.TaskManifest, error) {
 
 	defer resp.Body.Close()
 
-	mf := new(types.TaskManifest)
+	mf := new(models.TaskManifest)
 	manifest.SetTaskManifestMeta(mf)
 	if err := manifest.SetTaskManifestSpec(mf); err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func (h *JobHttpProvider) Fetch() (*types.TaskManifest, error) {
 	return mf, nil
 }
 
-func New(cfg *types.JobSpecProviderHTTP) (*JobHttpProvider, error) {
+func New(cfg *models.JobSpecProviderHTTP) (*JobHttpProvider, error) {
 
 	log.V(logLevel).Debug("Use http task watcher")
 

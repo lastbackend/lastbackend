@@ -26,10 +26,10 @@ import (
 
 	"github.com/lastbackend/lastbackend/internal/minion/runtime"
 	"github.com/lastbackend/lastbackend/internal/minion/state"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/pkg/client"
+	"github.com/lastbackend/lastbackend/pkg/client/cluster"
 	"github.com/lastbackend/lastbackend/pkg/network"
 	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/spf13/viper"
@@ -44,25 +44,25 @@ type Controller struct {
 	ctx        context.Context
 	runtime    *runtime.Runtime
 	state      *state.State
-	restClient client.IClient
+	restClient cluster.IClient
 	network    *network.Network
 	cache      struct {
 		lock      sync.RWMutex
-		resources types.NodeStatus
-		pods      map[string]*types.PodStatus
-		volumes   map[string]*types.VolumeStatus
+		resources models.NodeStatus
+		pods      map[string]*models.PodStatus
+		volumes   map[string]*models.VolumeStatus
 	}
 }
 
-func New(r *runtime.Runtime, rest client.IClient, network *network.Network, state *state.State) *Controller {
+func New(r *runtime.Runtime, rest cluster.IClient, network *network.Network, state *state.State) *Controller {
 	var c = new(Controller)
 	c.ctx = context.Background()
 	c.runtime = r
 	c.state = state
 	c.restClient = rest
 	c.network = network
-	c.cache.pods = make(map[string]*types.PodStatus)
-	c.cache.volumes = make(map[string]*types.VolumeStatus)
+	c.cache.pods = make(map[string]*models.PodStatus)
+	c.cache.volumes = make(map[string]*models.VolumeStatus)
 
 	pods := state.Pods().GetPods()
 	for p, st := range pods {
@@ -230,7 +230,7 @@ func (c *Controller) Subscribe() {
 	<-done
 }
 
-func getPodOptions(p *types.PodStatus) *request.NodePodStatusOptions {
+func getPodOptions(p *models.PodStatus) *request.NodePodStatusOptions {
 	opts := v1.Request().Node().NodePodStatusOptions()
 	opts.State = p.State
 	opts.Status = p.Status
@@ -242,7 +242,7 @@ func getPodOptions(p *types.PodStatus) *request.NodePodStatusOptions {
 	return opts
 }
 
-func getVolumeOptions(p *types.VolumeStatus) *request.NodeVolumeStatusOptions {
+func getVolumeOptions(p *models.VolumeStatus) *request.NodeVolumeStatusOptions {
 	opts := v1.Request().Node().NodeVolumeStatusOptions()
 	opts.State = p.State
 	opts.Message = p.Message

@@ -19,9 +19,10 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"sync"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const logRoutePrefix = "state:routes:>"
@@ -30,8 +31,8 @@ type RouteState struct {
 	lock   sync.RWMutex
 	hash   string
 	routes map[string]struct {
-		status   *types.RouteStatus
-		manifest *types.RouteManifest
+		status   *models.RouteStatus
+		manifest *models.RouteManifest
 	}
 	watchers map[chan string]bool
 }
@@ -56,10 +57,10 @@ func (rs *RouteState) SetHash(hash string) {
 	rs.hash = hash
 }
 
-func (rs *RouteState) GetRouteManifests() map[string]*types.RouteManifest {
+func (rs *RouteState) GetRouteManifests() map[string]*models.RouteManifest {
 	log.V(logLevel).Debugf("%s get route manifests", logRoutePrefix)
 
-	var manifests = make(map[string]*types.RouteManifest, 0)
+	var manifests = make(map[string]*models.RouteManifest, 0)
 	for k, route := range rs.routes {
 		if route.manifest != nil {
 			manifests[k] = route.manifest
@@ -69,7 +70,7 @@ func (rs *RouteState) GetRouteManifests() map[string]*types.RouteManifest {
 	return manifests
 }
 
-func (rs *RouteState) GetRouteManifest(key string) *types.RouteManifest {
+func (rs *RouteState) GetRouteManifest(key string) *models.RouteManifest {
 	log.V(logLevel).Debugf("%s: get route manifest: %s", logRoutePrefix, key)
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
@@ -82,14 +83,14 @@ func (rs *RouteState) GetRouteManifest(key string) *types.RouteManifest {
 	return ep.manifest
 }
 
-func (rs *RouteState) AddRouteManifest(key string, route *types.RouteManifest) {
+func (rs *RouteState) AddRouteManifest(key string, route *models.RouteManifest) {
 	log.V(logLevel).Debugf("%s: add route manifest: %s", logRoutePrefix, key)
 	rs.lock.Lock()
 	rt, ok := rs.routes[key]
 	if !ok {
 		rs.routes[key] = struct {
-			status   *types.RouteStatus
-			manifest *types.RouteManifest
+			status   *models.RouteStatus
+			manifest *models.RouteManifest
 		}{status: nil, manifest: route}
 	} else {
 		rt.manifest = route
@@ -99,14 +100,14 @@ func (rs *RouteState) AddRouteManifest(key string, route *types.RouteManifest) {
 	rs.lock.Unlock()
 }
 
-func (rs *RouteState) SetRouteManifest(key string, route *types.RouteManifest) {
+func (rs *RouteState) SetRouteManifest(key string, route *models.RouteManifest) {
 	rs.lock.Lock()
 	log.V(logLevel).Debugf("%s: set route manifest: %s", logRoutePrefix, key)
 	rt, ok := rs.routes[key]
 	if !ok {
 		rs.routes[key] = struct {
-			status   *types.RouteStatus
-			manifest *types.RouteManifest
+			status   *models.RouteStatus
+			manifest *models.RouteManifest
 		}{status: nil, manifest: route}
 	} else {
 		rt.manifest = route
@@ -127,10 +128,10 @@ func (rs *RouteState) DelRouteManifests(key string) {
 	rs.lock.Unlock()
 }
 
-func (rs *RouteState) GetRouteStatuses() map[string]*types.RouteStatus {
+func (rs *RouteState) GetRouteStatuses() map[string]*models.RouteStatus {
 	log.V(logLevel).Debugf("%s get route statuses", logRoutePrefix)
 
-	var statuses = make(map[string]*types.RouteStatus, 0)
+	var statuses = make(map[string]*models.RouteStatus, 0)
 	for k, route := range rs.routes {
 		statuses[k] = route.status
 	}
@@ -138,7 +139,7 @@ func (rs *RouteState) GetRouteStatuses() map[string]*types.RouteStatus {
 	return statuses
 }
 
-func (rs *RouteState) GetRouteStatus(key string) *types.RouteStatus {
+func (rs *RouteState) GetRouteStatus(key string) *models.RouteStatus {
 	log.V(logLevel).Debugf("%s: get route status: %s", logRoutePrefix, key)
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
@@ -151,14 +152,14 @@ func (rs *RouteState) GetRouteStatus(key string) *types.RouteStatus {
 	return ep.status
 }
 
-func (rs *RouteState) AddRouteStatus(key string, status *types.RouteStatus) {
+func (rs *RouteState) AddRouteStatus(key string, status *models.RouteStatus) {
 	log.V(logLevel).Debugf("%s: add route status: %s", logRoutePrefix, key)
 	rs.lock.Lock()
 	rt, ok := rs.routes[key]
 	if !ok {
 		rs.routes[key] = struct {
-			status   *types.RouteStatus
-			manifest *types.RouteManifest
+			status   *models.RouteStatus
+			manifest *models.RouteManifest
 		}{status: status, manifest: nil}
 	} else {
 		rt.status = status
@@ -168,14 +169,14 @@ func (rs *RouteState) AddRouteStatus(key string, status *types.RouteStatus) {
 	rs.dispatch(key)
 }
 
-func (rs *RouteState) SetRouteStatus(key string, status *types.RouteStatus) {
+func (rs *RouteState) SetRouteStatus(key string, status *models.RouteStatus) {
 	rs.lock.Lock()
 	log.V(logLevel).Debugf("%s: set route status: %s", logRoutePrefix, key)
 	rt, ok := rs.routes[key]
 	if !ok {
 		rs.routes[key] = struct {
-			status   *types.RouteStatus
-			manifest *types.RouteManifest
+			status   *models.RouteStatus
+			manifest *models.RouteManifest
 		}{status: status, manifest: nil}
 	} else {
 		rt.status = status

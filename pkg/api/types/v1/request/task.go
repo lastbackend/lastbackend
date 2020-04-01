@@ -20,8 +20,9 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"gopkg.in/yaml.v2"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type TaskManifest struct {
@@ -39,32 +40,32 @@ type TaskManifestSpec struct {
 	Template *ManifestSpecTemplate `json:"template,omitempty" yaml:"template,omitempty"`
 }
 
-func (t *TaskManifest) SetTaskManifestMeta(task *types.TaskManifest) {
+func (t *TaskManifest) SetTaskManifestMeta(task *models.TaskManifest) {
 
 	task.Meta.Name = t.Meta.Name
 	task.Meta.Labels = t.Meta.Labels
 	task.Meta.Description = t.Meta.Description
 }
 
-func (t *TaskManifest) SetTaskManifestSpec(task *types.TaskManifest) error {
+func (t *TaskManifest) SetTaskManifestSpec(task *models.TaskManifest) error {
 
 	if t.Spec.Runtime != nil {
 		if task.Spec.Runtime == nil {
-			task.Spec.Runtime = new(types.ManifestSpecRuntime)
+			task.Spec.Runtime = new(models.ManifestSpecRuntime)
 		}
 		t.Spec.Runtime.SetManifestSpecRuntime(task.Spec.Runtime)
 	}
 
 	if t.Spec.Selector != nil {
 		if task.Spec.Selector == nil {
-			task.Spec.Selector = new(types.ManifestSpecSelector)
+			task.Spec.Selector = new(models.ManifestSpecSelector)
 		}
 		t.Spec.Selector.SetManifestSpecSelector(task.Spec.Selector)
 	}
 
 	if t.Spec.Template != nil {
 		if task.Spec.Template == nil {
-			task.Spec.Template = new(types.ManifestSpecTemplate)
+			task.Spec.Template = new(models.ManifestSpecTemplate)
 		}
 		if err := t.Spec.Template.SetManifestSpecTemplate(task.Spec.Template); err != nil {
 			return err
@@ -74,8 +75,8 @@ func (t *TaskManifest) SetTaskManifestSpec(task *types.TaskManifest) error {
 	return nil
 }
 
-func (t *TaskManifest) SetTaskMeta(task *types.Task) {
-	if task.Meta.Name == types.EmptyString {
+func (t *TaskManifest) SetTaskMeta(task *models.Task) {
+	if task.Meta.Name == models.EmptyString {
 		task.Meta.Name = *t.Meta.Name
 	}
 
@@ -84,7 +85,7 @@ func (t *TaskManifest) SetTaskMeta(task *types.Task) {
 	}
 }
 
-func (t *TaskManifest) SetTaskSpec(task *types.Task) error {
+func (t *TaskManifest) SetTaskSpec(task *models.Task) error {
 
 	if t.Spec.Runtime != nil {
 		t.Spec.Runtime.SetSpecRuntime(&task.Spec.Runtime)

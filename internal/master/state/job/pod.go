@@ -20,13 +20,12 @@ package job
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"strings"
 	"time"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/internal/util/generator"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
@@ -34,25 +33,25 @@ import (
 const logPodPrefix = "state:observer:pod"
 
 // PodObserve function manages pod handlers based on pod state
-func PodObserve(js *JobState, p *types.Pod) (err error) {
+func PodObserve(js *JobState, p *models.Pod) (err error) {
 
 	log.V(logLevel).Debugf("%s:> observe start: %s > state %s", logPodPrefix, p.SelfLink(), p.Status.State)
 
 	// Call pod state manager methods
 	switch p.Status.State {
-	case types.StateCreated:
+	case models.StateCreated:
 		err = handlePodStateCreated(js, p)
-	case types.StateProvision:
+	case models.StateProvision:
 		err = handlePodStateProvision(js, p)
-	case types.StateReady:
+	case models.StateReady:
 		err = handlePodStateReady(js, p)
-	case types.StateError:
+	case models.StateError:
 		err = handlePodStateError(js, p)
-	case types.StateDegradation:
+	case models.StateDegradation:
 		err = handlePodStateDegradation(js, p)
-	case types.StateDestroy:
+	case models.StateDestroy:
 		err = handlePodStateDestroy(js, p)
-	case types.StateDestroyed:
+	case models.StateDestroyed:
 		err = handlePodStateDestroyed(js, p)
 	}
 	if err != nil {
@@ -63,7 +62,7 @@ func PodObserve(js *JobState, p *types.Pod) (err error) {
 	log.V(logLevel).Debugf("%s:> observe state finish: %s", logPodPrefix, p.SelfLink())
 
 	_, sl := p.SelfLink().Parent()
-	if p.Status.State == types.StateDestroyed {
+	if p.Status.State == models.StateDestroyed {
 		delete(js.pod.list, sl.String())
 		return nil
 	} else {
@@ -86,7 +85,7 @@ func PodObserve(js *JobState, p *types.Pod) (err error) {
 	return nil
 }
 
-func handlePodStateCreated(js *JobState, p *types.Pod) error {
+func handlePodStateCreated(js *JobState, p *models.Pod) error {
 
 	log.V(logLevel).Debugf("%s:> handlePodStateCreated: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
 
@@ -97,7 +96,7 @@ func handlePodStateCreated(js *JobState, p *types.Pod) error {
 	return nil
 }
 
-func handlePodStateProvision(js *JobState, p *types.Pod) error {
+func handlePodStateProvision(js *JobState, p *models.Pod) error {
 
 	log.V(logLevel).Debugf("%s:> handlePodStateProvision: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
 
@@ -108,28 +107,28 @@ func handlePodStateProvision(js *JobState, p *types.Pod) error {
 	return nil
 }
 
-func handlePodStateReady(js *JobState, p *types.Pod) error {
+func handlePodStateReady(js *JobState, p *models.Pod) error {
 
 	log.V(logLevel).Debugf("%s:> handlePodStateReady: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
 
 	return nil
 }
 
-func handlePodStateError(js *JobState, p *types.Pod) error {
+func handlePodStateError(js *JobState, p *models.Pod) error {
 
 	log.V(logLevel).Debugf("%s:> handlePodStateError: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
 
 	return nil
 }
 
-func handlePodStateDegradation(js *JobState, p *types.Pod) error {
+func handlePodStateDegradation(js *JobState, p *models.Pod) error {
 
 	log.V(logLevel).Debugf("%s:> handlePodStateDegradation: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
 
 	return nil
 }
 
-func handlePodStateDestroy(js *JobState, p *types.Pod) error {
+func handlePodStateDestroy(js *JobState, p *models.Pod) error {
 
 	log.V(logLevel).Debugf("%s:> handlePodStateDestroy: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
 
@@ -141,7 +140,7 @@ func handlePodStateDestroy(js *JobState, p *types.Pod) error {
 	return nil
 }
 
-func handlePodStateDestroyed(js *JobState, p *types.Pod) error {
+func handlePodStateDestroyed(js *JobState, p *models.Pod) error {
 
 	log.V(logLevel).Debugf("%s:> handlePodStateDestroyed: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
 
@@ -154,14 +153,14 @@ func handlePodStateDestroyed(js *JobState, p *types.Pod) error {
 }
 
 // podCreate function creates new pod based on task spec
-func podCreate(stg storage.Storage, t *types.Task) (*types.Pod, error) {
-	pm := model.NewPodModel(context.Background(), stg)
+func podCreate(stg storage.IStorage, t *models.Task) (*models.Pod, error) {
+	pm := service.NewPodModel(context.Background(), stg)
 
-	pod := types.NewPod()
+	pod := models.NewPod()
 	pod.Meta.SetDefault()
 	pod.Meta.Name = strings.Split(generator.GetUUIDV4(), "-")[4][5:]
 	pod.Meta.Namespace = t.Meta.Namespace
-	sl, _ := types.NewPodSelfLink(types.KindTask, t.SelfLink().String(), pod.Meta.Name)
+	sl, _ := models.NewPodSelfLink(models.KindTask, t.SelfLink().String(), pod.Meta.Name)
 	pod.Meta.SelfLink = *sl
 	pod.Status.SetCreated()
 
@@ -173,7 +172,7 @@ func podCreate(stg storage.Storage, t *types.Task) (*types.Pod, error) {
 }
 
 // podDestroy function marks pod as provision
-func podProvision(js *JobState, p *types.Pod) (err error) {
+func podProvision(js *JobState, p *models.Pod) (err error) {
 
 	t := p.Meta.Updated
 
@@ -183,14 +182,14 @@ func podProvision(js *JobState, p *types.Pod) (err error) {
 		}
 	}()
 
-	if p.Status.State != types.StateProvision {
-		p.Status.State = types.StateProvision
+	if p.Status.State != models.StateProvision {
+		p.Status.State = models.StateProvision
 		p.Meta.Updated = time.Now()
 	}
 
-	if p.Meta.Node == types.EmptyString {
+	if p.Meta.Node == models.EmptyString {
 
-		var node *types.Node
+		var node *models.Node
 
 		node, err = js.cluster.PodLease(p)
 		if err != nil {
@@ -199,7 +198,7 @@ func podProvision(js *JobState, p *types.Pod) (err error) {
 		}
 
 		if node == nil {
-			p.Status.State = types.StateError
+			p.Status.State = models.StateError
 			p.Status.Message = errors.NodeNotFound
 			p.Meta.Updated = time.Now()
 			return nil
@@ -218,7 +217,7 @@ func podProvision(js *JobState, p *types.Pod) (err error) {
 }
 
 // podDestroy function marks pod spec as destroy
-func podDestroy(js *JobState, p *types.Pod) (err error) {
+func podDestroy(js *JobState, p *models.Pod) (err error) {
 
 	t := p.Meta.Updated
 	defer func() {
@@ -229,14 +228,14 @@ func podDestroy(js *JobState, p *types.Pod) (err error) {
 
 	if p.Spec.State.Destroy {
 
-		if p.Meta.Node == types.EmptyString {
-			p.Status.State = types.StateDestroyed
+		if p.Meta.Node == models.EmptyString {
+			p.Status.State = models.StateDestroyed
 			p.Meta.Updated = time.Now()
 			return nil
 		}
 
-		if p.Status.State != types.StateDestroy {
-			p.Status.State = types.StateDestroy
+		if p.Status.State != models.StateDestroy {
+			p.Status.State = models.StateDestroy
 			p.Meta.Updated = time.Now()
 		}
 		return nil
@@ -246,7 +245,7 @@ func podDestroy(js *JobState, p *types.Pod) (err error) {
 
 	if err = podManifestSet(js.storage, p); err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
-			if p.Meta.Node != types.EmptyString {
+			if p.Meta.Node != models.EmptyString {
 				if _, err := js.cluster.PodRelease(p); err != nil {
 					if !errors.Storage().IsErrEntityNotFound(err) {
 						return err
@@ -254,7 +253,7 @@ func podDestroy(js *JobState, p *types.Pod) (err error) {
 				}
 			}
 
-			p.Status.State = types.StateDestroyed
+			p.Status.State = models.StateDestroyed
 			p.Meta.Updated = time.Now()
 			return nil
 		}
@@ -262,10 +261,10 @@ func podDestroy(js *JobState, p *types.Pod) (err error) {
 		return err
 	}
 
-	p.Status.State = types.StateDestroy
+	p.Status.State = models.StateDestroy
 
-	if p.Meta.Node == types.EmptyString {
-		p.Status.State = types.StateDestroyed
+	if p.Meta.Node == models.EmptyString {
+		p.Status.State = models.StateDestroyed
 	}
 
 	p.Meta.Updated = time.Now()
@@ -273,9 +272,9 @@ func podDestroy(js *JobState, p *types.Pod) (err error) {
 }
 
 // podRemove function removes pod from storage if node is released
-func podRemove(js *JobState, p *types.Pod) (err error) {
+func podRemove(js *JobState, p *models.Pod) (err error) {
 
-	pm := model.NewPodModel(context.Background(), js.storage)
+	pm := service.NewPodModel(context.Background(), js.storage)
 	if _, err = js.cluster.PodRelease(p); err != nil {
 		return err
 	}
@@ -284,7 +283,7 @@ func podRemove(js *JobState, p *types.Pod) (err error) {
 		return err
 	}
 
-	p.Meta.Node = types.EmptyString
+	p.Meta.Node = models.EmptyString
 	p.Meta.Updated = time.Now()
 
 	if err = pm.Remove(p); err != nil && !errors.Storage().IsErrEntityNotFound(err) {
@@ -296,10 +295,10 @@ func podRemove(js *JobState, p *types.Pod) (err error) {
 	return nil
 }
 
-func podUpdate(stg storage.Storage, p *types.Pod, timestamp time.Time) error {
+func podUpdate(stg storage.IStorage, p *models.Pod, timestamp time.Time) error {
 
 	if timestamp.Before(p.Meta.Updated) {
-		pm := model.NewPodModel(context.Background(), stg)
+		pm := service.NewPodModel(context.Background(), stg)
 		if err := pm.Update(p); err != nil {
 			log.Errorf("pod update %s", err.Error())
 			return err
@@ -309,9 +308,9 @@ func podUpdate(stg storage.Storage, p *types.Pod, timestamp time.Time) error {
 	return nil
 }
 
-func podManifestPut(stg storage.Storage, p *types.Pod) error {
+func podManifestPut(stg storage.IStorage, p *models.Pod) error {
 
-	mm := model.NewPodModel(context.Background(), stg)
+	mm := service.NewPodModel(context.Background(), stg)
 	m, err := mm.ManifestGet(p.Meta.Node, p.Meta.SelfLink.String())
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
@@ -321,7 +320,7 @@ func podManifestPut(stg storage.Storage, p *types.Pod) error {
 	}
 
 	if m == nil {
-		pm := types.PodManifest(p.Spec)
+		pm := models.PodManifest(p.Spec)
 
 		if err := mm.ManifestAdd(p.Meta.Node, p.Meta.SelfLink.String(), &pm); err != nil {
 			log.Errorf("%s", err.Error())
@@ -332,14 +331,14 @@ func podManifestPut(stg storage.Storage, p *types.Pod) error {
 	return nil
 }
 
-func podManifestSet(stg storage.Storage, p *types.Pod) error {
+func podManifestSet(stg storage.IStorage, p *models.Pod) error {
 
 	var (
-		m   *types.PodManifest
+		m   *models.PodManifest
 		err error
 	)
 
-	mm := model.NewPodModel(context.Background(), stg)
+	mm := service.NewPodModel(context.Background(), stg)
 	m, err = mm.ManifestGet(p.Meta.Node, p.Meta.SelfLink.String())
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
@@ -350,10 +349,10 @@ func podManifestSet(stg storage.Storage, p *types.Pod) error {
 
 	// Update manifest
 	if m == nil {
-		ms := types.PodManifest(p.Spec)
+		ms := models.PodManifest(p.Spec)
 		m = &ms
 	} else {
-		*m = types.PodManifest(p.Spec)
+		*m = models.PodManifest(p.Spec)
 	}
 
 	if err := mm.ManifestSet(p.Meta.Node, p.Meta.SelfLink.String(), m); err != nil {
@@ -363,14 +362,14 @@ func podManifestSet(stg storage.Storage, p *types.Pod) error {
 	return nil
 }
 
-func podManifestDel(stg storage.Storage, p *types.Pod) error {
+func podManifestDel(stg storage.IStorage, p *models.Pod) error {
 
-	if p.Meta.Node == types.EmptyString {
+	if p.Meta.Node == models.EmptyString {
 		return nil
 	}
 
 	// Remove manifest
-	mm := model.NewPodModel(context.Background(), stg)
+	mm := service.NewPodModel(context.Background(), stg)
 	err := mm.ManifestDel(p.Meta.Node, p.SelfLink().String())
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {

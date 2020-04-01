@@ -22,7 +22,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -30,11 +30,11 @@ const (
 	logServicePrefix = "node:runtime:service"
 )
 
-func (r Runtime) serviceStart(ctx context.Context, pod string, m *types.ContainerManifest, status *types.PodStatus) error {
+func (r Runtime) serviceStart(ctx context.Context, pod string, m *models.ContainerManifest, status *models.PodStatus) error {
 
 	var (
 		err error
-		c   = new(types.PodContainer)
+		c   = new(models.PodContainer)
 	)
 
 	c.ID, err = r.cri.Create(ctx, m)
@@ -47,10 +47,10 @@ func (r Runtime) serviceStart(ctx context.Context, pod string, m *types.Containe
 
 		log.Errorf("%s can-not create container: %s", logServicePrefix, err)
 
-		c.State.Error = types.PodContainerStateError{
+		c.State.Error = models.PodContainerStateError{
 			Error:   true,
 			Message: err.Error(),
-			Exit: types.PodContainerStateExit{
+			Exit: models.PodContainerStateExit{
 				Timestamp: time.Now().UTC(),
 			},
 		}
@@ -69,7 +69,7 @@ func (r Runtime) serviceStart(ctx context.Context, pod string, m *types.Containe
 	// Start container =========================================================
 	//==========================================================================
 
-	c.State.Created = types.PodContainerStateCreated{
+	c.State.Created = models.PodContainerStateCreated{
 		Created: time.Now().UTC(),
 	}
 
@@ -86,10 +86,10 @@ func (r Runtime) serviceStart(ctx context.Context, pod string, m *types.Containe
 			return nil
 		}
 
-		c.State.Error = types.PodContainerStateError{
+		c.State.Error = models.PodContainerStateError{
 			Error:   true,
 			Message: err.Error(),
-			Exit: types.PodContainerStateExit{
+			Exit: models.PodContainerStateExit{
 				Timestamp: time.Now().UTC(),
 			},
 		}
@@ -105,7 +105,7 @@ func (r Runtime) serviceStart(ctx context.Context, pod string, m *types.Containe
 	}
 
 	c.Ready = true
-	c.State.Started = types.PodContainerStateStarted{
+	c.State.Started = models.PodContainerStateStarted{
 		Started:   true,
 		Timestamp: time.Now().UTC(),
 	}

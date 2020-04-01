@@ -27,7 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/internal/master/http/job"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/resource"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
@@ -58,13 +58,13 @@ func TestJobInfo(t *testing.T) {
 	j2 := getJobAsset(ns1.Meta.Name, "test", "")
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		job       *types.Job
+		namespace *models.Namespace
+		job       *models.Job
 	}
 
 	tests := []struct {
@@ -108,10 +108,10 @@ func TestJobInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -191,18 +191,18 @@ func TestJobList(t *testing.T) {
 	j1 := getJobAsset(ns1.Meta.Name, "demo", "")
 	j2 := getJobAsset(ns1.Meta.Name, "test", "")
 
-	jl := types.NewJobMap()
+	jl := models.NewJobMap()
 	jl.Items[j1.SelfLink().String()] = j1
 	jl.Items[j2.SelfLink().String()] = j2
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		job       *types.Job
+		namespace *models.Namespace
+		job       *models.Job
 	}
 
 	tests := []struct {
@@ -212,7 +212,7 @@ func TestJobList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         *types.JobMap
+		want         *models.JobMap
 		wantErr      bool
 		expectedCode int
 	}{
@@ -237,10 +237,10 @@ func TestJobList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -378,13 +378,13 @@ func TestJobCreate(t *testing.T) {
 	sm7.Spec.Task.Template.Containers[0].Resources.Limits.CPU = ""
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		job       *types.Job
+		namespace *models.Namespace
+		job       *models.Job
 	}
 
 	tests := []struct {
@@ -503,10 +503,10 @@ func TestJobCreate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -562,7 +562,7 @@ func TestJobCreate(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got := new(types.Job)
+				got := new(models.Job)
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Job(), tc.args.job.SelfLink().String(), got, nil)
 				if !assert.NoError(t, err) {
 					return
@@ -667,13 +667,13 @@ func TestJobUpdate(t *testing.T) {
 	sm7.Spec.Task.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		job       *types.Job
+		namespace *models.Namespace
+		job       *models.Job
 	}
 
 	tests := []struct {
@@ -792,10 +792,10 @@ func TestJobUpdate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -992,13 +992,13 @@ func TestJobRemove(t *testing.T) {
 	s2 := getJobAsset(ns1.Meta.Name, "test", "")
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		job       *types.Job
+		namespace *models.Namespace
+		job       *models.Job
 	}
 
 	tests := []struct {
@@ -1042,10 +1042,10 @@ func TestJobRemove(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Job(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -1097,14 +1097,14 @@ func TestJobRemove(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got := new(types.Job)
+				got := new(models.Job)
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Job(), tc.args.job.SelfLink().String(), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}
 
 				if got != nil {
-					assert.Equal(t, types.StateDestroy, got.Status.State, "status not destroy")
+					assert.Equal(t, models.StateDestroy, got.Status.State, "status not destroy")
 				}
 
 				assert.Equal(t, tc.want, string(body), "response not equal with want")
@@ -1115,27 +1115,27 @@ func TestJobRemove(t *testing.T) {
 
 }
 
-func getNamespaceAsset(name, desc string) *types.Namespace {
-	var n = types.Namespace{}
+func getNamespaceAsset(name, desc string) *models.Namespace {
+	var n = models.Namespace{}
 	n.Meta.SetDefault()
 	n.Meta.Name = name
 	n.Meta.Description = desc
-	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
+	n.Meta.SelfLink = *models.NewNamespaceSelfLink(name)
 	return &n
 }
 
-func getJobAsset(namespace, name, desc string) *types.Job {
-	var s = types.Job{}
+func getJobAsset(namespace, name, desc string) *models.Job {
+	var s = models.Job{}
 	s.Meta.SetDefault()
 	s.Meta.Namespace = namespace
 	s.Meta.Name = name
 	s.Meta.Description = desc
 	s.Spec.Concurrency.Limit = 1
-	s.Spec.Task.Template.Containers = make(types.SpecTemplateContainers, 0)
-	s.Spec.Task.Template.Containers = append(s.Spec.Task.Template.Containers, &types.SpecTemplateContainer{
+	s.Spec.Task.Template.Containers = make(models.SpecTemplateContainers, 0)
+	s.Spec.Task.Template.Containers = append(s.Spec.Task.Template.Containers, &models.SpecTemplateContainer{
 		Name: "demo",
 	})
-	s.Meta.SelfLink = *types.NewJobSelfLink(namespace, name)
+	s.Meta.SelfLink = *models.NewJobSelfLink(namespace, name)
 
 	return &s
 }

@@ -25,7 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/internal/api/envs"
 	"github.com/lastbackend/lastbackend/internal/master/http/events"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/http/middleware"
 	"github.com/lastbackend/lastbackend/internal/util/resource"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
@@ -90,52 +90,52 @@ func TestEventsSubscribe(t *testing.T) {
 		ig1 = getIngressAsset("demo", "desc", true)
 	)
 
-	_, vns1 := getEventAsset(types.EventActionCreate, types.KindNamespace, ns1)
-	_, vns2 := getEventAsset(types.EventActionUpdate, types.KindNamespace, ns0)
-	_, vns3 := getEventAsset(types.EventActionDelete, types.KindNamespace, ns0)
+	_, vns1 := getEventAsset(models.EventActionCreate, models.KindNamespace, ns1)
+	_, vns2 := getEventAsset(models.EventActionUpdate, models.KindNamespace, ns0)
+	_, vns3 := getEventAsset(models.EventActionDelete, models.KindNamespace, ns0)
 
-	_, vsc1 := getEventAsset(types.EventActionCreate, types.KindService, sc1)
-	_, vsc2 := getEventAsset(types.EventActionUpdate, types.KindService, sc0)
-	_, vsc3 := getEventAsset(types.EventActionDelete, types.KindService, sc0)
+	_, vsc1 := getEventAsset(models.EventActionCreate, models.KindService, sc1)
+	_, vsc2 := getEventAsset(models.EventActionUpdate, models.KindService, sc0)
+	_, vsc3 := getEventAsset(models.EventActionDelete, models.KindService, sc0)
 
-	_, vdp1 := getEventAsset(types.EventActionCreate, types.KindDeployment, dp1)
-	_, vdp2 := getEventAsset(types.EventActionUpdate, types.KindDeployment, dp0)
-	_, vdp3 := getEventAsset(types.EventActionDelete, types.KindDeployment, dp0)
+	_, vdp1 := getEventAsset(models.EventActionCreate, models.KindDeployment, dp1)
+	_, vdp2 := getEventAsset(models.EventActionUpdate, models.KindDeployment, dp0)
+	_, vdp3 := getEventAsset(models.EventActionDelete, models.KindDeployment, dp0)
 
-	_, vpd1 := getEventAsset(types.EventActionCreate, types.KindPod, pd1)
-	_, vpd2 := getEventAsset(types.EventActionUpdate, types.KindPod, pd0)
-	_, vpd3 := getEventAsset(types.EventActionDelete, types.KindPod, pd0)
+	_, vpd1 := getEventAsset(models.EventActionCreate, models.KindPod, pd1)
+	_, vpd2 := getEventAsset(models.EventActionUpdate, models.KindPod, pd0)
+	_, vpd3 := getEventAsset(models.EventActionDelete, models.KindPod, pd0)
 
-	_, vrt1 := getEventAsset(types.EventActionCreate, types.KindRoute, rt1)
-	_, vrt2 := getEventAsset(types.EventActionUpdate, types.KindRoute, rt0)
-	_, vrt3 := getEventAsset(types.EventActionDelete, types.KindRoute, rt0)
+	_, vrt1 := getEventAsset(models.EventActionCreate, models.KindRoute, rt1)
+	_, vrt2 := getEventAsset(models.EventActionUpdate, models.KindRoute, rt0)
+	_, vrt3 := getEventAsset(models.EventActionDelete, models.KindRoute, rt0)
 
-	_, vsk1 := getEventAsset(types.EventActionCreate, types.KindSecret, sk1)
-	_, vsk2 := getEventAsset(types.EventActionUpdate, types.KindSecret, sk0)
-	_, vsk3 := getEventAsset(types.EventActionDelete, types.KindSecret, sk0)
+	_, vsk1 := getEventAsset(models.EventActionCreate, models.KindSecret, sk1)
+	_, vsk2 := getEventAsset(models.EventActionUpdate, models.KindSecret, sk0)
+	_, vsk3 := getEventAsset(models.EventActionDelete, models.KindSecret, sk0)
 
-	_, vcf1 := getEventAsset(types.EventActionCreate, types.KindConfig, cf1)
-	_, vcf2 := getEventAsset(types.EventActionUpdate, types.KindConfig, cf0)
-	_, vcf3 := getEventAsset(types.EventActionDelete, types.KindConfig, cf0)
+	_, vcf1 := getEventAsset(models.EventActionCreate, models.KindConfig, cf1)
+	_, vcf2 := getEventAsset(models.EventActionUpdate, models.KindConfig, cf0)
+	_, vcf3 := getEventAsset(models.EventActionDelete, models.KindConfig, cf0)
 
-	_, vvl1 := getEventAsset(types.EventActionCreate, types.KindVolume, vl1)
-	_, vvl2 := getEventAsset(types.EventActionUpdate, types.KindVolume, vl0)
-	_, vvl3 := getEventAsset(types.EventActionDelete, types.KindVolume, vl0)
+	_, vvl1 := getEventAsset(models.EventActionCreate, models.KindVolume, vl1)
+	_, vvl2 := getEventAsset(models.EventActionUpdate, models.KindVolume, vl0)
+	_, vvl3 := getEventAsset(models.EventActionDelete, models.KindVolume, vl0)
 
-	_, vnd1 := getEventAsset(types.EventActionCreate, types.KindNode, nd1)
-	_, vnd2 := getEventAsset(types.EventActionUpdate, types.KindNode, nd0)
-	_, vnd3 := getEventAsset(types.EventActionDelete, types.KindNode, nd0)
+	_, vnd1 := getEventAsset(models.EventActionCreate, models.KindNode, nd1)
+	_, vnd2 := getEventAsset(models.EventActionUpdate, models.KindNode, nd0)
+	_, vnd3 := getEventAsset(models.EventActionDelete, models.KindNode, nd0)
 
-	_, vdc1 := getEventAsset(types.EventActionCreate, types.KindDiscovery, dc1)
-	_, vdc2 := getEventAsset(types.EventActionUpdate, types.KindDiscovery, dc0)
-	_, vdc3 := getEventAsset(types.EventActionDelete, types.KindDiscovery, dc0)
+	_, vdc1 := getEventAsset(models.EventActionCreate, models.KindDiscovery, dc1)
+	_, vdc2 := getEventAsset(models.EventActionUpdate, models.KindDiscovery, dc0)
+	_, vdc3 := getEventAsset(models.EventActionDelete, models.KindDiscovery, dc0)
 
-	_, vig1 := getEventAsset(types.EventActionCreate, types.KindIngress, ig1)
-	_, vig2 := getEventAsset(types.EventActionUpdate, types.KindIngress, ig0)
-	_, vig3 := getEventAsset(types.EventActionDelete, types.KindIngress, ig0)
+	_, vig1 := getEventAsset(models.EventActionCreate, models.KindIngress, ig1)
+	_, vig2 := getEventAsset(models.EventActionUpdate, models.KindIngress, ig0)
+	_, vig3 := getEventAsset(models.EventActionDelete, models.KindIngress, ig0)
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
@@ -161,7 +161,7 @@ func TestEventsSubscribe(t *testing.T) {
 	}{
 		{
 			name:         "access check",
-			args:         args{ctx, "", types.KindNamespace, types.EventActionCreate, ns1},
+			args:         args{ctx, "", models.KindNamespace, models.EventActionCreate, ns1},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			err:          "{\"code\":401,\"status\":\"Not Authorized\",\"message\":\"Access denied\"}",
@@ -171,7 +171,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "namespace create",
-			args:         args{ctx, token, types.KindNamespace, types.EventActionCreate, ns1},
+			args:         args{ctx, token, models.KindNamespace, models.EventActionCreate, ns1},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vns1),
@@ -180,7 +180,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "namespace update",
-			args:         args{ctx, token, types.KindNamespace, types.EventActionUpdate, ns0},
+			args:         args{ctx, token, models.KindNamespace, models.EventActionUpdate, ns0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vns2),
@@ -189,7 +189,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "namespace remove",
-			args:         args{ctx, token, types.KindNamespace, types.EventActionDelete, ns0},
+			args:         args{ctx, token, models.KindNamespace, models.EventActionDelete, ns0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vns3),
@@ -199,7 +199,7 @@ func TestEventsSubscribe(t *testing.T) {
 
 		{
 			name:         "service create",
-			args:         args{ctx, token, types.KindService, types.EventActionCreate, sc1},
+			args:         args{ctx, token, models.KindService, models.EventActionCreate, sc1},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vsc1),
@@ -208,7 +208,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "service update",
-			args:         args{ctx, token, types.KindService, types.EventActionUpdate, sc0},
+			args:         args{ctx, token, models.KindService, models.EventActionUpdate, sc0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vsc2),
@@ -217,7 +217,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "service remove",
-			args:         args{ctx, token, types.KindService, types.EventActionDelete, sc0},
+			args:         args{ctx, token, models.KindService, models.EventActionDelete, sc0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vsc3),
@@ -227,7 +227,7 @@ func TestEventsSubscribe(t *testing.T) {
 
 		{
 			name:         "deployment create",
-			args:         args{ctx, token, types.KindDeployment, types.EventActionCreate, dp1},
+			args:         args{ctx, token, models.KindDeployment, models.EventActionCreate, dp1},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vdp1),
@@ -236,7 +236,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "deployment update",
-			args:         args{ctx, token, types.KindDeployment, types.EventActionUpdate, dp0},
+			args:         args{ctx, token, models.KindDeployment, models.EventActionUpdate, dp0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vdp2),
@@ -245,7 +245,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "deployment remove",
-			args:         args{ctx, token, types.KindDeployment, types.EventActionDelete, dp0},
+			args:         args{ctx, token, models.KindDeployment, models.EventActionDelete, dp0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vdp3),
@@ -255,7 +255,7 @@ func TestEventsSubscribe(t *testing.T) {
 
 		{
 			name:         "pod create",
-			args:         args{ctx, token, types.KindPod, types.EventActionCreate, pd1},
+			args:         args{ctx, token, models.KindPod, models.EventActionCreate, pd1},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vpd1),
@@ -264,7 +264,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "pod update",
-			args:         args{ctx, token, types.KindPod, types.EventActionUpdate, pd0},
+			args:         args{ctx, token, models.KindPod, models.EventActionUpdate, pd0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vpd2),
@@ -273,7 +273,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "pod remove",
-			args:         args{ctx, token, types.KindPod, types.EventActionDelete, pd0},
+			args:         args{ctx, token, models.KindPod, models.EventActionDelete, pd0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vpd3),
@@ -283,7 +283,7 @@ func TestEventsSubscribe(t *testing.T) {
 
 		{
 			name:         "route create",
-			args:         args{ctx, token, types.KindRoute, types.EventActionCreate, rt1},
+			args:         args{ctx, token, models.KindRoute, models.EventActionCreate, rt1},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vrt1),
@@ -292,7 +292,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "route update",
-			args:         args{ctx, token, types.KindRoute, types.EventActionUpdate, rt0},
+			args:         args{ctx, token, models.KindRoute, models.EventActionUpdate, rt0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vrt2),
@@ -301,7 +301,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "route remove",
-			args:         args{ctx, token, types.KindRoute, types.EventActionDelete, rt0},
+			args:         args{ctx, token, models.KindRoute, models.EventActionDelete, rt0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vrt3),
@@ -311,7 +311,7 @@ func TestEventsSubscribe(t *testing.T) {
 
 		{
 			name:         "secret create",
-			args:         args{ctx, token, types.KindSecret, types.EventActionCreate, sk1},
+			args:         args{ctx, token, models.KindSecret, models.EventActionCreate, sk1},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vsk1),
@@ -320,7 +320,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "secret update",
-			args:         args{ctx, token, types.KindSecret, types.EventActionUpdate, sk0},
+			args:         args{ctx, token, models.KindSecret, models.EventActionUpdate, sk0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vsk2),
@@ -329,7 +329,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "secret remove",
-			args:         args{ctx, token, types.KindSecret, types.EventActionDelete, sk0},
+			args:         args{ctx, token, models.KindSecret, models.EventActionDelete, sk0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vsk3),
@@ -339,7 +339,7 @@ func TestEventsSubscribe(t *testing.T) {
 
 		{
 			name:         "config create",
-			args:         args{ctx, token, types.KindConfig, types.EventActionCreate, cf1},
+			args:         args{ctx, token, models.KindConfig, models.EventActionCreate, cf1},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vcf1),
@@ -348,7 +348,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "config update",
-			args:         args{ctx, token, types.KindConfig, types.EventActionUpdate, cf0},
+			args:         args{ctx, token, models.KindConfig, models.EventActionUpdate, cf0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vcf2),
@@ -357,7 +357,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "config remove",
-			args:         args{ctx, token, types.KindConfig, types.EventActionDelete, cf0},
+			args:         args{ctx, token, models.KindConfig, models.EventActionDelete, cf0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vcf3),
@@ -367,7 +367,7 @@ func TestEventsSubscribe(t *testing.T) {
 
 		{
 			name:         "volume create",
-			args:         args{ctx, token, types.KindVolume, types.EventActionCreate, vl1},
+			args:         args{ctx, token, models.KindVolume, models.EventActionCreate, vl1},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vvl1),
@@ -376,7 +376,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "volume update",
-			args:         args{ctx, token, types.KindVolume, types.EventActionUpdate, vl0},
+			args:         args{ctx, token, models.KindVolume, models.EventActionUpdate, vl0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vvl2),
@@ -385,7 +385,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "volume remove",
-			args:         args{ctx, token, types.KindVolume, types.EventActionDelete, vl0},
+			args:         args{ctx, token, models.KindVolume, models.EventActionDelete, vl0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vvl3),
@@ -395,7 +395,7 @@ func TestEventsSubscribe(t *testing.T) {
 
 		{
 			name:         "node create",
-			args:         args{ctx, token, types.KindNode, types.EventActionCreate, nd1},
+			args:         args{ctx, token, models.KindNode, models.EventActionCreate, nd1},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vnd1),
@@ -404,7 +404,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "node update",
-			args:         args{ctx, token, types.KindNode, types.EventActionUpdate, nd0},
+			args:         args{ctx, token, models.KindNode, models.EventActionUpdate, nd0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vnd2),
@@ -413,7 +413,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "node remove",
-			args:         args{ctx, token, types.KindNode, types.EventActionDelete, nd0},
+			args:         args{ctx, token, models.KindNode, models.EventActionDelete, nd0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vnd3),
@@ -423,7 +423,7 @@ func TestEventsSubscribe(t *testing.T) {
 
 		{
 			name:         "discovery create",
-			args:         args{ctx, token, types.KindDiscovery, types.EventActionCreate, dc1},
+			args:         args{ctx, token, models.KindDiscovery, models.EventActionCreate, dc1},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vdc1),
@@ -432,7 +432,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "discovery update",
-			args:         args{ctx, token, types.KindDiscovery, types.EventActionUpdate, dc0},
+			args:         args{ctx, token, models.KindDiscovery, models.EventActionUpdate, dc0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vdc2),
@@ -441,7 +441,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "discovery remove",
-			args:         args{ctx, token, types.KindDiscovery, types.EventActionDelete, dc0},
+			args:         args{ctx, token, models.KindDiscovery, models.EventActionDelete, dc0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vdc3),
@@ -451,7 +451,7 @@ func TestEventsSubscribe(t *testing.T) {
 
 		{
 			name:         "ingress create",
-			args:         args{ctx, token, types.KindIngress, types.EventActionCreate, ig1},
+			args:         args{ctx, token, models.KindIngress, models.EventActionCreate, ig1},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vig1),
@@ -460,7 +460,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "ingress update",
-			args:         args{ctx, token, types.KindIngress, types.EventActionUpdate, ig0},
+			args:         args{ctx, token, models.KindIngress, models.EventActionUpdate, ig0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vig2),
@@ -469,7 +469,7 @@ func TestEventsSubscribe(t *testing.T) {
 		},
 		{
 			name:         "ingress remove",
-			args:         args{ctx, token, types.KindIngress, types.EventActionDelete, ig0},
+			args:         args{ctx, token, models.KindIngress, models.EventActionDelete, ig0},
 			fields:       fields{stg},
 			handler:      events.EventSubscribeH,
 			want:         string(vig3),
@@ -479,46 +479,46 @@ func TestEventsSubscribe(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Deployment(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Deployment(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Pod(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Pod(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Route(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Route(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Config(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Config(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Volume(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Volume(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Status(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Status(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Discovery().Info(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Discovery().Info(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Discovery().Status(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Discovery().Status(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Ingress().Info(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Ingress().Info(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Ingress().Status(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Ingress().Status(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -532,53 +532,53 @@ func TestEventsSubscribe(t *testing.T) {
 			defer clear()
 
 			switch tc.args.kind {
-			case types.KindNamespace:
+			case models.KindNamespace:
 				err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), ns0.SelfLink().String(), ns0, nil)
 				if !assert.NoError(t, err, "initial namespace insert error") {
 					return
 				}
-			case types.KindService:
+			case models.KindService:
 				err := tc.fields.stg.Put(context.Background(), stg.Collection().Service(), sc0.SelfLink().String(), sc0, nil)
 				if !assert.NoError(t, err, "initial service insert error") {
 					return
 				}
-			case types.KindDeployment:
+			case models.KindDeployment:
 				err := tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), dp0.SelfLink().String(), dp0, nil)
 				if !assert.NoError(t, err, "initial service insert error") {
 					return
 				}
 
-			case types.KindPod:
+			case models.KindPod:
 				err := tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), pd0.SelfLink().String(), pd0, nil)
 				if !assert.NoError(t, err, "initial service insert error") {
 					return
 				}
 
-			case types.KindRoute:
+			case models.KindRoute:
 				err := tc.fields.stg.Put(context.Background(), stg.Collection().Route(), rt0.SelfLink().String(), rt0, nil)
 				if !assert.NoError(t, err, "initial service insert error") {
 					return
 				}
 
-			case types.KindSecret:
+			case models.KindSecret:
 				err := tc.fields.stg.Put(context.Background(), stg.Collection().Secret(), sk0.SelfLink().String(), sk0, nil)
 				if !assert.NoError(t, err, "initial service insert error") {
 					return
 				}
 
-			case types.KindConfig:
+			case models.KindConfig:
 				err := tc.fields.stg.Put(context.Background(), stg.Collection().Config(), cf0.SelfLink().String(), cf0, nil)
 				if !assert.NoError(t, err, "initial service insert error") {
 					return
 				}
 
-			case types.KindVolume:
+			case models.KindVolume:
 				err := tc.fields.stg.Put(context.Background(), stg.Collection().Volume(), vl0.SelfLink().String(), vl0, nil)
 				if !assert.NoError(t, err, "initial service insert error") {
 					return
 				}
 
-			case types.KindNode:
+			case models.KindNode:
 				err := tc.fields.stg.Put(context.Background(), stg.Collection().Node().Status(), nd0.SelfLink().String(), nd0, nil)
 				if !assert.NoError(t, err, "initial node status insert error") {
 					return
@@ -589,7 +589,7 @@ func TestEventsSubscribe(t *testing.T) {
 					return
 				}
 
-			case types.KindDiscovery:
+			case models.KindDiscovery:
 				err := tc.fields.stg.Put(context.Background(), stg.Collection().Discovery().Status(), dc0.SelfLink().String(), dc0, nil)
 				if !assert.NoError(t, err, "initial node status insert error") {
 					return
@@ -600,7 +600,7 @@ func TestEventsSubscribe(t *testing.T) {
 					return
 				}
 
-			case types.KindIngress:
+			case models.KindIngress:
 				err := tc.fields.stg.Put(context.Background(), stg.Collection().Ingress().Status(), ig0.SelfLink().String(), ig0, nil)
 				if !assert.NoError(t, err, "initial node status insert error") {
 					return
@@ -677,141 +677,141 @@ func TestEventsSubscribe(t *testing.T) {
 
 			<-time.NewTimer(10 * time.Millisecond).C
 			switch tc.args.kind {
-			case types.KindNamespace:
+			case models.KindNamespace:
 
-				item := tc.args.obj.(*types.Namespace)
+				item := tc.args.obj.(*models.Namespace)
 				switch tc.args.action {
-				case types.EventActionCreate:
+				case models.EventActionCreate:
 					err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), item.SelfLink().String(), item, nil)
-				case types.EventActionUpdate:
+				case models.EventActionUpdate:
 					err = tc.fields.stg.Set(context.Background(), stg.Collection().Namespace(), item.SelfLink().String(), item, nil)
-				case types.EventActionDelete:
+				case models.EventActionDelete:
 					err = tc.fields.stg.Del(context.Background(), stg.Collection().Namespace(), item.SelfLink().String())
 				}
 
-			case types.KindService:
-				item := tc.args.obj.(*types.Service)
+			case models.KindService:
+				item := tc.args.obj.(*models.Service)
 				switch tc.args.action {
-				case types.EventActionCreate:
+				case models.EventActionCreate:
 					err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), item.SelfLink().String(), item, nil)
-				case types.EventActionUpdate:
+				case models.EventActionUpdate:
 					err = tc.fields.stg.Set(context.Background(), stg.Collection().Service(), item.SelfLink().String(), item, nil)
-				case types.EventActionDelete:
+				case models.EventActionDelete:
 					err = tc.fields.stg.Del(context.Background(), stg.Collection().Service(), item.SelfLink().String())
 				}
 
-			case types.KindDeployment:
-				item := tc.args.obj.(*types.Deployment)
+			case models.KindDeployment:
+				item := tc.args.obj.(*models.Deployment)
 				switch tc.args.action {
-				case types.EventActionCreate:
+				case models.EventActionCreate:
 					err = tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), item.SelfLink().String(), item, nil)
-				case types.EventActionUpdate:
+				case models.EventActionUpdate:
 					err = tc.fields.stg.Set(context.Background(), stg.Collection().Deployment(), item.SelfLink().String(), item, nil)
-				case types.EventActionDelete:
+				case models.EventActionDelete:
 					err = tc.fields.stg.Del(context.Background(), stg.Collection().Deployment(), item.SelfLink().String())
 				}
 
-			case types.KindPod:
-				item := tc.args.obj.(*types.Pod)
+			case models.KindPod:
+				item := tc.args.obj.(*models.Pod)
 				switch tc.args.action {
-				case types.EventActionCreate:
+				case models.EventActionCreate:
 					err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), item.SelfLink().String(), item, nil)
-				case types.EventActionUpdate:
+				case models.EventActionUpdate:
 					err = tc.fields.stg.Set(context.Background(), stg.Collection().Pod(), item.SelfLink().String(), item, nil)
-				case types.EventActionDelete:
+				case models.EventActionDelete:
 					err = tc.fields.stg.Del(context.Background(), stg.Collection().Pod(), item.SelfLink().String())
 				}
 
-			case types.KindVolume:
-				item := tc.args.obj.(*types.Volume)
+			case models.KindVolume:
+				item := tc.args.obj.(*models.Volume)
 				switch tc.args.action {
-				case types.EventActionCreate:
+				case models.EventActionCreate:
 					err = tc.fields.stg.Put(context.Background(), stg.Collection().Volume(), item.SelfLink().String(), item, nil)
-				case types.EventActionUpdate:
+				case models.EventActionUpdate:
 					err = tc.fields.stg.Set(context.Background(), stg.Collection().Volume(), item.SelfLink().String(), item, nil)
-				case types.EventActionDelete:
+				case models.EventActionDelete:
 					err = tc.fields.stg.Del(context.Background(), stg.Collection().Volume(), item.SelfLink().String())
 				}
 
-			case types.KindSecret:
-				item := tc.args.obj.(*types.Secret)
+			case models.KindSecret:
+				item := tc.args.obj.(*models.Secret)
 				switch tc.args.action {
-				case types.EventActionCreate:
+				case models.EventActionCreate:
 					err = tc.fields.stg.Put(context.Background(), stg.Collection().Secret(), item.SelfLink().String(), item, nil)
-				case types.EventActionUpdate:
+				case models.EventActionUpdate:
 					err = tc.fields.stg.Set(context.Background(), stg.Collection().Secret(), item.SelfLink().String(), item, nil)
-				case types.EventActionDelete:
+				case models.EventActionDelete:
 					err = tc.fields.stg.Del(context.Background(), stg.Collection().Secret(), item.SelfLink().String())
 				}
 
-			case types.KindConfig:
-				item := tc.args.obj.(*types.Config)
+			case models.KindConfig:
+				item := tc.args.obj.(*models.Config)
 				switch tc.args.action {
-				case types.EventActionCreate:
+				case models.EventActionCreate:
 					err = tc.fields.stg.Put(context.Background(), stg.Collection().Config(), item.SelfLink().String(), item, nil)
-				case types.EventActionUpdate:
+				case models.EventActionUpdate:
 					err = tc.fields.stg.Set(context.Background(), stg.Collection().Config(), item.SelfLink().String(), item, nil)
-				case types.EventActionDelete:
+				case models.EventActionDelete:
 					err = tc.fields.stg.Del(context.Background(), stg.Collection().Config(), item.SelfLink().String())
 				}
 
-			case types.KindRoute:
-				item := tc.args.obj.(*types.Route)
+			case models.KindRoute:
+				item := tc.args.obj.(*models.Route)
 				switch tc.args.action {
-				case types.EventActionCreate:
+				case models.EventActionCreate:
 					err = tc.fields.stg.Put(context.Background(), stg.Collection().Route(), item.SelfLink().String(), item, nil)
-				case types.EventActionUpdate:
+				case models.EventActionUpdate:
 					err = tc.fields.stg.Set(context.Background(), stg.Collection().Route(), item.SelfLink().String(), item, nil)
-				case types.EventActionDelete:
+				case models.EventActionDelete:
 					err = tc.fields.stg.Del(context.Background(), stg.Collection().Route(), item.SelfLink().String())
 				}
 
-			case types.KindNode:
-				item := tc.args.obj.(*types.Node)
+			case models.KindNode:
+				item := tc.args.obj.(*models.Node)
 				switch tc.args.action {
-				case types.EventActionCreate:
+				case models.EventActionCreate:
 					err = tc.fields.stg.Put(context.Background(), stg.Collection().Node().Status(), item.SelfLink().String(), item.Status, nil)
 					<-time.NewTimer(10 * time.Millisecond).C
 					err = tc.fields.stg.Put(context.Background(), stg.Collection().Node().Info(), item.SelfLink().String(), item, nil)
-				case types.EventActionUpdate:
+				case models.EventActionUpdate:
 					err = tc.fields.stg.Set(context.Background(), stg.Collection().Node().Status(), item.SelfLink().String(), item.Status, nil)
 					<-time.NewTimer(10 * time.Millisecond).C
 					err = tc.fields.stg.Set(context.Background(), stg.Collection().Node().Info(), item.SelfLink().String(), item, nil)
-				case types.EventActionDelete:
+				case models.EventActionDelete:
 					err = tc.fields.stg.Del(context.Background(), stg.Collection().Node().Status(), item.SelfLink().String())
 					<-time.NewTimer(10 * time.Millisecond).C
 					err = tc.fields.stg.Del(context.Background(), stg.Collection().Node().Info(), item.SelfLink().String())
 				}
 
-			case types.KindDiscovery:
-				item := tc.args.obj.(*types.Discovery)
+			case models.KindDiscovery:
+				item := tc.args.obj.(*models.Discovery)
 				switch tc.args.action {
-				case types.EventActionCreate:
+				case models.EventActionCreate:
 					err = tc.fields.stg.Put(context.Background(), stg.Collection().Discovery().Status(), item.SelfLink().String(), item.Status, nil)
 					<-time.NewTimer(10 * time.Millisecond).C
 					err = tc.fields.stg.Put(context.Background(), stg.Collection().Discovery().Info(), item.SelfLink().String(), item, nil)
-				case types.EventActionUpdate:
+				case models.EventActionUpdate:
 					err = tc.fields.stg.Set(context.Background(), stg.Collection().Discovery().Status(), item.SelfLink().String(), item.Status, nil)
 					<-time.NewTimer(10 * time.Millisecond).C
 					err = tc.fields.stg.Set(context.Background(), stg.Collection().Discovery().Info(), item.SelfLink().String(), item, nil)
-				case types.EventActionDelete:
+				case models.EventActionDelete:
 					err = tc.fields.stg.Del(context.Background(), stg.Collection().Discovery().Status(), item.SelfLink().String())
 					<-time.NewTimer(10 * time.Millisecond).C
 					err = tc.fields.stg.Del(context.Background(), stg.Collection().Discovery().Info(), item.SelfLink().String())
 				}
 
-			case types.KindIngress:
-				item := tc.args.obj.(*types.Ingress)
+			case models.KindIngress:
+				item := tc.args.obj.(*models.Ingress)
 				switch tc.args.action {
-				case types.EventActionCreate:
+				case models.EventActionCreate:
 					err = tc.fields.stg.Put(context.Background(), stg.Collection().Ingress().Status(), item.SelfLink().String(), item.Status, nil)
 					<-time.NewTimer(10 * time.Millisecond).C
 					err = tc.fields.stg.Put(context.Background(), stg.Collection().Ingress().Info(), item.SelfLink().String(), item, nil)
-				case types.EventActionUpdate:
+				case models.EventActionUpdate:
 					err = tc.fields.stg.Set(context.Background(), stg.Collection().Ingress().Status(), item.SelfLink().String(), item.Status, nil)
 					<-time.NewTimer(10 * time.Millisecond).C
 					err = tc.fields.stg.Set(context.Background(), stg.Collection().Ingress().Info(), item.SelfLink().String(), item, nil)
-				case types.EventActionDelete:
+				case models.EventActionDelete:
 					err = tc.fields.stg.Del(context.Background(), stg.Collection().Ingress().Status(), item.SelfLink().String())
 					<-time.NewTimer(10 * time.Millisecond).C
 					err = tc.fields.stg.Del(context.Background(), stg.Collection().Ingress().Info(), item.SelfLink().String())
@@ -828,111 +828,111 @@ func TestEventsSubscribe(t *testing.T) {
 
 }
 
-func getNamespaceAsset(name, desc string) *types.Namespace {
-	var n = types.Namespace{}
+func getNamespaceAsset(name, desc string) *models.Namespace {
+	var n = models.Namespace{}
 
 	n.Meta.Name = name
 	n.Meta.Description = desc
-	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
+	n.Meta.SelfLink = *models.NewNamespaceSelfLink(name)
 	return &n
 }
 
-func getServiceAsset(namespace, name, desc string) *types.Service {
-	var s = types.Service{}
+func getServiceAsset(namespace, name, desc string) *models.Service {
+	var s = models.Service{}
 	s.Meta.SetDefault()
 	s.Meta.Namespace = namespace
 	s.Meta.Name = name
 	s.Meta.Description = desc
 	s.Spec.Replicas = 1
-	s.Spec.Template.Containers = make(types.SpecTemplateContainers, 0)
-	s.Spec.Template.Containers = append(s.Spec.Template.Containers, &types.SpecTemplateContainer{
+	s.Spec.Template.Containers = make(models.SpecTemplateContainers, 0)
+	s.Spec.Template.Containers = append(s.Spec.Template.Containers, &models.SpecTemplateContainer{
 		Name: "demo",
 	})
-	s.Meta.SelfLink = *types.NewServiceSelfLink(namespace, name)
+	s.Meta.SelfLink = *models.NewServiceSelfLink(namespace, name)
 	return &s
 }
 
-func getDeploymentAsset(namespace, service, name string) *types.Deployment {
-	var d = types.Deployment{}
+func getDeploymentAsset(namespace, service, name string) *models.Deployment {
+	var d = models.Deployment{}
 	d.Meta.SetDefault()
 	d.Meta.Namespace = namespace
 	d.Meta.Service = service
 	d.Meta.Name = name
-	d.Meta.SelfLink = *types.NewDeploymentSelfLink(namespace, service, name)
+	d.Meta.SelfLink = *models.NewDeploymentSelfLink(namespace, service, name)
 	return &d
 }
 
-func getPodAsset(namespace, service, deployment, name, desc string) *types.Pod {
-	p := types.Pod{}
+func getPodAsset(namespace, service, deployment, name, desc string) *models.Pod {
+	p := models.Pod{}
 
 	p.Meta.Name = name
 	p.Meta.Description = desc
 	p.Meta.Namespace = namespace
-	psl, _ := types.NewPodSelfLink(types.KindDeployment, types.NewDeploymentSelfLink(namespace, service, deployment).String(), name)
+	psl, _ := models.NewPodSelfLink(models.KindDeployment, models.NewDeploymentSelfLink(namespace, service, deployment).String(), name)
 	p.Meta.SelfLink = *psl
 
 	return &p
 }
 
-func getSecretAsset(namespace, name string) *types.Secret {
-	var s = types.Secret{}
+func getSecretAsset(namespace, name string) *models.Secret {
+	var s = models.Secret{}
 	s.Meta.SetDefault()
 	s.Meta.Name = name
 	s.Meta.Namespace = namespace
 	s.SelfLink()
 
-	s.Spec.Type = types.KindSecretOpaque
+	s.Spec.Type = models.KindSecretOpaque
 	s.Spec.Data = make(map[string][]byte, 0)
-	s.Meta.SelfLink = *types.NewSecretSelfLink(namespace, name)
+	s.Meta.SelfLink = *models.NewSecretSelfLink(namespace, name)
 	return &s
 }
 
-func getConfigAsset(namespace, name string) *types.Config {
-	var c = types.Config{}
+func getConfigAsset(namespace, name string) *models.Config {
+	var c = models.Config{}
 	c.Meta.SetDefault()
 	c.Meta.Name = name
 	c.Meta.Namespace = namespace
 	c.Spec.Data = make(map[string]string, 0)
-	c.Meta.SelfLink = *types.NewConfigSelfLink(namespace, name)
+	c.Meta.SelfLink = *models.NewConfigSelfLink(namespace, name)
 	return &c
 }
 
-func getVolumeAsset(namespace, name string) *types.Volume {
-	var r = types.Volume{}
+func getVolumeAsset(namespace, name string) *models.Volume {
+	var r = models.Volume{}
 	r.Meta.SetDefault()
 	r.Meta.Namespace = namespace
 	r.Meta.Name = name
 	r.Spec.Selector.Node = ""
 	r.Spec.HostPath = "/"
 	r.Spec.Capacity.Storage, _ = resource.DecodeMemoryResource("128MB")
-	r.Meta.SelfLink = *types.NewVolumeSelfLink(namespace, name)
+	r.Meta.SelfLink = *models.NewVolumeSelfLink(namespace, name)
 	return &r
 }
 
-func getRouteAsset(namespace, name string) *types.Route {
-	var r = types.Route{}
+func getRouteAsset(namespace, name string) *models.Route {
+	var r = models.Route{}
 	r.Meta.SetDefault()
 	r.Meta.Namespace = namespace
 	r.Meta.Name = name
 	r.Spec.Endpoint = fmt.Sprintf("%s.test-domain.com", name)
-	r.Spec.Rules = make([]types.RouteRule, 0)
-	r.Meta.SelfLink = *types.NewRouteSelfLink(namespace, name)
+	r.Spec.Rules = make([]models.RouteRule, 0)
+	r.Meta.SelfLink = *models.NewRouteSelfLink(namespace, name)
 	return &r
 }
 
-func getNodeAsset(name, desc string, online bool) *types.Node {
-	var n = types.Node{
-		Meta: types.NodeMeta{},
-		Status: types.NodeStatus{
+func getNodeAsset(name, desc string, online bool) *models.Node {
+	var n = models.Node{
+		Meta: models.NodeMeta{},
+		Status: models.NodeStatus{
 			Online: online,
-			Capacity: types.NodeResources{
+			Capacity: models.NodeResources{
 				Containers: 2,
 				Pods:       2,
 				RAM:        1024,
 				CPU:        2,
 				Storage:    512,
 			},
-			Allocated: types.NodeResources{
+			Allocated: models.NodeResources{
 				Containers: 1,
 				Pods:       1,
 				RAM:        512,
@@ -940,94 +940,94 @@ func getNodeAsset(name, desc string, online bool) *types.Node {
 				Storage:    256,
 			},
 		},
-		Spec: types.NodeSpec{},
+		Spec: models.NodeSpec{},
 	}
 
 	n.Meta.Name = name
 	n.Meta.Description = desc
 	n.Meta.Hostname = name
 	n.Meta.SetDefault()
-	n.Meta.SelfLink = *types.NewNodeSelfLink(n.Meta.Hostname)
+	n.Meta.SelfLink = *models.NewNodeSelfLink(n.Meta.Hostname)
 
 	return &n
 }
 
-func getDiscoveryAsset(name, desc string, online bool) *types.Discovery {
-	var n = types.Discovery{
-		Meta: types.DiscoveryMeta{},
-		Status: types.DiscoveryStatus{
+func getDiscoveryAsset(name, desc string, online bool) *models.Discovery {
+	var n = models.Discovery{
+		Meta: models.DiscoveryMeta{},
+		Status: models.DiscoveryStatus{
 			Online: online,
 		},
-		Spec: types.DiscoverySpec{},
+		Spec: models.DiscoverySpec{},
 	}
 
 	n.Meta.Name = name
 	n.Meta.Description = desc
 	n.Meta.SetDefault()
-	n.Meta.SelfLink = *types.NewDiscoverySelfLink(n.Meta.Name)
+	n.Meta.SelfLink = *models.NewDiscoverySelfLink(n.Meta.Name)
 
 	return &n
 }
 
-func getIngressAsset(name, desc string, online bool) *types.Ingress {
-	var n = types.Ingress{
-		Meta: types.IngressMeta{},
-		Status: types.IngressStatus{
+func getIngressAsset(name, desc string, online bool) *models.Ingress {
+	var n = models.Ingress{
+		Meta: models.IngressMeta{},
+		Status: models.IngressStatus{
 			Online: online,
 		},
-		Spec: types.IngressSpec{},
+		Spec: models.IngressSpec{},
 	}
 
 	n.Meta.Name = name
 	n.Meta.Description = desc
 	n.Meta.SetDefault()
-	n.Meta.SelfLink = *types.NewIngressSelfLink(n.Meta.Name)
+	n.Meta.SelfLink = *models.NewIngressSelfLink(n.Meta.Name)
 
 	return &n
 }
 
-func getEventAsset(action, kind string, obj interface{}) (*types.Event, []byte) {
+func getEventAsset(action, kind string, obj interface{}) (*models.Event, []byte) {
 
-	e1 := types.Event{Kind: kind}
+	e1 := models.Event{Kind: kind}
 	switch kind {
-	case types.KindNamespace:
-		e1.Data = obj.(*types.Namespace)
+	case models.KindNamespace:
+		e1.Data = obj.(*models.Namespace)
 
-	case types.KindService:
-		e1.Data = obj.(*types.Service)
+	case models.KindService:
+		e1.Data = obj.(*models.Service)
 
-	case types.KindJob:
-		e1.Data = obj.(*types.Task)
+	case models.KindJob:
+		e1.Data = obj.(*models.Task)
 
-	case types.KindDeployment:
-		e1.Data = obj.(*types.Deployment)
+	case models.KindDeployment:
+		e1.Data = obj.(*models.Deployment)
 
-	case types.KindPod:
-		e1.Data = obj.(*types.Pod)
+	case models.KindPod:
+		e1.Data = obj.(*models.Pod)
 
-	case types.KindVolume:
-		e1.Data = obj.(*types.Volume)
+	case models.KindVolume:
+		e1.Data = obj.(*models.Volume)
 
-	case types.KindSecret:
-		e1.Data = obj.(*types.Secret)
+	case models.KindSecret:
+		e1.Data = obj.(*models.Secret)
 
-	case types.KindConfig:
-		e1.Data = obj.(*types.Config)
+	case models.KindConfig:
+		e1.Data = obj.(*models.Config)
 
-	case types.KindRoute:
-		e1.Data = obj.(*types.Route)
+	case models.KindRoute:
+		e1.Data = obj.(*models.Route)
 
-	case types.KindNode:
-		e1.Data = obj.(*types.Node)
+	case models.KindNode:
+		e1.Data = obj.(*models.Node)
 
-	case types.KindIngress:
-		e1.Data = obj.(*types.Ingress)
+	case models.KindIngress:
+		e1.Data = obj.(*models.Ingress)
 
-	case types.KindDiscovery:
-		e1.Data = obj.(*types.Discovery)
+	case models.KindDiscovery:
+		e1.Data = obj.(*models.Discovery)
 
-	case types.KindCluster:
-		e1.Data = obj.(*types.Cluster)
+	case models.KindCluster:
+		e1.Data = obj.(*models.Cluster)
 	}
 
 	e1.Action = action

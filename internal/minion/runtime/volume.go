@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -31,7 +31,7 @@ const (
 	logVolumePrefix = "node:runtime:volume:>"
 )
 
-func (r Runtime) VolumeManage(ctx context.Context, key string, manifest *types.VolumeManifest) error {
+func (r Runtime) VolumeManage(ctx context.Context, key string, manifest *models.VolumeManifest) error {
 
 	log.V(logLevel).Debugf("%s provision volume: %s", logVolumePrefix, key)
 
@@ -45,7 +45,7 @@ func (r Runtime) VolumeManage(ctx context.Context, key string, manifest *types.V
 		v := r.state.Volumes().GetVolume(key)
 		if v == nil {
 
-			vs := types.NewVolumeStatus()
+			vs := models.NewVolumeStatus()
 			vs.SetDestroyed()
 			r.state.Volumes().AddVolume(key, vs)
 
@@ -71,7 +71,7 @@ func (r Runtime) VolumeManage(ctx context.Context, key string, manifest *types.V
 	// Get volume list from current state
 	v := r.state.Volumes().GetVolume(key)
 	if v != nil {
-		if v.State != types.StateDestroyed {
+		if v.State != models.StateDestroyed {
 			return nil
 		}
 	}
@@ -88,13 +88,13 @@ func (r Runtime) VolumeManage(ctx context.Context, key string, manifest *types.V
 	return nil
 }
 
-func (r Runtime) VolumeCreate(ctx context.Context, name string, mf *types.VolumeManifest) (*types.VolumeStatus, error) {
+func (r Runtime) VolumeCreate(ctx context.Context, name string, mf *models.VolumeManifest) (*models.VolumeStatus, error) {
 
-	var status = new(types.VolumeStatus)
+	var status = new(models.VolumeStatus)
 
 	log.V(logLevel).Debugf("%s create volume: %s", logVolumePrefix, mf)
-	if mf.Type == types.EmptyString {
-		mf.Type = types.KindVolumeHostDir
+	if mf.Type == models.EmptyString {
+		mf.Type = models.KindVolumeHostDir
 	}
 
 	si, ok := r.csi[mf.Type]
@@ -111,7 +111,7 @@ func (r Runtime) VolumeCreate(ctx context.Context, name string, mf *types.Volume
 	}
 
 	if st.Ready {
-		status.State = types.StateReady
+		status.State = models.StateReady
 	}
 
 	status.Status = *st
@@ -130,8 +130,8 @@ func (r Runtime) VolumeDestroy(ctx context.Context, name string) error {
 		return nil
 	}
 
-	if vol.Status.Type == types.EmptyString {
-		vol.Status.Type = types.KindVolumeHostDir
+	if vol.Status.Type == models.EmptyString {
+		vol.Status.Type = models.KindVolumeHostDir
 	}
 
 	si, ok := r.csi[vol.Status.Type]
@@ -176,9 +176,9 @@ func (r Runtime) VolumeRestore(ctx context.Context) error {
 		}
 
 		for name, state := range states {
-			status := new(types.VolumeStatus)
+			status := new(models.VolumeStatus)
 			if state.Ready {
-				status.State = types.StateReady
+				status.State = models.StateReady
 			}
 			status.Status = *state
 			r.state.Volumes().SetVolume(strings.Replace(name, "_", ":", -1), status)
@@ -209,8 +209,8 @@ func (r Runtime) VolumeCheckConfigData(ctx context.Context, name string, config 
 		return false, errors.New("volume not exists")
 	}
 
-	if vol.Status.Type == types.EmptyString {
-		vol.Status.Type = types.KindVolumeHostDir
+	if vol.Status.Type == models.EmptyString {
+		vol.Status.Type = models.KindVolumeHostDir
 	}
 
 	si, ok := r.csi[vol.Status.Type]
@@ -238,8 +238,8 @@ func (r Runtime) VolumeSetConfigData(ctx context.Context, name string, config st
 		return errors.New("config not exists")
 	}
 
-	if vol.Status.Type == types.EmptyString {
-		vol.Status.Type = types.KindVolumeHostDir
+	if vol.Status.Type == models.EmptyString {
+		vol.Status.Type = models.KindVolumeHostDir
 	}
 
 	si, ok := r.csi[vol.Status.Type]

@@ -22,11 +22,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/api/envs"
-	"github.com/lastbackend/lastbackend/internal/master/http/route"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
@@ -35,9 +30,14 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/lastbackend/lastbackend/internal/api/envs"
+	"github.com/lastbackend/lastbackend/internal/master/http/route"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -58,13 +58,13 @@ func TestRouteInfo(t *testing.T) {
 	r2 := getRouteAsset(ns2.Meta.Name, "test")
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		route     *types.Route
+		namespace *models.Namespace
+		route     *models.Route
 	}
 
 	tests := []struct {
@@ -108,10 +108,10 @@ func TestRouteInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := stg.Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := stg.Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Del(context.Background(), stg.Collection().Route(), types.EmptyString)
+		err = stg.Del(context.Background(), stg.Collection().Route(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -187,17 +187,17 @@ func TestRouteList(t *testing.T) {
 	r1 := getRouteAsset(ns1.Meta.Name, "demo")
 	r2 := getRouteAsset(ns1.Meta.Name, "test")
 
-	rl := types.NewRouteMap()
+	rl := models.NewRouteMap()
 	rl.Items[r1.SelfLink().String()] = r1
 	rl.Items[r2.SelfLink().String()] = r2
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
+		namespace *models.Namespace
 	}
 
 	tests := []struct {
@@ -207,7 +207,7 @@ func TestRouteList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         *types.RouteMap
+		want         *models.RouteMap
 		wantErr      bool
 		expectedCode int
 	}{
@@ -232,10 +232,10 @@ func TestRouteList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Del(context.Background(), stg.Collection().Route(), types.EmptyString)
+		err = stg.Del(context.Background(), stg.Collection().Route(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -321,7 +321,7 @@ func TestRouteCreate(t *testing.T) {
 
 	sv1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 
-	sl := new(types.ServiceList)
+	sl := new(models.ServiceList)
 	sl.Items = append(sl.Items, sv1)
 
 	// initial route in database
@@ -364,12 +364,12 @@ func TestRouteCreate(t *testing.T) {
 	mf5s, _ := mf5.ToJson()
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
+		namespace *models.Namespace
 	}
 
 	tests := []struct {
@@ -449,13 +449,13 @@ func TestRouteCreate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Del(context.Background(), stg.Collection().Route(), types.EmptyString)
+		err = stg.Del(context.Background(), stg.Collection().Route(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -512,7 +512,7 @@ func TestRouteCreate(t *testing.T) {
 
 				t.Log("route self-link:", tc.want.Meta.Namespace, tc.want.Meta.Name)
 
-				got := new(types.Route)
+				got := new(models.Route)
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Route(), tc.want.Meta.SelfLink, got, nil)
 				if !assert.NoError(t, err) {
 					return
@@ -555,7 +555,7 @@ func TestRouteUpdate(t *testing.T) {
 	sv1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 	sv2 := getServiceAsset(ns1.Meta.Name, "test1", "")
 
-	sl := new(types.ServiceList)
+	sl := new(models.ServiceList)
 	sl.Items = append(sl.Items, sv1)
 
 	r0 := getRouteAsset(ns1.Meta.Name, "initial-0")
@@ -605,13 +605,13 @@ func TestRouteUpdate(t *testing.T) {
 	mf7s, _ := mf7.ToJson()
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		route     *types.Route
+		namespace *models.Namespace
+		route     *models.Route
 	}
 
 	tests := []struct {
@@ -699,13 +699,13 @@ func TestRouteUpdate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := stg.Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := stg.Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Del(context.Background(), stg.Collection().Service(), types.EmptyString)
+		err = stg.Del(context.Background(), stg.Collection().Service(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Del(context.Background(), stg.Collection().Route(), types.EmptyString)
+		err = stg.Del(context.Background(), stg.Collection().Route(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -765,7 +765,7 @@ func TestRouteUpdate(t *testing.T) {
 			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect code message")
 			} else {
-				got := new(types.Route)
+				got := new(models.Route)
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Route(), tc.want.Meta.SelfLink, got, nil)
 				assert.NoError(t, err)
 				if assert.NotEmpty(t, got, "route is empty") {
@@ -796,13 +796,13 @@ func TestRouteRemove(t *testing.T) {
 	r2 := getRouteAsset(ns1.Meta.Name, "test")
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		route     *types.Route
+		namespace *models.Namespace
+		route     *models.Route
 	}
 
 	tests := []struct {
@@ -846,10 +846,10 @@ func TestRouteRemove(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Del(context.Background(), stg.Collection().Route(), types.EmptyString)
+		err = stg.Del(context.Background(), stg.Collection().Route(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -901,7 +901,7 @@ func TestRouteRemove(t *testing.T) {
 			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
-				var got = new(types.Route)
+				var got = new(models.Route)
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Route(), tc.args.route.SelfLink().String(), got, nil)
 				if err != nil {
 					assert.NoError(t, err)
@@ -914,35 +914,35 @@ func TestRouteRemove(t *testing.T) {
 
 }
 
-func getNamespaceAsset(name, desc string) *types.Namespace {
-	var n = types.Namespace{}
+func getNamespaceAsset(name, desc string) *models.Namespace {
+	var n = models.Namespace{}
 	n.Meta.SetDefault()
 	n.Meta.Name = name
 	n.Meta.Description = desc
 	n.Meta.Endpoint = fmt.Sprintf("%s", name)
-	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
+	n.Meta.SelfLink = *models.NewNamespaceSelfLink(name)
 	return &n
 }
 
-func getServiceAsset(namespace, name, desc string) *types.Service {
-	var s = types.Service{}
+func getServiceAsset(namespace, name, desc string) *models.Service {
+	var s = models.Service{}
 	s.Meta.SetDefault()
 	s.Meta.Namespace = namespace
 	s.Meta.Name = name
 	s.Meta.Description = desc
 	s.Meta.Endpoint = fmt.Sprintf("%s.%s", namespace, name)
-	s.Meta.SelfLink = *types.NewServiceSelfLink(namespace, name)
+	s.Meta.SelfLink = *models.NewServiceSelfLink(namespace, name)
 	return &s
 }
 
-func getRouteAsset(namespace, name string) *types.Route {
-	var r = types.Route{}
+func getRouteAsset(namespace, name string) *models.Route {
+	var r = models.Route{}
 	r.Meta.SetDefault()
 	r.Meta.Namespace = namespace
 	r.Meta.Name = name
 	r.Spec.Endpoint = fmt.Sprintf("%s.test-domain.com", name)
-	r.Spec.Rules = make([]types.RouteRule, 0)
-	r.Meta.SelfLink = *types.NewRouteSelfLink(namespace, name)
+	r.Spec.Rules = make([]models.RouteRule, 0)
+	r.Meta.SelfLink = *models.NewRouteSelfLink(namespace, name)
 	return &r
 }
 

@@ -27,7 +27,7 @@ import (
 	"testing"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/generator"
 	"github.com/stretchr/testify/assert"
 	"time"
@@ -44,7 +44,7 @@ func init() {
 	envs.Get().SetIPAM(ipm)
 }
 
-func testServiceObserver(t *testing.T, name, werr string, wst *ServiceState, state *ServiceState, svc *types.Service) {
+func testServiceObserver(t *testing.T, name, werr string, wst *ServiceState, state *ServiceState, svc *models.Service) {
 
 	var (
 		ctx = context.Background()
@@ -66,7 +66,7 @@ func testServiceObserver(t *testing.T, name, werr string, wst *ServiceState, sta
 	t.Run(name, func(t *testing.T) {
 
 		err := serviceObserve(state, svc)
-		if werr != types.EmptyString {
+		if werr != models.EmptyString {
 
 			if assert.NoError(t, err, "error should be presented") {
 				return
@@ -339,7 +339,7 @@ func TestHandleServiceStateCreated(t *testing.T) {
 		name string
 		args struct {
 			state *ServiceState
-			svc   *types.Service
+			svc   *models.Service
 		}
 		want struct {
 			err   string
@@ -352,12 +352,12 @@ func TestHandleServiceStateCreated(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle without endpoint create"}
 
-		s.args.svc = getServiceAsset(types.StateCreated, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateCreated, models.EmptyString)
 		s.args.state = getServiceStateAsset(s.args.svc)
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
-		dp := getDeploymentAsset(s.want.state.service, types.StateCreated, types.EmptyString)
+		dp := getDeploymentAsset(s.want.state.service, models.StateCreated, models.EmptyString)
 		s.want.state.deployment.provision = dp
 		s.want.state.deployment.list[dp.SelfLink().String()] = dp
 
@@ -367,15 +367,15 @@ func TestHandleServiceStateCreated(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with endpoint create"}
 
-		s.args.svc = getServiceAsset(types.StateCreated, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateCreated, models.EmptyString)
 		s.args.svc.Spec.Network.Ports = make(map[uint16]string)
 		s.args.svc.Spec.Network.Ports[80] = "80/tcp"
 
 		s.args.state = getServiceStateAsset(s.args.svc)
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
-		dp := getDeploymentAsset(s.want.state.service, types.StateCreated, types.EmptyString)
+		dp := getDeploymentAsset(s.want.state.service, models.StateCreated, models.EmptyString)
 
 		s.want.state.deployment.provision = dp
 		s.want.state.deployment.list[dp.SelfLink().String()] = dp
@@ -387,7 +387,7 @@ func TestHandleServiceStateCreated(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with endpoint update"}
 
-		s.args.svc = getServiceAsset(types.StateCreated, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateCreated, models.EmptyString)
 		s.args.svc.Spec.Network.Ports = make(map[uint16]string)
 		s.args.svc.Spec.Network.Ports[80] = "80/tcp"
 
@@ -395,9 +395,9 @@ func TestHandleServiceStateCreated(t *testing.T) {
 		s.args.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 		s.args.state.endpoint.endpoint.Spec.PortMap[9000] = "9000/udp"
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.state = getServiceStateAsset(s.args.svc)
-		dp := getDeploymentAsset(s.want.state.service, types.StateCreated, types.EmptyString)
+		dp := getDeploymentAsset(s.want.state.service, models.StateCreated, models.EmptyString)
 
 		s.want.state.deployment.provision = dp
 		s.want.state.deployment.list[dp.SelfLink().String()] = dp
@@ -411,7 +411,7 @@ func TestHandleServiceStateCreated(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with endpoint remove"}
 
-		s.args.svc = getServiceAsset(types.StateCreated, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateCreated, models.EmptyString)
 		s.args.svc.Spec.Network.Ports = make(map[uint16]string)
 		s.args.svc.Spec.Network.Ports[80] = "80/tcp"
 
@@ -420,9 +420,9 @@ func TestHandleServiceStateCreated(t *testing.T) {
 
 		s.args.svc.Spec.Network.Ports = make(map[uint16]string)
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.state = getServiceStateAsset(s.args.svc)
-		dp := getDeploymentAsset(s.want.state.service, types.StateCreated, types.EmptyString)
+		dp := getDeploymentAsset(s.want.state.service, models.StateCreated, models.EmptyString)
 
 		s.want.state.deployment.provision = dp
 		s.want.state.deployment.list[dp.SelfLink().String()] = dp
@@ -433,10 +433,10 @@ func TestHandleServiceStateCreated(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with deployment provision update"}
 
-		s.args.svc = getServiceAsset(types.StateCreated, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateCreated, models.EmptyString)
 		s.args.svc.Spec.Template.Updated.Add(-5 * time.Second)
 
-		dp1 := getDeploymentAsset(s.args.svc, types.StateCreated, types.EmptyString)
+		dp1 := getDeploymentAsset(s.args.svc, models.StateCreated, models.EmptyString)
 
 		s.args.state = getServiceStateAsset(s.args.svc)
 		s.args.svc.Spec.Template.Updated = time.Now()
@@ -444,15 +444,15 @@ func TestHandleServiceStateCreated(t *testing.T) {
 		s.args.state.deployment.provision = dp1
 		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
 
-		dp2 := getDeploymentAsset(s.want.state.service, types.StateProvision, types.EmptyString)
+		dp2 := getDeploymentAsset(s.want.state.service, models.StateProvision, models.EmptyString)
 
-		s.want.state.service.Status.State = types.StateCreated
+		s.want.state.service.Status.State = models.StateCreated
 		s.want.state.deployment.provision = dp2
 		s.want.state.deployment.list[dp2.SelfLink().String()] = dp2
-		s.want.state.deployment.list[dp1.SelfLink().String()].Status.State = types.StateDestroyed
+		s.want.state.deployment.list[dp1.SelfLink().String()].Status.State = models.StateDestroyed
 
 		return s
 	}())
@@ -460,22 +460,22 @@ func TestHandleServiceStateCreated(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with deployment active scale"}
 
-		s.args.svc = getServiceAsset(types.StateCreated, types.EmptyString)
-		dp1 := getDeploymentAsset(s.args.svc, types.StateReady, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateCreated, models.EmptyString)
+		dp1 := getDeploymentAsset(s.args.svc, models.StateReady, models.EmptyString)
 		cdp := *dp1
 
 		s.args.state = getServiceStateAsset(s.args.svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.args.svc.Spec.Replicas++
 
 		cdp.Spec.Replicas = s.args.svc.Spec.Replicas
 		s.want.state = getServiceStateAsset(s.args.svc)
 		s.want.state.deployment.list[cdp.SelfLink().String()] = &cdp
 		s.want.state.deployment.active = &cdp
-		s.want.state.deployment.list[cdp.SelfLink().String()].Status.State = types.StateProvision
+		s.want.state.deployment.list[cdp.SelfLink().String()].Status.State = models.StateProvision
 
 		return s
 	}())
@@ -492,7 +492,7 @@ func TestHandleServiceStateProvision(t *testing.T) {
 		name string
 		args struct {
 			state *ServiceState
-			svc   *types.Service
+			svc   *models.Service
 		}
 		want struct {
 			err   string
@@ -505,15 +505,15 @@ func TestHandleServiceStateProvision(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with endpoint create"}
 
-		s.args.svc = getServiceAsset(types.StateProvision, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateProvision, models.EmptyString)
 		s.args.svc.Spec.Network.Ports = make(map[uint16]string)
 		s.args.svc.Spec.Network.Ports[80] = "80/tcp"
 
 		s.args.state = getServiceStateAsset(s.args.svc)
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
-		dp := getDeploymentAsset(s.want.state.service, types.StateCreated, types.EmptyString)
+		dp := getDeploymentAsset(s.want.state.service, models.StateCreated, models.EmptyString)
 
 		s.want.state.deployment.provision = dp
 		s.want.state.deployment.list[dp.SelfLink().String()] = dp
@@ -525,7 +525,7 @@ func TestHandleServiceStateProvision(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with endpoint update"}
 
-		s.args.svc = getServiceAsset(types.StateProvision, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateProvision, models.EmptyString)
 		s.args.svc.Spec.Network.Ports = make(map[uint16]string)
 		s.args.svc.Spec.Network.Ports[80] = "80/tcp"
 
@@ -533,9 +533,9 @@ func TestHandleServiceStateProvision(t *testing.T) {
 		s.args.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 		s.args.state.endpoint.endpoint.Spec.PortMap[9000] = "9000/udp"
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.state = getServiceStateAsset(s.args.svc)
-		dp := getDeploymentAsset(s.want.state.service, types.StateCreated, types.EmptyString)
+		dp := getDeploymentAsset(s.want.state.service, models.StateCreated, models.EmptyString)
 
 		s.want.state.deployment.provision = dp
 		s.want.state.deployment.list[dp.SelfLink().String()] = dp
@@ -550,7 +550,7 @@ func TestHandleServiceStateProvision(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with endpoint remove"}
 
-		s.args.svc = getServiceAsset(types.StateProvision, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateProvision, models.EmptyString)
 		s.args.svc.Spec.Network.Ports = make(map[uint16]string)
 		s.args.svc.Spec.Network.Ports[80] = "80/tcp"
 
@@ -559,9 +559,9 @@ func TestHandleServiceStateProvision(t *testing.T) {
 
 		s.args.svc.Spec.Network.Ports = make(map[uint16]string)
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.state = getServiceStateAsset(s.args.svc)
-		dp := getDeploymentAsset(s.want.state.service, types.StateCreated, types.EmptyString)
+		dp := getDeploymentAsset(s.want.state.service, models.StateCreated, models.EmptyString)
 
 		s.want.state.deployment.provision = dp
 		s.want.state.deployment.list[dp.SelfLink().String()] = dp
@@ -572,22 +572,22 @@ func TestHandleServiceStateProvision(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with active deployment scale"}
 
-		s.args.svc = getServiceAsset(types.StateProvision, types.EmptyString)
-		dp1 := getDeploymentAsset(s.args.svc, types.StateReady, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateProvision, models.EmptyString)
+		dp1 := getDeploymentAsset(s.args.svc, models.StateReady, models.EmptyString)
 		cdp := *dp1
 
 		s.args.state = getServiceStateAsset(s.args.svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.args.svc.Spec.Replicas++
 
 		cdp.Spec.Replicas = s.args.svc.Spec.Replicas
 		s.want.state = getServiceStateAsset(s.args.svc)
 		s.want.state.deployment.list[cdp.SelfLink().String()] = &cdp
 		s.want.state.deployment.active = &cdp
-		s.want.state.deployment.list[cdp.SelfLink().String()].Status.State = types.StateProvision
+		s.want.state.deployment.list[cdp.SelfLink().String()].Status.State = models.StateProvision
 
 		return s
 	}())
@@ -595,9 +595,9 @@ func TestHandleServiceStateProvision(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with provision deployment scale"}
 
-		s.args.svc = getServiceAsset(types.StateProvision, types.EmptyString)
-		dp1 := getDeploymentAsset(s.args.svc, types.StateError, types.EmptyString)
-		dp2 := getDeploymentAsset(s.args.svc, types.StateCreated, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateProvision, models.EmptyString)
+		dp1 := getDeploymentAsset(s.args.svc, models.StateError, models.EmptyString)
+		dp2 := getDeploymentAsset(s.args.svc, models.StateCreated, models.EmptyString)
 
 		cdp1 := *dp1
 		cdp2 := *dp2
@@ -608,11 +608,11 @@ func TestHandleServiceStateProvision(t *testing.T) {
 		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
 		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.args.svc.Spec.Replicas++
 
 		cdp2.Spec.Replicas = s.args.svc.Spec.Replicas
-		cdp2.Status.State = types.StateProvision
+		cdp2.Status.State = models.StateProvision
 
 		s.want.state = getServiceStateAsset(s.args.svc)
 		s.want.state.deployment.list[cdp1.SelfLink().String()] = &cdp1
@@ -626,10 +626,10 @@ func TestHandleServiceStateProvision(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with new deployment create with provision deployment"}
 
-		s.args.svc = getServiceAsset(types.StateProvision, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateProvision, models.EmptyString)
 		s.args.svc.Spec.Template.Updated.Add(-5 * time.Second)
-		dp1 := getDeploymentAsset(s.args.svc, types.StateReady, types.EmptyString)
-		dp2 := getDeploymentAsset(s.args.svc, types.StateError, types.EmptyString)
+		dp1 := getDeploymentAsset(s.args.svc, models.StateReady, models.EmptyString)
+		dp2 := getDeploymentAsset(s.args.svc, models.StateError, models.EmptyString)
 
 		s.args.state = getServiceStateAsset(s.args.svc)
 		s.args.state.deployment.active = dp1
@@ -638,12 +638,12 @@ func TestHandleServiceStateProvision(t *testing.T) {
 		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.args.svc.Spec.Template.Updated = time.Now()
-		dp3 := getDeploymentAsset(s.args.svc, types.StateProvision, types.EmptyString)
+		dp3 := getDeploymentAsset(s.args.svc, models.StateProvision, models.EmptyString)
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.deployment.list[dp1.SelfLink().String()].Status.State = types.StateReady
-		s.want.state.deployment.list[dp2.SelfLink().String()].Status.State = types.StateDestroyed
+		s.want.state.deployment.list[dp1.SelfLink().String()].Status.State = models.StateReady
+		s.want.state.deployment.list[dp2.SelfLink().String()].Status.State = models.StateDestroyed
 		s.want.state.deployment.list[dp3.SelfLink().String()] = dp3
 		s.want.state.deployment.provision = dp3
 
@@ -653,20 +653,20 @@ func TestHandleServiceStateProvision(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with new deployment create without provision deployment"}
 
-		s.args.svc = getServiceAsset(types.StateProvision, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateProvision, models.EmptyString)
 		s.args.svc.Spec.Template.Updated.Add(-5 * time.Second)
-		dp1 := getDeploymentAsset(s.args.svc, types.StateError, types.EmptyString)
+		dp1 := getDeploymentAsset(s.args.svc, models.StateError, models.EmptyString)
 
 		s.args.state = getServiceStateAsset(s.args.svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
 
 		s.args.svc.Spec.Template.Updated = time.Now()
-		dp2 := getDeploymentAsset(s.args.svc, types.StateProvision, types.EmptyString)
+		dp2 := getDeploymentAsset(s.args.svc, models.StateProvision, models.EmptyString)
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.deployment.list[dp1.SelfLink().String()].Status.State = types.StateDestroyed
+		s.want.state.deployment.list[dp1.SelfLink().String()].Status.State = models.StateDestroyed
 		s.want.state.deployment.list[dp2.SelfLink().String()] = dp2
 		s.want.state.deployment.provision = dp2
 
@@ -683,7 +683,7 @@ func TestHandleServiceStateReady(t *testing.T) {
 		name string
 		args struct {
 			state *ServiceState
-			svc   *types.Service
+			svc   *models.Service
 		}
 		want struct {
 			err   string
@@ -696,14 +696,14 @@ func TestHandleServiceStateReady(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "check ready state stay ready"}
 
-		svc := getServiceAsset(types.StateReady, types.EmptyString)
+		svc := getServiceAsset(models.StateReady, models.EmptyString)
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.svc = svc
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.service.Status.State = types.StateReady
+		s.want.state.service.Status.State = models.StateReady
 
 		return s
 	}())
@@ -718,7 +718,7 @@ func TestHandleServiceStateError(t *testing.T) {
 		name string
 		args struct {
 			state *ServiceState
-			svc   *types.Service
+			svc   *models.Service
 		}
 		want struct {
 			err   string
@@ -731,14 +731,14 @@ func TestHandleServiceStateError(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "check error state stay error"}
 
-		svc := getServiceAsset(types.StateError, types.EmptyString)
+		svc := getServiceAsset(models.StateError, models.EmptyString)
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.svc = svc
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.service.Status.State = types.StateError
+		s.want.state.service.Status.State = models.StateError
 
 		return s
 	}())
@@ -753,7 +753,7 @@ func TestHandleServiceStateDegradation(t *testing.T) {
 		name string
 		args struct {
 			state *ServiceState
-			svc   *types.Service
+			svc   *models.Service
 		}
 		want struct {
 			err   string
@@ -766,14 +766,14 @@ func TestHandleServiceStateDegradation(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "check degradation state stay degradation"}
 
-		svc := getServiceAsset(types.StateDegradation, types.EmptyString)
+		svc := getServiceAsset(models.StateDegradation, models.EmptyString)
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.svc = svc
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.service.Status.State = types.StateDegradation
+		s.want.state.service.Status.State = models.StateDegradation
 
 		return s
 	}())
@@ -789,7 +789,7 @@ func TestHandleServiceStateDestroy(t *testing.T) {
 		name string
 		args struct {
 			state *ServiceState
-			svc   *types.Service
+			svc   *models.Service
 		}
 		want struct {
 			err   string
@@ -802,9 +802,9 @@ func TestHandleServiceStateDestroy(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle without deployments and endpoint"}
 
-		s.args.svc = getServiceAsset(types.StateDestroy, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateDestroy, models.EmptyString)
 		s.args.state = getServiceStateAsset(s.args.svc)
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
 		s.want.state.service = nil
@@ -815,14 +815,14 @@ func TestHandleServiceStateDestroy(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle without deployments"}
 
-		s.args.svc = getServiceAsset(types.StateDestroy, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateDestroy, models.EmptyString)
 		s.args.svc.Spec.Network.Ports = make(map[uint16]string)
 		s.args.svc.Spec.Network.Ports[80] = "80/tcp"
 
 		s.args.state = getServiceStateAsset(s.args.svc)
 		s.args.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
 		s.want.state.service = nil
@@ -833,11 +833,11 @@ func TestHandleServiceStateDestroy(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with deployments and without endpoint"}
 
-		s.args.svc = getServiceAsset(types.StateDestroy, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateDestroy, models.EmptyString)
 		s.args.state = getServiceStateAsset(s.args.svc)
 
-		dp1 := getDeploymentAsset(s.args.svc, types.StateReady, types.EmptyString)
-		dp2 := getDeploymentAsset(s.args.svc, types.StateCreated, types.EmptyString)
+		dp1 := getDeploymentAsset(s.args.svc, models.StateReady, models.EmptyString)
+		dp2 := getDeploymentAsset(s.args.svc, models.StateCreated, models.EmptyString)
 
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
@@ -847,7 +847,7 @@ func TestHandleServiceStateDestroy(t *testing.T) {
 		cdp1 := *dp1
 		cdp2 := *dp2
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
 		s.want.state.deployment.list[cdp1.SelfLink().String()] = &cdp1
@@ -856,8 +856,8 @@ func TestHandleServiceStateDestroy(t *testing.T) {
 		s.want.state.deployment.active = &cdp1
 		s.want.state.deployment.provision = &cdp2
 
-		cdp1.Status.State = types.StateDestroy
-		cdp2.Status.State = types.StateDestroy
+		cdp1.Status.State = models.StateDestroy
+		cdp2.Status.State = models.StateDestroy
 
 		return s
 	}())
@@ -865,14 +865,14 @@ func TestHandleServiceStateDestroy(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with deployments and with endpoint"}
 
-		s.args.svc = getServiceAsset(types.StateDestroy, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateDestroy, models.EmptyString)
 		s.args.svc.Spec.Network.Ports = make(map[uint16]string)
 		s.args.svc.Spec.Network.Ports[80] = "80/tcp"
 
 		s.args.state = getServiceStateAsset(s.args.svc)
 
-		dp1 := getDeploymentAsset(s.args.svc, types.StateReady, types.EmptyString)
-		dp2 := getDeploymentAsset(s.args.svc, types.StateCreated, types.EmptyString)
+		dp1 := getDeploymentAsset(s.args.svc, models.StateReady, models.EmptyString)
+		dp2 := getDeploymentAsset(s.args.svc, models.StateCreated, models.EmptyString)
 
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
@@ -884,7 +884,7 @@ func TestHandleServiceStateDestroy(t *testing.T) {
 		cdp1 := *dp1
 		cdp2 := *dp2
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
 		s.want.state.deployment.list[cdp1.SelfLink().String()] = &cdp1
@@ -893,8 +893,8 @@ func TestHandleServiceStateDestroy(t *testing.T) {
 		s.want.state.deployment.active = &cdp1
 		s.want.state.deployment.provision = &cdp2
 
-		cdp1.Status.State = types.StateDestroy
-		cdp2.Status.State = types.StateDestroy
+		cdp1.Status.State = models.StateDestroy
+		cdp2.Status.State = models.StateDestroy
 
 		s.want.state.endpoint.endpoint = nil
 
@@ -912,7 +912,7 @@ func TestHandleServiceStateDestroyed(t *testing.T) {
 		name string
 		args struct {
 			state *ServiceState
-			svc   *types.Service
+			svc   *models.Service
 		}
 		want struct {
 			err   string
@@ -925,9 +925,9 @@ func TestHandleServiceStateDestroyed(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle without deployments and endpoint"}
 
-		s.args.svc = getServiceAsset(types.StateDestroyed, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateDestroyed, models.EmptyString)
 		s.args.state = getServiceStateAsset(s.args.svc)
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
 		s.want.state.service = nil
@@ -938,14 +938,14 @@ func TestHandleServiceStateDestroyed(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle without deployments"}
 
-		s.args.svc = getServiceAsset(types.StateDestroyed, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateDestroyed, models.EmptyString)
 		s.args.svc.Spec.Network.Ports = make(map[uint16]string)
 		s.args.svc.Spec.Network.Ports[80] = "80/tcp"
 
 		s.args.state = getServiceStateAsset(s.args.svc)
 		s.args.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
 		s.want.state.service = nil
@@ -957,11 +957,11 @@ func TestHandleServiceStateDestroyed(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with deployments and without endpoint"}
 
-		s.args.svc = getServiceAsset(types.StateDestroyed, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateDestroyed, models.EmptyString)
 		s.args.state = getServiceStateAsset(s.args.svc)
 
-		dp1 := getDeploymentAsset(s.args.svc, types.StateReady, types.EmptyString)
-		dp2 := getDeploymentAsset(s.args.svc, types.StateCreated, types.EmptyString)
+		dp1 := getDeploymentAsset(s.args.svc, models.StateReady, models.EmptyString)
+		dp2 := getDeploymentAsset(s.args.svc, models.StateCreated, models.EmptyString)
 
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
@@ -971,7 +971,7 @@ func TestHandleServiceStateDestroyed(t *testing.T) {
 		cdp1 := *dp1
 		cdp2 := *dp2
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
 		s.want.state.deployment.list[cdp1.SelfLink().String()] = &cdp1
@@ -980,10 +980,10 @@ func TestHandleServiceStateDestroyed(t *testing.T) {
 		s.want.state.deployment.active = &cdp1
 		s.want.state.deployment.provision = &cdp2
 
-		cdp1.Status.State = types.StateDestroy
-		cdp2.Status.State = types.StateDestroy
+		cdp1.Status.State = models.StateDestroy
+		cdp2.Status.State = models.StateDestroy
 
-		s.want.state.service.Status.State = types.StateDestroy
+		s.want.state.service.Status.State = models.StateDestroy
 
 		return s
 	}())
@@ -991,14 +991,14 @@ func TestHandleServiceStateDestroyed(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with deployments and with endpoint"}
 
-		s.args.svc = getServiceAsset(types.StateDestroyed, types.EmptyString)
+		s.args.svc = getServiceAsset(models.StateDestroyed, models.EmptyString)
 		s.args.svc.Spec.Network.Ports = make(map[uint16]string)
 		s.args.svc.Spec.Network.Ports[80] = "80/tcp"
 
 		s.args.state = getServiceStateAsset(s.args.svc)
 
-		dp1 := getDeploymentAsset(s.args.svc, types.StateReady, types.EmptyString)
-		dp2 := getDeploymentAsset(s.args.svc, types.StateCreated, types.EmptyString)
+		dp1 := getDeploymentAsset(s.args.svc, models.StateReady, models.EmptyString)
+		dp2 := getDeploymentAsset(s.args.svc, models.StateCreated, models.EmptyString)
 
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
@@ -1010,7 +1010,7 @@ func TestHandleServiceStateDestroyed(t *testing.T) {
 		cdp1 := *dp1
 		cdp2 := *dp2
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
 		s.want.state.deployment.list[cdp1.SelfLink().String()] = &cdp1
@@ -1019,11 +1019,11 @@ func TestHandleServiceStateDestroyed(t *testing.T) {
 		s.want.state.deployment.active = &cdp1
 		s.want.state.deployment.provision = &cdp2
 
-		cdp1.Status.State = types.StateDestroy
-		cdp2.Status.State = types.StateDestroy
+		cdp1.Status.State = models.StateDestroy
+		cdp2.Status.State = models.StateDestroy
 
 		s.want.state.endpoint.endpoint = nil
-		s.want.state.service.Status.State = types.StateDestroy
+		s.want.state.service.Status.State = models.StateDestroy
 
 		return s
 	}())
@@ -1050,12 +1050,12 @@ func TestServiceStatusState(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "check created state stay created"}
 
-		svc := getServiceAsset(types.StateCreated, types.EmptyString)
+		svc := getServiceAsset(models.StateCreated, models.EmptyString)
 
 		s.args.state = getServiceStateAsset(svc)
 
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.service.Status.State = types.StateCreated
+		s.want.state.service.Status.State = models.StateCreated
 
 		return s
 	}())
@@ -1063,9 +1063,9 @@ func TestServiceStatusState(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "check created state to provision without active deployment"}
 
-		svc := getServiceAsset(types.StateCreated, types.EmptyString)
-		dp1 := getDeploymentAsset(svc, types.StateProvision, types.EmptyString)
-		dp2 := getDeploymentAsset(svc, types.StateError, types.EmptyString)
+		svc := getServiceAsset(models.StateCreated, models.EmptyString)
+		dp1 := getDeploymentAsset(svc, models.StateProvision, models.EmptyString)
+		dp2 := getDeploymentAsset(svc, models.StateError, models.EmptyString)
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp1
@@ -1073,7 +1073,7 @@ func TestServiceStatusState(t *testing.T) {
 		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.service.Status.State = types.StateProvision
+		s.want.state.service.Status.State = models.StateProvision
 
 		return s
 	}())
@@ -1081,9 +1081,9 @@ func TestServiceStatusState(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "check created state to provision with active provision deployment"}
 
-		svc := getServiceAsset(types.StateCreated, types.EmptyString)
-		dp1 := getDeploymentAsset(svc, types.StateProvision, types.EmptyString)
-		dp2 := getDeploymentAsset(svc, types.StateCancel, types.EmptyString)
+		svc := getServiceAsset(models.StateCreated, models.EmptyString)
+		dp1 := getDeploymentAsset(svc, models.StateProvision, models.EmptyString)
+		dp2 := getDeploymentAsset(svc, models.StateCancel, models.EmptyString)
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
@@ -1091,7 +1091,7 @@ func TestServiceStatusState(t *testing.T) {
 		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.service.Status.State = types.StateProvision
+		s.want.state.service.Status.State = models.StateProvision
 
 		return s
 	}())
@@ -1099,9 +1099,9 @@ func TestServiceStatusState(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "check created state to provision with active created deployment"}
 
-		svc := getServiceAsset(types.StateCreated, types.EmptyString)
-		dp1 := getDeploymentAsset(svc, types.StateCreated, types.EmptyString)
-		dp2 := getDeploymentAsset(svc, types.StateCancel, types.EmptyString)
+		svc := getServiceAsset(models.StateCreated, models.EmptyString)
+		dp1 := getDeploymentAsset(svc, models.StateCreated, models.EmptyString)
+		dp2 := getDeploymentAsset(svc, models.StateCancel, models.EmptyString)
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
@@ -1109,7 +1109,7 @@ func TestServiceStatusState(t *testing.T) {
 		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.service.Status.State = types.StateCreated
+		s.want.state.service.Status.State = models.StateCreated
 
 		return s
 	}())
@@ -1117,10 +1117,10 @@ func TestServiceStatusState(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "check provision state to ready with active deployment"}
 
-		svc := getServiceAsset(types.StateProvision, types.EmptyString)
+		svc := getServiceAsset(models.StateProvision, models.EmptyString)
 
-		dp1 := getDeploymentAsset(svc, types.StateReady, types.EmptyString)
-		dp2 := getDeploymentAsset(svc, types.StateError, types.EmptyString)
+		dp1 := getDeploymentAsset(svc, models.StateReady, models.EmptyString)
+		dp2 := getDeploymentAsset(svc, models.StateError, models.EmptyString)
 		dp2.Spec.Template.Containers[0].Name = "changed"
 		dp2.Spec.Template.Updated.Add(3 * time.Second)
 
@@ -1131,7 +1131,7 @@ func TestServiceStatusState(t *testing.T) {
 		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.service.Status.State = types.StateReady
+		s.want.state.service.Status.State = models.StateReady
 
 		return s
 	}())
@@ -1139,10 +1139,10 @@ func TestServiceStatusState(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "check provision state to ready with active deployment and provision error"}
 
-		svc := getServiceAsset(types.StateProvision, types.EmptyString)
+		svc := getServiceAsset(models.StateProvision, models.EmptyString)
 
-		dp1 := getDeploymentAsset(svc, types.StateReady, types.EmptyString)
-		dp2 := getDeploymentAsset(svc, types.StateError, types.EmptyString)
+		dp1 := getDeploymentAsset(svc, models.StateReady, models.EmptyString)
+		dp2 := getDeploymentAsset(svc, models.StateError, models.EmptyString)
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
@@ -1151,7 +1151,7 @@ func TestServiceStatusState(t *testing.T) {
 		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.service.Status.State = types.StateReady
+		s.want.state.service.Status.State = models.StateReady
 
 		return s
 	}())
@@ -1159,10 +1159,10 @@ func TestServiceStatusState(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "check error state to ready with active deployment"}
 
-		svc := getServiceAsset(types.StateError, types.EmptyString)
+		svc := getServiceAsset(models.StateError, models.EmptyString)
 
-		dp1 := getDeploymentAsset(svc, types.StateReady, types.EmptyString)
-		dp2 := getDeploymentAsset(svc, types.StateError, types.EmptyString)
+		dp1 := getDeploymentAsset(svc, models.StateReady, models.EmptyString)
+		dp2 := getDeploymentAsset(svc, models.StateError, models.EmptyString)
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
@@ -1171,7 +1171,7 @@ func TestServiceStatusState(t *testing.T) {
 		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.service.Status.State = types.StateReady
+		s.want.state.service.Status.State = models.StateReady
 
 		return s
 	}())
@@ -1179,10 +1179,10 @@ func TestServiceStatusState(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "check provision state to error with active deployment"}
 
-		svc := getServiceAsset(types.StateProvision, types.EmptyString)
+		svc := getServiceAsset(models.StateProvision, models.EmptyString)
 
-		dp1 := getDeploymentAsset(svc, types.StateError, types.EmptyString)
-		dp2 := getDeploymentAsset(svc, types.StateError, types.EmptyString)
+		dp1 := getDeploymentAsset(svc, models.StateError, models.EmptyString)
+		dp2 := getDeploymentAsset(svc, models.StateError, models.EmptyString)
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
@@ -1191,7 +1191,7 @@ func TestServiceStatusState(t *testing.T) {
 		s.args.state.deployment.list[dp2.SelfLink().String()] = dp2
 
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.service.Status.State = types.StateError
+		s.want.state.service.Status.State = models.StateError
 
 		return s
 	}())
@@ -1199,16 +1199,16 @@ func TestServiceStatusState(t *testing.T) {
 	tests = append(tests, func() suit {
 		s := suit{name: "check provision state to error without active deployment"}
 
-		svc := getServiceAsset(types.StateProvision, types.EmptyString)
+		svc := getServiceAsset(models.StateProvision, models.EmptyString)
 
-		dp1 := getDeploymentAsset(svc, types.StateError, types.EmptyString)
+		dp1 := getDeploymentAsset(svc, models.StateError, models.EmptyString)
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp1
 		s.args.state.deployment.list[dp1.SelfLink().String()] = dp1
 
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.service.Status.State = types.StateError
+		s.want.state.service.Status.State = models.StateError
 
 		return s
 	}())
@@ -1218,12 +1218,12 @@ func TestServiceStatusState(t *testing.T) {
 	}
 }
 
-func getServiceAsset(state, message string) *types.Service {
-	s := new(types.Service)
+func getServiceAsset(state, message string) *models.Service {
+	s := new(models.Service)
 
 	s.Meta.Namespace = "test"
 	s.Meta.Name = "service"
-	s.Meta.SelfLink = *types.NewServiceSelfLink(s.Meta.Namespace, s.Meta.Name)
+	s.Meta.SelfLink = *models.NewServiceSelfLink(s.Meta.Namespace, s.Meta.Name)
 
 	s.Status.State = state
 	s.Status.Message = message
@@ -1231,20 +1231,20 @@ func getServiceAsset(state, message string) *types.Service {
 	s.Spec.Replicas = 1
 	s.Spec.Template.Updated = time.Now()
 
-	s.Spec.Template.Containers = types.SpecTemplateContainers{}
-	s.Spec.Template.Containers = append(s.Spec.Template.Containers, &types.SpecTemplateContainer{
+	s.Spec.Template.Containers = models.SpecTemplateContainers{}
+	s.Spec.Template.Containers = append(s.Spec.Template.Containers, &models.SpecTemplateContainer{
 		Name: "demo",
 	})
 
 	return s
 }
 
-func getEndpointAsset(svc *types.Service) *types.Endpoint {
-	e := new(types.Endpoint)
+func getEndpointAsset(svc *models.Service) *models.Endpoint {
+	e := new(models.Endpoint)
 
 	e.Meta.Namespace = svc.Meta.Namespace
 	e.Meta.Name = svc.Meta.Name
-	e.Meta.SelfLink = *types.NewEndpointSelfLink(e.Meta.Namespace, e.Meta.Name)
+	e.Meta.SelfLink = *models.NewEndpointSelfLink(e.Meta.Namespace, e.Meta.Name)
 
 	e.Spec.PortMap = make(map[uint16]string)
 	for k, v := range svc.Spec.Network.Ports {
@@ -1254,47 +1254,47 @@ func getEndpointAsset(svc *types.Service) *types.Endpoint {
 	return e
 }
 
-func getDeploymentAsset(svc *types.Service, state, message string) *types.Deployment {
+func getDeploymentAsset(svc *models.Service, state, message string) *models.Deployment {
 
-	d := new(types.Deployment)
+	d := new(models.Deployment)
 
 	d.Meta.Namespace = svc.Meta.Namespace
 	d.Meta.Service = svc.Meta.Name
 	d.Meta.Name = generator.GetUUIDV4()
-	d.Meta.SelfLink = *types.NewDeploymentSelfLink(d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
+	d.Meta.SelfLink = *models.NewDeploymentSelfLink(d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
 
 	d.Status.State = state
 	d.Status.Message = message
-	d.Status.Dependencies.Volumes = make(map[string]types.StatusDependency, 0)
-	d.Status.Dependencies.Secrets = make(map[string]types.StatusDependency, 0)
-	d.Status.Dependencies.Configs = make(map[string]types.StatusDependency, 0)
+	d.Status.Dependencies.Volumes = make(map[string]models.StatusDependency, 0)
+	d.Status.Dependencies.Secrets = make(map[string]models.StatusDependency, 0)
+	d.Status.Dependencies.Configs = make(map[string]models.StatusDependency, 0)
 
 	d.Spec.State = svc.Spec.State
 	d.Spec.Template = svc.Spec.Template
 	d.Spec.Replicas = svc.Spec.Replicas
 
-	d.Spec.Template.Containers = types.SpecTemplateContainers{}
-	d.Spec.Template.Containers = append(d.Spec.Template.Containers, &types.SpecTemplateContainer{
+	d.Spec.Template.Containers = models.SpecTemplateContainers{}
+	d.Spec.Template.Containers = append(d.Spec.Template.Containers, &models.SpecTemplateContainer{
 		Name: "demo",
 	})
 
 	return d
 }
 
-func getPodAsset(d *types.Deployment, state, message string) *types.Pod {
+func getPodAsset(d *models.Deployment, state, message string) *models.Pod {
 
-	p := new(types.Pod)
+	p := new(models.Pod)
 
 	p.Meta.Namespace = d.Meta.Namespace
 	p.Meta.Name = generator.GetUUIDV4()
 
-	sl, _ := types.NewPodSelfLink(types.KindDeployment, d.SelfLink().String(), p.Meta.Name)
+	sl, _ := models.NewPodSelfLink(models.KindDeployment, d.SelfLink().String(), p.Meta.Name)
 	p.Meta.SelfLink = *sl
 
 	p.Status.State = state
 	p.Status.Message = message
 
-	if state == types.StateReady {
+	if state == models.StateReady {
 		p.Status.Running = true
 	}
 
@@ -1304,20 +1304,20 @@ func getPodAsset(d *types.Deployment, state, message string) *types.Pod {
 	return p
 }
 
-func getServiceStateAsset(svc *types.Service) *ServiceState {
+func getServiceStateAsset(svc *models.Service) *ServiceState {
 
-	n := new(types.Node)
+	n := new(models.Node)
 
 	n.Meta.Name = "node"
 	n.Meta.Hostname = "node.local"
-	n.Status.Capacity = types.NodeResources{
+	n.Status.Capacity = models.NodeResources{
 		Containers: 10,
 		Pods:       10,
 		RAM:        1000,
 		CPU:        1,
 		Storage:    1000,
 	}
-	n.Meta.SelfLink = *types.NewNodeSelfLink(n.Meta.Hostname)
+	n.Meta.SelfLink = *models.NewNodeSelfLink(n.Meta.Hostname)
 
 	cs := cluster.NewClusterState()
 	cs.SetNode(n)
@@ -1348,7 +1348,7 @@ func getServiceStateCopy(ss *ServiceState) *ServiceState {
 		for k, pl := range ss.pod.list {
 
 			if _, ok := s.pod.list[k]; !ok {
-				s.pod.list[k] = make(map[string]*types.Pod)
+				s.pod.list[k] = make(map[string]*models.Pod)
 			}
 
 			for l, p := range pl {

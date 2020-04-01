@@ -22,7 +22,7 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/internal/exporter/envs"
 	"github.com/lastbackend/lastbackend/internal/exporter/runtime"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/tools/log"
@@ -39,7 +39,7 @@ type Controller struct {
 	runtime *runtime.Runtime
 	cache   struct {
 		lock      sync.RWMutex
-		resources types.ExporterStatus
+		resources models.ExporterStatus
 	}
 }
 

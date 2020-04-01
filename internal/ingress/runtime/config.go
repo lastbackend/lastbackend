@@ -32,7 +32,7 @@ import (
 
 	"io/ioutil"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -107,7 +107,7 @@ func (c conf) Sync() error {
 	cfg.Stats.Password = c.Stats.Password
 	cfg.Stats.Port = c.Stats.Port
 
-	if cfg.Stats.Username != types.EmptyString && cfg.Stats.Password != types.EmptyString {
+	if cfg.Stats.Username != models.EmptyString && cfg.Stats.Password != models.EmptyString {
 		if cfg.Stats.Port == 0 {
 			cfg.Stats.Port = 9000
 		}

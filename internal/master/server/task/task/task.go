@@ -20,15 +20,15 @@ package task
 
 import (
 	"context"
+	"strings"
+
 	"github.com/lastbackend/lastbackend/internal/api/envs"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/generator"
 	"github.com/lastbackend/lastbackend/internal/util/resource"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/tools/log"
-	"strings"
 )
 
 const (
@@ -36,10 +36,10 @@ const (
 	logLevel  = 3
 )
 
-func Fetch(ctx context.Context, namespace, job, name string) (*types.Task, *errors.Err) {
+func Fetch(ctx context.Context, namespace, job, name string) (*models.Task, *errors.Err) {
 
-	tm := model.NewTaskModel(ctx, envs.Get().GetStorage())
-	task, err := tm.Get(types.NewTaskSelfLink(namespace, job, name).String())
+	tm := service.NewTaskModel(ctx, envs.Get().GetStorage())
+	task, err := tm.Get(models.NewTaskSelfLink(namespace, job, name).String())
 
 	if err != nil {
 		log.Errorf("%s:fetch:> err: %s", logPrefix, err.Error())
@@ -55,14 +55,14 @@ func Fetch(ctx context.Context, namespace, job, name string) (*types.Task, *erro
 	return task, nil
 }
 
-func Create(ctx context.Context, ns *types.Namespace, job *types.Job, mf *request.TaskManifest) (*types.Task, *errors.Err) {
+func Create(ctx context.Context, ns *models.Namespace, job *models.Job, mf *request.TaskManifest) (*models.Task, *errors.Err) {
 
-	jm := model.NewJobModel(ctx, envs.Get().GetStorage())
-	tm := model.NewTaskModel(ctx, envs.Get().GetStorage())
+	jm := service.NewJobModel(ctx, envs.Get().GetStorage())
+	tm := service.NewTaskModel(ctx, envs.Get().GetStorage())
 
 	if mf.Meta.Name != nil {
 
-		task, err := tm.Get(types.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, *mf.Meta.Name).String())
+		task, err := tm.Get(models.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, *mf.Meta.Name).String())
 		if err != nil {
 			log.Errorf("%s:create:> get task by name `%s` in namespace `%s` err: %s", logPrefix, mf.Meta.Name, ns.Meta.Name, err.Error())
 			return nil, errors.New("task").InternalServerError()
@@ -76,21 +76,21 @@ func Create(ctx context.Context, ns *types.Namespace, job *types.Job, mf *reques
 		}
 	}
 
-	task := new(types.Task)
+	task := new(models.Task)
 	task.Meta.SetDefault()
 	task.Meta.Namespace = ns.Meta.Name
 	task.Meta.Job = job.Meta.Name
 
 	if mf.Meta.Name != nil {
-		task.Meta.SelfLink = *types.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, *mf.Meta.Name)
+		task.Meta.SelfLink = *models.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, *mf.Meta.Name)
 		mf.SetTaskMeta(task)
 	} else {
 		name := strings.Split(generator.GetUUIDV4(), "-")[4][5:]
 		task.Meta.Name = name
-		task.Meta.SelfLink = *types.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, name)
+		task.Meta.SelfLink = *models.NewTaskSelfLink(ns.Meta.Name, job.Meta.Name, name)
 	}
 
-	task.Status.State = types.StateCreated
+	task.Status.State = models.StateCreated
 
 	task.Spec.Runtime = job.Spec.Task.Runtime
 	task.Spec.Selector = job.Spec.Task.Selector
@@ -104,10 +104,10 @@ func Create(ctx context.Context, ns *types.Namespace, job *types.Job, mf *reques
 	if job.Spec.Resources.Limits.RAM != 0 || job.Spec.Resources.Limits.CPU != 0 {
 		for _, c := range task.Spec.Template.Containers {
 			if c.Resources.Limits.RAM == 0 {
-				c.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(types.DEFAULT_RESOURCE_LIMITS_RAM)
+				c.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(models.DEFAULT_RESOURCE_LIMITS_RAM)
 			}
 			if c.Resources.Limits.CPU == 0 {
-				c.Resources.Limits.CPU, _ = resource.DecodeCpuResource(types.DEFAULT_RESOURCE_LIMITS_CPU)
+				c.Resources.Limits.CPU, _ = resource.DecodeCpuResource(models.DEFAULT_RESOURCE_LIMITS_CPU)
 			}
 		}
 	}

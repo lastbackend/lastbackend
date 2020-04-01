@@ -21,19 +21,19 @@ package views
 import (
 	"encoding/json"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type ControllerView struct{}
 
-func (nv *ControllerView) New(obj *types.Controller) *Controller {
+func (nv *ControllerView) New(obj *models.Controller) *Controller {
 	n := Controller{}
 	n.Meta = nv.ToControllerMeta(obj.Meta)
 	n.Status = nv.ToControllerStatus(obj.Status)
 	return &n
 }
 
-func (nv *ControllerView) ToControllerMeta(meta types.ControllerMeta) ControllerMeta {
+func (nv *ControllerView) ToControllerMeta(meta models.ControllerMeta) ControllerMeta {
 	m := ControllerMeta{}
 	m.Name = meta.Name
 	m.Description = meta.Description
@@ -42,7 +42,7 @@ func (nv *ControllerView) ToControllerMeta(meta types.ControllerMeta) Controller
 	return m
 }
 
-func (nv *ControllerView) ToControllerStatus(status types.ControllerStatus) ControllerStatus {
+func (nv *ControllerView) ToControllerStatus(status models.ControllerStatus) ControllerStatus {
 	return ControllerStatus{
 		Ready: status.Ready,
 	}
@@ -52,7 +52,7 @@ func (obj *Controller) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func (nv *ControllerView) NewList(obj *types.ControllerList) *ControllerList {
+func (nv *ControllerView) NewList(obj *models.ControllerList) *ControllerList {
 	if obj == nil {
 		return nil
 	}
