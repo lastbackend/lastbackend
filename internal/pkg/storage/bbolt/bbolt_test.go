@@ -16,42 +16,44 @@
 // from Last.Backend LLC.
 //
 
-package mock_test
+package bbolt_test
 
 import (
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage/mock"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage/bbolt"
+	"os"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestStorage_Get(t *testing.T) {
-	stg, err := mock.New()
+	stg, err := bbolt.New(bbolt.Options{Path: path.Join(os.TempDir(), ".lb_test")})
 	assert.NoError(t, err, "storage initialize err")
 	storage.StorageGetAssets(t, stg)
 }
 
 func TestStorage_List(t *testing.T) {
-	stg, err := mock.New()
+	stg, err := bbolt.New(bbolt.Options{Path: path.Join(os.TempDir(), ".lb_test")})
 	assert.NoError(t, err, "storage initialize err")
 	storage.StorageListAssets(t, stg)
 }
 
 func TestStorage_Put(t *testing.T) {
-	stg, err := mock.New()
+	stg, err := bbolt.New(bbolt.Options{Path: path.Join(os.TempDir(), ".lb_test")})
 	assert.NoError(t, err, "storage initialize err")
 	storage.StoragePutAssets(t, stg)
 }
 
 func TestStorage_Set(t *testing.T) {
-	stg, err := mock.New()
+	stg, err := bbolt.New(bbolt.Options{Path: path.Join(os.TempDir(), ".lb_test")})
 	assert.NoError(t, err, "storage initialize err")
 	storage.StorageSetAssets(t, stg)
 }
 
 func TestStorage_Del(t *testing.T) {
-	stg, err := mock.New()
+	stg, err := bbolt.New(bbolt.Options{Path: path.Join(os.TempDir(), ".lb_test")})
 	assert.NoError(t, err, "storage initialize err")
 	storage.StorageDelAssets(t, stg)
 }

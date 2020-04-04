@@ -110,8 +110,8 @@ func (s Storage) Get(collection, key string, outPtr interface{}) error {
 			return errors.New(types.ErrCollectionNotExists)
 		}
 		data := b.Get([]byte(key))
-		if data != nil {
-			return nil
+		if data == nil {
+			return errors.New(types.ErrEntityNotFound)
 		}
 		return decode(s.codec, data, outPtr)
 	})
@@ -167,6 +167,10 @@ func (s Storage) Put(collection, key string, obj interface{}) error {
 		b := tx.Bucket([]byte(collection))
 		if b == nil {
 			return errors.New(types.ErrCollectionNotExists)
+		}
+		data := b.Get([]byte(key))
+		if data != nil {
+			return errors.New(types.ErrEntityExists)
 		}
 		return b.Put([]byte(key), buf)
 	}); err != nil {
@@ -226,6 +230,9 @@ func decode(s serializer.Codec, value []byte, out interface{}) error {
 }
 
 func decodeList(codec serializer.Codec, items map[string][]byte, listOut interface{}) error {
+	if listOut == nil {
+		return errors.New(types.ErrStructOutIsInvalid)
+	}
 	v, err := converter.EnforcePtr(listOut)
 	if err != nil {
 		return errors.New(types.ErrStructOutIsInvalid)
