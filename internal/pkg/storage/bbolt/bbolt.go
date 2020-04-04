@@ -230,9 +230,6 @@ func decode(s serializer.Codec, value []byte, out interface{}) error {
 }
 
 func decodeList(codec serializer.Codec, items map[string][]byte, listOut interface{}) error {
-	if listOut == nil {
-		return errors.New(types.ErrStructOutIsInvalid)
-	}
 	v, err := converter.EnforcePtr(listOut)
 	if err != nil {
 		return errors.New(types.ErrStructOutIsInvalid)
