@@ -1,7 +1,8 @@
 ---
 # Runtime
 verbose: 3
-token: lstbknd
+security:
+  token: lstbknd
 workdir: "/private/var/lib/lastbackend/runtime/"
 
 api:

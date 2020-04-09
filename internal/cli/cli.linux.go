@@ -21,11 +21,12 @@ package cli
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/lastbackend/lastbackend/internal/cli/command"
 	"github.com/lastbackend/lastbackend/internal/cli/command/cluster"
 	"github.com/lastbackend/lastbackend/internal/cli/command/daemon"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 type CLI struct {

@@ -20,10 +20,10 @@ package daemon
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/cli/command"
 	"os"
 	"strings"
 
+	"github.com/lastbackend/lastbackend/internal/cli/command"
 	mo "github.com/lastbackend/lastbackend/internal/cli/command/daemon/master/options"
 	no "github.com/lastbackend/lastbackend/internal/cli/command/daemon/minion/options"
 	"github.com/lastbackend/lastbackend/internal/master"

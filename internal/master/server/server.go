@@ -38,12 +38,14 @@ import (
 	"github.com/lastbackend/lastbackend/internal/master/server/task"
 	"github.com/lastbackend/lastbackend/internal/master/server/volume"
 	"github.com/lastbackend/lastbackend/internal/master/state"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/internal/util/http"
 	"github.com/lastbackend/lastbackend/internal/util/http/cors"
 	"github.com/spf13/viper"
 )
+
+const defaultPort = 2967
 
 type HttpServer struct {
 	host string
@@ -72,6 +74,9 @@ func NewServer(state *state.State, stg storage.IStorage, v *viper.Viper) *HttpSe
 
 	hs.host = v.GetString("server.host")
 	hs.port = v.GetInt("server.port")
+	if hs.port == 0 {
+		hs.port = defaultPort
+	}
 
 	r := mux.NewRouter()
 	r.Methods("OPTIONS").HandlerFunc(cors.Headers)

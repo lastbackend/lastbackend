@@ -2,7 +2,8 @@
 
 # Runtime
 verbose: 3
-token: lstbknd
+security:
+  token: lstbknd
 
 # Cluster info
 name: "lastbackend"
@@ -24,6 +25,7 @@ storage:
 # Cluster http-server settings
 server:
   host: 0.0.0.0
+  port: 2967
   tls:
     insecure: true
 
