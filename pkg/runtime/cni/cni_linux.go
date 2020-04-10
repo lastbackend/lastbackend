@@ -24,6 +24,7 @@ import (
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni/local"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cni/vxlan"
 	"github.com/spf13/viper"
 )
 

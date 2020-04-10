@@ -28,6 +28,7 @@ import (
 )
 
 const (
+	DefaultNamespace   = "default"
 	ErrInvalidSelfLink = "invalid selflink"
 )
 

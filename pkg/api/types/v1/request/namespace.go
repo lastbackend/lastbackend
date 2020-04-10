@@ -24,7 +24,6 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/internal/util/resource"
 )
 
@@ -58,7 +57,7 @@ func (s *NamespaceManifest) ToYaml() ([]byte, error) {
 	return yaml.Marshal(s)
 }
 
-func (s *NamespaceManifest) SetNamespaceMeta(ns *types.NamespaceManifest) {
+func (s *NamespaceManifest) SetNamespaceMeta(ns *models.NamespaceManifest) {
 
 	if ns.Meta.Name == models.EmptyString {
 		ns.Meta.Name = *s.Meta.Name
@@ -76,7 +75,7 @@ func (s *NamespaceManifest) SetNamespaceMeta(ns *types.NamespaceManifest) {
 	}
 }
 
-func (s *NamespaceManifest) SetNamespaceSpec(ns *types.NamespaceManifest) error {
+func (s *NamespaceManifest) SetNamespaceSpec(ns *models.NamespaceManifest) error {
 
 	if s.Spec.Resources != nil {
 

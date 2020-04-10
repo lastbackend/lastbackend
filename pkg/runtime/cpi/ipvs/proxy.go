@@ -23,20 +23,20 @@ package ipvs
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cni/utils"
-	"github.com/spf13/viper"
-	"github.com/vishvananda/netlink"
-	"golang.org/x/sys/unix"
 	"net"
 	"os/exec"
 	"strings"
 	"syscall"
 
+	"github.com/lastbackend/lastbackend/pkg/runtime/cni/utils"
+	"github.com/spf13/viper"
+	"github.com/vishvananda/netlink"
+	"golang.org/x/sys/unix"
+
 	libipvs "github.com/docker/libnetwork/ipvs"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/network"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
 	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/vishvananda/netlink/nl"
 )
@@ -50,7 +50,6 @@ const (
 
 // Proxy balancer
 type Proxy struct {
-	cpi cpi.CPI
 	// IVPS cmd path
 	ipvs *libipvs.Handle
 	link netlink.Link

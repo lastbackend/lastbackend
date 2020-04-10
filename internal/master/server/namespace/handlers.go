@@ -27,7 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/internal/master/state"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+
 	h "github.com/lastbackend/lastbackend/internal/util/http"
 	"github.com/lastbackend/lastbackend/internal/util/http/util"
 	v1 "github.com/lastbackend/lastbackend/pkg/api/types/v1"
@@ -409,12 +409,12 @@ func (handler Handler) NamespaceResourceGetH(w http.ResponseWriter, r *http.Requ
 	name := util.Vars(r)["name"]
 
 	if len(namespace) == 0 {
-		namespace = types.DefaultNamespace
+		namespace = models.DefaultNamespace
 	}
 
 	log.Debugf("%s:info:> get namespace `%s`", logPrefix, namespace)
 
-	item, err := handler.state.Resource().Get(ctx, types.NewResourceSelfLink(namespace, resource, name))
+	item, err := handler.state.Resource().Get(ctx, models.NewResourceSelfLink(namespace, resource, name))
 	if err != nil {
 		errors.HTTP.NotFound(w)
 		return
@@ -523,7 +523,7 @@ func (handler Handler) NamespaceResourceRemoveH(w http.ResponseWriter, r *http.R
 
 	namespace := util.QueryString(r, "namespace")
 	if len(namespace) == 0 {
-		namespace = types.DefaultNamespace
+		namespace = models.DefaultNamespace
 	}
 
 	resource := util.Vars(r)["resource"]
@@ -531,7 +531,7 @@ func (handler Handler) NamespaceResourceRemoveH(w http.ResponseWriter, r *http.R
 
 	log.Debugf("%s:info:> get namespace `%s`", logPrefix, namespace)
 
-	item, err := handler.state.Resource().Del(ctx, types.NewResourceSelfLink(namespace, resource, name))
+	item, err := handler.state.Resource().Del(ctx, models.NewResourceSelfLink(namespace, resource, name))
 	if err != nil {
 		errors.HTTP.NotFound(w)
 		return

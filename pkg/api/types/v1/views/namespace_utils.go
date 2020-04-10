@@ -80,7 +80,7 @@ func (nv *NamespaceView) NewApplyStatus(status struct {
 	return &n
 }
 
-func (nv NamespaceView) NewList(items []*types.Namespace) *NamespaceList {
+func (nv NamespaceView) NewList(items []*models.Namespace) *NamespaceList {
 
 	n := make(NamespaceList, 0)
 	for _, v := range items {
@@ -89,25 +89,25 @@ func (nv NamespaceView) NewList(items []*types.Namespace) *NamespaceList {
 	return &n
 }
 
-func (n *NamespaceView) NewResource(obj types.NamespaceResource) NamespaceResource {
+func (n *NamespaceView) NewResource(obj models.NamespaceResource) NamespaceResource {
 	switch obj.Kind() {
-	case types.KindService:
-		return new(ServiceView).New(obj.(*types.Service))
+	case models.KindService:
+		return new(ServiceView).New(obj.(*models.Service))
 	}
 	return nil
 }
 
-func (n *NamespaceView) NewResourceList(objs types.NamespaceResourceList) NamespaceResourceList {
+func (n *NamespaceView) NewResourceList(objs models.NamespaceResourceList) NamespaceResourceList {
 
 	switch objs.Kind() {
-	case types.KindService:
-		return new(ServiceView).NewList(objs.(*types.ServiceList))
+	case models.KindService:
+		return new(ServiceView).NewList(objs.(*models.ServiceList))
 	}
 
 	return nil
 }
 
-func (r *Namespace) ToMeta(obj types.NamespaceMeta) NamespaceMeta {
+func (r *Namespace) ToMeta(obj models.NamespaceMeta) NamespaceMeta {
 	meta := NamespaceMeta{}
 	meta.Name = obj.Name
 	meta.Description = obj.Description
@@ -154,7 +154,7 @@ func (r *Namespace) ToEnv(obj models.NamespaceEnvs) NamespaceEnvs {
 	return envs
 }
 
-func (r *Namespace) ToResources(obj types.ResourceItem) *NamespaceQuota {
+func (r *Namespace) ToResources(obj models.ResourceItem) *NamespaceQuota {
 
 	if obj.RAM == 0 || obj.CPU == 0 || obj.Storage == 0 {
 		return nil

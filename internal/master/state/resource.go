@@ -20,34 +20,35 @@ package state
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type ResourceController struct {
 }
 
 // List method returns slice of namespace resources
-func (ns *ResourceController) List(ctx context.Context, filter *ResourceFilter) (types.NamespaceResource, error) {
+func (ns *ResourceController) List(ctx context.Context, filter *ResourceFilter) (models.NamespaceResource, error) {
 	return nil, nil
 }
 
 // Get method returns namespace resource
-func (ns *ResourceController) Get(ctx context.Context, selflink types.SelfLink) (types.NamespaceResource, error) {
+func (ns *ResourceController) Get(ctx context.Context, selflink models.SelfLink) (models.NamespaceResource, error) {
 	return nil, nil
 }
 
 // Put method insert namespace resource
-func (ns *ResourceController) Put(ctx context.Context, manifest types.NamespaceResourceManifest) (types.NamespaceResource, error) {
+func (ns *ResourceController) Put(ctx context.Context, manifest models.NamespaceResourceManifest) (models.NamespaceResource, error) {
 	return nil, nil
 }
 
 // Set method updates namespace resource
-func (ns *ResourceController) Set(ctx context.Context, manifest types.NamespaceResourceManifest) (types.NamespaceResource, error) {
+func (ns *ResourceController) Set(ctx context.Context, manifest models.NamespaceResourceManifest) (models.NamespaceResource, error) {
 	return nil, nil
 }
 
 // Del method removes namespace resource
-func (ns *ResourceController) Del(ctx context.Context, selflink types.SelfLink) (types.NamespaceResource, error) {
+func (ns *ResourceController) Del(ctx context.Context, selflink models.SelfLink) (models.NamespaceResource, error) {
 	return nil, nil
 }
 

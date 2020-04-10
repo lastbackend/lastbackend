@@ -22,11 +22,11 @@ package vxlan
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
 	"net"
 	"syscall"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni/utils"
 	"github.com/lastbackend/lastbackend/tools/log"
@@ -37,8 +37,6 @@ const NetworkType = "vxlan"
 const DefaultContainerDevice = "docker0"
 
 type Network struct {
-	cni.CNI
-
 	ExtIface *NetworkInterface
 	IntIface *NetworkInterface
 	Device   *Device

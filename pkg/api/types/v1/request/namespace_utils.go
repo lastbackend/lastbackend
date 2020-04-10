@@ -20,11 +20,12 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/internal/util/validator"
 	"io"
 	"io/ioutil"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/util/validator"
 )
 
 type NamespaceRequest struct{}
@@ -33,7 +34,7 @@ func (NamespaceRequest) Manifest() *NamespaceManifest {
 	return new(NamespaceManifest)
 }
 
-func (NamespaceRequest) ReadManifest(reader io.Reader) (types.NamespaceResourceManifest, *errors.Err) {
+func (NamespaceRequest) ReadManifest(reader io.Reader) (models.NamespaceResourceManifest, *errors.Err) {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -72,7 +73,7 @@ func (s *NamespaceManifest) Validate() *errors.Err {
 	return nil
 }
 
-func (s *NamespaceManifest) DecodeAndValidate(reader io.Reader) (*types.NamespaceManifest, *errors.Err) {
+func (s *NamespaceManifest) DecodeAndValidate(reader io.Reader) (*models.NamespaceManifest, *errors.Err) {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -93,7 +94,7 @@ func (s *NamespaceManifest) DecodeAndValidate(reader io.Reader) (*types.Namespac
 		return nil, err
 	}
 
-	ns := new(types.NamespaceManifest)
+	ns := new(models.NamespaceManifest)
 
 	s.SetNamespaceMeta(ns)
 	if err := s.SetNamespaceSpec(ns); err != nil {

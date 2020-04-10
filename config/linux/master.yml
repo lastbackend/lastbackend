@@ -1,0 +1,35 @@
+---
+
+# Runtime
+verbose: 3
+security:
+  token: lstbknd
+
+# Cluster info
+name: "lastbackend"
+description: "lastbackend cluster"
+
+# System domains settings
+domain:
+  internal: "lb.local"
+  external: "lastbackend.lbdp.io"
+
+# Etcd database
+storage:
+  driver: "etcd"
+  etcd:
+    prefix: lastbackend
+    endpoints:
+      - "127.0.0.1:2379"
+
+# Cluster http-server settings
+server:
+  host: 0.0.0.0
+  port: 2967
+  tls:
+    insecure: true
+
+# Last.Backend vault service settings
+vault:
+  endpoint: http://127.0.0.1:2965
+  token: d3ee20b4307141b8b52a6ba18029c88e
