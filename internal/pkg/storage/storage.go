@@ -19,10 +19,7 @@
 package storage
 
 import (
-	"context"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage/badger"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage/etcd"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage/etcd/v3"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage/bbolt"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/mock"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/types"
 	"github.com/spf13/viper"
@@ -52,37 +49,25 @@ const (
 	TestKind       types.Kind = "test"
 )
 
-type Storage interface {
-	Info(ctx context.Context, collection, name string) (*types.System, error)
-	Get(ctx context.Context, collection, name string, obj interface{}, opts *types.Opts) error
-	List(ctx context.Context, collection, q string, obj interface{}, opts *types.Opts) error
-	Map(ctx context.Context, collection, q string, obj interface{}, opts *types.Opts) error
-	Put(ctx context.Context, collection, name string, obj interface{}, opts *types.Opts) error
-	Set(ctx context.Context, collection, name string, obj interface{}, opts *types.Opts) error
-	Del(ctx context.Context, collection, name string) error
-	Watch(ctx context.Context, collection string, event chan *types.WatcherEvent, opts *types.Opts) error
-	Collection() types.Collection
-	Filter() types.Filter
+type IStorage interface {
+	List(collection string, listOutPtr interface{}) error
+	Get(collection, key string, outPtr interface{}) error
+	Set(collection, key string, obj interface{}) error
+	Put(collection, key string, obj interface{}) error
+	Del(collection, key string) error
+	Close() error
 }
 
-func Get(v *viper.Viper) (Storage, error) {
+func Get(v *viper.Viper) (IStorage, error) {
 
 	switch v.GetString("storage.driver") {
 	case "mock":
 		return mock.New()
-	case "etcd":
-		config := new(v3.Config)
-
-		config.Prefix = v.GetString("storage.etcd.prefix")
-		config.Endpoints = v.GetStringSlice("storage.etcd.endpoints")
-
-		config.TLS.CA = v.GetString("storage.etcd.tls.ca")
-		config.TLS.Cert = v.GetString("storage.etcd.tls.cert")
-		config.TLS.Key = v.GetString("storage.etcd.tls.key")
-
-		return etcd.New(config)
 	default:
-		return badger.New()
+		opts := bbolt.Options{
+			Path: v.GetString("storage.bbolt.path"),
+		}
+		return bbolt.New(opts)
 	}
 }
 

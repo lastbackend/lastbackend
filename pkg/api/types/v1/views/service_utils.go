@@ -21,7 +21,7 @@ package views
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"strconv"
 )
@@ -32,7 +32,7 @@ type ServiceView struct{}
 // SERVICE INFO MODEL
 // ***************************************************
 
-func (sv *ServiceView) New(srv *types.Service) *Service {
+func (sv *ServiceView) New(srv *models.Service) *Service {
 	s := new(Service)
 	s.Meta = s.ToMeta(srv.Meta)
 	s.Status = s.ToStatus(srv.Status)
@@ -40,7 +40,7 @@ func (sv *ServiceView) New(srv *types.Service) *Service {
 	return s
 }
 
-func (sv *ServiceView) NewWithDeployment(srv *types.Service) *Service {
+func (sv *ServiceView) NewWithDeployment(srv *models.Service) *Service {
 	s := new(Service)
 	s.Meta = s.ToMeta(srv.Meta)
 	s.Status = s.ToStatus(srv.Status)
@@ -48,7 +48,7 @@ func (sv *ServiceView) NewWithDeployment(srv *types.Service) *Service {
 	return s
 }
 
-func (sv *Service) ToMeta(obj types.ServiceMeta) ServiceMeta {
+func (sv *Service) ToMeta(obj models.ServiceMeta) ServiceMeta {
 	sm := ServiceMeta{
 		Name:        obj.Name,
 		Description: obj.Description,
@@ -68,14 +68,14 @@ func (sv *Service) ToMeta(obj types.ServiceMeta) ServiceMeta {
 	return sm
 }
 
-func (sv *Service) ToStatus(obj types.ServiceStatus) ServiceStatus {
+func (sv *Service) ToStatus(obj models.ServiceStatus) ServiceStatus {
 	return ServiceStatus{
 		State:   obj.State,
 		Message: obj.Message,
 	}
 }
 
-func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
+func (sv *Service) ToSpec(obj models.ServiceSpec) ServiceSpec {
 
 	mv := new(ManifestView)
 
@@ -95,7 +95,7 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 	return spec
 }
 
-func (sv *Service) ToDeployments(obj *types.DeploymentList) DeploymentMap {
+func (sv *Service) ToDeployments(obj *models.DeploymentList) DeploymentMap {
 	deployments := make(DeploymentMap, 0)
 	for _, d := range obj.Items {
 		if d.Meta.Namespace == sv.Meta.Namespace && d.Meta.Service == sv.Meta.Name {
@@ -260,7 +260,7 @@ func (sv Service) ToRequestManifest() *request.ServiceManifest {
 	return sm
 }
 
-func (sv *ServiceView) NewList(obj *types.ServiceList) *ServiceList {
+func (sv *ServiceView) NewList(obj *models.ServiceList) *ServiceList {
 	if obj == nil {
 		return nil
 	}

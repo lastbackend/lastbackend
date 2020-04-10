@@ -21,7 +21,7 @@ package views
 import (
 	"time"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type Container struct {
@@ -36,7 +36,7 @@ type Container struct {
 	// Container current state
 	Status string `json:"status"`
 	// Container ports mapping
-	Ports map[string][]*types.Port `json:"ports"`
+	Ports map[string][]*models.Port `json:"ports"`
 	// Container created time
 	Created time.Time `json:"created"`
 	// Container started time

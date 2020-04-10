@@ -38,12 +38,6 @@ func TestStorage_List(t *testing.T) {
 	storage.StorageListAssets(t, stg)
 }
 
-func TestStorage_Map(t *testing.T) {
-	stg, err := mock.New()
-	assert.NoError(t, err, "storage initialize err")
-	storage.StorageMapAssets(t, stg)
-}
-
 func TestStorage_Put(t *testing.T) {
 	stg, err := mock.New()
 	assert.NoError(t, err, "storage initialize err")

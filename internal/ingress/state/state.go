@@ -19,7 +19,7 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 const logLevel = 3
@@ -30,8 +30,8 @@ type State struct {
 }
 
 type IngressState struct {
-	Info   types.IngressInfo
-	Status types.IngressStatus
+	Info   models.IngressInfo
+	Status models.IngressStatus
 }
 
 func (s *State) Ingress() *IngressState {
@@ -48,8 +48,8 @@ func New() *State {
 		ingress: new(IngressState),
 		routes: &RouteState{
 			routes: make(map[string]struct {
-				status   *types.RouteStatus
-				manifest *types.RouteManifest
+				status   *models.RouteStatus
+				manifest *models.RouteManifest
 			}, 0),
 			watchers: make(map[chan string]bool, 0),
 		},

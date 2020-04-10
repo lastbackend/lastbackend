@@ -23,23 +23,22 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/minion/envs"
-	"github.com/shirou/gopsutil/cpu"
 	"os"
 	"syscall"
 	"unsafe"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/system"
+	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
 )
 
 const MinContainerMemory = 32
 
-func NodeInfo() types.NodeInfo {
+func (r Runtime) NodeInfo() models.NodeInfo {
 
 	var (
-		info = types.NodeInfo{}
+		info = models.NodeInfo{}
 	)
 
 	osInfo := system.GetOsInfo()
@@ -69,9 +68,9 @@ func NodeInfo() types.NodeInfo {
 	return info
 }
 
-func NodeStatus() types.NodeStatus {
+func (r Runtime) NodeStatus() models.NodeStatus {
 
-	var state = types.NodeStatus{}
+	var state = models.NodeStatus{}
 
 	state.Capacity = NodeCapacity()
 	state.Allocated = NodeAllocation()
@@ -79,7 +78,7 @@ func NodeStatus() types.NodeStatus {
 	return state
 }
 
-func NodeCapacity() types.NodeResources {
+func (r Runtime) NodeCapacity() models.NodeResources {
 
 	vmStat, err := mem.VirtualMemory()
 	if err != nil {
@@ -101,7 +100,7 @@ func NodeCapacity() types.NodeResources {
 
 	m := vmStat.Total
 
-	return types.NodeResources{
+	return models.NodeResources{
 		Storage:    int64(storage),
 		CPU:        int64(cpuStat[0].Mhz) * int64(1e6) * int64(cpuStat[0].Cores),
 		RAM:        int64(m),
@@ -110,7 +109,7 @@ func NodeCapacity() types.NodeResources {
 	}
 }
 
-func NodeAllocation() types.NodeResources {
+func (r Runtime) NodeAllocation() models.NodeResources {
 
 	vmStat, err := mem.VirtualMemory()
 	if err != nil {
@@ -120,7 +119,7 @@ func NodeAllocation() types.NodeResources {
 	m := vmStat.Free
 	s := envs.Get().GetState().Pods()
 
-	return types.NodeResources{
+	return models.NodeResources{
 		RAM:        int64(m),
 		CPU:        0, // TODO: need get cpu resource value
 		Pods:       s.GetPodsCount(),

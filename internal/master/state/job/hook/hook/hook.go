@@ -21,10 +21,10 @@ package hook
 import (
 	"github.com/lastbackend/lastbackend/internal/master/state/job/hook"
 	"github.com/lastbackend/lastbackend/internal/master/state/job/hook/http"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
-func New(hook types.JobSpecHook) (hook.Hook, error) {
+func New(hook models.JobSpecHook) (hook.Hook, error) {
 
 	if hook.Http != nil {
 		return http.New(hook.Http)

@@ -22,12 +22,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/api/envs"
-	"github.com/lastbackend/lastbackend/internal/master/http/config"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -35,9 +29,15 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/lastbackend/lastbackend/internal/api/envs"
+	"github.com/lastbackend/lastbackend/internal/master/http/config"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -60,12 +60,12 @@ func TestConfigList(t *testing.T) {
 	c1.Spec.Data["test.txt"] = "test1"
 	c2.Spec.Data["test.txt"] = "test2"
 
-	cl := types.NewConfigMap()
+	cl := models.NewConfigMap()
 	cl.Items[c1.SelfLink().String()] = c1
 	cl.Items[c2.SelfLink().String()] = c2
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
@@ -79,7 +79,7 @@ func TestConfigList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         *types.ConfigMap
+		want         *models.ConfigMap
 		wantErr      bool
 		expectedCode int
 	}{
@@ -95,10 +95,10 @@ func TestConfigList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Config(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Config(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -180,13 +180,13 @@ func TestConfigCreate(t *testing.T) {
 	ns1 := getNamespaceAsset("demo", "")
 
 	c1 := getConfigAsset(ns1, "demo")
-	c1.Meta.Kind = types.KindConfigText
+	c1.Meta.Kind = models.KindConfigText
 	c1.Spec.Data["test.txt"] = "test1"
 
 	mf1, _ := getConfigManifest(c1).ToJson()
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
@@ -230,10 +230,10 @@ func TestConfigCreate(t *testing.T) {
 
 	clear := func() {
 
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Config(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Config(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -281,7 +281,7 @@ func TestConfigCreate(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got := new(types.Config)
+				got := new(models.Config)
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Config(), tc.want.Meta.SelfLink, got, nil)
 				assert.NoError(t, err)
 
@@ -308,23 +308,23 @@ func TestConfigUpdate(t *testing.T) {
 	ns1 := getNamespaceAsset("demo", "")
 
 	c1 := getConfigAsset(ns1, "demo")
-	c1.Meta.Kind = types.KindConfigText
+	c1.Meta.Kind = models.KindConfigText
 	c1.Spec.Data["test.txt"] = "test1"
 
 	c2 := getConfigAsset(ns1, "demo")
-	c2.Meta.Kind = types.KindConfigText
+	c2.Meta.Kind = models.KindConfigText
 	c2.Spec.Data["test.txt"] = "test2"
 	c2.Spec.Data["test.cfg"] = "cfg"
 
 	mf2, _ := getConfigManifest(c2).ToJson()
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx    context.Context
-		config *types.Config
+		config *models.Config
 	}
 
 	tests := []struct {
@@ -352,10 +352,10 @@ func TestConfigUpdate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Config(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Config(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -433,21 +433,21 @@ func TestConfigRemove(t *testing.T) {
 	ns1 := getNamespaceAsset("demo", "")
 
 	c1 := getConfigAsset(ns1, "demo")
-	c1.Meta.Kind = types.KindConfigText
+	c1.Meta.Kind = models.KindConfigText
 	c1.Spec.Data["test.txt"] = "test1"
 
 	c2 := getConfigAsset(ns1, "test")
-	c2.Meta.Kind = types.KindConfigText
+	c2.Meta.Kind = models.KindConfigText
 	c2.Spec.Data["test.txt"] = "test2"
 	c2.Spec.Data["test.cfg"] = "cfg"
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx    context.Context
-		config *types.Config
+		config *models.Config
 	}
 
 	tests := []struct {
@@ -482,10 +482,10 @@ func TestConfigRemove(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Config(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Config(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -540,7 +540,7 @@ func TestConfigRemove(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got := new(types.Config)
+				got := new(models.Config)
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Config(),
 					tc.args.config.SelfLink().String(), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
@@ -554,7 +554,7 @@ func TestConfigRemove(t *testing.T) {
 
 }
 
-func getConfigManifest(s *types.Config) *request.ConfigManifest {
+func getConfigManifest(s *models.Config) *request.ConfigManifest {
 
 	smf := new(request.ConfigManifest)
 
@@ -569,21 +569,21 @@ func getConfigManifest(s *types.Config) *request.ConfigManifest {
 	return smf
 }
 
-func getNamespaceAsset(name, desc string) *types.Namespace {
-	var n = types.Namespace{}
+func getNamespaceAsset(name, desc string) *models.Namespace {
+	var n = models.Namespace{}
 	n.Meta.SetDefault()
 	n.Meta.Name = name
 	n.Meta.Description = desc
-	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
+	n.Meta.SelfLink = *models.NewNamespaceSelfLink(name)
 	return &n
 }
 
-func getConfigAsset(namespace *types.Namespace, name string) *types.Config {
-	var c = types.Config{}
+func getConfigAsset(namespace *models.Namespace, name string) *models.Config {
+	var c = models.Config{}
 	c.Meta.SetDefault()
 	c.Meta.Name = name
 	c.Meta.Namespace = namespace.Meta.Name
-	c.Meta.SelfLink = *types.NewConfigSelfLink(namespace.Meta.Name, name)
+	c.Meta.SelfLink = *models.NewConfigSelfLink(namespace.Meta.Name, name)
 	c.Spec.Data = make(map[string]string, 0)
 	return &c
 }

@@ -20,13 +20,14 @@ package secret
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/lastbackend/lastbackend/internal/api/envs"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/pkg/service"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/tools/log"
-	"net/http"
 )
 
 const (
@@ -34,9 +35,9 @@ const (
 	logLevel  = 3
 )
 
-func Fetch(ctx context.Context, namespace, name string) (*types.Secret, *errors.Err) {
+func Fetch(ctx context.Context, namespace, name string) (*models.Secret, *errors.Err) {
 
-	sm := model.NewSecretModel(ctx, envs.Get().GetStorage())
+	sm := service.NewSecretModel(ctx, envs.Get().GetStorage())
 	sct, err := sm.Get(namespace, name)
 
 	if err != nil {
@@ -53,7 +54,7 @@ func Fetch(ctx context.Context, namespace, name string) (*types.Secret, *errors.
 	return sct, nil
 }
 
-func Apply(ctx context.Context, ns *types.Namespace, mf *request.SecretManifest) (*types.Secret, *errors.Err) {
+func Apply(ctx context.Context, ns *models.Namespace, mf *request.SecretManifest) (*models.Secret, *errors.Err) {
 
 	if mf.Meta.Name == nil {
 		return nil, errors.New("secret").BadParameter("meta.name")
@@ -73,9 +74,9 @@ func Apply(ctx context.Context, ns *types.Namespace, mf *request.SecretManifest)
 	return Update(ctx, ns, sct, mf)
 }
 
-func Create(ctx context.Context, ns *types.Namespace, mf *request.SecretManifest) (*types.Secret, *errors.Err) {
+func Create(ctx context.Context, ns *models.Namespace, mf *request.SecretManifest) (*models.Secret, *errors.Err) {
 
-	sm := model.NewSecretModel(ctx, envs.Get().GetStorage())
+	sm := service.NewSecretModel(ctx, envs.Get().GetStorage())
 	if mf.Meta.Name != nil {
 
 		sc, err := sm.Get(ns.Meta.Name, *mf.Meta.Name)
@@ -90,9 +91,9 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.SecretManifest
 		}
 	}
 
-	sct := new(types.Secret)
+	sct := new(models.Secret)
 	sct.Meta.SetDefault()
-	sct.Meta.SelfLink = *types.NewSecretSelfLink(ns.Meta.Name, *mf.Meta.Name)
+	sct.Meta.SelfLink = *models.NewSecretSelfLink(ns.Meta.Name, *mf.Meta.Name)
 	sct.Meta.Namespace = ns.Meta.Name
 
 	mf.SetSecretMeta(sct)
@@ -106,9 +107,9 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.SecretManifest
 	return sct, nil
 }
 
-func Update(ctx context.Context, ns *types.Namespace, sct *types.Secret, mf *request.SecretManifest) (*types.Secret, *errors.Err) {
+func Update(ctx context.Context, ns *models.Namespace, sct *models.Secret, mf *request.SecretManifest) (*models.Secret, *errors.Err) {
 
-	sm := model.NewSecretModel(ctx, envs.Get().GetStorage())
+	sm := service.NewSecretModel(ctx, envs.Get().GetStorage())
 
 	mf.SetSecretMeta(sct)
 	mf.SetSecretSpec(sct)

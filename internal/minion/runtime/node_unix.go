@@ -23,11 +23,10 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/minion/envs"
 	"os"
 	"syscall"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/system"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
@@ -35,10 +34,10 @@ import (
 
 const MinContainerMemory uint64 = 32
 
-func NodeInfo() types.NodeInfo {
+func (r Runtime) NodeInfo() models.NodeInfo {
 
 	var (
-		info = types.NodeInfo{}
+		info = models.NodeInfo{}
 	)
 
 	osInfo := system.GetOsInfo()
@@ -47,18 +46,19 @@ func NodeInfo() types.NodeInfo {
 		_ = fmt.Errorf("get hostname err: %s", err)
 	}
 
-	ip, err := system.GetHostIP(envs.Get().GetConfig().Network.Interface)
-	if err != nil {
-		_ = fmt.Errorf("get ip err: %s", err)
-	}
+	// TODO: Set default network interface
+	//ip, err := system.GetHostIP(envs.Get().GetConfig().Network.Interface)
+	//if err != nil {
+	//	_ = fmt.Errorf("get ip err: %s", err)
+	//}
 
+	//info.ExternalIP = ip
 	info.Hostname = hostname
-	info.ExternalIP = ip
 	info.OSType = osInfo.GoOS
 	info.OSName = fmt.Sprintf("%s %s", osInfo.OS, osInfo.Core)
 	info.Architecture = osInfo.Platform
 
-	net := envs.Get().GetNet()
+	net := r.network
 	if net != nil {
 		nt := net.Info(context.Background())
 		info.InternalIP = nt.IP
@@ -68,17 +68,17 @@ func NodeInfo() types.NodeInfo {
 	return info
 }
 
-func NodeStatus() types.NodeStatus {
+func (r Runtime) NodeStatus() models.NodeStatus {
 
-	var state = types.NodeStatus{}
+	var state = models.NodeStatus{}
 
-	state.Capacity = NodeCapacity()
-	state.Allocated = NodeAllocation()
+	state.Capacity = r.NodeCapacity()
+	state.Allocated = r.NodeAllocation()
 
 	return state
 }
 
-func NodeCapacity() types.NodeResources {
+func (r Runtime) NodeCapacity() models.NodeResources {
 
 	vmStat, err := mem.VirtualMemory()
 	if err != nil {
@@ -92,13 +92,14 @@ func NodeCapacity() types.NodeResources {
 
 	var stat syscall.Statfs_t
 
-	syscall.Statfs(envs.Get().GetConfig().Container.Csi.Dir.Root, &stat)
+	// TODO: Set default container storage interface
+	//syscall.Statfs(envs.Get().GetConfig().Container.Csi.Dir.Root, &stat)
 
 	// Available blocks * size per block = available space in bytes
 	storage := stat.Blocks * uint64(stat.Bsize)
 	m := vmStat.Total
 
-	return types.NodeResources{
+	return models.NodeResources{
 		Storage:    int64(storage),
 		RAM:        int64(m),
 		CPU:        int64(cpuStat[0].Mhz) * int64(1e6) * int64(cpuStat[0].Cores),
@@ -107,11 +108,11 @@ func NodeCapacity() types.NodeResources {
 	}
 }
 
-func NodeAllocation() types.NodeResources {
+func (r Runtime) NodeAllocation() models.NodeResources {
 
-	s := envs.Get().GetState().Pods()
+	s := r.state.Pods()
 
-	return types.NodeResources{
+	return models.NodeResources{
 		RAM:        0,
 		CPU:        0, // TODO: need get cpu resource value
 		Pods:       s.GetPodsCount(),

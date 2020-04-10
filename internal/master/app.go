@@ -62,6 +62,7 @@ func New(v *viper.Viper) (*App, error) {
 
 func (app App) Run() error {
 	log := logger.WithContext(context.Background())
+
 	log.Infof("Run master service")
 
 	go func() {

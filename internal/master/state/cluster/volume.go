@@ -23,9 +23,8 @@ import (
 	"time"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -33,42 +32,42 @@ const (
 	logPrefixVolume = "observer:cluster:volume"
 )
 
-func volumeObserve(ss *ClusterState, d *types.Volume) error {
+func volumeObserve(ss *ClusterState, d *models.Volume) error {
 
 	log.V(logLevel).Debugf("%s:> observe start: %s > %s", logPrefixVolume, d.SelfLink().String(), d.Status.State)
 
 	switch d.Status.State {
-	case types.StateCreated:
+	case models.StateCreated:
 		if err := handleVolumeStateCreated(ss, d); err != nil {
 			log.Errorf("%s:> handle volume state create err: %s", logPrefixVolume, err.Error())
 			return err
 		}
 		break
-	case types.StateProvision:
+	case models.StateProvision:
 		if err := handleVolumeStateProvision(ss, d); err != nil {
 			log.Errorf("%s:> handle volume state provision err: %s", logPrefixVolume, err.Error())
 			return err
 		}
 		break
-	case types.StateReady:
+	case models.StateReady:
 		if err := handleVolumeStateReady(ss, d); err != nil {
 			log.Errorf("%s:> handle volume state ready err: %s", logPrefixVolume, err.Error())
 			return err
 		}
 		break
-	case types.StateError:
+	case models.StateError:
 		if err := handleVolumeStateError(ss, d); err != nil {
 			log.Errorf("%s:> handle volume state error err: %s", logPrefixVolume, err.Error())
 			return err
 		}
 		break
-	case types.StateDestroy:
+	case models.StateDestroy:
 		if err := handleVolumeStateDestroy(ss, d); err != nil {
 			log.Errorf("%s:> handle volume state destroy err: %s", logPrefixVolume, err.Error())
 			return err
 		}
 		break
-	case types.StateDestroyed:
+	case models.StateDestroyed:
 		if err := handleVolumeStateDestroyed(ss, d); err != nil {
 			log.Errorf("%s:> handle volume state destroyed err: %s", logPrefixVolume, err.Error())
 			return err
@@ -76,7 +75,7 @@ func volumeObserve(ss *ClusterState, d *types.Volume) error {
 		break
 	}
 
-	if d.Status.State == types.StateDestroyed {
+	if d.Status.State == models.StateDestroyed {
 		delete(ss.volume.list, d.SelfLink().String())
 	} else {
 		ss.volume.list[d.SelfLink().String()] = d
@@ -93,7 +92,7 @@ func volumeObserve(ss *ClusterState, d *types.Volume) error {
 	return nil
 }
 
-func handleVolumeStateCreated(cs *ClusterState, v *types.Volume) error {
+func handleVolumeStateCreated(cs *ClusterState, v *models.Volume) error {
 	log.V(logLevel).Debugf("%s:> handleVolumeStateCreated: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 
 	if err := volumeProvision(cs, v); err != nil {
@@ -102,7 +101,7 @@ func handleVolumeStateCreated(cs *ClusterState, v *types.Volume) error {
 	return nil
 }
 
-func handleVolumeStateProvision(cs *ClusterState, v *types.Volume) error {
+func handleVolumeStateProvision(cs *ClusterState, v *models.Volume) error {
 	log.V(logLevel).Debugf("%s:> handleVolumeStateProvision: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 
 	if err := volumeProvision(cs, v); err != nil {
@@ -111,17 +110,17 @@ func handleVolumeStateProvision(cs *ClusterState, v *types.Volume) error {
 	return nil
 }
 
-func handleVolumeStateReady(cs *ClusterState, v *types.Volume) error {
+func handleVolumeStateReady(cs *ClusterState, v *models.Volume) error {
 	log.V(logLevel).Debugf("%s:> handleVolumeStateReady: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 	return nil
 }
 
-func handleVolumeStateError(cs *ClusterState, v *types.Volume) error {
+func handleVolumeStateError(cs *ClusterState, v *models.Volume) error {
 	log.V(logLevel).Debugf("%s:> handleVolumeStateError: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 	return nil
 }
 
-func handleVolumeStateDestroy(cs *ClusterState, v *types.Volume) error {
+func handleVolumeStateDestroy(cs *ClusterState, v *models.Volume) error {
 	log.V(logLevel).Debugf("%s:> handleVolumeStateDestroy: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 
 	if err := volumeDestroy(cs, v); err != nil {
@@ -132,7 +131,7 @@ func handleVolumeStateDestroy(cs *ClusterState, v *types.Volume) error {
 	return nil
 }
 
-func handleVolumeStateDestroyed(cs *ClusterState, v *types.Volume) error {
+func handleVolumeStateDestroyed(cs *ClusterState, v *models.Volume) error {
 	log.V(logLevel).Debugf("%s:> handleVolumeStateDestroyed: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 
 	if err := volumeRemove(cs, v); err != nil {
@@ -143,10 +142,10 @@ func handleVolumeStateDestroyed(cs *ClusterState, v *types.Volume) error {
 	return nil
 }
 
-func volumeUpdate(stg storage.Storage, v *types.Volume, timestamp time.Time) error {
+func volumeUpdate(stg storage.IStorage, v *models.Volume, timestamp time.Time) error {
 
 	if timestamp.Before(v.Meta.Updated) {
-		vm := model.NewVolumeModel(context.Background(), stg)
+		vm := service.NewVolumeModel(context.Background(), stg)
 		if err := vm.Update(v); err != nil {
 			log.Errorf("%s", err.Error())
 			return err
@@ -156,7 +155,7 @@ func volumeUpdate(stg storage.Storage, v *types.Volume, timestamp time.Time) err
 	return nil
 }
 
-func volumeProvision(cs *ClusterState, volume *types.Volume) (err error) {
+func volumeProvision(cs *ClusterState, volume *models.Volume) (err error) {
 
 	t := volume.Meta.Updated
 
@@ -166,9 +165,9 @@ func volumeProvision(cs *ClusterState, volume *types.Volume) (err error) {
 		}
 	}()
 
-	if volume.Meta.Node != types.EmptyString {
+	if volume.Meta.Node != models.EmptyString {
 		log.Debugf("%s:> volume manifest create: %s", logPrefixVolume, volume.SelfLink())
-		vm := model.NewVolumeModel(context.Background(), cs.storage)
+		vm := service.NewVolumeModel(context.Background(), cs.storage)
 		mf, err := vm.ManifestGet(volume.Meta.Node, volume.SelfLink().String())
 		if err != nil {
 			log.Errorf("%s:> volume manifest create err: %s", logPrefixVolume, err.Error())
@@ -189,15 +188,15 @@ func volumeProvision(cs *ClusterState, volume *types.Volume) (err error) {
 			}
 		}
 
-		if volume.Status.State != types.StateProvision {
-			volume.Status.State = types.StateProvision
+		if volume.Status.State != models.StateProvision {
+			volume.Status.State = models.StateProvision
 			volume.Meta.Updated = time.Now()
 		}
 
 		return nil
 	}
 
-	if volume.Meta.Node == types.EmptyString {
+	if volume.Meta.Node == models.EmptyString {
 
 		log.Debugf("%s:> volume provision > find node: %s", logPrefixVolume, volume.SelfLink().String())
 
@@ -209,7 +208,7 @@ func volumeProvision(cs *ClusterState, volume *types.Volume) (err error) {
 
 		if node == nil {
 			log.Debugf("%s:> volume provision > node not found: %s", logPrefixVolume, volume.SelfLink().String())
-			volume.Status.State = types.StateError
+			volume.Status.State = models.StateError
 			volume.Status.Message = errors.NodeNotFound
 			volume.Meta.Updated = time.Now()
 			return nil
@@ -226,15 +225,15 @@ func volumeProvision(cs *ClusterState, volume *types.Volume) (err error) {
 		return err
 	}
 
-	if volume.Status.State != types.StateProvision {
-		volume.Status.State = types.StateProvision
+	if volume.Status.State != models.StateProvision {
+		volume.Status.State = models.StateProvision
 		volume.Meta.Updated = time.Now()
 	}
 
 	return nil
 }
 
-func volumeDestroy(cs *ClusterState, volume *types.Volume) (err error) {
+func volumeDestroy(cs *ClusterState, volume *models.Volume) (err error) {
 
 	t := volume.Meta.Updated
 
@@ -245,25 +244,25 @@ func volumeDestroy(cs *ClusterState, volume *types.Volume) (err error) {
 	}()
 
 	if volume.Spec.State.Destroy {
-		if volume.Meta.Node == types.EmptyString {
-			volume.Status.State = types.StateDestroyed
+		if volume.Meta.Node == models.EmptyString {
+			volume.Status.State = models.StateDestroyed
 			volume.Meta.Updated = time.Now()
 			return nil
 		}
 	} else {
 		volume.Spec.State.Destroy = true
-		volume.Status.State = types.StateDestroy
+		volume.Status.State = models.StateDestroy
 		volume.Meta.Updated = time.Now()
 	}
 
-	if volume.Status.State != types.StateDestroy {
-		volume.Status.State = types.StateDestroy
+	if volume.Status.State != models.StateDestroy {
+		volume.Status.State = models.StateDestroy
 		volume.Meta.Updated = time.Now()
 	}
 
 	if err = volumeManifestSet(cs.storage, volume); err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
-			if volume.Meta.Node != types.EmptyString {
+			if volume.Meta.Node != models.EmptyString {
 				if _, err := cs.VolumeRelease(volume); err != nil {
 					if !errors.Storage().IsErrEntityNotFound(err) {
 						return err
@@ -273,7 +272,7 @@ func volumeDestroy(cs *ClusterState, volume *types.Volume) (err error) {
 				return nil
 			}
 
-			volume.Status.State = types.StateDestroyed
+			volume.Status.State = models.StateDestroyed
 			volume.Meta.Updated = time.Now()
 			return nil
 		}
@@ -281,17 +280,17 @@ func volumeDestroy(cs *ClusterState, volume *types.Volume) (err error) {
 		return err
 	}
 
-	if volume.Meta.Node == types.EmptyString {
-		volume.Status.State = types.StateDestroyed
+	if volume.Meta.Node == models.EmptyString {
+		volume.Status.State = models.StateDestroyed
 		volume.Meta.Updated = time.Now()
 	}
 
 	return nil
 }
 
-func volumeRemove(cs *ClusterState, volume *types.Volume) (err error) {
+func volumeRemove(cs *ClusterState, volume *models.Volume) (err error) {
 
-	vm := model.NewVolumeModel(context.Background(), cs.storage)
+	vm := service.NewVolumeModel(context.Background(), cs.storage)
 	if _, err = cs.VolumeRelease(volume); err != nil {
 		return err
 	}
@@ -300,7 +299,7 @@ func volumeRemove(cs *ClusterState, volume *types.Volume) (err error) {
 		return err
 	}
 
-	volume.Meta.Node = types.EmptyString
+	volume.Meta.Node = models.EmptyString
 	volume.Meta.Updated = time.Now()
 
 	if err = vm.Remove(volume); err != nil {
@@ -312,11 +311,11 @@ func volumeRemove(cs *ClusterState, volume *types.Volume) (err error) {
 	return nil
 }
 
-func volumeManifestAdd(stg storage.Storage, vol *types.Volume) error {
+func volumeManifestAdd(stg storage.IStorage, vol *models.Volume) error {
 
 	log.V(logLevel).Debugf("%s: create volume manifest for node: %s", logPrefixVolume, vol.SelfLink().String())
 
-	var vm = new(types.VolumeManifest)
+	var vm = new(models.VolumeManifest)
 
 	vm.State.Destroy = false
 	vm.Type = vol.Spec.Type
@@ -324,7 +323,7 @@ func volumeManifestAdd(stg storage.Storage, vol *types.Volume) error {
 	vm.HostPath = vol.Spec.HostPath
 	vm.Capacity.Storage = vol.Spec.Capacity.Storage
 
-	im := model.NewVolumeModel(context.Background(), stg)
+	im := service.NewVolumeModel(context.Background(), stg)
 	if err := im.ManifestAdd(vol.Meta.Node, vol.SelfLink().String(), vm); err != nil {
 		log.Errorf("%s:> volume manifest create err: %s", logPrefixVolume, err.Error())
 		return err
@@ -333,14 +332,14 @@ func volumeManifestAdd(stg storage.Storage, vol *types.Volume) error {
 	return nil
 }
 
-func volumeManifestSet(stg storage.Storage, vol *types.Volume) error {
+func volumeManifestSet(stg storage.IStorage, vol *models.Volume) error {
 
 	var (
-		m   *types.VolumeManifest
+		m   *models.VolumeManifest
 		err error
 	)
 
-	im := model.NewVolumeModel(context.Background(), stg)
+	im := service.NewVolumeModel(context.Background(), stg)
 
 	m, err = im.ManifestGet(vol.Meta.Node, vol.Meta.SelfLink.String())
 	if err != nil {
@@ -350,10 +349,10 @@ func volumeManifestSet(stg storage.Storage, vol *types.Volume) error {
 	// Update manifest
 	if m == nil {
 		log.V(logLevel).Debugf("%s: create volume for node: %s", logPrefixVolume, vol.SelfLink().String())
-		ms := types.VolumeManifest(vol.Spec)
+		ms := models.VolumeManifest(vol.Spec)
 		m = &ms
 	} else {
-		*m = types.VolumeManifest(vol.Spec)
+		*m = models.VolumeManifest(vol.Spec)
 	}
 
 	if err := im.ManifestSet(vol.Meta.Node, vol.SelfLink().String(), m); err != nil {
@@ -363,14 +362,14 @@ func volumeManifestSet(stg storage.Storage, vol *types.Volume) error {
 	return nil
 }
 
-func volumeManifestDel(stg storage.Storage, vol *types.Volume) error {
+func volumeManifestDel(stg storage.IStorage, vol *models.Volume) error {
 
-	if vol.Meta.Node == types.EmptyString {
+	if vol.Meta.Node == models.EmptyString {
 		return nil
 	}
 
 	// Remove manifest
-	vm := model.NewVolumeModel(context.Background(), stg)
+	vm := service.NewVolumeModel(context.Background(), stg)
 	err := vm.ManifestDel(vol.Meta.Node, vol.SelfLink().String())
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
@@ -381,7 +380,7 @@ func volumeManifestDel(stg storage.Storage, vol *types.Volume) error {
 	return nil
 }
 
-func volumeManifestCheckEqual(mf *types.VolumeManifest, vol *types.Volume) bool {
+func volumeManifestCheckEqual(mf *models.VolumeManifest, vol *models.Volume) bool {
 
 	if mf.Capacity.Storage != vol.Spec.Capacity.Storage {
 		return false

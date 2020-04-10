@@ -30,7 +30,7 @@ const (
 
 // State main structure
 type State struct {
-	storage storage.Storage
+	storage storage.IStorage
 
 	Namespace *NamespaceController
 	Service   *ServiceController
@@ -43,7 +43,7 @@ func (s *State) Resource() *ResourceController {
 }
 
 // NewState function returns new instance of state
-func NewState(ctx context.Context, stg storage.Storage) *State {
+func NewState(ctx context.Context, stg storage.IStorage) *State {
 
 	var state = new(State)
 

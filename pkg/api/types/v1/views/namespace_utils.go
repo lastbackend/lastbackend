@@ -24,12 +24,12 @@ import (
 
 	"github.com/lastbackend/lastbackend/internal/util/resource"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type NamespaceView struct{}
 
-func (nv *NamespaceView) New(obj *types.Namespace) *Namespace {
+func (nv *NamespaceView) New(obj *models.Namespace) *Namespace {
 	n := Namespace{}
 	n.Meta = n.ToMeta(obj.Meta)
 	n.Status = n.ToStatus(obj.Status)
@@ -124,7 +124,7 @@ func (r *Namespace) ToMeta(obj types.NamespaceMeta) NamespaceMeta {
 	return meta
 }
 
-func (r *Namespace) ToSpec(spec types.NamespaceSpec) NamespaceSpec {
+func (r *Namespace) ToSpec(spec models.NamespaceSpec) NamespaceSpec {
 	return NamespaceSpec{
 		Resources: NamespaceQuotas{
 			Limits:  r.ToResources(spec.Resources.Limits),
@@ -138,7 +138,7 @@ func (r *Namespace) ToSpec(spec types.NamespaceSpec) NamespaceSpec {
 	}
 }
 
-func (r *Namespace) ToStatus(status types.NamespaceStatus) NamespaceStatus {
+func (r *Namespace) ToStatus(status models.NamespaceStatus) NamespaceStatus {
 	return NamespaceStatus{
 		Resources: NamespaceStatusResources{
 			Allocated: r.ToResources(status.Resources.Allocated),
@@ -146,7 +146,7 @@ func (r *Namespace) ToStatus(status types.NamespaceStatus) NamespaceStatus {
 	}
 }
 
-func (r *Namespace) ToEnv(obj types.NamespaceEnvs) NamespaceEnvs {
+func (r *Namespace) ToEnv(obj models.NamespaceEnvs) NamespaceEnvs {
 	envs := make(NamespaceEnvs, 0)
 	for _, env := range obj {
 		envs = append(envs, fmt.Sprintf("%s=%s", env.Name, env.Value))

@@ -20,7 +20,7 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"io"
 	"io/ioutil"
 
@@ -35,7 +35,7 @@ func (VolumeRequest) Manifest() *VolumeManifest {
 
 func (v *VolumeManifest) Validate() *errors.Err {
 
-	if v.Spec.Type == types.EmptyString {
+	if v.Spec.Type == models.EmptyString {
 		return errors.BadParameter("spec.type")
 	}
 

@@ -20,18 +20,18 @@ package runtime
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/minion/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"strings"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const (
 	logVolumePrefix = "node:runtime:volume:>"
 )
 
-func VolumeManage(ctx context.Context, key string, manifest *types.VolumeManifest) error {
+func (r Runtime) VolumeManage(ctx context.Context, key string, manifest *models.VolumeManifest) error {
 
 	log.V(logLevel).Debugf("%s provision volume: %s", logVolumePrefix, key)
 
@@ -42,25 +42,25 @@ func VolumeManage(ctx context.Context, key string, manifest *types.VolumeManifes
 	// Call destroy volume
 	if manifest.State.Destroy {
 
-		v := envs.Get().GetState().Volumes().GetVolume(key)
+		v := r.state.Volumes().GetVolume(key)
 		if v == nil {
 
-			vs := types.NewVolumeStatus()
+			vs := models.NewVolumeStatus()
 			vs.SetDestroyed()
-			envs.Get().GetState().Volumes().AddVolume(key, vs)
+			r.state.Volumes().AddVolume(key, vs)
 
 			return nil
 		}
 
 		log.V(logLevel).Debugf("%s volume found > destroy it: %s", logVolumePrefix, key)
 
-		if err := VolumeDestroy(ctx, key); err != nil {
+		if err := r.VolumeDestroy(ctx, key); err != nil {
 			log.Errorf("%s can not destroy volume: %s", logVolumePrefix, err.Error())
 			return err
 		}
 
 		v.SetDestroyed()
-		envs.Get().GetState().Volumes().SetVolume(key, v)
+		r.state.Volumes().SetVolume(key, v)
 		return nil
 	}
 
@@ -69,36 +69,37 @@ func VolumeManage(ctx context.Context, key string, manifest *types.VolumeManifes
 	//==========================================================================
 
 	// Get volume list from current state
-	v := envs.Get().GetState().Volumes().GetVolume(key)
+	v := r.state.Volumes().GetVolume(key)
 	if v != nil {
-		if v.State != types.StateDestroyed {
+		if v.State != models.StateDestroyed {
 			return nil
 		}
 	}
 
 	log.V(logLevel).Debugf("%s volume not found > create it: %s", logVolumePrefix, key)
 
-	status, err := VolumeCreate(ctx, key, manifest)
+	status, err := r.VolumeCreate(ctx, key, manifest)
 	if err != nil {
 		log.Errorf("%s can not create volume: %s err: %s", logVolumePrefix, key, err.Error())
 		status.SetError(err)
 	}
 
-	envs.Get().GetState().Volumes().SetVolume(key, status)
+	r.state.Volumes().SetVolume(key, status)
 	return nil
 }
 
-func VolumeCreate(ctx context.Context, name string, mf *types.VolumeManifest) (*types.VolumeStatus, error) {
+func (r Runtime) VolumeCreate(ctx context.Context, name string, mf *models.VolumeManifest) (*models.VolumeStatus, error) {
 
-	var status = new(types.VolumeStatus)
+	var status = new(models.VolumeStatus)
 
 	log.V(logLevel).Debugf("%s create volume: %s", logVolumePrefix, mf)
-	if mf.Type == types.EmptyString {
-		mf.Type = types.KindVolumeHostDir
+	if mf.Type == models.EmptyString {
+		mf.Type = models.KindVolumeHostDir
 	}
 
-	si, err := envs.Get().GetCSI(mf.Type)
-	if err != nil {
+	si, ok := r.csi[mf.Type]
+	if !ok {
+		err := errors.New("storage container interface not supported")
 		log.Errorf("%s can-not get storage interface: %s", logVolumePrefix, err)
 		return nil, err
 	}
@@ -110,31 +111,32 @@ func VolumeCreate(ctx context.Context, name string, mf *types.VolumeManifest) (*
 	}
 
 	if st.Ready {
-		status.State = types.StateReady
+		status.State = models.StateReady
 	}
 
 	status.Status = *st
-	envs.Get().GetState().Volumes().AddVolume(name, status)
+	r.state.Volumes().AddVolume(name, status)
 
 	return status, nil
 }
 
-func VolumeDestroy(ctx context.Context, name string) error {
+func (r Runtime) VolumeDestroy(ctx context.Context, name string) error {
 
 	log.V(logLevel).Debugf("%s destroy volume: %s", logVolumePrefix, name)
 
-	vol := envs.Get().GetState().Volumes().GetVolume(name)
+	vol := r.state.Volumes().GetVolume(name)
 
 	if vol == nil {
 		return nil
 	}
 
-	if vol.Status.Type == types.EmptyString {
-		vol.Status.Type = types.KindVolumeHostDir
+	if vol.Status.Type == models.EmptyString {
+		vol.Status.Type = models.KindVolumeHostDir
 	}
 
-	si, err := envs.Get().GetCSI(vol.Status.Type)
-	if err != nil {
+	si, ok := r.csi[vol.Status.Type]
+	if !ok {
+		err := errors.New("storage container interface not supported")
 		log.Errorf("%s remove volume failed: %s", logVolumePrefix, err.Error())
 		return err
 	}
@@ -144,22 +146,21 @@ func VolumeDestroy(ctx context.Context, name string) error {
 	}
 
 	vol.SetDestroyed()
-	envs.Get().GetState().Volumes().SetVolume(name, vol)
+	r.state.Volumes().SetVolume(name, vol)
 
 	return nil
 }
 
-func VolumeRestore(ctx context.Context) error {
+func (r Runtime) VolumeRestore(ctx context.Context) error {
 
 	log.Debugf("%s start volumes restore", logVolumePrefix)
 
-	tp := envs.Get().ListCSI()
-
-	for _, t := range tp {
+	for t := range r.csi {
 
 		log.Debugf("%s restore volumes type: %s", logVolumePrefix, t)
-		sci, err := envs.Get().GetCSI(t)
-		if err != nil {
+		sci, ok := r.csi[t]
+		if !ok {
+			err := errors.New("storage container interface not supported")
 			log.Errorf("%s storage interface init err: %s", logVolumePrefix, err.Error())
 			return err
 		}
@@ -175,12 +176,12 @@ func VolumeRestore(ctx context.Context) error {
 		}
 
 		for name, state := range states {
-			status := new(types.VolumeStatus)
+			status := new(models.VolumeStatus)
 			if state.Ready {
-				status.State = types.StateReady
+				status.State = models.StateReady
 			}
 			status.Status = *state
-			envs.Get().GetState().Volumes().SetVolume(strings.Replace(name, "_", ":", -1), status)
+			r.state.Volumes().SetVolume(strings.Replace(name, "_", ":", -1), status)
 		}
 
 	}
@@ -188,45 +189,46 @@ func VolumeRestore(ctx context.Context) error {
 	return nil
 }
 
-func VolumeSetSecretData(ctx context.Context, name string, secret string) error {
+func (r Runtime) VolumeSetSecretData(ctx context.Context, name string, secret string) error {
 	log.Debugf("%s volume set secret data: %s > %s", logVolumePrefix, secret, name)
 	return nil
 }
 
-func VolumeCheckSecretData(ctx context.Context, name string, secret string) (bool, error) {
+func (r Runtime) VolumeCheckSecretData(ctx context.Context, name string, secret string) (bool, error) {
 	log.Debugf("%s volume check secret data: %s > %s", logVolumePrefix, secret, name)
 	return true, nil
 }
 
-func VolumeCheckConfigData(ctx context.Context, name string, config string) (bool, error) {
+func (r Runtime) VolumeCheckConfigData(ctx context.Context, name string, config string) (bool, error) {
 	log.Debugf("%s volume check config data: %s > %s", logVolumePrefix, config, name)
 
-	vol := envs.Get().GetState().Volumes().GetVolume(name)
-	cfg := envs.Get().GetState().Configs().GetConfig(config)
+	vol := r.state.Volumes().GetVolume(name)
+	cfg := r.state.Configs().GetConfig(config)
 
 	if vol == nil {
 		return false, errors.New("volume not exists")
 	}
 
-	if vol.Status.Type == types.EmptyString {
-		vol.Status.Type = types.KindVolumeHostDir
+	if vol.Status.Type == models.EmptyString {
+		vol.Status.Type = models.KindVolumeHostDir
 	}
 
-	si, err := envs.Get().GetCSI(vol.Status.Type)
-	if err != nil {
-		log.Errorf("%s remove volume failed: %s", logVolumePrefix, err.Error())
+	si, ok := r.csi[vol.Status.Type]
+	if !ok {
+		err := errors.New("storage container interface not supported")
+		log.Errorf("%s remove volume failed: %s", logVolumePrefix, err)
 		return false, err
 	}
 
 	return si.FilesCheck(ctx, &vol.Status, cfg.Data)
 }
 
-func VolumeSetConfigData(ctx context.Context, name string, config string) error {
+func (r Runtime) VolumeSetConfigData(ctx context.Context, name string, config string) error {
 
 	log.Debugf("%s set volume config data: %s > %s", logVolumePrefix, config, name)
 
-	vol := envs.Get().GetState().Volumes().GetVolume(name)
-	cfg := envs.Get().GetState().Configs().GetConfig(config)
+	vol := r.state.Volumes().GetVolume(name)
+	cfg := r.state.Configs().GetConfig(config)
 
 	if vol == nil {
 		return errors.New("volume not exists")
@@ -236,13 +238,14 @@ func VolumeSetConfigData(ctx context.Context, name string, config string) error 
 		return errors.New("config not exists")
 	}
 
-	if vol.Status.Type == types.EmptyString {
-		vol.Status.Type = types.KindVolumeHostDir
+	if vol.Status.Type == models.EmptyString {
+		vol.Status.Type = models.KindVolumeHostDir
 	}
 
-	si, err := envs.Get().GetCSI(vol.Status.Type)
-	if err != nil {
-		log.Errorf("%s remove volume failed: %s", logVolumePrefix, err.Error())
+	si, ok := r.csi[vol.Status.Type]
+	if !ok {
+		err := errors.New("storage container interface not supported")
+		log.Errorf("%s remove volume failed: %v", logVolumePrefix, err)
 		return err
 	}
 

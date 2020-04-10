@@ -22,14 +22,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/system"
 )
 
-func (r *Runtime) DiscoveryInfo() types.DiscoveryInfo {
+func (r *Runtime) DiscoveryInfo() models.DiscoveryInfo {
 
 	var (
-		info = types.DiscoveryInfo{}
+		info = models.DiscoveryInfo{}
 	)
 
 	osInfo := system.GetOsInfo()
@@ -52,9 +52,9 @@ func (r *Runtime) DiscoveryInfo() types.DiscoveryInfo {
 	return info
 }
 
-func (r *Runtime) DiscoveryStatus() types.DiscoveryStatus {
+func (r *Runtime) DiscoveryStatus() models.DiscoveryStatus {
 
-	var state = types.DiscoveryStatus{}
+	var state = models.DiscoveryStatus{}
 
 	ip, err := system.GetHostIP(r.opts.Iface)
 	if err != nil {

@@ -20,15 +20,14 @@ package service
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/master/ipam"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/lastbackend/lastbackend/internal/master/ipam"
 	"github.com/lastbackend/lastbackend/internal/master/state/cluster"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -40,30 +39,30 @@ const (
 type ServiceState struct {
 	lock sync.Mutex
 
-	storage storage.Storage
+	storage storage.IStorage
 	ipam    ipam.IPAM
 
 	cluster  *cluster.ClusterState
-	service  *types.Service
+	service  *models.Service
 	endpoint struct {
-		endpoint *types.Endpoint
-		manifest *types.EndpointManifest
+		endpoint *models.Endpoint
+		manifest *models.EndpointManifest
 	}
 
 	deployment struct {
 		index     int
-		active    *types.Deployment
-		provision *types.Deployment
-		list      map[string]*types.Deployment
+		active    *models.Deployment
+		provision *models.Deployment
+		list      map[string]*models.Deployment
 	}
 	pod struct {
-		list map[string]map[string]*types.Pod
+		list map[string]map[string]*models.Pod
 	}
 
 	observers struct {
-		service    chan *types.Service
-		deployment chan *types.Deployment
-		pod        chan *types.Pod
+		service    chan *models.Service
+		deployment chan *models.Deployment
+		pod        chan *models.Pod
 	}
 }
 
@@ -80,7 +79,7 @@ func (ss *ServiceState) Restore() error {
 	)
 
 	// Get all pods
-	pm := model.NewPodModel(context.Background(), ss.storage)
+	pm := service.NewPodModel(context.Background(), ss.storage)
 	pl, err := pm.ListByService(ss.service.Meta.Namespace, ss.service.Meta.Name)
 	if err != nil {
 		log.Errorf("%s:restore:> get pod map error: %v", logPrefix, err)
@@ -93,7 +92,7 @@ func (ss *ServiceState) Restore() error {
 		// Check if deployment map for pod exists
 		_, sl := p.SelfLink().Parent()
 		if _, ok := ss.pod.list[sl.String()]; !ok {
-			ss.pod.list[sl.String()] = make(map[string]*types.Pod)
+			ss.pod.list[sl.String()] = make(map[string]*models.Pod)
 		}
 
 		// put pod into map by deployment name and pod name
@@ -101,7 +100,7 @@ func (ss *ServiceState) Restore() error {
 	}
 
 	// Get all deployments
-	dm := model.NewDeploymentModel(context.Background(), ss.storage)
+	dm := service.NewDeploymentModel(context.Background(), ss.storage)
 	dl, err := dm.ListByService(ss.service.Meta.Namespace, ss.service.Meta.Name)
 	if err != nil {
 		log.Errorf("%s:restore:> get deployment map error: %v", logPrefix, err)
@@ -130,7 +129,7 @@ func (ss *ServiceState) Restore() error {
 	// Set service current spec and provision spec
 	switch ss.service.Status.State {
 	// if service is in ready state - mark deployment with same spec as current
-	case types.StateReady:
+	case models.StateReady:
 		for _, d := range ss.deployment.list {
 			if d.Spec.Template.Updated.Equal(ss.service.Spec.Template.Updated) {
 				ss.deployment.active = d
@@ -138,14 +137,14 @@ func (ss *ServiceState) Restore() error {
 		}
 		break
 	// if service is in provision state - mark deployment in ready state as current
-	case types.StateWaiting:
+	case models.StateWaiting:
 		fallthrough
-	case types.StateDegradation:
+	case models.StateDegradation:
 		fallthrough
-	case types.StateProvision:
+	case models.StateProvision:
 
 		for _, d := range ss.deployment.list {
-			if d.Status.State == types.StateReady {
+			if d.Status.State == models.StateReady {
 				ss.deployment.active = d
 				continue
 			}
@@ -224,15 +223,15 @@ func (ss *ServiceState) Observe() {
 	}
 }
 
-func (ss *ServiceState) SetService(s *types.Service) {
+func (ss *ServiceState) SetService(s *models.Service) {
 	ss.observers.service <- s
 }
 
-func (ss *ServiceState) SetDeployment(d *types.Deployment) {
+func (ss *ServiceState) SetDeployment(d *models.Deployment) {
 	ss.observers.deployment <- d
 }
 
-func (ss *ServiceState) DelDeployment(d *types.Deployment) {
+func (ss *ServiceState) DelDeployment(d *models.Deployment) {
 
 	if _, ok := ss.pod.list[d.SelfLink().String()]; !ok {
 		return
@@ -259,11 +258,11 @@ func (ss *ServiceState) DelDeployment(d *types.Deployment) {
 
 }
 
-func (ss *ServiceState) SetPod(p *types.Pod) {
+func (ss *ServiceState) SetPod(p *models.Pod) {
 	ss.observers.pod <- p
 }
 
-func (ss *ServiceState) DelPod(p *types.Pod) {
+func (ss *ServiceState) DelPod(p *models.Pod) {
 	_, sl := p.SelfLink().Parent()
 
 	if sl == nil {
@@ -277,7 +276,7 @@ func (ss *ServiceState) DelPod(p *types.Pod) {
 	delete(ss.pod.list[sl.String()], p.SelfLink().String())
 }
 
-func (ss *ServiceState) CheckDeps(dep types.StatusDependency) {
+func (ss *ServiceState) CheckDeps(dep models.StatusDependency) {
 
 	log.Debugf("%s:> check dependency: %s", logPrefix, dep.Name)
 
@@ -286,38 +285,38 @@ func (ss *ServiceState) CheckDeps(dep types.StatusDependency) {
 		return
 	}
 
-	if ss.deployment.provision.Status.State == types.StateWaiting {
+	if ss.deployment.provision.Status.State == models.StateWaiting {
 
 		switch dep.Type {
-		case types.KindVolume:
+		case models.KindVolume:
 			if _, ok := ss.deployment.provision.Status.Dependencies.Volumes[dep.Name]; !ok {
 				return
 			}
 
 			ss.deployment.provision.Status.Dependencies.Volumes[dep.Name] = dep
 			if ss.deployment.provision.Status.CheckDeps() {
-				ss.deployment.provision.Status.State = types.StateCreated
+				ss.deployment.provision.Status.State = models.StateCreated
 				ss.observers.deployment <- ss.deployment.provision
 			}
-		case types.KindSecret:
+		case models.KindSecret:
 			if _, ok := ss.deployment.provision.Status.Dependencies.Secrets[dep.Name]; !ok {
 				return
 			}
 
 			ss.deployment.provision.Status.Dependencies.Secrets[dep.Name] = dep
 			if ss.deployment.provision.Status.CheckDeps() {
-				ss.deployment.provision.Status.State = types.StateCreated
+				ss.deployment.provision.Status.State = models.StateCreated
 				ss.observers.deployment <- ss.deployment.provision
 			}
 
-		case types.KindConfig:
+		case models.KindConfig:
 			if _, ok := ss.deployment.provision.Status.Dependencies.Configs[dep.Name]; !ok {
 				return
 			}
 
 			ss.deployment.provision.Status.Dependencies.Configs[dep.Name] = dep
 			if ss.deployment.provision.Status.CheckDeps() {
-				ss.deployment.provision.Status.State = types.StateCreated
+				ss.deployment.provision.Status.State = models.StateCreated
 				ss.observers.deployment <- ss.deployment.provision
 			}
 		}
@@ -325,7 +324,7 @@ func (ss *ServiceState) CheckDeps(dep types.StatusDependency) {
 	}
 }
 
-func NewServiceState(stg storage.Storage, ipam ipam.IPAM, cs *cluster.ClusterState, s *types.Service) *ServiceState {
+func NewServiceState(stg storage.IStorage, ipam ipam.IPAM, cs *cluster.ClusterState, s *models.Service) *ServiceState {
 
 	var ss = new(ServiceState)
 
@@ -334,12 +333,12 @@ func NewServiceState(stg storage.Storage, ipam ipam.IPAM, cs *cluster.ClusterSta
 	ss.service = s
 	ss.cluster = cs
 
-	ss.observers.service = make(chan *types.Service)
-	ss.observers.deployment = make(chan *types.Deployment)
-	ss.observers.pod = make(chan *types.Pod)
+	ss.observers.service = make(chan *models.Service)
+	ss.observers.deployment = make(chan *models.Deployment)
+	ss.observers.pod = make(chan *models.Pod)
 
-	ss.deployment.list = make(map[string]*types.Deployment)
-	ss.pod.list = make(map[string]map[string]*types.Pod)
+	ss.deployment.list = make(map[string]*models.Deployment)
+	ss.pod.list = make(map[string]map[string]*models.Pod)
 
 	go ss.Observe()
 

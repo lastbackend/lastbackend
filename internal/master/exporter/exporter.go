@@ -20,9 +20,10 @@ package exporter
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"sync"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const (
@@ -33,16 +34,16 @@ const (
 type Exporter struct {
 	cache struct {
 		lock        sync.RWMutex
-		cluster     *types.Cluster
-		nodes       map[string]*types.Node
-		namespaces  map[string]*types.Namespace
-		services    map[string]*types.Service
-		deployments map[string]*types.Deployment
-		pods        map[string]*types.Pod
-		jobs        map[string]*types.Job
-		tasks       map[string]*types.Task
-		volumes     map[string]*types.Volume
-		routes      map[string]*types.Route
+		cluster     *models.Cluster
+		nodes       map[string]*models.Node
+		namespaces  map[string]*models.Namespace
+		services    map[string]*models.Service
+		deployments map[string]*models.Deployment
+		pods        map[string]*models.Pod
+		jobs        map[string]*models.Job
+		tasks       map[string]*models.Task
+		volumes     map[string]*models.Volume
+		routes      map[string]*models.Route
 	}
 }
 

@@ -34,7 +34,7 @@ import (
 
 	libipvs "github.com/docker/libnetwork/ipvs"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/network"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
 	"github.com/lastbackend/lastbackend/tools/log"
@@ -65,12 +65,12 @@ type Service struct {
 	dest map[string]*libipvs.Destination
 }
 
-func (p *Proxy) Info(ctx context.Context) (map[string]*types.EndpointState, error) {
+func (p *Proxy) Info(ctx context.Context) (map[string]*models.EndpointState, error) {
 	return p.getState(ctx)
 }
 
 // Create new proxy rules
-func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*types.EndpointState, error) {
+func (p *Proxy) Create(ctx context.Context, manifest *models.EndpointManifest) (*models.EndpointState, error) {
 
 	log.V(logLevel).Debugf("%s create ipvs virtual server with ip %s: and upstreams %v", logIPVSPrefix, manifest.IP, manifest.Upstreams)
 
@@ -142,7 +142,7 @@ func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*
 }
 
 // Destroy proxy rules
-func (p *Proxy) Destroy(ctx context.Context, state *types.EndpointState) error {
+func (p *Proxy) Destroy(ctx context.Context, state *models.EndpointState) error {
 
 	var (
 		err error
@@ -152,7 +152,7 @@ func (p *Proxy) Destroy(ctx context.Context, state *types.EndpointState) error {
 		return nil
 	}
 
-	mf := types.EndpointManifest{}
+	mf := models.EndpointManifest{}
 	mf.EndpointSpec = state.EndpointSpec
 	mf.Upstreams = state.Upstreams
 
@@ -175,7 +175,7 @@ func (p *Proxy) Destroy(ctx context.Context, state *types.EndpointState) error {
 }
 
 // Update proxy rules
-func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *types.EndpointManifest) (*types.EndpointState, error) {
+func (p *Proxy) Update(ctx context.Context, state *models.EndpointState, spec *models.EndpointManifest) (*models.EndpointState, error) {
 
 	psvc, err := specToServices(spec)
 	if err != nil {
@@ -183,7 +183,7 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 		return state, err
 	}
 
-	mf := types.EndpointManifest{}
+	mf := models.EndpointManifest{}
 	mf.EndpointSpec = state.EndpointSpec
 	mf.Upstreams = state.Upstreams
 
@@ -270,7 +270,7 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 }
 
 // getStateByIp returns current proxy state filtered by endpoint ip
-func (p *Proxy) getStateByIP(ctx context.Context, ip string) (*types.EndpointState, error) {
+func (p *Proxy) getStateByIP(ctx context.Context, ip string) (*models.EndpointState, error) {
 
 	state, err := p.getState(ctx)
 	if err != nil {
@@ -282,9 +282,9 @@ func (p *Proxy) getStateByIP(ctx context.Context, ip string) (*types.EndpointSta
 }
 
 // getStateByIp returns current proxy state
-func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, error) {
+func (p *Proxy) getState(ctx context.Context) (map[string]*models.EndpointState, error) {
 
-	el := make(map[string]*types.EndpointState)
+	el := make(map[string]*models.EndpointState)
 
 	if out, err := exec.Command("modprobe", "-va", "ip_vs").CombinedOutput(); err != nil {
 		return nil, fmt.Errorf("%s running modprobe ip_vs failed with message: `%s`, error: %s", logIPVSPrefix, strings.TrimSpace(string(out)), err.Error())
@@ -307,7 +307,7 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 
 		endpoint := el[host]
 		if endpoint == nil {
-			endpoint = new(types.EndpointState)
+			endpoint = new(models.EndpointState)
 			endpoint.IP = host
 			endpoint.PortMap = make(map[uint16]string)
 			endpoint.Upstreams = make([]string, 0)
@@ -516,7 +516,7 @@ func New(v *viper.Viper) (*Proxy, error) {
 		iiface = v.GetString("network.cpi.interface.internal")
 	)
 
-	if eiface == types.EmptyString {
+	if eiface == models.EmptyString {
 		log.Debugf("%s find default interface to traffic route by name", logIPVSPrefix)
 		_, prx.dest.external, err = utils.GetDefaultInterface()
 		if err != nil {
@@ -533,7 +533,7 @@ func New(v *viper.Viper) (*Proxy, error) {
 		log.Debugf("%s external route ip net: %s", logIPVSPrefix, prx.dest.external.String())
 	}
 
-	if iiface == types.EmptyString {
+	if iiface == models.EmptyString {
 		iiface = ifaceDocker
 	}
 
@@ -549,7 +549,7 @@ func New(v *viper.Viper) (*Proxy, error) {
 	return prx, nil
 }
 
-func specToServices(spec *types.EndpointManifest) (map[string]*Service, error) {
+func specToServices(spec *models.EndpointManifest) (map[string]*Service, error) {
 
 	var svcs = make(map[string]*Service, 0)
 

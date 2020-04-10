@@ -21,14 +21,14 @@ package route
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/api/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"net/http"
 	"strings"
+
+	"github.com/lastbackend/lastbackend/internal/api/envs"
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const (
@@ -36,9 +36,9 @@ const (
 	logLevel  = 3
 )
 
-func Fetch(ctx context.Context, namespace, name string) (*types.Route, *errors.Err) {
+func Fetch(ctx context.Context, namespace, name string) (*models.Route, *errors.Err) {
 
-	vm := model.NewRouteModel(ctx, envs.Get().GetStorage())
+	vm := service.NewRouteModel(ctx, envs.Get().GetStorage())
 	vol, err := vm.Get(namespace, name)
 
 	if err != nil {
@@ -55,7 +55,7 @@ func Fetch(ctx context.Context, namespace, name string) (*types.Route, *errors.E
 	return vol, nil
 }
 
-func Apply(ctx context.Context, ns *types.Namespace, mf *request.RouteManifest) (*types.Route, *errors.Err) {
+func Apply(ctx context.Context, ns *models.Namespace, mf *request.RouteManifest) (*models.Route, *errors.Err) {
 
 	if mf.Meta.Name == nil {
 		return nil, errors.New("route").BadParameter("meta.name")
@@ -75,10 +75,10 @@ func Apply(ctx context.Context, ns *types.Namespace, mf *request.RouteManifest) 
 	return Update(ctx, ns, vol, mf)
 }
 
-func Create(ctx context.Context, ns *types.Namespace, mf *request.RouteManifest) (*types.Route, *errors.Err) {
+func Create(ctx context.Context, ns *models.Namespace, mf *request.RouteManifest) (*models.Route, *errors.Err) {
 
-	rm := model.NewRouteModel(ctx, envs.Get().GetStorage())
-	sm := model.NewServiceModel(ctx, envs.Get().GetStorage())
+	rm := service.NewRouteModel(ctx, envs.Get().GetStorage())
+	sm := service.NewServiceModel(ctx, envs.Get().GetStorage())
 
 	if mf.Meta.Name != nil {
 
@@ -105,15 +105,15 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.RouteManifest)
 		return nil, errors.New("route").InternalServerError()
 	}
 
-	route := new(types.Route)
+	route := new(models.Route)
 	route.Meta.SetDefault()
-	route.Meta.SelfLink = *types.NewRouteSelfLink(ns.Meta.Name, *mf.Meta.Name)
+	route.Meta.SelfLink = *models.NewRouteSelfLink(ns.Meta.Name, *mf.Meta.Name)
 	route.Meta.Namespace = ns.Meta.Name
 
 	mf.SetRouteMeta(route)
 	mf.SetRouteSpec(route, ns, svc)
 
-	if route.Spec.Endpoint == types.EmptyString {
+	if route.Spec.Endpoint == models.EmptyString {
 		_, external := envs.Get().GetDomain()
 		route.Spec.Endpoint = fmt.Sprintf("%s.%s.%s", strings.ToLower(route.Meta.Name), strings.ToLower(ns.Meta.Name), external)
 	}
@@ -133,10 +133,10 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.RouteManifest)
 }
 
 //
-func Update(ctx context.Context, ns *types.Namespace, rt *types.Route, mf *request.RouteManifest) (*types.Route, *errors.Err) {
+func Update(ctx context.Context, ns *models.Namespace, rt *models.Route, mf *request.RouteManifest) (*models.Route, *errors.Err) {
 
-	rm := model.NewRouteModel(ctx, envs.Get().GetStorage())
-	sm := model.NewServiceModel(ctx, envs.Get().GetStorage())
+	rm := service.NewRouteModel(ctx, envs.Get().GetStorage())
+	sm := service.NewServiceModel(ctx, envs.Get().GetStorage())
 
 	if mf.Meta.Name != nil {
 
@@ -166,7 +166,7 @@ func Update(ctx context.Context, ns *types.Namespace, rt *types.Route, mf *reque
 	mf.SetRouteMeta(rt)
 	mf.SetRouteSpec(rt, ns, svc)
 
-	if rt.Spec.Endpoint == types.EmptyString {
+	if rt.Spec.Endpoint == models.EmptyString {
 		_, external := envs.Get().GetDomain()
 		rt.Spec.Endpoint = fmt.Sprintf("%s.%s.%s", strings.ToLower(rt.Meta.Name), strings.ToLower(ns.Meta.Name), external)
 	}
@@ -177,7 +177,7 @@ func Update(ctx context.Context, ns *types.Namespace, rt *types.Route, mf *reque
 		return nil, errors.New("route").BadParameter("rules", err)
 	}
 
-	rt.Status.State = types.StateProvision
+	rt.Status.State = models.StateProvision
 	rt, err = rm.Set(rt)
 	if err != nil {
 		log.Errorf("%s:update:> update route `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
@@ -189,7 +189,7 @@ func Update(ctx context.Context, ns *types.Namespace, rt *types.Route, mf *reque
 
 func validateManifest(ctx context.Context, mf *request.RouteManifest) *errors.Err {
 
-	rm := model.NewRouteModel(ctx, envs.Get().GetStorage())
+	rm := service.NewRouteModel(ctx, envs.Get().GetStorage())
 
 	rl, err := rm.List()
 	if err != nil {

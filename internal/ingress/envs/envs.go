@@ -23,7 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/network"
 	"text/template"
 
-	"github.com/lastbackend/lastbackend/pkg/client/types"
+	"github.com/lastbackend/lastbackend/pkg/client/cluster/types"
 )
 
 var _env Env

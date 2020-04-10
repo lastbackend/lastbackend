@@ -21,44 +21,44 @@ package views
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type EventView struct{}
 
-func (nv *EventView) New(obj *types.Event) *Event {
+func (nv *EventView) New(obj *models.Event) *Event {
 
 	n := Event{
 		Name: fmt.Sprintf("%s:%s", obj.Kind, obj.Action),
 	}
 
 	switch obj.Kind {
-	case types.KindNamespace:
-		n.Payload = new(NamespaceView).New(obj.Data.(*types.Namespace))
-	case types.KindService:
-		n.Payload = new(ServiceView).New(obj.Data.(*types.Service))
-	case types.KindDeployment:
-		n.Payload = new(DeploymentView).New(obj.Data.(*types.Deployment))
-	case types.KindPod:
-		n.Payload = new(PodView).New(obj.Data.(*types.Pod))
-	case types.KindRoute:
-		n.Payload = new(RouteView).New(obj.Data.(*types.Route))
-	case types.KindSecret:
-		n.Payload = new(SecretView).New(obj.Data.(*types.Secret))
-	case types.KindConfig:
-		n.Payload = new(ConfigView).New(obj.Data.(*types.Config))
-	case types.KindVolume:
-		n.Payload = new(VolumeView).New(obj.Data.(*types.Volume))
-	case types.KindJob:
-		n.Payload = new(JobView).New(obj.Data.(*types.Job))
-	case types.KindTask:
-		n.Payload = new(TaskView).New(obj.Data.(*types.Task))
-	case types.KindNode:
-		n.Payload = new(NodeView).New(obj.Data.(*types.Node))
-	case types.KindDiscovery:
-		n.Payload = new(DiscoveryView).New(obj.Data.(*types.Discovery))
-	case types.KindIngress:
-		n.Payload = new(IngressView).New(obj.Data.(*types.Ingress))
+	case models.KindNamespace:
+		n.Payload = new(NamespaceView).New(obj.Data.(*models.Namespace))
+	case models.KindService:
+		n.Payload = new(ServiceView).New(obj.Data.(*models.Service))
+	case models.KindDeployment:
+		n.Payload = new(DeploymentView).New(obj.Data.(*models.Deployment))
+	case models.KindPod:
+		n.Payload = new(PodView).New(obj.Data.(*models.Pod))
+	case models.KindRoute:
+		n.Payload = new(RouteView).New(obj.Data.(*models.Route))
+	case models.KindSecret:
+		n.Payload = new(SecretView).New(obj.Data.(*models.Secret))
+	case models.KindConfig:
+		n.Payload = new(ConfigView).New(obj.Data.(*models.Config))
+	case models.KindVolume:
+		n.Payload = new(VolumeView).New(obj.Data.(*models.Volume))
+	case models.KindJob:
+		n.Payload = new(JobView).New(obj.Data.(*models.Job))
+	case models.KindTask:
+		n.Payload = new(TaskView).New(obj.Data.(*models.Task))
+	case models.KindNode:
+		n.Payload = new(NodeView).New(obj.Data.(*models.Node))
+	case models.KindDiscovery:
+		n.Payload = new(DiscoveryView).New(obj.Data.(*models.Discovery))
+	case models.KindIngress:
+		n.Payload = new(IngressView).New(obj.Data.(*models.Ingress))
 	default:
 
 	}

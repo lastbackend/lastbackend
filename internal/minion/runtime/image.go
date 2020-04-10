@@ -21,18 +21,18 @@ package runtime
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/minion/envs"
+	"strings"
+
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 	"golang.org/x/net/context"
-	"strings"
 )
 
-func ImagePull(ctx context.Context, namespace string, image *types.SpecTemplateContainerImage) error {
+func (r Runtime) ImagePull(ctx context.Context, namespace string, image *models.SpecTemplateContainerImage) error {
 
 	var (
-		mf = new(types.ImageManifest)
+		mf = new(models.ImageManifest)
 	)
 
 	mf.Name = image.Name
@@ -40,9 +40,9 @@ func ImagePull(ctx context.Context, namespace string, image *types.SpecTemplateC
 		mf.Name = fmt.Sprintf("%s@%s", strings.Split(image.Name, ":")[0], image.Sha)
 	}
 
-	if image.Secret.Name != types.EmptyString {
+	if image.Secret.Name != models.EmptyString {
 
-		secret, err := SecretGet(ctx, namespace, image.Secret.Name)
+		secret, err := r.SecretGet(ctx, namespace, image.Secret.Name)
 		if err != nil {
 			log.Errorf("can not get secret for image. err: %s", err.Error())
 			if strings.Contains(err.Error(), "Internal Server Error") {
@@ -65,12 +65,12 @@ func ImagePull(ctx context.Context, namespace string, image *types.SpecTemplateC
 			return errors.New("docker auth secret format is invalid")
 		}
 
-		data := types.SecretAuthData{
+		data := models.SecretAuthData{
 			Username: pair[0],
 			Password: pair[1],
 		}
 
-		auth, err := envs.Get().GetCII().Auth(ctx, &data)
+		auth, err := r.cii.Auth(ctx, &data)
 		if err != nil {
 			log.Errorf("can not create secret string. err: %s", err.Error())
 			return err
@@ -79,33 +79,33 @@ func ImagePull(ctx context.Context, namespace string, image *types.SpecTemplateC
 		mf.Auth = auth
 	}
 
-	img, err := envs.Get().GetCII().Pull(ctx, mf, nil)
+	img, err := r.cii.Pull(ctx, mf, nil)
 	if err != nil {
 		log.Errorf("can not pull image: %s", err.Error())
 		return err
 	}
 
 	if img != nil {
-		envs.Get().GetState().Images().AddImage(img.SelfLink(), img)
+		r.state.Images().AddImage(img.SelfLink(), img)
 	}
 
 	return nil
 }
 
-func ImageRemove(ctx context.Context, link string) error {
-	if err := envs.Get().GetCII().Remove(ctx, link); err != nil {
+func (r Runtime) ImageRemove(ctx context.Context, link string) error {
+	if err := r.cii.Remove(ctx, link); err != nil {
 		log.Warnf("Can-not remove unnecessary image %s: %s", link, err)
 	}
 
-	envs.Get().GetState().Images().DelImage(link)
+	r.state.Images().DelImage(link)
 
 	return nil
 }
 
-func ImageRestore(ctx context.Context) error {
+func (r Runtime) ImageRestore(ctx context.Context) error {
 
-	state := envs.Get().GetState().Images()
-	imgs, err := envs.Get().GetCII().List(ctx)
+	state := r.state.Images()
+	imgs, err := r.cii.List(ctx)
 	if err != nil {
 		return err
 	}

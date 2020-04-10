@@ -38,7 +38,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -59,13 +59,13 @@ func TestServiceInfo(t *testing.T) {
 	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		service   *types.Service
+		namespace *models.Namespace
+		service   *models.Service
 	}
 
 	tests := []struct {
@@ -109,10 +109,10 @@ func TestServiceInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -192,18 +192,18 @@ func TestServiceList(t *testing.T) {
 	s1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
 
-	sl := types.NewServiceMap()
+	sl := models.NewServiceMap()
 	sl.Items[s1.SelfLink().String()] = s1
 	sl.Items[s2.SelfLink().String()] = s2
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		service   *types.Service
+		namespace *models.Namespace
+		service   *models.Service
 	}
 
 	tests := []struct {
@@ -213,7 +213,7 @@ func TestServiceList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         *types.ServiceMap
+		want         *models.ServiceMap
 		wantErr      bool
 		expectedCode int
 	}{
@@ -238,10 +238,10 @@ func TestServiceList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -378,13 +378,13 @@ func TestServiceCreate(t *testing.T) {
 	sm7.Spec.Template.Containers[0].Resources.Limits.CPU = ""
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		service   *types.Service
+		namespace *models.Namespace
+		service   *models.Service
 	}
 
 	tests := []struct {
@@ -503,10 +503,10 @@ func TestServiceCreate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -562,7 +562,7 @@ func TestServiceCreate(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got := new(types.Service)
+				got := new(models.Service)
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Service(), tc.args.service.SelfLink().String(), got, nil)
 				assert.NoError(t, err)
 
@@ -665,13 +665,13 @@ func TestServiceUpdate(t *testing.T) {
 	sm7.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		service   *types.Service
+		namespace *models.Namespace
+		service   *models.Service
 	}
 
 	tests := []struct {
@@ -790,10 +790,10 @@ func TestServiceUpdate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -993,13 +993,13 @@ func TestServiceRemove(t *testing.T) {
 	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		service   *types.Service
+		namespace *models.Namespace
+		service   *models.Service
 	}
 
 	tests := []struct {
@@ -1043,10 +1043,10 @@ func TestServiceRemove(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -1098,14 +1098,14 @@ func TestServiceRemove(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got := new(types.Service)
+				got := new(models.Service)
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Service(), tc.args.service.SelfLink().String(), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}
 
 				if got != nil {
-					assert.Equal(t, got.Status.State, types.StateDestroy, "status not destroy")
+					assert.Equal(t, got.Status.State, models.StateDestroy, "status not destroy")
 				}
 
 				assert.Equal(t, tc.want, string(body), "response not equal with want")
@@ -1116,27 +1116,27 @@ func TestServiceRemove(t *testing.T) {
 
 }
 
-func getNamespaceAsset(name, desc string) *types.Namespace {
-	var n = types.Namespace{}
+func getNamespaceAsset(name, desc string) *models.Namespace {
+	var n = models.Namespace{}
 	n.Meta.SetDefault()
 	n.Meta.Name = name
 	n.Meta.Description = desc
-	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
+	n.Meta.SelfLink = *models.NewNamespaceSelfLink(name)
 	return &n
 }
 
-func getServiceAsset(namespace, name, desc string) *types.Service {
-	var s = types.Service{}
+func getServiceAsset(namespace, name, desc string) *models.Service {
+	var s = models.Service{}
 	s.Meta.SetDefault()
 	s.Meta.Namespace = namespace
 	s.Meta.Name = name
 	s.Meta.Description = desc
 	s.Spec.Replicas = 1
-	s.Spec.Template.Containers = make(types.SpecTemplateContainers, 0)
-	s.Spec.Template.Containers = append(s.Spec.Template.Containers, &types.SpecTemplateContainer{
+	s.Spec.Template.Containers = make(models.SpecTemplateContainers, 0)
+	s.Spec.Template.Containers = append(s.Spec.Template.Containers, &models.SpecTemplateContainer{
 		Name: "demo",
 	})
-	s.Meta.SelfLink = *types.NewServiceSelfLink(namespace, name)
+	s.Meta.SelfLink = *models.NewServiceSelfLink(namespace, name)
 	return &s
 }
 

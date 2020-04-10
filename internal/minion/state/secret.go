@@ -19,31 +19,32 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"sync"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const logSecretPrefix = "state:secret:>"
 
 type SecretsState struct {
 	lock    sync.RWMutex
-	secrets map[string]types.Secret
+	secrets map[string]models.Secret
 }
 
-func (s *SecretsState) GetSecrets() map[string]types.Secret {
+func (s *SecretsState) GetSecrets() map[string]models.Secret {
 	log.V(logLevel).Debugf("%s get pods", logSecretPrefix)
 	return s.secrets
 }
 
-func (s *SecretsState) SetSecrets(secrets map[string]*types.Secret) {
+func (s *SecretsState) SetSecrets(secrets map[string]*models.Secret) {
 	log.V(logLevel).Debugf("%s set secrets: %d", logSecretPrefix, len(secrets))
 	for h, secret := range secrets {
 		s.secrets[h] = *secret
 	}
 }
 
-func (s *SecretsState) GetSecret(name string) *types.Secret {
+func (s *SecretsState) GetSecret(name string) *models.Secret {
 	log.V(logLevel).Debugf("%s get secret: %s", logSecretPrefix, name)
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -54,12 +55,12 @@ func (s *SecretsState) GetSecret(name string) *types.Secret {
 	return &pod
 }
 
-func (s *SecretsState) AddSecret(name string, secret *types.Secret) {
+func (s *SecretsState) AddSecret(name string, secret *models.Secret) {
 	log.V(logLevel).Debugf("%s add secret: %s", logSecretPrefix, name)
 	s.SetSecret(name, secret)
 }
 
-func (s *SecretsState) SetSecret(name string, secret *types.Secret) {
+func (s *SecretsState) SetSecret(name string, secret *models.Secret) {
 	log.V(logLevel).Debugf("%s set secret: %s", logSecretPrefix, name)
 	s.lock.Lock()
 	defer s.lock.Unlock()

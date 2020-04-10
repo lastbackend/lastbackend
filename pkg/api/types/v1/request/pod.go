@@ -20,7 +20,7 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/resource"
 	"gopkg.in/yaml.v2"
 	"strings"
@@ -58,9 +58,9 @@ func (s *PodManifest) ToYaml() ([]byte, error) {
 	return yaml.Marshal(s)
 }
 
-func (s *PodManifest) SetPodMeta(svc *types.Pod) {
+func (s *PodManifest) SetPodMeta(svc *models.Pod) {
 
-	if svc.Meta.Name == types.EmptyString {
+	if svc.Meta.Name == models.EmptyString {
 		svc.Meta.Name = *s.Meta.Name
 	}
 
@@ -74,11 +74,11 @@ func (s *PodManifest) SetPodMeta(svc *types.Pod) {
 
 }
 
-func (s *PodManifest) SetPodSpec(pod *types.Pod) {
+func (s *PodManifest) SetPodSpec(pod *models.Pod) {
 
 	if s.Spec.Selector != nil {
 
-		if s.Spec.Selector.Node != types.EmptyString && pod.Spec.Selector.Node != s.Spec.Selector.Node {
+		if s.Spec.Selector.Node != models.EmptyString && pod.Spec.Selector.Node != s.Spec.Selector.Node {
 			pod.Spec.Selector.Node = s.Spec.Selector.Node
 		}
 
@@ -193,25 +193,25 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 		}
 
 		if tne {
-			pod.Spec.Runtime.Tasks = make([]types.SpecRuntimeTask, 0)
+			pod.Spec.Runtime.Tasks = make([]models.SpecRuntimeTask, 0)
 			for _, t := range s.Spec.Runtime.Tasks {
 
-				task := types.SpecRuntimeTask{
+				task := models.SpecRuntimeTask{
 					Name:      t.Name,
 					Container: t.Container,
-					EnvVars:   make(types.SpecTemplateContainerEnvs, 0),
+					EnvVars:   make(models.SpecTemplateContainerEnvs, 0),
 					Commands:  make([]string, 0),
 				}
 
 				for _, env := range t.Env {
-					task.EnvVars = append(task.EnvVars, &types.SpecTemplateContainerEnv{
+					task.EnvVars = append(task.EnvVars, &models.SpecTemplateContainerEnv{
 						Name:  env.Name,
 						Value: env.Value,
-						Secret: types.SpecTemplateContainerEnvSecret{
+						Secret: models.SpecTemplateContainerEnvSecret{
 							Name: env.Secret.Name,
 							Key:  env.Secret.Key,
 						},
-						Config: types.SpecTemplateContainerEnvConfig{
+						Config: models.SpecTemplateContainerEnvConfig{
 							Name: env.Config.Name,
 							Key:  env.Config.Key,
 						},
@@ -237,7 +237,7 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 
 			var (
 				f    = false
-				spec *types.SpecTemplateContainer
+				spec *models.SpecTemplateContainer
 			)
 
 			for _, sc := range pod.Spec.Template.Containers {
@@ -248,10 +248,10 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 			}
 
 			if spec == nil {
-				spec = new(types.SpecTemplateContainer)
+				spec = new(models.SpecTemplateContainer)
 			}
 
-			if spec.Name == types.EmptyString {
+			if spec.Name == models.EmptyString {
 				spec.Name = c.Name
 				pod.Spec.Template.Updated = time.Now()
 			}
@@ -323,14 +323,14 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 				}
 
 				if !f {
-					spec.EnvVars = append(spec.EnvVars, &types.SpecTemplateContainerEnv{
+					spec.EnvVars = append(spec.EnvVars, &models.SpecTemplateContainerEnv{
 						Name:  ce.Name,
 						Value: ce.Value,
-						Secret: types.SpecTemplateContainerEnvSecret{
+						Secret: models.SpecTemplateContainerEnvSecret{
 							Name: ce.Secret.Name,
 							Key:  ce.Secret.Key,
 						},
-						Config: types.SpecTemplateContainerEnvConfig{
+						Config: models.SpecTemplateContainerEnvConfig{
 							Name: ce.Config.Name,
 							Key:  ce.Config.Key,
 						},
@@ -338,7 +338,7 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 				}
 			}
 
-			var envs = make([]*types.SpecTemplateContainerEnv, 0)
+			var envs = make([]*models.SpecTemplateContainerEnv, 0)
 			for _, se := range spec.EnvVars {
 				for _, ce := range c.Env {
 					if ce.Name == se.Name {
@@ -390,7 +390,7 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 					}
 				}
 				if !f {
-					spec.Volumes = append(spec.Volumes, &types.SpecTemplateContainerVolume{
+					spec.Volumes = append(spec.Volumes, &models.SpecTemplateContainerVolume{
 						Name:      v.Name,
 						Mode:      v.Mode,
 						MountPath: v.MountPath,
@@ -399,7 +399,7 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 				}
 			}
 
-			vlms := make([]*types.SpecTemplateContainerVolume, 0)
+			vlms := make([]*models.SpecTemplateContainerVolume, 0)
 			for _, sv := range spec.Volumes {
 				for _, cv := range c.Volumes {
 					if sv.Name == cv.Name {
@@ -421,7 +421,7 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 
 		}
 
-		var spcs = make([]*types.SpecTemplateContainer, 0)
+		var spcs = make([]*models.SpecTemplateContainer, 0)
 		for _, ss := range pod.Spec.Template.Containers {
 			for _, cs := range s.Spec.Template.Containers {
 				if ss.Name == cs.Name {
@@ -440,7 +440,7 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 
 			var (
 				f    = false
-				spec *types.SpecTemplateVolume
+				spec *models.SpecTemplateVolume
 			)
 
 			for _, sv := range pod.Spec.Template.Volumes {
@@ -451,10 +451,10 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 			}
 
 			if spec == nil {
-				spec = new(types.SpecTemplateVolume)
+				spec = new(models.SpecTemplateVolume)
 			}
 
-			if spec.Name == types.EmptyString {
+			if spec.Name == models.EmptyString {
 				spec.Name = v.Name
 				pod.Spec.Template.Updated = time.Now()
 			}
@@ -485,9 +485,9 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 			}
 
 			if !e {
-				spec.Secret.Binds = make([]types.SpecTemplateSecretVolumeBind, 0)
+				spec.Secret.Binds = make([]models.SpecTemplateSecretVolumeBind, 0)
 				for _, v := range v.Secret.Binds {
-					spec.Secret.Binds = append(spec.Secret.Binds, types.SpecTemplateSecretVolumeBind{
+					spec.Secret.Binds = append(spec.Secret.Binds, models.SpecTemplateSecretVolumeBind{
 						Key:  v.Key,
 						File: v.File,
 					})
@@ -514,9 +514,9 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 			}
 
 			if !ec {
-				spec.Config.Binds = make([]types.SpecTemplateConfigVolumeBind, 0)
+				spec.Config.Binds = make([]models.SpecTemplateConfigVolumeBind, 0)
 				for _, v := range v.Config.Binds {
-					spec.Config.Binds = append(spec.Config.Binds, types.SpecTemplateConfigVolumeBind{
+					spec.Config.Binds = append(spec.Config.Binds, models.SpecTemplateConfigVolumeBind{
 						Key:  v.Key,
 						File: v.File,
 					})
@@ -530,7 +530,7 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 
 		}
 
-		var vlms = make([]*types.SpecTemplateVolume, 0)
+		var vlms = make([]*models.SpecTemplateVolume, 0)
 		for _, ss := range pod.Spec.Template.Volumes {
 			for _, cs := range s.Spec.Template.Volumes {
 				if ss.Name == cs.Name {
@@ -549,8 +549,8 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 
 }
 
-func (s *PodManifest) GetManifest() *types.PodManifest {
-	sm := new(types.PodManifest)
+func (s *PodManifest) GetManifest() *models.PodManifest {
+	sm := new(models.PodManifest)
 	if s.Spec.Selector != nil {
 		sm.Selector = s.Spec.Selector.GetSpec()
 	}

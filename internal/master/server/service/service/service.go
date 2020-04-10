@@ -21,16 +21,16 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/api/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/internal/util/resource"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/lastbackend/lastbackend/internal/api/envs"
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/util/resource"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const (
@@ -38,9 +38,9 @@ const (
 	logLevel  = 3
 )
 
-func Fetch(ctx context.Context, namespace, name string) (*types.Service, *errors.Err) {
+func Fetch(ctx context.Context, namespace, name string) (*models.Service, *errors.Err) {
 
-	nm := model.NewServiceModel(ctx, envs.Get().GetStorage())
+	nm := service.NewServiceModel(ctx, envs.Get().GetStorage())
 	svc, err := nm.Get(namespace, name)
 
 	if err != nil {
@@ -57,7 +57,7 @@ func Fetch(ctx context.Context, namespace, name string) (*types.Service, *errors
 	return svc, nil
 }
 
-func Apply(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifest, opts *request.ServiceUpdateOptions) (*types.Service, *errors.Err) {
+func Apply(ctx context.Context, ns *models.Namespace, mf *request.ServiceManifest, opts *request.ServiceUpdateOptions) (*models.Service, *errors.Err) {
 
 	if mf.Meta.Name == nil {
 		return nil, errors.New("service").BadParameter("meta.name")
@@ -77,10 +77,10 @@ func Apply(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifest
 	return Update(ctx, ns, svc, mf, opts)
 }
 
-func Create(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifest) (*types.Service, *errors.Err) {
+func Create(ctx context.Context, ns *models.Namespace, mf *request.ServiceManifest) (*models.Service, *errors.Err) {
 
-	nm := model.NewNamespaceModel(ctx, envs.Get().GetStorage())
-	sm := model.NewServiceModel(ctx, envs.Get().GetStorage())
+	nm := service.NewNamespaceModel(ctx, envs.Get().GetStorage())
+	sm := service.NewServiceModel(ctx, envs.Get().GetStorage())
 
 	if mf.Meta.Name != nil {
 
@@ -98,9 +98,9 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifes
 		}
 	}
 
-	svc := new(types.Service)
+	svc := new(models.Service)
 	mf.SetServiceMeta(svc)
-	svc.Meta.SelfLink = *types.NewServiceSelfLink(ns.Meta.Name, *mf.Meta.Name)
+	svc.Meta.SelfLink = *models.NewServiceSelfLink(ns.Meta.Name, *mf.Meta.Name)
 	svc.Meta.Namespace = ns.Meta.Name
 	svc.Meta.Endpoint = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
 
@@ -113,10 +113,10 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifes
 		if ns.Spec.Resources.Limits.RAM != 0 || ns.Spec.Resources.Limits.CPU != 0 {
 			for _, c := range svc.Spec.Template.Containers {
 				if c.Resources.Limits.RAM == 0 {
-					c.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(types.DEFAULT_RESOURCE_LIMITS_RAM)
+					c.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(models.DEFAULT_RESOURCE_LIMITS_RAM)
 				}
 				if c.Resources.Limits.CPU == 0 {
-					c.Resources.Limits.CPU, _ = resource.DecodeCpuResource(types.DEFAULT_RESOURCE_LIMITS_CPU)
+					c.Resources.Limits.CPU, _ = resource.DecodeCpuResource(models.DEFAULT_RESOURCE_LIMITS_CPU)
 				}
 			}
 		}
@@ -143,10 +143,10 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifes
 	return svc, nil
 }
 
-func Update(ctx context.Context, ns *types.Namespace, svc *types.Service, mf *request.ServiceManifest, opts *request.ServiceUpdateOptions) (*types.Service, *errors.Err) {
+func Update(ctx context.Context, ns *models.Namespace, svc *models.Service, mf *request.ServiceManifest, opts *request.ServiceUpdateOptions) (*models.Service, *errors.Err) {
 
-	nm := model.NewNamespaceModel(ctx, envs.Get().GetStorage())
-	sm := model.NewServiceModel(ctx, envs.Get().GetStorage())
+	nm := service.NewNamespaceModel(ctx, envs.Get().GetStorage())
+	sm := service.NewServiceModel(ctx, envs.Get().GetStorage())
 
 	resources := svc.Spec.GetResourceRequest()
 

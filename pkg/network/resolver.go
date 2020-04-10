@@ -21,8 +21,9 @@ package network
 import (
 	"context"
 	"fmt"
+
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/network/state"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
@@ -52,7 +53,7 @@ func (n *Network) ResolverManage(ctx context.Context) error {
 
 	log.V(logLevel).Debugf("%s:> create resolver", logResolverPrefix)
 
-	manifest := new(types.EndpointManifest)
+	manifest := new(models.EndpointManifest)
 	manifest.IP = n.resolver.ip
 	manifest.PortMap = make(map[uint16]string)
 

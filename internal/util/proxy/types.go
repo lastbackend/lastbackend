@@ -19,7 +19,7 @@
 package proxy
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
-type Handler func(message types.ProxyMessage) error
+type Handler func(message models.ProxyMessage) error

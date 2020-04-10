@@ -20,25 +20,25 @@ package runtime
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/minion/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"strings"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
-func SecretGet(ctx context.Context, namespace, name string) (*types.Secret, error) {
+func (r Runtime) SecretGet(ctx context.Context, namespace, name string) (*models.Secret, error) {
 
-	cli := envs.Get().GetRestClient()
+	cli := r.retClient
 	if cli == nil {
 		return nil, nil
 	}
 
-	secret := envs.Get().GetState().Secrets().GetSecret(types.NewSecretSelfLink(namespace, name).String())
+	secret := r.state.Secrets().GetSecret(models.NewSecretSelfLink(namespace, name).String())
 	if secret != nil {
 		return secret, nil
 	}
 
-	sr, err := cli.Namespace(namespace).Secret(name).Get(ctx)
+	sr, err := cli.V1().Namespace(namespace).Secret(name).Get(ctx)
 	if err != nil {
 		log.Errorf("can not receive secret from api, err: %s", err.Error())
 		return nil, err
@@ -47,61 +47,61 @@ func SecretGet(ctx context.Context, namespace, name string) (*types.Secret, erro
 	return sr.Decode(), nil
 }
 
-func SecretCreate(ctx context.Context, namespace, name string) error {
+func (r Runtime) SecretCreate(ctx context.Context, namespace, name string) error {
 
-	cli := envs.Get().GetRestClient()
+	cli := r.retClient
 	if cli == nil {
 		return nil
 	}
 
-	ok := envs.Get().GetState().Secrets().GetSecret(types.NewSecretSelfLink(namespace, name).String())
+	ok := r.state.Secrets().GetSecret(models.NewSecretSelfLink(namespace, name).String())
 	if ok != nil {
 		return nil
 	}
 
-	secret, err := cli.Namespace(namespace).Secret(name).Get(ctx)
+	secret, err := cli.V1().Namespace(namespace).Secret(name).Get(ctx)
 	if err != nil {
 		log.Errorf("get secret err: %s", err.Error())
 		return err
 	}
 
-	envs.Get().GetState().Secrets().AddSecret(secret.Meta.SelfLink, secret.Decode())
+	r.state.Secrets().AddSecret(secret.Meta.SelfLink, secret.Decode())
 
 	return nil
 }
 
-func SecretUpdate(ctx context.Context, selflink string) error {
+func (r Runtime) SecretUpdate(ctx context.Context, selflink string) error {
 
-	cli := envs.Get().GetRestClient()
+	cli := r.retClient
 	if cli == nil {
 		return nil
 	}
 
-	namespace, name := parseSecretSelflink(selflink)
+	namespace, name := r.parseSecretSelflink(selflink)
 
-	secret, err := cli.Namespace(namespace).Secret(name).Get(ctx)
+	secret, err := cli.V1().Namespace(namespace).Secret(name).Get(ctx)
 	if err != nil {
 		log.Errorf("get secret err: %s", err.Error())
 		return err
 	}
 
-	envs.Get().GetState().Secrets().AddSecret(secret.Meta.SelfLink, secret.Decode())
+	r.state.Secrets().AddSecret(secret.Meta.SelfLink, secret.Decode())
 
 	return nil
 
 }
 
-func SecretRemove(ctx context.Context, selflink string) {
-	envs.Get().GetState().Secrets().DelSecret(selflink)
+func (r Runtime) SecretRemove(ctx context.Context, selflink string) {
+	r.state.Secrets().DelSecret(selflink)
 }
 
-func parseSecretSelflink(selflink string) (string, string) {
+func (r Runtime) parseSecretSelflink(selflink string) (string, string) {
 	var namespace, name string
 
 	parts := strings.SplitN(selflink, ":", 1)
 
 	if len(parts) == 1 {
-		namespace = types.DefaultNamespace
+		namespace = models.DEFAULT_NAMESPACE
 		name = parts[0]
 	}
 

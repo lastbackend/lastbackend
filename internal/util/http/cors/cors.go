@@ -25,6 +25,6 @@ func Headers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Origin", origin)
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	w.Header().Add("Access-Control-Allow-Methods", "OPTIONS,GET,POST,PUT,DELETE")
-	w.Header().Add("Access-Control-Allow-headers", "X-CSRF-Auth, Authorization, Content-Type, x-lastbackend, Origin, X-Requested-With, Content-HostPath, Accept")
+	w.Header().Add("Access-Control-Allow-Headers", "Authorization, Content-Type, Origin, Content-Name, Accept, X-Tools-Name, X-Requested-With, X-Access-Token")
 	w.Header().Add("Content-Type", "application/json")
 }

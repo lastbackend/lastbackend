@@ -25,7 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/internal/master/state/cluster"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -39,7 +39,7 @@ func init() {
 	envs.Get().SetStorage(stg)
 }
 
-func testJobObserver(t *testing.T, name, werr string, wjs *JobState, js *JobState, job *types.Job) {
+func testJobObserver(t *testing.T, name, werr string, wjs *JobState, js *JobState, job *models.Job) {
 	var (
 		ctx = context.Background()
 		stg = envs.Get().GetStorage()
@@ -59,7 +59,7 @@ func testJobObserver(t *testing.T, name, werr string, wjs *JobState, js *JobStat
 	t.Run(name, func(t *testing.T) {
 
 		err := jobObserve(js, job)
-		if werr != types.EmptyString {
+		if werr != models.EmptyString {
 
 			if assert.NoError(t, err, "error should be presented") {
 				return
@@ -91,7 +91,7 @@ func TestHandleJobStateCreated(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			job      *types.Job
+			job      *models.Job
 		}
 		want struct {
 			err      string
@@ -105,15 +105,15 @@ func TestHandleJobStateCreated(t *testing.T) {
 
 		s := suit{name: "successful state handle created job state"}
 
-		job := getJobAsset(types.StateCreated, types.EmptyString)
+		job := getJobAsset(models.StateCreated, models.EmptyString)
 		js := getJobStateAsset(job)
 
 		s.args.jobState = js
 		s.args.job = job
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 
 		return s
 	}())
@@ -128,7 +128,7 @@ func TestHandleJobStateRunning(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			job      *types.Job
+			job      *models.Job
 		}
 		want struct {
 			err      string
@@ -142,15 +142,15 @@ func TestHandleJobStateRunning(t *testing.T) {
 
 		s := suit{name: "successful state handle running job state"}
 
-		job := getJobAsset(types.StateRunning, types.EmptyString)
+		job := getJobAsset(models.StateRunning, models.EmptyString)
 		js := getJobStateAsset(job)
 
 		s.args.jobState = js
 		s.args.job = job
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateRunning
+		s.want.jobState.job.Status.State = models.StateRunning
 
 		return s
 	}())
@@ -165,7 +165,7 @@ func TestHandleJobStatePaused(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			job      *types.Job
+			job      *models.Job
 		}
 		want struct {
 			err      string
@@ -179,15 +179,15 @@ func TestHandleJobStatePaused(t *testing.T) {
 
 		s := suit{name: "successful state handle paused job state"}
 
-		job := getJobAsset(types.StatePaused, types.EmptyString)
+		job := getJobAsset(models.StatePaused, models.EmptyString)
 		js := getJobStateAsset(job)
 
 		s.args.jobState = js
 		s.args.job = job
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StatePaused
+		s.want.jobState.job.Status.State = models.StatePaused
 
 		return s
 	}())
@@ -202,7 +202,7 @@ func TestHandleJobStateError(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			job      *types.Job
+			job      *models.Job
 		}
 		want struct {
 			err      string
@@ -216,15 +216,15 @@ func TestHandleJobStateError(t *testing.T) {
 
 		s := suit{name: "successful state handle error job state"}
 
-		job := getJobAsset(types.StateError, types.EmptyString)
+		job := getJobAsset(models.StateError, models.EmptyString)
 		js := getJobStateAsset(job)
 
 		s.args.jobState = js
 		s.args.job = job
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateError
+		s.want.jobState.job.Status.State = models.StateError
 
 		return s
 	}())
@@ -239,7 +239,7 @@ func TestHandleJobStateDestroy(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			job      *types.Job
+			job      *models.Job
 		}
 		want struct {
 			err      string
@@ -253,15 +253,15 @@ func TestHandleJobStateDestroy(t *testing.T) {
 
 		s := suit{name: "successful state handle destroy job state without tasks"}
 
-		job := getJobAsset(types.StateDestroy, types.EmptyString)
+		job := getJobAsset(models.StateDestroy, models.EmptyString)
 		js := getJobStateAsset(job)
 
 		s.args.jobState = js
 		s.args.job = job
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateDestroyed
+		s.want.jobState.job.Status.State = models.StateDestroyed
 
 		return s
 	}())
@@ -270,10 +270,10 @@ func TestHandleJobStateDestroy(t *testing.T) {
 
 		s := suit{name: "successful state handle destroy job state with tasks"}
 
-		job := getJobAsset(types.StateDestroy, types.EmptyString)
+		job := getJobAsset(models.StateDestroy, models.EmptyString)
 		js := getJobStateAsset(job)
-		task1 := getTaskAsset(job, types.StateDestroyed, types.EmptyString)
-		task2 := getTaskAsset(job, types.StateQueued, types.EmptyString)
+		task1 := getTaskAsset(job, models.StateDestroyed, models.EmptyString)
+		task2 := getTaskAsset(job, models.StateQueued, models.EmptyString)
 
 		s.args.jobState = js
 		s.args.job = job
@@ -283,9 +283,9 @@ func TestHandleJobStateDestroy(t *testing.T) {
 		wt1 := getTaskCopy(task1)
 		wt2 := getTaskCopy(task2)
 		wt2.Spec.State.Destroy = true
-		wt2.Status.State = types.StateDestroyed
+		wt2.Status.State = models.StateDestroyed
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
 		s.want.jobState.task.list[wt1.SelfLink().String()] = wt1
 		s.want.jobState.task.list[wt2.SelfLink().String()] = wt2
@@ -303,7 +303,7 @@ func TestHandleJobStateDestroyed(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			job      *types.Job
+			job      *models.Job
 		}
 		want struct {
 			err      string
@@ -317,13 +317,13 @@ func TestHandleJobStateDestroyed(t *testing.T) {
 
 		s := suit{name: "successful state handle destroyed job state without tasks"}
 
-		job := getJobAsset(types.StateDestroyed, types.EmptyString)
+		job := getJobAsset(models.StateDestroyed, models.EmptyString)
 		js := getJobStateAsset(job)
 
 		s.args.jobState = js
 		s.args.job = job
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
 		s.want.jobState.job = nil
 
@@ -334,19 +334,19 @@ func TestHandleJobStateDestroyed(t *testing.T) {
 
 		s := suit{name: "successful state handle destroyed job state with tasks"}
 
-		job := getJobAsset(types.StateDestroyed, types.EmptyString)
+		job := getJobAsset(models.StateDestroyed, models.EmptyString)
 		js := getJobStateAsset(job)
-		task1 := getTaskAsset(job, types.StateCreated, types.EmptyString)
-		task2 := getTaskAsset(job, types.StateDestroyed, types.EmptyString)
+		task1 := getTaskAsset(job, models.StateCreated, models.EmptyString)
+		task2 := getTaskAsset(job, models.StateDestroyed, models.EmptyString)
 
 		s.args.jobState = js
 		s.args.job = job
 		s.args.jobState.task.list[task1.SelfLink().String()] = task1
 		s.args.jobState.task.list[task2.SelfLink().String()] = task2
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateDestroy
+		s.want.jobState.job.Status.State = models.StateDestroy
 
 		return s
 	}())
@@ -375,12 +375,12 @@ func TestJobTaskProvision(t *testing.T) {
 
 		s := suit{name: "successful job state waiting without tasks in queue"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
 
 		s.args.jobState = js
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
 
 		return s
@@ -390,14 +390,14 @@ func TestJobTaskProvision(t *testing.T) {
 
 		s := suit{name: "successful job state running without tasks in queue"}
 
-		job := getJobAsset(types.StateRunning, types.EmptyString)
+		job := getJobAsset(models.StateRunning, models.EmptyString)
 		js := getJobStateAsset(job)
 
 		s.args.jobState = js
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 
 		return s
 	}())
@@ -406,20 +406,20 @@ func TestJobTaskProvision(t *testing.T) {
 
 		s := suit{name: "successful job state waiting with tasks in queue"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateQueued, types.EmptyString)
+		task := getTaskAsset(job, models.StateQueued, models.EmptyString)
 
 		s.args.jobState = js
 		s.args.jobState.task.list[task.SelfLink().String()] = task
 		s.args.jobState.task.queue[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateProvision
+		wt.Status.State = models.StateProvision
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateRunning
+		s.want.jobState.job.Status.State = models.StateRunning
 		s.want.jobState.task.queue[wt.SelfLink().String()] = wt
 
 		return s
@@ -429,11 +429,11 @@ func TestJobTaskProvision(t *testing.T) {
 
 		s := suit{name: "successful job state running with tasks in queue and active"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task1 := getTaskAsset(job, types.StatePaused, types.EmptyString)
-		task2 := getTaskAsset(job, types.StateQueued, types.EmptyString)
-		task3 := getTaskAsset(job, types.StateQueued, types.EmptyString)
+		task1 := getTaskAsset(job, models.StatePaused, models.EmptyString)
+		task2 := getTaskAsset(job, models.StateQueued, models.EmptyString)
+		task3 := getTaskAsset(job, models.StateQueued, models.EmptyString)
 
 		s.args.jobState = js
 		s.args.jobState.task.list[task1.SelfLink().String()] = task1
@@ -441,9 +441,9 @@ func TestJobTaskProvision(t *testing.T) {
 		s.args.jobState.task.list[task2.SelfLink().String()] = task3
 		s.args.jobState.task.active[task1.SelfLink().String()] = task1
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 
 		return s
 	}())
@@ -452,11 +452,11 @@ func TestJobTaskProvision(t *testing.T) {
 
 		s := suit{name: "successful job state running with tasks in queue and active and limit 2"}
 
-		job := getJobAsset(types.StateRunning, types.EmptyString)
+		job := getJobAsset(models.StateRunning, models.EmptyString)
 		js := getJobStateAsset(job)
-		task1 := getTaskAsset(job, types.StateProvision, types.EmptyString)
-		task2 := getTaskAsset(job, types.StateQueued, types.EmptyString)
-		task3 := getTaskAsset(job, types.StateQueued, types.EmptyString)
+		task1 := getTaskAsset(job, models.StateProvision, models.EmptyString)
+		task2 := getTaskAsset(job, models.StateQueued, models.EmptyString)
+		task3 := getTaskAsset(job, models.StateQueued, models.EmptyString)
 
 		s.args.jobState = js
 		s.args.jobState.job.Spec.Concurrency.Limit = 2
@@ -468,15 +468,15 @@ func TestJobTaskProvision(t *testing.T) {
 		s.args.jobState.task.queue[task3.SelfLink().String()] = task3
 
 		wt1 := getTaskCopy(task1)
-		wt1.Status.State = types.StateProvision
+		wt1.Status.State = models.StateProvision
 		wt2 := getTaskCopy(task2)
-		wt2.Status.State = types.StateProvision
+		wt2.Status.State = models.StateProvision
 		wt3 := getTaskCopy(task3)
-		wt3.Status.State = types.StateQueued
+		wt3.Status.State = models.StateQueued
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateRunning
+		s.want.jobState.job.Status.State = models.StateRunning
 		s.want.jobState.task.active[wt1.SelfLink().String()] = wt1
 		s.want.jobState.task.queue[wt2.SelfLink().String()] = wt2
 		s.want.jobState.task.queue[wt3.SelfLink().String()] = wt3
@@ -500,12 +500,12 @@ func TestJobTaskProvision(t *testing.T) {
 	}
 }
 
-func getJobAsset(state, message string) *types.Job {
-	j := new(types.Job)
+func getJobAsset(state, message string) *models.Job {
+	j := new(models.Job)
 
 	j.Meta.Namespace = "test"
 	j.Meta.Name = "job"
-	j.Meta.SelfLink = *types.NewJobSelfLink(j.Meta.Namespace, j.Meta.Name)
+	j.Meta.SelfLink = *models.NewJobSelfLink(j.Meta.Namespace, j.Meta.Name)
 
 	j.Status.State = state
 	j.Status.Message = message
@@ -516,20 +516,20 @@ func getJobAsset(state, message string) *types.Job {
 	return j
 }
 
-func getJobStateAsset(job *types.Job) *JobState {
+func getJobStateAsset(job *models.Job) *JobState {
 
-	n := new(types.Node)
+	n := new(models.Node)
 
 	n.Meta.Name = "node"
 	n.Meta.Hostname = "node.local"
-	n.Status.Capacity = types.NodeResources{
+	n.Status.Capacity = models.NodeResources{
 		Containers: 10,
 		Pods:       10,
 		RAM:        1000,
 		CPU:        1,
 		Storage:    1000,
 	}
-	n.Meta.SelfLink = *types.NewNodeSelfLink(n.Meta.Hostname)
+	n.Meta.SelfLink = *models.NewNodeSelfLink(n.Meta.Hostname)
 
 	cs := cluster.NewClusterState()
 	cs.SetNode(n)
@@ -545,30 +545,30 @@ func getJobStateCopy(js *JobState) *JobState {
 
 	njs := NewJobState(js.cluster, &j)
 
-	njs.task.list = make(map[string]*types.Task, 0)
+	njs.task.list = make(map[string]*models.Task, 0)
 	for k, t := range js.task.list {
 		njs.task.list[k] = &(*t)
 	}
 
-	njs.task.active = make(map[string]*types.Task, 0)
+	njs.task.active = make(map[string]*models.Task, 0)
 	for k, t := range js.task.active {
 		task := *t
 		njs.task.active[k] = &task
 	}
 
-	njs.task.queue = make(map[string]*types.Task, 0)
+	njs.task.queue = make(map[string]*models.Task, 0)
 	for k, t := range js.task.queue {
 		task := *t
 		njs.task.queue[k] = &task
 	}
 
-	njs.task.finished = make([]*types.Task, 0)
+	njs.task.finished = make([]*models.Task, 0)
 	for _, t := range js.task.finished {
 		task := *t
 		njs.task.finished = append(njs.task.finished, &task)
 	}
 
-	njs.pod.list = make(map[string]*types.Pod, 0)
+	njs.pod.list = make(map[string]*models.Pod, 0)
 	for k, p := range js.pod.list {
 		pod := *p
 		njs.pod.list[k] = &pod
@@ -638,7 +638,7 @@ func compareJobStateProperties(old *JobState, new *JobState) error {
 		return errors.New("finished tasks count is different")
 	}
 
-	finished := make(map[string]*types.Task, 0)
+	finished := make(map[string]*models.Task, 0)
 	for _, v := range old.task.finished {
 		finished[v.SelfLink().String()] = v
 	}

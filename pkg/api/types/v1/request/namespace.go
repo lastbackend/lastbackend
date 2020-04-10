@@ -20,9 +20,12 @@ package request
 
 import (
 	"encoding/json"
+
+	"gopkg.in/yaml.v2"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"github.com/lastbackend/lastbackend/internal/util/resource"
-	"gopkg.in/yaml.v2"
 )
 
 type NamespaceManifest struct {
@@ -57,7 +60,7 @@ func (s *NamespaceManifest) ToYaml() ([]byte, error) {
 
 func (s *NamespaceManifest) SetNamespaceMeta(ns *types.NamespaceManifest) {
 
-	if ns.Meta.Name == types.EmptyString {
+	if ns.Meta.Name == models.EmptyString {
 		ns.Meta.Name = *s.Meta.Name
 	}
 

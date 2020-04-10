@@ -22,7 +22,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/proxy"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -52,7 +52,7 @@ func TestNewLogger(t *testing.T) {
 
 	<-time.NewTimer(time.Second).C
 
-	cl := proxy.NewClient("test", types.EmptyString, nil)
+	cl := proxy.NewClient("test", models.EmptyString, nil)
 	if !assert.NotNil(t, cl, "client can not be nil") {
 		return
 	}
@@ -63,8 +63,8 @@ func TestNewLogger(t *testing.T) {
 		lines   = 100
 		total   = 0
 		done    = make(chan bool)
-		sl      = types.NewTaskSelfLink("ns", "job", "task").String()
-		psl, _  = types.NewPodSelfLink(types.KindTask, sl, "pod")
+		sl      = models.NewTaskSelfLink("ns", "job", "task").String()
+		psl, _  = models.NewPodSelfLink(models.KindTask, sl, "pod")
 	)
 
 	<-time.NewTimer(time.Millisecond * 100).C
@@ -77,7 +77,7 @@ func TestNewLogger(t *testing.T) {
 		}
 
 		i++
-		log := types.LogMessage{
+		log := models.LogMessage{
 			Selflink: psl.String(),
 			Data:     fmt.Sprintf("stored log: %d", i),
 		}
@@ -100,7 +100,7 @@ func TestNewLogger(t *testing.T) {
 		var stream *File
 
 		for {
-			stream, err = l.storage.GetStream(types.KindTask, sl, false)
+			stream, err = l.storage.GetStream(models.KindTask, sl, false)
 			if err != nil {
 				t.Error(err.Error())
 				break
@@ -142,7 +142,7 @@ func TestNewLogger(t *testing.T) {
 			}
 
 			i++
-			log := types.LogMessage{
+			log := models.LogMessage{
 				Selflink: psl.String(),
 				Data:     fmt.Sprintf("realtime log: %d", i),
 			}

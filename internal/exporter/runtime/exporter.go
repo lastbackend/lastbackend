@@ -20,16 +20,16 @@ package runtime
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/proxy"
 	"github.com/lastbackend/lastbackend/internal/util/system"
 	"os"
 )
 
-func (r *Runtime) ExporterInfo() types.ExporterInfo {
+func (r *Runtime) ExporterInfo() models.ExporterInfo {
 
 	var (
-		info = types.ExporterInfo{}
+		info = models.ExporterInfo{}
 	)
 
 	osInfo := system.GetOsInfo()
@@ -52,9 +52,9 @@ func (r *Runtime) ExporterInfo() types.ExporterInfo {
 	return info
 }
 
-func (r *Runtime) ExporterStatus() types.ExporterStatus {
+func (r *Runtime) ExporterStatus() models.ExporterStatus {
 
-	var state = types.ExporterStatus{}
+	var state = models.ExporterStatus{}
 
 	ip, err := system.GetHostIP(r.iface)
 	if err != nil {

@@ -23,19 +23,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/api/envs"
-	"github.com/lastbackend/lastbackend/internal/master/http/deployment"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/lastbackend/lastbackend/internal/api/envs"
+	"github.com/lastbackend/lastbackend/internal/master/http/deployment"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -60,14 +60,14 @@ func TestDeploymentInfo(t *testing.T) {
 	p2 := getPodAsset(ns1.Meta.Name, s1.Meta.Name, d1.Meta.Name, "test", "")
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx        context.Context
-		namespace  *types.Namespace
-		service    *types.Service
-		deployment *types.Deployment
+		namespace  *models.Namespace
+		service    *models.Service
+		deployment *models.Deployment
 	}
 
 	tests := []struct {
@@ -120,16 +120,16 @@ func TestDeploymentInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Deployment(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Deployment(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Pod(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Pod(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -221,18 +221,18 @@ func TestDeploymentListHList(t *testing.T) {
 	d1 := getDeploymentAsset(ns1.Meta.Name, s1.Meta.Name, "demo")
 	d2 := getDeploymentAsset(ns1.Meta.Name, s2.Meta.Name, "test")
 
-	dl := types.NewDeploymentMap()
+	dl := models.NewDeploymentMap()
 	dl.Items[d1.SelfLink().String()] = d1
 	dl.Items[d2.SelfLink().String()] = d2
 
 	type fields struct {
-		stg storage.Storage
+		stg storage.IStorage
 	}
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
-		service   *types.Service
+		namespace *models.Namespace
+		service   *models.Service
 	}
 
 	tests := []struct {
@@ -242,7 +242,7 @@ func TestDeploymentListHList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         *types.DeploymentMap
+		want         *models.DeploymentMap
 		wantErr      bool
 		expectedCode int
 	}{
@@ -276,13 +276,13 @@ func TestDeploymentListHList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), models.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Deployment(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Deployment(), models.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -355,44 +355,44 @@ func TestDeploymentListHList(t *testing.T) {
 
 }
 
-func getNamespaceAsset(name, desc string) *types.Namespace {
-	var n = types.Namespace{}
+func getNamespaceAsset(name, desc string) *models.Namespace {
+	var n = models.Namespace{}
 	n.Meta.SetDefault()
 	n.Meta.Name = name
 	n.Meta.Description = desc
-	n.Meta.SelfLink = *types.NewNamespaceSelfLink(name)
+	n.Meta.SelfLink = *models.NewNamespaceSelfLink(name)
 
 	return &n
 }
 
-func getServiceAsset(namespace, name, desc string) *types.Service {
-	var n = types.Service{}
+func getServiceAsset(namespace, name, desc string) *models.Service {
+	var n = models.Service{}
 
 	n.Meta.SetDefault()
 	n.Meta.Namespace = namespace
 	n.Meta.Name = name
 	n.Meta.Description = desc
-	n.Meta.SelfLink = *types.NewServiceSelfLink(namespace, name)
+	n.Meta.SelfLink = *models.NewServiceSelfLink(namespace, name)
 	return &n
 }
 
-func getDeploymentAsset(namespace, service, name string) *types.Deployment {
-	var d = types.Deployment{}
+func getDeploymentAsset(namespace, service, name string) *models.Deployment {
+	var d = models.Deployment{}
 	d.Meta.SetDefault()
 	d.Meta.Namespace = namespace
 	d.Meta.Service = service
 	d.Meta.Name = name
-	d.Meta.SelfLink = *types.NewDeploymentSelfLink(namespace, service, name)
+	d.Meta.SelfLink = *models.NewDeploymentSelfLink(namespace, service, name)
 	return &d
 }
 
-func getPodAsset(namespace, service, deployment, name, desc string) types.Pod {
-	p := types.Pod{}
+func getPodAsset(namespace, service, deployment, name, desc string) models.Pod {
+	p := models.Pod{}
 
 	p.Meta.Name = name
 	p.Meta.Description = desc
 	p.Meta.Namespace = namespace
-	psl, _ := types.NewPodSelfLink(types.KindDeployment, types.NewDeploymentSelfLink(namespace, service, deployment).String(), name)
+	psl, _ := models.NewPodSelfLink(models.KindDeployment, models.NewDeploymentSelfLink(namespace, service, deployment).String(), name)
 	p.Meta.SelfLink = *psl
 
 	return p

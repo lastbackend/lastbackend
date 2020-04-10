@@ -21,19 +21,19 @@ package views
 import (
 	"encoding/json"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type IngressView struct{}
 
-func (nv *IngressView) New(obj *types.Ingress) *Ingress {
+func (nv *IngressView) New(obj *models.Ingress) *Ingress {
 	n := Ingress{}
 	n.Meta = nv.ToIngressMeta(obj.Meta)
 	n.Status = nv.ToIngressStatus(obj.Status)
 	return &n
 }
 
-func (nv *IngressView) ToIngressMeta(meta types.IngressMeta) IngressMeta {
+func (nv *IngressView) ToIngressMeta(meta models.IngressMeta) IngressMeta {
 	m := IngressMeta{}
 	m.Name = meta.Name
 	m.Description = meta.Description
@@ -42,7 +42,7 @@ func (nv *IngressView) ToIngressMeta(meta types.IngressMeta) IngressMeta {
 	return m
 }
 
-func (nv *IngressView) ToIngressStatus(status types.IngressStatus) IngressStatus {
+func (nv *IngressView) ToIngressStatus(status models.IngressStatus) IngressStatus {
 	return IngressStatus{
 		Ready: status.Ready,
 	}
@@ -52,7 +52,7 @@ func (obj *Ingress) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func (nv *IngressView) NewList(obj *types.IngressList) *IngressList {
+func (nv *IngressView) NewList(obj *models.IngressList) *IngressList {
 	if obj == nil {
 		return nil
 	}
@@ -69,12 +69,12 @@ func (obj *IngressList) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func (nv *IngressView) NewManifest(obj *types.IngressManifest) *IngressManifest {
+func (nv *IngressView) NewManifest(obj *models.IngressManifest) *IngressManifest {
 
 	manifest := IngressManifest{
-		Endpoints: make(map[string]*types.EndpointManifest, 0),
-		Routes:    make(map[string]*types.RouteManifest, 0),
-		Subnets:   make(map[string]*types.SubnetManifest, 0),
+		Endpoints: make(map[string]*models.EndpointManifest, 0),
+		Routes:    make(map[string]*models.RouteManifest, 0),
+		Subnets:   make(map[string]*models.SubnetManifest, 0),
 	}
 
 	if obj == nil {
@@ -91,16 +91,16 @@ func (nv *IngressView) NewManifest(obj *types.IngressManifest) *IngressManifest 
 	return &manifest
 }
 
-func (obj *IngressManifest) Decode() *types.IngressManifest {
+func (obj *IngressManifest) Decode() *models.IngressManifest {
 
-	manifest := types.IngressManifest{
-		Routes:    make(map[string]*types.RouteManifest, 0),
-		Endpoints: make(map[string]*types.EndpointManifest, 0),
-		Network:   make(map[string]*types.SubnetManifest, 0),
+	manifest := models.IngressManifest{
+		Routes:    make(map[string]*models.RouteManifest, 0),
+		Endpoints: make(map[string]*models.EndpointManifest, 0),
+		Network:   make(map[string]*models.SubnetManifest, 0),
 	}
 
 	manifest.Meta.Initial = obj.Meta.Initial
-	manifest.Resolvers = make(map[string]*types.ResolverManifest, 0)
+	manifest.Resolvers = make(map[string]*models.ResolverManifest, 0)
 
 	for i, r := range obj.Resolvers {
 		manifest.Resolvers[i] = r

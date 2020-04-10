@@ -20,7 +20,8 @@ package network
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/network/state"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
@@ -31,7 +32,7 @@ func (n *Network) Subnets() *state.SubnetState {
 	return n.state.Subnets()
 }
 
-func (n *Network) Info(ctx context.Context) *types.NetworkState {
+func (n *Network) Info(ctx context.Context) *models.NetworkState {
 	return n.cni.Info(ctx)
 }
 
@@ -49,13 +50,13 @@ func (n *Network) SubnetRestore(ctx context.Context) error {
 	return nil
 }
 
-func (n *Network) SubnetManage(ctx context.Context, cidr string, sn *types.SubnetManifest) error {
+func (n *Network) SubnetManage(ctx context.Context, cidr string, sn *models.SubnetManifest) error {
 
 	subnets := n.state.Subnets().GetSubnets()
 	if state, ok := subnets[cidr]; ok {
 
 		log.Debugf("check subnet exists: %s", cidr)
-		if sn.State == types.StateDestroy {
+		if sn.State == models.StateDestroy {
 
 			log.Debugf("destroy subnet: %s", cidr)
 			if err := n.cni.Destroy(ctx, &state); err != nil {
@@ -72,7 +73,7 @@ func (n *Network) SubnetManage(ctx context.Context, cidr string, sn *types.Subne
 		return nil
 	}
 
-	if sn.State == types.StateDestroy {
+	if sn.State == models.StateDestroy {
 		return nil
 	}
 

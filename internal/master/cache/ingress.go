@@ -21,7 +21,7 @@ package cache
 import (
 	"sync"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -29,32 +29,32 @@ const logCacheIngress = "api:cache:ingress"
 
 type CacheIngressManifest struct {
 	lock      sync.RWMutex
-	ingress   map[string]*types.Ingress
-	discovery map[string]*types.Discovery
-	routes    map[string]*types.RouteManifest
-	manifests map[string]*types.IngressManifest
+	ingress   map[string]*models.Ingress
+	discovery map[string]*models.Discovery
+	routes    map[string]*models.RouteManifest
+	manifests map[string]*models.IngressManifest
 }
 
-func (c *CacheIngressManifest) SetSubnetManifest(cidr string, s *types.SubnetManifest) {
+func (c *CacheIngressManifest) SetSubnetManifest(cidr string, s *models.SubnetManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
 	for n := range c.manifests {
 
 		if _, ok := c.manifests[n].Network[cidr]; !ok {
-			c.manifests[n].Network = make(map[string]*types.SubnetManifest)
+			c.manifests[n].Network = make(map[string]*models.SubnetManifest)
 		}
 
 		c.manifests[n].Network[cidr] = s
 	}
 }
 
-func (c *CacheIngressManifest) SetRouteManifest(ingress, name string, s *types.RouteManifest) {
+func (c *CacheIngressManifest) SetRouteManifest(ingress, name string, s *models.RouteManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	log.Debugf("set route manifest %s", name)
 
-	if s.State == types.StateDestroyed {
+	if s.State == models.StateDestroyed {
 		delete(c.routes, name)
 	} else {
 		c.routes[name] = s
@@ -62,7 +62,7 @@ func (c *CacheIngressManifest) SetRouteManifest(ingress, name string, s *types.R
 
 	if _, ok := c.manifests[ingress]; ok {
 		if _, ok := c.manifests[ingress].Routes[name]; !ok {
-			c.manifests[ingress].Routes = make(map[string]*types.RouteManifest, 0)
+			c.manifests[ingress].Routes = make(map[string]*models.RouteManifest, 0)
 		}
 		c.manifests[ingress].Routes[name] = s
 	}
@@ -79,7 +79,7 @@ func (c *CacheIngressManifest) DelRouteManifest(ingress, name string) {
 	}
 }
 
-func (c *CacheIngressManifest) SetEndpointManifest(addr string, s *types.EndpointManifest) {
+func (c *CacheIngressManifest) SetEndpointManifest(addr string, s *models.EndpointManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -87,13 +87,13 @@ func (c *CacheIngressManifest) SetEndpointManifest(addr string, s *types.Endpoin
 
 	for _, n := range c.manifests {
 		if n.Endpoints == nil {
-			n.Endpoints = make(map[string]*types.EndpointManifest, 0)
+			n.Endpoints = make(map[string]*models.EndpointManifest, 0)
 		}
 		n.Endpoints[addr] = s
 	}
 }
 
-func (c *CacheIngressManifest) SetIngress(ingress *types.Ingress) {
+func (c *CacheIngressManifest) SetIngress(ingress *models.Ingress) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.ingress[ingress.SelfLink().String()] = ingress
@@ -106,7 +106,7 @@ func (c *CacheIngressManifest) DelIngress(selflink string) {
 	delete(c.manifests, selflink)
 }
 
-func (c *CacheIngressManifest) SetDiscovery(discovery *types.Discovery) {
+func (c *CacheIngressManifest) SetDiscovery(discovery *models.Discovery) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -142,11 +142,11 @@ func (c *CacheIngressManifest) DelDiscovery(selflink string) {
 	defer c.lock.Unlock()
 	delete(c.discovery, selflink)
 
-	resolvers := make(map[string]*types.ResolverManifest, 0)
+	resolvers := make(map[string]*models.ResolverManifest, 0)
 
 	for _, d := range c.discovery {
 		if d.Status.Ready {
-			resolvers[d.Status.IP] = &types.ResolverManifest{
+			resolvers[d.Status.IP] = &models.ResolverManifest{
 				IP:   d.Status.IP,
 				Port: d.Status.Port,
 			}
@@ -159,11 +159,11 @@ func (c *CacheIngressManifest) DelDiscovery(selflink string) {
 }
 
 func (c *CacheIngressManifest) SetResolvers() {
-	resolvers := make(map[string]*types.ResolverManifest, 0)
+	resolvers := make(map[string]*models.ResolverManifest, 0)
 
 	for _, d := range c.discovery {
 		if d.Status.Ready {
-			resolvers[d.Status.IP] = &types.ResolverManifest{
+			resolvers[d.Status.IP] = &models.ResolverManifest{
 				IP:   d.Status.IP,
 				Port: d.Status.Port,
 			}
@@ -175,13 +175,13 @@ func (c *CacheIngressManifest) SetResolvers() {
 	}
 }
 
-func (c *CacheIngressManifest) GetResolvers() map[string]*types.ResolverManifest {
+func (c *CacheIngressManifest) GetResolvers() map[string]*models.ResolverManifest {
 
-	resolvers := make(map[string]*types.ResolverManifest, 0)
+	resolvers := make(map[string]*models.ResolverManifest, 0)
 
 	for _, d := range c.discovery {
 		if d.Status.Ready {
-			resolvers[d.Status.IP] = &types.ResolverManifest{
+			resolvers[d.Status.IP] = &models.ResolverManifest{
 				IP:   d.Status.IP,
 				Port: d.Status.Port,
 			}
@@ -191,7 +191,7 @@ func (c *CacheIngressManifest) GetResolvers() map[string]*types.ResolverManifest
 	return resolvers
 }
 
-func (c *CacheIngressManifest) Get(ingress string) *types.IngressManifest {
+func (c *CacheIngressManifest) Get(ingress string) *models.IngressManifest {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if s, ok := c.manifests[ingress]; !ok {
@@ -201,14 +201,14 @@ func (c *CacheIngressManifest) Get(ingress string) *types.IngressManifest {
 	}
 }
 
-func (c *CacheIngressManifest) GetRoutes(ingress string) map[string]*types.RouteManifest {
+func (c *CacheIngressManifest) GetRoutes(ingress string) map[string]*models.RouteManifest {
 	return c.routes
 }
 
 func (c *CacheIngressManifest) Flush(ingress string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	c.manifests[ingress] = new(types.IngressManifest)
+	c.manifests[ingress] = new(models.IngressManifest)
 }
 
 func (c *CacheIngressManifest) Clear(ingress string) {
@@ -219,9 +219,9 @@ func (c *CacheIngressManifest) Clear(ingress string) {
 
 func NewCacheIngressManifest() *CacheIngressManifest {
 	c := new(CacheIngressManifest)
-	c.manifests = make(map[string]*types.IngressManifest, 0)
-	c.discovery = make(map[string]*types.Discovery, 0)
-	c.routes = make(map[string]*types.RouteManifest, 0)
-	c.ingress = make(map[string]*types.Ingress)
+	c.manifests = make(map[string]*models.IngressManifest, 0)
+	c.discovery = make(map[string]*models.Discovery, 0)
+	c.routes = make(map[string]*models.RouteManifest, 0)
+	c.ingress = make(map[string]*models.Ingress)
 	return c
 }

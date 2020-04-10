@@ -18,13 +18,13 @@
 
 package request
 
-import "github.com/lastbackend/lastbackend/internal/pkg/types"
+import "github.com/lastbackend/lastbackend/internal/pkg/models"
 
 // swagger:model request_ingress_connect
 type IngressConnectOptions struct {
-	Info    types.IngressInfo   `json:"info"`
-	Status  types.IngressStatus `json:"status"`
-	Network types.NetworkState  `json:"network"`
+	Info    models.IngressInfo   `json:"info"`
+	Status  models.IngressStatus `json:"status"`
+	Network models.NetworkState  `json:"network"`
 }
 
 // swagger:ignore
@@ -34,6 +34,6 @@ type IngressRemoveOptions struct {
 }
 
 type IngressStatusOptions struct {
-	Status types.IngressStatus           `json:"status"`
-	Routes map[string]*types.RouteStatus `json:"routes"`
+	Status models.IngressStatus           `json:"status"`
+	Routes map[string]*models.RouteStatus `json:"routes"`
 }

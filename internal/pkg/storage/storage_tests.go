@@ -22,25 +22,22 @@ import (
 	"context"
 	"testing"
 
-	"encoding/json"
-
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/tools/log"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
 
-func StorageGetAssets(t *testing.T, stg Storage) {
+func StorageGetAssets(t *testing.T, stg IStorage) {
 
 	var ctx = context.Background()
 
 	type obj struct {
-		types.System
+		models.System
 		Name string `json:"name"`
 	}
 
 	type fields struct {
-		stg Storage
+		stg IStorage
 	}
 
 	type args struct {
@@ -86,13 +83,13 @@ func StorageGetAssets(t *testing.T, stg Storage) {
 
 	for _, tt := range tests {
 
-		err := tt.fields.stg.Del(tt.args.ctx, tt.fields.stg.Collection().Test(), "")
+		err := tt.fields.stg.Del("demo", tt.args.obj.Name)
 		if !assert.NoError(t, err) {
 			return
 		}
 
 		if tt.args.obj != nil {
-			err = tt.fields.stg.Put(tt.args.ctx, tt.fields.stg.Collection().Test(), tt.args.obj.Name, tt.args.obj, nil)
+			err := tt.fields.stg.Set("demo", tt.args.obj.Name, tt.args.obj)
 			if !assert.NoError(t, err) {
 				return
 			}
@@ -100,8 +97,7 @@ func StorageGetAssets(t *testing.T, stg Storage) {
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			err := tt.fields.stg.Get(tt.args.ctx, tt.fields.stg.Collection().Test(), tt.args.key, tt.args.out, nil)
-
+			err := tt.fields.stg.Get("demo", tt.args.key, tt.args.out)
 			if tt.wantErr {
 				if !assert.Error(t, err, "expected err") {
 					return
@@ -124,65 +120,38 @@ func StorageGetAssets(t *testing.T, stg Storage) {
 
 }
 
-func StorageListAssets(t *testing.T, stg Storage) {
+func StorageListAssets(t *testing.T, stg IStorage) {
 
 	var ctx = context.Background()
 
 	type obj struct {
-		types.System
 		Name string `json:"name"`
 	}
 
-	type objl struct {
-		types.System
-		Items []*obj
-	}
-
 	type fields struct {
-		stg Storage
+		stg IStorage
 	}
 
 	type args struct {
 		ctx context.Context
-		obj objl
-		out *objl
+		obj []*obj
+		out []*obj
 		q   string
-	}
-
-	outf := func() *objl {
-		nl := objl{}
-		return &nl
 	}
 
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
-		want    *objl
+		want    []*obj
 		wantErr bool
 		err     string
 	}{
 		{
-			"out struct is nil",
-			fields{stg},
-			args{ctx: ctx, obj: objl{Items: []*obj{{Name: "demo"}, {Name: "test"}}}, out: nil},
-			nil,
-			true,
-			errors.ErrStructOutIsNil,
-		},
-		{
-			"test successful list with filter",
-			fields{stg},
-			args{ctx: ctx, obj: objl{Items: []*obj{{Name: "demo"}, {Name: "test"}}}, out: outf(), q: "demo"},
-			&objl{Items: []*obj{{Name: "demo"}}},
-			false,
-			"",
-		},
-		{
 			"test successful list",
 			fields{stg},
-			args{ctx: ctx, obj: objl{Items: []*obj{{Name: "demo"}, {Name: "test"}}}, out: outf()},
-			&objl{Items: []*obj{{Name: "demo"}, {Name: "test"}}},
+			args{ctx: ctx, obj: []*obj{{Name: "demo"}, {Name: "test"}}, out: []*obj{}},
+			[]*obj{{Name: "demo"}, {Name: "test"}},
 			false,
 			"",
 		},
@@ -190,13 +159,8 @@ func StorageListAssets(t *testing.T, stg Storage) {
 
 	for _, tt := range tests {
 
-		err := tt.fields.stg.Del(tt.args.ctx, tt.fields.stg.Collection().Test(), "")
-		if !assert.NoError(t, err) {
-			return
-		}
-
-		for _, o := range tt.args.obj.Items {
-			err = tt.fields.stg.Put(tt.args.ctx, tt.fields.stg.Collection().Test(), o.Name, o, nil)
+		for _, o := range tt.args.obj {
+			err := tt.fields.stg.Set("demo", o.Name, o)
 			if !assert.NoError(t, err) {
 				return
 			}
@@ -204,7 +168,7 @@ func StorageListAssets(t *testing.T, stg Storage) {
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			err := tt.fields.stg.List(tt.args.ctx, tt.fields.stg.Collection().Test(), tt.args.q, tt.args.out, nil)
+			err := tt.fields.stg.List("demo", &tt.args.out)
 
 			if tt.wantErr {
 				if !assert.Error(t, err, "expected err") {
@@ -222,13 +186,13 @@ func StorageListAssets(t *testing.T, stg Storage) {
 				return
 			}
 
-			if !assert.Equal(t, len(tt.want.Items), len(tt.args.out.Items), "object received invalid length") {
+			if !assert.Equal(t, len(tt.want), len(tt.args.out), "object received invalid length") {
 				return
 			}
 
-			for _, w := range tt.want.Items {
+			for _, w := range tt.want {
 				var found bool
-				for _, a := range tt.args.out.Items {
+				for _, a := range tt.args.out {
 					if w.Name == a.Name {
 						found = true
 					}
@@ -244,122 +208,7 @@ func StorageListAssets(t *testing.T, stg Storage) {
 
 }
 
-func StorageMapAssets(t *testing.T, stg Storage) {
-
-	var ctx = context.Background()
-
-	type obj struct {
-		types.System
-		Name string `json:"name"`
-	}
-
-	type objm struct {
-		types.System
-		Items map[string]*obj
-	}
-
-	type fields struct {
-		stg Storage
-	}
-
-	type args struct {
-		ctx context.Context
-		obj []*obj
-		out *objm
-		q   string
-	}
-
-	outf := func() *objm {
-		out := objm{}
-		out.Items = make(map[string]*obj, 0)
-		return &out
-	}
-
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *objm
-		wantErr bool
-		err     string
-	}{
-		{
-			"out struct is nil",
-			fields{stg},
-			args{ctx: ctx, obj: []*obj{{Name: "demo"}, {Name: "test"}}, out: nil},
-			nil,
-			true,
-			errors.ErrStructOutIsNil,
-		},
-		{
-			"test successful list with filter",
-			fields{stg},
-			args{ctx: ctx, obj: []*obj{{Name: "demo"}, {Name: "test"}}, out: outf(), q: "demo"},
-			&objm{Items: map[string]*obj{"demo": {Name: "demo"}}},
-			false,
-			"",
-		},
-		{
-			"test successful map",
-			fields{stg},
-			args{ctx: ctx, obj: []*obj{{Name: "demo"}, {Name: "test"}}, out: outf()},
-			&objm{Items: map[string]*obj{"demo": {Name: "demo"}, "test": {Name: "test"}}},
-			false,
-			"",
-		},
-	}
-
-	for _, tt := range tests {
-
-		err := tt.fields.stg.Del(tt.args.ctx, tt.fields.stg.Collection().Test(), "")
-		if !assert.NoError(t, err) {
-			return
-		}
-
-		for _, o := range tt.args.obj {
-			err = tt.fields.stg.Put(tt.args.ctx, tt.fields.stg.Collection().Test(), o.Name, o, nil)
-			if !assert.NoError(t, err) {
-				return
-			}
-		}
-
-		t.Run(tt.name, func(t *testing.T) {
-
-			err := tt.fields.stg.Map(tt.args.ctx, tt.fields.stg.Collection().Test(), tt.args.q, tt.args.out, nil)
-
-			if tt.wantErr {
-				if !assert.Error(t, err, "expected err") {
-					return
-				}
-				assert.Equal(t, tt.err, err.Error(), "err message different")
-				return
-			}
-
-			if !assert.NoError(t, err) {
-				return
-			}
-
-			if !assert.NotNil(t, tt.args.out, "expected pointer") {
-				return
-			}
-
-			jse, err := json.Marshal(tt.want.Items)
-			if !assert.NoError(t, err) {
-				return
-			}
-
-			jsa, err := json.Marshal(tt.args.out.Items)
-			if !assert.NoError(t, err) {
-				return
-			}
-
-			assert.Equal(t, string(jse), string(jsa), "object received error")
-		})
-	}
-
-}
-
-func StoragePutAssets(t *testing.T, stg Storage) {
+func StoragePutAssets(t *testing.T, stg IStorage) {
 
 	var ctx = context.Background()
 
@@ -368,7 +217,7 @@ func StoragePutAssets(t *testing.T, stg Storage) {
 	}
 
 	type fields struct {
-		stg Storage
+		stg IStorage
 	}
 
 	type args struct {
@@ -408,19 +257,19 @@ func StoragePutAssets(t *testing.T, stg Storage) {
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			err := tt.fields.stg.Del(tt.args.ctx, tt.fields.stg.Collection().Test(), "")
+			err := tt.fields.stg.Del("demo", tt.args.obj.Name)
 			if !assert.NoError(t, err) {
 				return
 			}
 
 			if tt.wantErr && tt.err == errors.ErrEntityExists {
-				err = tt.fields.stg.Put(tt.args.ctx, tt.fields.stg.Collection().Test(), tt.args.obj.Name, tt.args.obj, nil)
+				err = tt.fields.stg.Set("demo", tt.args.obj.Name, tt.args.obj)
 				if !assert.NoError(t, err) {
 					return
 				}
 			}
 
-			err = tt.fields.stg.Put(tt.args.ctx, tt.fields.stg.Collection().Test(), tt.args.obj.Name, tt.args.obj, nil)
+			err = tt.fields.stg.Put("demo", tt.args.obj.Name, tt.args.obj)
 			if tt.wantErr {
 				if !assert.Error(t, err, "expected err") {
 					return
@@ -433,7 +282,7 @@ func StoragePutAssets(t *testing.T, stg Storage) {
 				return
 			}
 
-			err = tt.fields.stg.Get(tt.args.ctx, tt.fields.stg.Collection().Test(), tt.args.key, tt.args.out, nil)
+			err = tt.fields.stg.Get("demo", tt.args.key, tt.args.out)
 
 			if !assert.NoError(t, err) {
 				return
@@ -449,7 +298,7 @@ func StoragePutAssets(t *testing.T, stg Storage) {
 
 }
 
-func StorageSetAssets(t *testing.T, stg Storage) {
+func StorageSetAssets(t *testing.T, stg IStorage) {
 
 	var ctx = context.Background()
 
@@ -459,7 +308,7 @@ func StorageSetAssets(t *testing.T, stg Storage) {
 	}
 
 	type fields struct {
-		stg Storage
+		stg IStorage
 	}
 
 	type args struct {
@@ -478,22 +327,6 @@ func StorageSetAssets(t *testing.T, stg Storage) {
 		err     string
 	}{
 		{
-			"test set err entity not found",
-			fields{stg},
-			args{ctx: ctx, key: "demo", obj: &obj{"demo", "test"}, out: new(obj)},
-			&obj{"demo", "test"},
-			true,
-			errors.ErrEntityNotFound,
-		},
-		{
-			"test successful set when entity not exists",
-			fields{stg},
-			args{ctx: ctx, key: "demo", obj: &obj{"demo", "test"}, out: new(obj)},
-			&obj{"demo", "test"},
-			false,
-			errors.ErrEntityNotFound,
-		},
-		{
 			"test successful set",
 			fields{stg},
 			args{ctx: ctx, key: "demo", obj: &obj{"demo", "test"}, out: new(obj)},
@@ -507,17 +340,9 @@ func StorageSetAssets(t *testing.T, stg Storage) {
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			err := tt.fields.stg.Del(tt.args.ctx, tt.fields.stg.Collection().Test(), "")
+			err := tt.fields.stg.Del("demo", "test")
 			if !assert.NoError(t, err) {
 				return
-			}
-
-			log.Info(tt.err)
-			if tt.err != errors.ErrEntityNotFound {
-				err = tt.fields.stg.Put(tt.args.ctx, tt.fields.stg.Collection().Test(), tt.args.obj.Name, &obj{"demo", "demo"}, nil)
-				if !assert.NoError(t, err) {
-					return
-				}
 			}
 
 			var opts = GetOpts()
@@ -526,7 +351,7 @@ func StorageSetAssets(t *testing.T, stg Storage) {
 				opts.Force = true
 			}
 
-			err = tt.fields.stg.Set(tt.args.ctx, tt.fields.stg.Collection().Test(), tt.args.obj.Name, tt.args.obj, opts)
+			err = tt.fields.stg.Set("demo", tt.args.obj.Name, tt.args.obj)
 
 			if tt.wantErr {
 				if !assert.Error(t, err, "expected err") {
@@ -540,8 +365,7 @@ func StorageSetAssets(t *testing.T, stg Storage) {
 				return
 			}
 
-			err = tt.fields.stg.Get(tt.args.ctx, tt.fields.stg.Collection().Test(), tt.args.key, tt.args.out, nil)
-
+			err = tt.fields.stg.Get("demo", tt.args.key, tt.args.out)
 			if !assert.NoError(t, err) {
 				return
 			}
@@ -556,7 +380,7 @@ func StorageSetAssets(t *testing.T, stg Storage) {
 
 }
 
-func StorageDelAssets(t *testing.T, stg Storage) {
+func StorageDelAssets(t *testing.T, stg IStorage) {
 
 	var ctx = context.Background()
 
@@ -565,7 +389,7 @@ func StorageDelAssets(t *testing.T, stg Storage) {
 	}
 
 	type fields struct {
-		stg Storage
+		stg IStorage
 	}
 
 	type args struct {
@@ -605,13 +429,13 @@ func StorageDelAssets(t *testing.T, stg Storage) {
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			err := tt.fields.stg.Del(tt.args.ctx, tt.fields.stg.Collection().Test(), "")
+			err := tt.fields.stg.Del("demo", "test")
 			if !assert.NoError(t, err) {
 				return
 			}
 
 			if !tt.wantErr && tt.err != errors.ErrEntityNotFound {
-				err = tt.fields.stg.Put(tt.args.ctx, tt.fields.stg.Collection().Test(), tt.args.obj.Name, tt.args.obj, nil)
+				err = tt.fields.stg.Put("demo", tt.args.obj.Name, tt.args.obj)
 				if !assert.NoError(t, err) {
 					return
 				}
@@ -623,14 +447,14 @@ func StorageDelAssets(t *testing.T, stg Storage) {
 				opts.Force = true
 			}
 
-			err = tt.fields.stg.Del(tt.args.ctx, tt.fields.stg.Collection().Test(), tt.args.obj.Name)
+			err = tt.fields.stg.Del("demo", tt.args.obj.Name)
 			if !assert.NoError(t, err) {
 				return
 			}
 
 			if !tt.wantErr {
 
-				err := tt.fields.stg.Get(tt.args.ctx, tt.fields.stg.Collection().Test(), tt.args.key, tt.args.out, nil)
+				err := tt.fields.stg.Get("demo", tt.args.key, tt.args.out)
 				if !assert.Error(t, err, "expected err") {
 					return
 				}

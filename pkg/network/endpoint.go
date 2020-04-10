@@ -20,9 +20,9 @@ package network
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/network/state"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/pkg/network/state"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -34,13 +34,13 @@ func (n *Network) Endpoints() *state.EndpointState {
 	return n.state.Endpoints()
 }
 
-func (n *Network) EndpointManage(ctx context.Context, key string, manifest *types.EndpointManifest) error {
+func (n *Network) EndpointManage(ctx context.Context, key string, manifest *models.EndpointManifest) error {
 	log.V(logLevel).Debugf("%s manage: %s", logEndpointPrefix, key)
 
 	state := n.state.Endpoints().GetEndpoint(key)
 
 	if state != nil {
-		if manifest.State == types.StateDestroy {
+		if manifest.State == models.StateDestroy {
 			n.EndpointDestroy(ctx, key, state)
 			n.state.Endpoints().DelEndpoint(key)
 			return nil
@@ -60,7 +60,7 @@ func (n *Network) EndpointManage(ctx context.Context, key string, manifest *type
 		return nil
 	}
 
-	if manifest.State == types.StateDestroy {
+	if manifest.State == models.StateDestroy {
 		return nil
 	}
 
@@ -86,25 +86,25 @@ func (n *Network) EndpointRestore(ctx context.Context) error {
 	return nil
 }
 
-func (n *Network) EndpointCreate(ctx context.Context, key string, manifest *types.EndpointManifest) (*types.EndpointState, error) {
+func (n *Network) EndpointCreate(ctx context.Context, key string, manifest *models.EndpointManifest) (*models.EndpointState, error) {
 	log.V(logLevel).Debugf("%s create %s", logEndpointPrefix, key)
 	cpi := n.cpi
 	return cpi.Create(ctx, manifest)
 }
 
-func (n *Network) EndpointUpdate(ctx context.Context, endpoint string, state *types.EndpointState, manifest *types.EndpointManifest) (*types.EndpointState, error) {
+func (n *Network) EndpointUpdate(ctx context.Context, endpoint string, state *models.EndpointState, manifest *models.EndpointManifest) (*models.EndpointState, error) {
 	log.V(logLevel).Debugf("%s update %s", logEndpointPrefix, endpoint)
 	cpi := n.cpi
 	return cpi.Update(ctx, state, manifest)
 }
 
-func (n *Network) EndpointDestroy(ctx context.Context, endpoint string, state *types.EndpointState) error {
+func (n *Network) EndpointDestroy(ctx context.Context, endpoint string, state *models.EndpointState) error {
 	log.V(logLevel).Debugf("%s destroy: %s", logEndpointPrefix, endpoint)
 	cpi := n.cpi
 	return cpi.Destroy(ctx, state)
 }
 
-func endpointEqual(manifest *types.EndpointManifest, state *types.EndpointState) bool {
+func endpointEqual(manifest *models.EndpointManifest, state *models.EndpointState) bool {
 
 	if state.IP != manifest.IP {
 		log.V(logLevel).Debugf("%s ips not match %s != %s", logEndpointPrefix, manifest.IP, state.IP)

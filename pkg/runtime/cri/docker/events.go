@@ -21,7 +21,7 @@ package docker
 import (
 	"context"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 
 	d "github.com/docker/docker/api/types"
@@ -29,7 +29,7 @@ import (
 
 const CTYPE = "container"
 
-func (r *Runtime) Subscribe(ctx context.Context, container chan *types.Container) error {
+func (r *Runtime) Subscribe(ctx context.Context, container chan *models.Container) error {
 
 	log.Debugf("%s:subscribe:> create new event listener subscribe", logPrefix)
 
@@ -54,10 +54,10 @@ func (r *Runtime) Subscribe(ctx context.Context, container chan *types.Container
 				continue
 			}
 
-			if e.Status == types.StateDestroy {
-				c := new(types.Container)
+			if e.Status == models.StateDestroy {
+				c := new(models.Container)
 				c.ID = e.ID
-				c.State = types.StateDestroyed
+				c.State = models.StateDestroyed
 				container <- c
 				continue
 			}

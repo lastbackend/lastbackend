@@ -21,6 +21,10 @@ package types
 import "github.com/lastbackend/lastbackend/internal/pkg/errors"
 
 const (
+	ErrValueIsNil            = errors.ErrValueIsNil
+	ErrKeyIsEmpty            = errors.ErrKeyIsEmpty
+	ErrCollectionIsEmpty     = errors.ErrCollectionIsEmpty
+	ErrCollectionNotExists   = errors.ErrCollectionNotExists
 	ErrEntityExists          = errors.ErrEntityExists
 	ErrOperationFailure      = errors.ErrOperationFailure
 	ErrEntityNotFound        = errors.ErrEntityNotFound

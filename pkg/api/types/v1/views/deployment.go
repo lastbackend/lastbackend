@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 	"io"
 	"io/ioutil"
@@ -36,6 +36,8 @@ type Deployment struct {
 	Meta   DeploymentMeta       `json:"meta"`
 	Status DeploymentStatusInfo `json:"status"`
 	Spec   DeploymentSpec       `json:"spec"`
+	// deployment pods
+	Pods map[string]Pod `json:"pods"`
 }
 
 // swagger:ignore
@@ -123,9 +125,9 @@ type RequestDeploymentScaleOptions struct {
 	Replicas *int `json:"replicas"`
 }
 
-func (s *RequestDeploymentScaleOptions) DecodeAndValidate(reader io.Reader) (types.DeploymentOptions, error) {
+func (s *RequestDeploymentScaleOptions) DecodeAndValidate(reader io.Reader) (models.DeploymentOptions, error) {
 
-	opts := types.DeploymentOptions{}
+	opts := models.DeploymentOptions{}
 
 	log.V(logLevel).Debug("Request: Deployment: decode and validate data for creating")
 

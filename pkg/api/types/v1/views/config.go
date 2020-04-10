@@ -19,8 +19,9 @@
 package views
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"time"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 // swagger:model views_secret
@@ -56,13 +57,13 @@ type ConfigMap map[string]*Config
 // swagger:model views_secret_list
 type ConfigList []*Config
 
-func (s *Config) Decode() *types.Config {
+func (s *Config) Decode() *models.Config {
 
-	o := new(types.Config)
+	o := new(models.Config)
 	o.Meta.Name = s.Meta.Name
 	o.Meta.Namespace = s.Meta.Namespace
 	o.Meta.Kind = s.Meta.Kind
-	o.Meta.SelfLink = *types.NewConfigSelfLink(s.Meta.Namespace, s.Meta.Name)
+	o.Meta.SelfLink = *models.NewConfigSelfLink(s.Meta.Namespace, s.Meta.Name)
 	o.Meta.Updated = s.Meta.Updated
 	o.Meta.Created = s.Meta.Created
 

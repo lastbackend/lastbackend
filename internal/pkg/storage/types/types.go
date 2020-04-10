@@ -18,13 +18,13 @@
 
 package types
 
-import "github.com/lastbackend/lastbackend/internal/pkg/types"
+import "github.com/lastbackend/lastbackend/internal/pkg/models"
 
 const (
-	STORAGEDELETEEVENT = types.EventActionDelete
-	STORAGECREATEEVENT = types.EventActionCreate
-	STORAGEUPDATEEVENT = types.EventActionUpdate
-	STORAGEERROREVENT  = types.EventActionError
+	STORAGEDELETEEVENT = models.EventActionDelete
+	STORAGECREATEEVENT = models.EventActionCreate
+	STORAGEUPDATEEVENT = models.EventActionUpdate
+	STORAGEERROREVENT  = models.EventActionError
 )
 
 type Watcher interface {
@@ -66,5 +66,5 @@ type Opts struct {
 }
 
 type System struct {
-	types.System
+	models.System
 }

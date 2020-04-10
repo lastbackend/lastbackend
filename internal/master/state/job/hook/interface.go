@@ -18,8 +18,8 @@
 
 package hook
 
-import "github.com/lastbackend/lastbackend/internal/pkg/types"
+import "github.com/lastbackend/lastbackend/internal/pkg/models"
 
 type Hook interface {
-	Execute(task *types.Task) error
+	Execute(task *models.Task) error
 }

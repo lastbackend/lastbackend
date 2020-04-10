@@ -30,7 +30,7 @@ const (
 
 type Observer struct {
 	rev     *int64
-	storage storage.Storage
+	storage storage.IStorage
 	state   *state.State
 }
 
@@ -42,7 +42,7 @@ func (o *Observer) Stop() {
 	o.state = nil
 }
 
-func NewObserver(stg storage.Storage, ipam ipam.IPAM) *Observer {
+func NewObserver(stg storage.IStorage, ipam ipam.IPAM) *Observer {
 
 	o := new(Observer)
 

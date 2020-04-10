@@ -21,8 +21,9 @@ package request
 import (
 	"encoding/base64"
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
 	"gopkg.in/yaml.v2"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type SecretManifest struct {
@@ -58,9 +59,9 @@ func (v *SecretManifest) ToYaml() ([]byte, error) {
 	return yaml.Marshal(v)
 }
 
-func (v *SecretManifest) SetSecretMeta(cfg *types.Secret) {
+func (v *SecretManifest) SetSecretMeta(cfg *models.Secret) {
 
-	if cfg.Meta.Name == types.EmptyString {
+	if cfg.Meta.Name == models.EmptyString {
 		cfg.Meta.Name = *v.Meta.Name
 	}
 
@@ -75,13 +76,13 @@ func (v *SecretManifest) SetSecretMeta(cfg *types.Secret) {
 }
 
 func (v *SecretManifest) SetAuthData(username, password string) {
-	v.Spec.Data[types.SecretUsernameKey] = username
-	v.Spec.Data[types.SecretPasswordKey] = password
+	v.Spec.Data[models.SecretUsernameKey] = username
+	v.Spec.Data[models.SecretPasswordKey] = password
 }
 
 // SetSecretSpec - set config spec from manifest
 // TODO: check if config spec is updated => update Meta.Updated or skip
-func (v *SecretManifest) SetSecretSpec(s *types.Secret) {
+func (v *SecretManifest) SetSecretSpec(s *models.Secret) {
 
 	s.Spec.Type = v.Spec.Type
 	s.Spec.Data = make(map[string][]byte, 0)
@@ -91,8 +92,8 @@ func (v *SecretManifest) SetSecretSpec(s *types.Secret) {
 	}
 }
 
-func (v *SecretManifest) GetManifest() *types.SecretManifest {
-	cfg := new(types.SecretManifest)
+func (v *SecretManifest) GetManifest() *models.SecretManifest {
+	cfg := new(models.SecretManifest)
 	cfg.Type = v.Spec.Type
 	return cfg
 }

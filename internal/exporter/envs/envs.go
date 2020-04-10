@@ -21,7 +21,7 @@ package envs
 import (
 	"github.com/lastbackend/lastbackend/internal/exporter/logger"
 	"github.com/lastbackend/lastbackend/internal/exporter/state"
-	"github.com/lastbackend/lastbackend/pkg/client/types"
+	"github.com/lastbackend/lastbackend/pkg/client/cluster/types"
 )
 
 var _env Env

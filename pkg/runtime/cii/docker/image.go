@@ -24,33 +24,34 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	docker "github.com/docker/docker/api/types"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"io"
 	"net/http"
+
+	docker "github.com/docker/docker/api/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const (
 	logLevel = 3
 )
 
-func (r *Runtime) Auth(ctx context.Context, secret *types.SecretAuthData) (string, error) {
+func (r *Runtime) Auth(ctx context.Context, secret *models.SecretAuthData) (string, error) {
 
-	config := types.AuthConfig{
+	config := models.AuthConfig{
 		Username: secret.Username,
 		Password: secret.Password,
 	}
 
 	js, err := json.Marshal(config)
 	if err != nil {
-		return types.EmptyString, err
+		return models.EmptyString, err
 	}
 
 	return base64.URLEncoding.EncodeToString(js), nil
 }
 
-func (r *Runtime) Pull(ctx context.Context, spec *types.ImageManifest, out io.Writer) (*types.Image, error) {
+func (r *Runtime) Pull(ctx context.Context, spec *models.ImageManifest, out io.Writer) (*models.Image, error) {
 
 	log.V(logLevel).Debugf("Docker: Name pull: %s", spec.Name)
 
@@ -60,7 +61,7 @@ func (r *Runtime) Pull(ctx context.Context, spec *types.ImageManifest, out io.Wr
 		},
 	}
 
-	if spec.Auth != types.EmptyString {
+	if spec.Auth != models.EmptyString {
 		options.RegistryAuth = spec.Auth
 	}
 
@@ -124,7 +125,7 @@ func (r *Runtime) Pull(ctx context.Context, spec *types.ImageManifest, out io.Wr
 	}
 }
 
-func (r *Runtime) Push(ctx context.Context, spec *types.ImageManifest, out io.Writer) (*types.Image, error) {
+func (r *Runtime) Push(ctx context.Context, spec *models.ImageManifest, out io.Writer) (*models.Image, error) {
 
 	log.V(logLevel).Debugf("Docker: Name push: %s", spec.Name)
 
@@ -207,7 +208,7 @@ func (r *Runtime) Push(ctx context.Context, spec *types.ImageManifest, out io.Wr
 	return image, err
 }
 
-func (r *Runtime) Build(ctx context.Context, stream io.Reader, spec *types.SpecBuildImage, out io.Writer) (*types.Image, error) {
+func (r *Runtime) Build(ctx context.Context, stream io.Reader, spec *models.SpecBuildImage, out io.Writer) (*models.Image, error) {
 	options := docker.ImageBuildOptions{
 		Tags:           spec.Tags,
 		Memory:         spec.Memory,
@@ -244,7 +245,7 @@ func (r *Runtime) Build(ctx context.Context, stream io.Reader, spec *types.SpecB
 			}
 			if readBytes == 0 {
 				// TODO: get image info
-				return new(types.Image), err
+				return new(models.Image), err
 			}
 
 			_, err = func(p []byte) (n int, err error) {
@@ -287,9 +288,9 @@ func (r *Runtime) Remove(ctx context.Context, ID string) error {
 	return err
 }
 
-func (r *Runtime) List(ctx context.Context) ([]*types.Image, error) {
+func (r *Runtime) List(ctx context.Context) ([]*models.Image, error) {
 
-	var images = make([]*types.Image, 0)
+	var images = make([]*models.Image, 0)
 
 	il, err := r.client.ImageList(ctx, docker.ImageListOptions{All: true})
 	if err != nil {
@@ -312,10 +313,10 @@ func (r *Runtime) List(ctx context.Context) ([]*types.Image, error) {
 	return images, nil
 }
 
-func (r *Runtime) Inspect(ctx context.Context, id string) (*types.Image, error) {
+func (r *Runtime) Inspect(ctx context.Context, id string) (*models.Image, error) {
 	info, _, err := r.client.ImageInspectWithRaw(ctx, id)
 
-	image := new(types.Image)
+	image := new(models.Image)
 	image.Meta.ID = info.ID
 
 	if len(info.RepoDigests) > 0 {

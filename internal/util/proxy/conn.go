@@ -20,12 +20,13 @@ package proxy
 
 import (
 	"encoding/binary"
-	protoio "github.com/gogo/protobuf/io"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"io"
 	"net"
 	"time"
+
+	protoio "github.com/gogo/protobuf/io"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 type Conn struct {
@@ -43,7 +44,7 @@ func (c *Conn) Write(p []byte) (int, error) {
 
 func (c *Conn) Send(data []byte) error {
 
-	msg := new(types.ProxyMessage)
+	msg := new(models.ProxyMessage)
 	msg.Type = KindMSG
 	msg.Partial = false
 	msg.Source = c.name
@@ -69,7 +70,7 @@ func (c *Conn) Handle(handler Handler) {
 
 	go func() {
 		for {
-			var msg types.ProxyMessage
+			var msg models.ProxyMessage
 
 			err := dec.ReadMsg(&msg)
 			if err != nil {
@@ -113,7 +114,7 @@ func (c *Conn) Handle(handler Handler) {
 
 func (c *Conn) Ping() error {
 
-	msg := new(types.ProxyMessage)
+	msg := new(models.ProxyMessage)
 	msg.Type = KindPing
 	msg.Partial = false
 	msg.Source = c.name
@@ -131,7 +132,7 @@ func (c *Conn) Ping() error {
 
 func (c *Conn) Pong() error {
 
-	msg := new(types.ProxyMessage)
+	msg := new(models.ProxyMessage)
 	msg.Type = KindPong
 	msg.Partial = false
 	msg.Source = c.name

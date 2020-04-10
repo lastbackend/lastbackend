@@ -20,25 +20,25 @@ package runtime
 
 import (
 	"github.com/lastbackend/lastbackend/internal/ingress/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
-func (r Runtime) RouteManage(name string, route *types.RouteManifest) (err error) {
+func (r Runtime) RouteManage(name string, route *models.RouteManifest) (err error) {
 
 	log.Debugf("route manage: %s", name)
 
-	var status = new(types.RouteStatus)
+	var status = new(models.RouteStatus)
 
 	defer func() {
 		if err = r.config.Sync(); err != nil {
-			status.State = types.StateError
+			status.State = models.StateError
 			status.Message = err.Error()
 			envs.Get().GetState().Routes().SetRouteStatus(name, status)
 			return
 		}
 
-		if status.State == types.StateDestroy {
+		if status.State == models.StateDestroy {
 			envs.Get().GetState().Routes().DelRoute(name)
 			return
 		}
@@ -46,20 +46,20 @@ func (r Runtime) RouteManage(name string, route *types.RouteManifest) (err error
 		envs.Get().GetState().Routes().SetRouteStatus(name, status)
 	}()
 
-	if route.State == types.StateDestroyed {
-		status.State = types.StateDestroyed
+	if route.State == models.StateDestroyed {
+		status.State = models.StateDestroyed
 		envs.Get().GetState().Routes().DelRoute(name)
 		return nil
 	}
 
-	if route.State == types.StateDestroy {
-		status.State = types.StateDestroyed
+	if route.State == models.StateDestroy {
+		status.State = models.StateDestroyed
 		envs.Get().GetState().Routes().DelRouteManifests(name)
 		return nil
 	}
 
 	envs.Get().GetState().Routes().SetRouteManifest(name, route)
-	status.State = types.StateProvision
+	status.State = models.StateProvision
 
 	return nil
 }

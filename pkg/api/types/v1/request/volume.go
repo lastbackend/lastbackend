@@ -20,10 +20,11 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/internal/util/resource"
 	"gopkg.in/yaml.v2"
 	"time"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/util/resource"
 )
 
 type VolumeManifest struct {
@@ -66,9 +67,9 @@ func (v *VolumeManifest) ToYaml() ([]byte, error) {
 	return yaml.Marshal(v)
 }
 
-func (v *VolumeManifest) SetVolumeMeta(vol *types.Volume) {
+func (v *VolumeManifest) SetVolumeMeta(vol *models.Volume) {
 
-	if vol.Meta.Name == types.EmptyString {
+	if vol.Meta.Name == models.EmptyString {
 		vol.Meta.Name = *v.Meta.Name
 	}
 
@@ -82,12 +83,12 @@ func (v *VolumeManifest) SetVolumeMeta(vol *types.Volume) {
 
 }
 
-func (v *VolumeManifest) SetVolumeSpec(vol *types.Volume) {
+func (v *VolumeManifest) SetVolumeSpec(vol *models.Volume) {
 
 	t := vol.Spec.Updated
 	defer func() {
 		if t.Before(vol.Spec.Updated) {
-			vol.Status.State = types.StateProvision
+			vol.Status.State = models.StateProvision
 			return
 		}
 	}()
@@ -142,8 +143,8 @@ func (v *VolumeManifest) SetVolumeSpec(vol *types.Volume) {
 
 }
 
-func (v VolumeManifest) GetManifest() *types.VolumeManifest {
-	var manifest = new(types.VolumeManifest)
+func (v VolumeManifest) GetManifest() *models.VolumeManifest {
+	var manifest = new(models.VolumeManifest)
 
 	manifest.Selector = v.Spec.Selector.GetSpec()
 	manifest.Type = v.Spec.Type

@@ -23,8 +23,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -33,12 +32,12 @@ const (
 )
 
 // serviceObserve manage handlers based on service state
-func serviceObserve(ss *ServiceState, s *types.Service) error {
+func serviceObserve(ss *ServiceState, s *models.Service) error {
 
 	switch s.Status.State {
 
 	// Check service created state triggers
-	case types.StateCreated:
+	case models.StateCreated:
 		if err := handleServiceStateCreated(ss, s); err != nil {
 			log.V(logLevel).Debugf("%s:observe:serviceStateCreated err:> %s", logPrefix, err.Error())
 			return err
@@ -46,7 +45,7 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 		break
 
 	// Check service provision state triggers
-	case types.StateProvision:
+	case models.StateProvision:
 		if err := handleServiceStateProvision(ss, s); err != nil {
 			log.V(logLevel).Debugf("%s:observe:serviceStateProvision err:> %s", logPrefix, err.Error())
 			return err
@@ -54,7 +53,7 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 		break
 
 	// Check service ready state triggers
-	case types.StateReady:
+	case models.StateReady:
 		if err := handleServiceStateReady(ss, s); err != nil {
 			log.V(logLevel).Debugf("%s:observe:serviceStateReady err:> %s", logPrefix, err.Error())
 			return err
@@ -62,7 +61,7 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 		break
 
 	// Check service error state triggers
-	case types.StateError:
+	case models.StateError:
 		if err := handleServiceStateError(ss, s); err != nil {
 			log.V(logLevel).Debugf("%s:observe:serviceStateError err:> %s", logPrefix, err.Error())
 			return err
@@ -70,7 +69,7 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 		break
 
 		// Check service error state triggers
-	case types.StateDegradation:
+	case models.StateDegradation:
 		if err := handleServiceStateDegradation(ss, s); err != nil {
 			log.V(logLevel).Debugf("%s:observe:serviceStateDegradation err:> %s", logPrefix, err.Error())
 			return err
@@ -78,7 +77,7 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 		break
 
 	// Run service destroy process
-	case types.StateDestroy:
+	case models.StateDestroy:
 		if err := handleServiceStateDestroy(ss, s); err != nil {
 			log.V(logLevel).Debugf("%s:observe:serviceStateDestroy err:> %s", logPrefix, err.Error())
 			return err
@@ -86,7 +85,7 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 		break
 
 	// Remove service from storage if it is already destroyed
-	case types.StateDestroyed:
+	case models.StateDestroyed:
 		if err := handleServiceStateDestroyed(ss, s); err != nil {
 			log.V(logLevel).Debugf("%s:observe:serviceStateDestroyed err:> %s", logPrefix, err.Error())
 			return err
@@ -111,7 +110,7 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 }
 
 // handleServiceStateCreated handles service created state
-func handleServiceStateCreated(ss *ServiceState, svc *types.Service) error {
+func handleServiceStateCreated(ss *ServiceState, svc *models.Service) error {
 
 	log.V(logLevel).Debugf("%s:> handleServiceStateCreated: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
@@ -131,7 +130,7 @@ func handleServiceStateCreated(ss *ServiceState, svc *types.Service) error {
 }
 
 // handleServiceStateProvision handles service provision state
-func handleServiceStateProvision(ss *ServiceState, svc *types.Service) error {
+func handleServiceStateProvision(ss *ServiceState, svc *models.Service) error {
 
 	log.V(logLevel).Debugf("%s:> handleServiceStateProvision: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
@@ -151,7 +150,7 @@ func handleServiceStateProvision(ss *ServiceState, svc *types.Service) error {
 }
 
 // handleServiceStateReady handles service ready state
-func handleServiceStateReady(ss *ServiceState, svc *types.Service) error {
+func handleServiceStateReady(ss *ServiceState, svc *models.Service) error {
 
 	log.V(logLevel).Debugf("%s:> handleServiceStateReady: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
@@ -159,7 +158,7 @@ func handleServiceStateReady(ss *ServiceState, svc *types.Service) error {
 }
 
 // handleServiceStateError handles service error state
-func handleServiceStateError(ss *ServiceState, svc *types.Service) error {
+func handleServiceStateError(ss *ServiceState, svc *models.Service) error {
 
 	log.V(logLevel).Debugf("%s:> handleServiceStateError: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
@@ -167,7 +166,7 @@ func handleServiceStateError(ss *ServiceState, svc *types.Service) error {
 }
 
 // handleServiceStateDegradation handles service degradation state
-func handleServiceStateDegradation(ss *ServiceState, svc *types.Service) error {
+func handleServiceStateDegradation(ss *ServiceState, svc *models.Service) error {
 
 	log.V(logLevel).Debugf("%s:> handleServiceStateDegradation: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
@@ -175,7 +174,7 @@ func handleServiceStateDegradation(ss *ServiceState, svc *types.Service) error {
 }
 
 // handleServiceStateDestroy handles service destroy state
-func handleServiceStateDestroy(ss *ServiceState, svc *types.Service) (err error) {
+func handleServiceStateDestroy(ss *ServiceState, svc *models.Service) (err error) {
 
 	log.V(logLevel).Debugf("%s:> handleServiceStateDestroy: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
@@ -186,15 +185,15 @@ func handleServiceStateDestroy(ss *ServiceState, svc *types.Service) (err error)
 		}
 	}
 
-	dm := model.NewDeploymentModel(context.Background(), ss.storage)
+	dm := service.NewDeploymentModel(context.Background(), ss.storage)
 
 	for _, d := range ss.deployment.list {
 
-		if d.Status.State == types.StateDestroyed {
+		if d.Status.State == models.StateDestroyed {
 			continue
 		}
 
-		if d.Status.State != types.StateDestroy {
+		if d.Status.State != models.StateDestroy {
 			if err := dm.Destroy(d); err != nil {
 				return err
 			}
@@ -202,7 +201,7 @@ func handleServiceStateDestroy(ss *ServiceState, svc *types.Service) (err error)
 	}
 
 	if len(ss.deployment.list) == 0 {
-		svc.Status.State = types.StateDestroyed
+		svc.Status.State = models.StateDestroyed
 		svc.Meta.Updated = time.Now()
 	}
 
@@ -210,7 +209,7 @@ func handleServiceStateDestroy(ss *ServiceState, svc *types.Service) (err error)
 }
 
 // handleServiceStateDestroyed handles service destroyed state
-func handleServiceStateDestroyed(ss *ServiceState, svc *types.Service) (err error) {
+func handleServiceStateDestroyed(ss *ServiceState, svc *models.Service) (err error) {
 
 	log.V(logLevel).Debugf("%s:> handleServiceStateDestroyed: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
@@ -219,20 +218,20 @@ func handleServiceStateDestroyed(ss *ServiceState, svc *types.Service) (err erro
 		return err
 	}
 
-	svc.Status.State = types.StateDestroy
+	svc.Status.State = models.StateDestroy
 	svc.Meta.Updated = time.Now()
 
 	if len(ss.deployment.list) > 0 {
-		dm := model.NewDeploymentModel(context.Background(), ss.storage)
+		dm := service.NewDeploymentModel(context.Background(), ss.storage)
 		for _, d := range ss.deployment.list {
 
-			if d.Status.State == types.StateDestroyed {
+			if d.Status.State == models.StateDestroyed {
 				if err = dm.Remove(d); err != nil {
 					return err
 				}
 			}
 
-			if d.Status.State != types.StateDestroy {
+			if d.Status.State != models.StateDestroy {
 				if err = dm.Destroy(d); err != nil {
 					return err
 				}
@@ -240,14 +239,14 @@ func handleServiceStateDestroyed(ss *ServiceState, svc *types.Service) (err erro
 
 		}
 
-		svc.Status.State = types.StateDestroy
+		svc.Status.State = models.StateDestroy
 		svc.Meta.Updated = time.Now()
 
 		return nil
 	}
 
-	sm := model.NewServiceModel(context.Background(), ss.storage)
-	nm := model.NewNamespaceModel(context.Background(), ss.storage)
+	sm := service.NewServiceModel(context.Background(), ss.storage)
+	nm := service.NewNamespaceModel(context.Background(), ss.storage)
 
 	ns, err := nm.Get(svc.Meta.Namespace)
 	if err != nil {
@@ -272,7 +271,7 @@ func handleServiceStateDestroyed(ss *ServiceState, svc *types.Service) (err erro
 }
 
 // serviceEndpointProvision function handles all cases for endpoint management
-func serviceEndpointProvision(ss *ServiceState, svc *types.Service) error {
+func serviceEndpointProvision(ss *ServiceState, svc *models.Service) error {
 
 	// check endpoint is needed
 	if svc == nil {
@@ -294,10 +293,10 @@ func serviceEndpointProvision(ss *ServiceState, svc *types.Service) error {
 }
 
 // serviceDeploymentProvision function handles all cases when deployment needs to be created or updated
-func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
+func serviceDeploymentProvision(ss *ServiceState, svc *models.Service) error {
 
 	var (
-		d *types.Deployment
+		d *models.Deployment
 	)
 
 	// select deployment for provision
@@ -328,7 +327,7 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 	if d == nil {
 
 		if len(svc.Spec.Template.Containers) == 0 {
-			svc.Status.State = types.StateReady
+			svc.Status.State = models.StateReady
 			return nil
 		}
 
@@ -344,12 +343,12 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 		for _, od := range ss.deployment.list {
 
 			if ss.deployment.active != nil {
-				if ss.deployment.active.SelfLink().String() == od.SelfLink().String() && od.Status.State == types.StateReady {
+				if ss.deployment.active.SelfLink().String() == od.SelfLink().String() && od.Status.State == models.StateReady {
 					continue
 				}
 			}
 
-			if od.Status.State != types.StateDestroy && od.Status.State != types.StateDestroyed {
+			if od.Status.State != models.StateDestroy && od.Status.State != models.StateDestroyed {
 				if err := deploymentDestroy(ss, od); err != nil {
 					log.Errorf("%s:> deployment cancel err: %s", logServicePrefix, err.Error())
 					return err
@@ -376,7 +375,7 @@ func serviceStatusState(ss *ServiceState) (err error) {
 		}
 
 		ss.service.Meta.Updated = time.Now()
-		sm := model.NewServiceModel(context.Background(), ss.storage)
+		sm := service.NewServiceModel(context.Background(), ss.storage)
 		if err := sm.Set(ss.service); err != nil {
 			log.Errorf("%s", err.Error())
 			return
@@ -385,8 +384,8 @@ func serviceStatusState(ss *ServiceState) (err error) {
 		return
 	}()
 
-	if ss.service.Status.State == types.StateDestroyed {
-		sm := model.NewServiceModel(context.Background(), ss.storage)
+	if ss.service.Status.State == models.StateDestroyed {
+		sm := service.NewServiceModel(context.Background(), ss.storage)
 		if err := sm.Set(ss.service); err != nil {
 			log.Errorf("%s", err.Error())
 			return err
@@ -394,16 +393,16 @@ func serviceStatusState(ss *ServiceState) (err error) {
 		return nil
 	}
 
-	if ss.service.Status.State == types.StateDestroy {
+	if ss.service.Status.State == models.StateDestroy {
 
 		if len(ss.deployment.list) == 0 {
-			ss.service.Status.State = types.StateDestroyed
+			ss.service.Status.State = models.StateDestroyed
 		}
 
 		return nil
 	}
 
-	if ss.service.Status.State == types.StateProvision || ss.service.Status.State == types.StateCreated {
+	if ss.service.Status.State == models.StateProvision || ss.service.Status.State == models.StateCreated {
 
 		if ss.deployment.provision == nil && ss.deployment.active != nil {
 
@@ -426,13 +425,13 @@ func serviceStatusState(ss *ServiceState) (err error) {
 		ss.service.Status.State = ss.deployment.active.Status.State
 		ss.service.Status.Message = ss.deployment.active.Status.Message
 
-		if ss.deployment.active.Status.State == types.StateCreated {
+		if ss.deployment.active.Status.State == models.StateCreated {
 
-			ss.service.Status.State = types.StateProvision
-			ss.service.Status.Message = types.EmptyString
+			ss.service.Status.State = models.StateProvision
+			ss.service.Status.Message = models.EmptyString
 		}
 
-		if ss.deployment.provision != nil && ss.deployment.provision.Status.State == types.StateProvision {
+		if ss.deployment.provision != nil && ss.deployment.provision.Status.State == models.StateProvision {
 			ss.service.Status.State = ss.deployment.provision.Status.State
 			ss.service.Status.Message = ss.deployment.provision.Status.Message
 		}

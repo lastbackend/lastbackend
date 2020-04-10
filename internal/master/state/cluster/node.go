@@ -21,8 +21,7 @@ package cluster
 import (
 	"context"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type NodeLease struct {
@@ -31,7 +30,7 @@ type NodeLease struct {
 	Request  NodeLeaseOptions
 	Response struct {
 		Err  error
-		Node *types.Node
+		Node *models.Node
 	}
 }
 
@@ -40,7 +39,7 @@ type NodeLeaseOptions struct {
 	CPU      *int64
 	RAM      *int64
 	Storage  *int64
-	Selector types.SpecSelector
+	Selector models.SpecSelector
 }
 
 func (nl *NodeLease) Wait() {
@@ -59,7 +58,7 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 
 		// check selectors first
 
-		if nl.Request.Selector.Node != types.EmptyString {
+		if nl.Request.Selector.Node != models.EmptyString {
 			if n.SelfLink().Hostname() != nl.Request.Selector.Node {
 				continue
 			}
@@ -83,8 +82,8 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 		}
 
 		var (
-			node      *types.Node
-			allocated = new(types.NodeResources)
+			node      *models.Node
+			allocated = new(models.NodeResources)
 		)
 
 		if node == nil {
@@ -117,7 +116,7 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 			node.Status.Allocated.CPU += allocated.CPU
 			node.Status.Allocated.Storage += allocated.Storage
 
-			nm := model.NewNodeModel(context.Background(), cs.storage)
+			nm := service.NewNodeModel(context.Background(), cs.storage)
 			if err := nm.Set(n); err != nil {
 				return err
 			}
@@ -158,6 +157,6 @@ func handleNodeRelease(cs *ClusterState, nl *NodeLease) error {
 		n.Status.Allocated.Storage -= *nl.Request.Storage
 	}
 
-	nm := model.NewNodeModel(context.Background(), cs.storage)
+	nm := service.NewNodeModel(context.Background(), cs.storage)
 	return nm.Set(n)
 }

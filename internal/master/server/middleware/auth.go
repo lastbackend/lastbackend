@@ -38,7 +38,7 @@ func (m Middleware) Authenticate(h http.HandlerFunc) http.HandlerFunc {
 			}
 			token = auth[1]
 		} else {
-			log.Errorf("%s:authenticate:> token not set", logPrefix)
+			log.Errorf("%s:session:authenticate:> token not set", logPrefix)
 			errors.HTTP.Unauthorized(w)
 			return
 		}

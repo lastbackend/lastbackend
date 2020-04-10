@@ -35,6 +35,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+const defaultPort = 2967
+
 type HttpServer struct {
 	host string
 	port int
@@ -48,7 +50,7 @@ type HttpServer struct {
 	router *mux.Router
 }
 
-func NewServer(state *state.State, stg storage.Storage, v *viper.Viper) *HttpServer {
+func NewServer(state *state.State, stg storage.IStorage, v *viper.Viper) *HttpServer {
 
 	hs := new(HttpServer)
 
@@ -62,6 +64,9 @@ func NewServer(state *state.State, stg storage.Storage, v *viper.Viper) *HttpSer
 
 	hs.host = v.GetString("server.host")
 	hs.port = v.GetInt("server.port")
+	if hs.port == 0 {
+		hs.port = defaultPort
+	}
 
 	r := mux.NewRouter()
 	r.Methods("OPTIONS").HandlerFunc(cors.Headers)

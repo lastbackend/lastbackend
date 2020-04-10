@@ -19,28 +19,29 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"sync"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const logResolversPrefix = "state:resolvers:>"
 
 type ResolverState struct {
 	lock      sync.RWMutex
-	resolvers map[string]*types.ResolverManifest
+	resolvers map[string]*models.ResolverManifest
 }
 
-func (n *ResolverState) GetResolvers() map[string]*types.ResolverManifest {
+func (n *ResolverState) GetResolvers() map[string]*models.ResolverManifest {
 	return n.resolvers
 }
 
-func (n *ResolverState) AddResolver(cidr string, sn *types.ResolverManifest) {
+func (n *ResolverState) AddResolver(cidr string, sn *models.ResolverManifest) {
 	log.V(logLevel).Debugf("%s add resolver: %s", logResolversPrefix, cidr)
 	n.SetResolver(cidr, sn)
 }
 
-func (n *ResolverState) SetResolver(cidr string, sn *types.ResolverManifest) {
+func (n *ResolverState) SetResolver(cidr string, sn *models.ResolverManifest) {
 	log.V(logLevel).Debugf("%s set resolver: %s", logResolversPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
@@ -52,7 +53,7 @@ func (n *ResolverState) SetResolver(cidr string, sn *types.ResolverManifest) {
 	n.resolvers[cidr] = sn
 }
 
-func (n *ResolverState) GetResolver(cidr string) *types.ResolverManifest {
+func (n *ResolverState) GetResolver(cidr string) *models.ResolverManifest {
 	log.V(logLevel).Debugf("%s get resolver: %s", logResolversPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()

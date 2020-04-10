@@ -19,9 +19,10 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"sync"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const logEndpointPrefix = "state:endpoints:>"
@@ -29,7 +30,7 @@ const logEndpointPrefix = "state:endpoints:>"
 type EndpointState struct {
 	lock      sync.RWMutex
 	hash      string
-	endpoints map[string]*types.EndpointState
+	endpoints map[string]*models.EndpointState
 }
 
 func (es *EndpointState) GetHash() string {
@@ -40,12 +41,12 @@ func (es *EndpointState) SetHash(hash string) {
 	es.hash = hash
 }
 
-func (es *EndpointState) GetEndpoints() map[string]*types.EndpointState {
+func (es *EndpointState) GetEndpoints() map[string]*models.EndpointState {
 	log.V(logLevel).Debugf("%s get endpoints", logEndpointPrefix)
 	return es.endpoints
 }
 
-func (es *EndpointState) SetEndpoints(endpoints map[string]*types.EndpointState) {
+func (es *EndpointState) SetEndpoints(endpoints map[string]*models.EndpointState) {
 	es.lock.Lock()
 	defer es.lock.Unlock()
 
@@ -54,7 +55,7 @@ func (es *EndpointState) SetEndpoints(endpoints map[string]*types.EndpointState)
 	}
 }
 
-func (es *EndpointState) GetEndpoint(key string) *types.EndpointState {
+func (es *EndpointState) GetEndpoint(key string) *models.EndpointState {
 	log.V(logLevel).Debugf("%s: get endpoint: %s", logEndpointPrefix, key)
 	es.lock.Lock()
 	defer es.lock.Unlock()
@@ -67,14 +68,14 @@ func (es *EndpointState) GetEndpoint(key string) *types.EndpointState {
 	return ep
 }
 
-func (es *EndpointState) AddEndpoint(key string, endpoint *types.EndpointState) {
+func (es *EndpointState) AddEndpoint(key string, endpoint *models.EndpointState) {
 	log.V(logLevel).Debugf("%s: add endpoint %s: %s", logEndpointPrefix, key, endpoint.IP)
 	es.lock.Lock()
 	defer es.lock.Unlock()
 	es.endpoints[key] = endpoint
 }
 
-func (es *EndpointState) SetEndpoint(key string, endpoint *types.EndpointState) {
+func (es *EndpointState) SetEndpoint(key string, endpoint *models.EndpointState) {
 	log.V(logLevel).Debugf("%s: set endpoint %s: %s", logEndpointPrefix, key, endpoint.IP)
 	es.lock.Lock()
 	defer es.lock.Unlock()

@@ -20,12 +20,11 @@ package controller
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/discovery/envs"
-	"github.com/lastbackend/lastbackend/internal/discovery/runtime"
 	"sync"
 	"time"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/discovery/runtime"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/tools/log"
@@ -40,7 +39,7 @@ type Controller struct {
 	runtime *runtime.Runtime
 	cache   struct {
 		lock      sync.RWMutex
-		resources types.DiscoveryStatus
+		resources models.DiscoveryStatus
 	}
 }
 

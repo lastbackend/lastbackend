@@ -23,11 +23,15 @@ import (
 )
 
 const (
+	ErrValueIsNil            = "the passed value is nil, which is not allowed"
+	ErrKeyIsEmpty            = "the passed key is empty, which is not allowed"
+	ErrCollectionIsEmpty     = "the passed collection is an empty string, which is invalid"
+	ErrCollectionNotExists   = "collection not exists"
 	ErrEntityExists          = "entity exists"
 	ErrOperationFailure      = "operation failure"
 	ErrEntityNotFound        = "entity not found"
 	ErrStructArgIsNil        = "input structure is nil"
-	ErrStructOutIsNil        = "output structure is nil"
+	ErrStructOutIsNil        = "unable to convert output struct to pointer"
 	ErrStructArgIsInvalid    = "input structure is invalid"
 	ErrStructOutIsInvalid    = "output structure is invalid"
 	ErrStructOutIsNotPointer = "output structure is not pointer"

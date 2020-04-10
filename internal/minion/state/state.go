@@ -19,7 +19,7 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 const logLevel = 5
@@ -73,8 +73,8 @@ func (s *State) Configs() *ConfigState {
 }
 
 type NodeState struct {
-	Info   types.NodeInfo
-	Status types.NodeStatus
+	Info   models.NodeInfo
+	Status models.NodeStatus
 }
 
 func New() *State {
@@ -83,33 +83,33 @@ func New() *State {
 		node: new(NodeState),
 		pods: &PodState{
 			local:      make(map[string]bool),
-			containers: make(map[string]*types.PodContainer, 0),
-			pods:       make(map[string]*types.PodStatus, 0),
+			containers: make(map[string]*models.PodContainer, 0),
+			pods:       make(map[string]*models.PodStatus, 0),
 			watchers:   make(map[chan string]bool, 0),
 		},
 		images: &ImageState{
-			images: make(map[string]*types.Image, 0),
+			images: make(map[string]*models.Image, 0),
 		},
 		networks: &NetworkState{
-			subnets: make(map[string]types.NetworkState, 0),
+			subnets: make(map[string]models.NetworkState, 0),
 		},
 		volumes: &VolumesState{
-			volumes:  make(map[string]types.VolumeStatus, 0),
-			claims:   make(map[string]types.VolumeClaim, 0),
+			volumes:  make(map[string]models.VolumeStatus, 0),
+			claims:   make(map[string]models.VolumeClaim, 0),
 			local:    make(map[string]bool),
 			watchers: make(map[chan string]bool, 0),
 		},
 		secrets: &SecretsState{
-			secrets: make(map[string]types.Secret, 0),
+			secrets: make(map[string]models.Secret, 0),
 		},
 		endpoints: &EndpointState{
-			endpoints: make(map[string]*types.EndpointState, 0),
+			endpoints: make(map[string]*models.EndpointState, 0),
 		},
 		task: &TaskState{
-			tasks: make(map[string]types.NodeTask, 0),
+			tasks: make(map[string]models.NodeTask, 0),
 		},
 		configs: &ConfigState{
-			configs: make(map[string]*types.ConfigManifest, 0),
+			configs: make(map[string]*models.ConfigManifest, 0),
 		},
 	}
 

@@ -19,25 +19,25 @@
 package cache
 
 import (
-	"github.com/lastbackend/lastbackend/tools/log"
 	"sync"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const logCacheExporter = "api:cache:exporter"
 
 type CacheExporterManifest struct {
 	lock      sync.RWMutex
-	manifests map[string]*types.ExporterManifest
+	manifests map[string]*models.ExporterManifest
 }
 
-func (c *CacheExporterManifest) SetSubnetManifest(cidr string, s *types.SubnetManifest) {
+func (c *CacheExporterManifest) SetSubnetManifest(cidr string, s *models.SubnetManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 }
 
-func (c *CacheExporterManifest) Get(exporter string) *types.ExporterManifest {
+func (c *CacheExporterManifest) Get(exporter string) *models.ExporterManifest {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if s, ok := c.manifests[exporter]; !ok {
@@ -50,7 +50,7 @@ func (c *CacheExporterManifest) Get(exporter string) *types.ExporterManifest {
 func (c *CacheExporterManifest) Flush(exporter string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	c.manifests[exporter] = new(types.ExporterManifest)
+	c.manifests[exporter] = new(models.ExporterManifest)
 }
 
 func (c *CacheExporterManifest) Clear(exporter string) {
@@ -62,6 +62,6 @@ func (c *CacheExporterManifest) Clear(exporter string) {
 
 func NewCacheExporterManifest() *CacheExporterManifest {
 	c := new(CacheExporterManifest)
-	c.manifests = make(map[string]*types.ExporterManifest, 0)
+	c.manifests = make(map[string]*models.ExporterManifest, 0)
 	return c
 }

@@ -19,12 +19,10 @@
 package network
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/network/state"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
-	ni "github.com/lastbackend/lastbackend/pkg/runtime/cni/cni"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
-	pi "github.com/lastbackend/lastbackend/pkg/runtime/cpi/cpi"
 	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/spf13/viper"
 )
@@ -49,25 +47,25 @@ func New(v *viper.Viper) (*Network, error) {
 
 	net := new(Network)
 
-	if v.GetString("network.cni.type") == types.EmptyString &&
-		v.GetString("network.cpi.type") == types.EmptyString {
+	if v.GetString("network.cni.type") == models.EmptyString &&
+		v.GetString("network.cpi.type") == models.EmptyString {
 		log.Debug("run without network management")
 		return nil, nil
 	}
 
 	net.state = state.New()
-	if net.cni, err = ni.New(v); err != nil {
+	if net.cni, err = cni.New(v); err != nil {
 		log.Errorf("Cannot initialize cni: %v", err)
 		return nil, err
 	}
 
-	if net.cpi, err = pi.New(v); err != nil {
+	if net.cpi, err = cpi.New(v); err != nil {
 		log.Errorf("Cannot initialize cni: %v", err)
 		return nil, err
 	}
 
 	rip := v.GetString("network.resolver.ip")
-	if rip == types.EmptyString {
+	if rip == models.EmptyString {
 		rip = DefaultResolverIP
 	}
 

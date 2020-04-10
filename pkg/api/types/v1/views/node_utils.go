@@ -20,14 +20,14 @@ package views
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/internal/util/resource"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/util/resource"
 )
 
 type NodeView struct{}
 
-func (nv *NodeView) New(obj *types.Node) *Node {
+func (nv *NodeView) New(obj *models.Node) *Node {
 	n := Node{}
 	n.Meta = nv.ToNodeMeta(obj.Meta)
 	n.Status = nv.ToNodeStatus(obj.Status)
@@ -35,7 +35,7 @@ func (nv *NodeView) New(obj *types.Node) *Node {
 	return &n
 }
 
-func (nv *NodeView) ToNodeMeta(meta types.NodeMeta) NodeMeta {
+func (nv *NodeView) ToNodeMeta(meta models.NodeMeta) NodeMeta {
 	nm := NodeMeta{}
 	nm.Name = meta.Name
 	nm.SelfLink = meta.SelfLink.String()
@@ -51,7 +51,7 @@ func (nv *NodeView) ToNodeMeta(meta types.NodeMeta) NodeMeta {
 	return nm
 }
 
-func (nv *NodeView) ToNodeStatus(status types.NodeStatus) NodeStatus {
+func (nv *NodeView) ToNodeStatus(status models.NodeStatus) NodeStatus {
 	ns := NodeStatus{}
 
 	ns.Online = status.Online
@@ -91,7 +91,7 @@ func (nv *NodeView) ToNodeStatus(status types.NodeStatus) NodeStatus {
 	return ns
 }
 
-func (nv *NodeView) ToNodeSpec(spec types.NodeSpec) NodeSpec {
+func (nv *NodeView) ToNodeSpec(spec models.NodeSpec) NodeSpec {
 	ns := NodeSpec{}
 	ns.Security.TLS = spec.Security.TLS
 	return ns
@@ -101,20 +101,20 @@ func (obj *Node) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func (obj *NodeManifest) Decode() *types.NodeManifest {
+func (obj *NodeManifest) Decode() *models.NodeManifest {
 
-	manifest := types.NodeManifest{
-		Secrets:   make(map[string]*types.SecretManifest, 0),
-		Configs:   make(map[string]*types.ConfigManifest, 0),
-		Network:   make(map[string]*types.SubnetManifest, 0),
-		Pods:      make(map[string]*types.PodManifest, 0),
-		Volumes:   make(map[string]*types.VolumeManifest, 0),
-		Endpoints: make(map[string]*types.EndpointManifest, 0),
+	manifest := models.NodeManifest{
+		Secrets:   make(map[string]*models.SecretManifest, 0),
+		Configs:   make(map[string]*models.ConfigManifest, 0),
+		Network:   make(map[string]*models.SubnetManifest, 0),
+		Pods:      make(map[string]*models.PodManifest, 0),
+		Volumes:   make(map[string]*models.VolumeManifest, 0),
+		Endpoints: make(map[string]*models.EndpointManifest, 0),
 	}
 
 	manifest.Meta.Initial = obj.Meta.Initial
-	manifest.Resolvers = make(map[string]*types.ResolverManifest, 0)
-	manifest.Exporter = new(types.ExporterManifest)
+	manifest.Resolvers = make(map[string]*models.ResolverManifest, 0)
+	manifest.Exporter = new(models.ExporterManifest)
 
 	for i, s := range obj.Discovery {
 		manifest.Resolvers[i] = s
@@ -149,7 +149,7 @@ func (obj *NodeManifest) Decode() *types.NodeManifest {
 	return &manifest
 }
 
-func (nv *NodeView) NewList(obj *types.NodeList) *NodeList {
+func (nv *NodeView) NewList(obj *models.NodeList) *NodeList {
 	if obj == nil {
 		return nil
 	}
@@ -162,15 +162,15 @@ func (nv *NodeView) NewList(obj *types.NodeList) *NodeList {
 	return &nodes
 }
 
-func (nv *NodeView) NewManifest(obj *types.NodeManifest) *NodeManifest {
+func (nv *NodeView) NewManifest(obj *models.NodeManifest) *NodeManifest {
 
 	manifest := NodeManifest{
-		Configs:   make(map[string]*types.ConfigManifest, 0),
-		Secrets:   make(map[string]*types.SecretManifest, 0),
-		Network:   make(map[string]*types.SubnetManifest, 0),
-		Pods:      make(map[string]*types.PodManifest, 0),
-		Volumes:   make(map[string]*types.VolumeManifest, 0),
-		Endpoints: make(map[string]*types.EndpointManifest, 0),
+		Configs:   make(map[string]*models.ConfigManifest, 0),
+		Secrets:   make(map[string]*models.SecretManifest, 0),
+		Network:   make(map[string]*models.SubnetManifest, 0),
+		Pods:      make(map[string]*models.PodManifest, 0),
+		Volumes:   make(map[string]*models.VolumeManifest, 0),
+		Endpoints: make(map[string]*models.EndpointManifest, 0),
 	}
 
 	if obj == nil {

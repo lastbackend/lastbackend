@@ -21,14 +21,14 @@ package job
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/internal/master/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/generator"
 	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 )
 
-func testPodObserver(t *testing.T, name, werr string, wjs *JobState, js *JobState, pod *types.Pod) {
+func testPodObserver(t *testing.T, name, werr string, wjs *JobState, js *JobState, pod *models.Pod) {
 	var (
 		ctx = context.Background()
 		stg = envs.Get().GetStorage()
@@ -47,7 +47,7 @@ func testPodObserver(t *testing.T, name, werr string, wjs *JobState, js *JobStat
 
 	t.Run(name, func(t *testing.T) {
 		err := PodObserve(js, pod)
-		if werr != types.EmptyString {
+		if werr != models.EmptyString {
 
 			if assert.NoError(t, err, "error should be presented") {
 				return
@@ -78,7 +78,7 @@ func TestHandlePodStateCreated(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			pod      *types.Pod
+			pod      *models.Pod
 		}
 		want struct {
 			err      string
@@ -92,10 +92,10 @@ func TestHandlePodStateCreated(t *testing.T) {
 
 		s := suit{name: "successful state handle pod created"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateCreated, types.EmptyString)
-		pod := getPodAsset(task, types.StateCreated, types.EmptyString)
+		task := getTaskAsset(job, models.StateCreated, models.EmptyString)
+		pod := getPodAsset(task, models.StateCreated, models.EmptyString)
 
 		s.args.pod = pod
 		s.args.jobState = js
@@ -104,11 +104,11 @@ func TestHandlePodStateCreated(t *testing.T) {
 
 		wt := getTaskCopy(task)
 		wp := getPodCopy(pod)
-		wp.Status.State = types.StateProvision
+		wp.Status.State = models.StateProvision
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.pod.list[wt.SelfLink().String()] = wp
 
 		return s
@@ -126,7 +126,7 @@ func TestHandlePodStateProvision(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			pod      *types.Pod
+			pod      *models.Pod
 		}
 		want struct {
 			err      string
@@ -140,10 +140,10 @@ func TestHandlePodStateProvision(t *testing.T) {
 
 		s := suit{name: "successful state handle pod provision"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
-		pod := getPodAsset(task, types.StateProvision, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
+		pod := getPodAsset(task, models.StateProvision, models.EmptyString)
 
 		s.args.pod = pod
 		s.args.jobState = js
@@ -151,11 +151,11 @@ func TestHandlePodStateProvision(t *testing.T) {
 
 		wt := getTaskCopy(task)
 		wp := getPodCopy(pod)
-		wp.Status.State = types.StateProvision
+		wp.Status.State = models.StateProvision
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.pod.list[wt.SelfLink().String()] = wp
 
 		return s
@@ -173,7 +173,7 @@ func TestHandlePodStateReady(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			pod      *types.Pod
+			pod      *models.Pod
 		}
 		want struct {
 			err      string
@@ -187,10 +187,10 @@ func TestHandlePodStateReady(t *testing.T) {
 
 		s := suit{name: "successful state handle pod ready"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
-		pod := getPodAsset(task, types.StateReady, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
+		pod := getPodAsset(task, models.StateReady, models.EmptyString)
 
 		s.args.pod = pod
 		s.args.jobState = js
@@ -199,11 +199,11 @@ func TestHandlePodStateReady(t *testing.T) {
 
 		wt := getTaskCopy(task)
 		wp := getPodCopy(pod)
-		wp.Status.State = types.StateReady
+		wp.Status.State = models.StateReady
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.pod.list[wt.SelfLink().String()] = wp
 
 		return s
@@ -221,7 +221,7 @@ func TestHandlePodStateError(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			pod      *types.Pod
+			pod      *models.Pod
 		}
 		want struct {
 			err      string
@@ -235,10 +235,10 @@ func TestHandlePodStateError(t *testing.T) {
 
 		s := suit{name: "successful state handle pod error"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
-		pod := getPodAsset(task, types.StateError, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
+		pod := getPodAsset(task, models.StateError, models.EmptyString)
 
 		s.args.pod = pod
 		s.args.jobState = js
@@ -247,11 +247,11 @@ func TestHandlePodStateError(t *testing.T) {
 
 		wt := getTaskCopy(task)
 		wp := getPodCopy(pod)
-		wp.Status.State = types.StateError
+		wp.Status.State = models.StateError
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.pod.list[wt.SelfLink().String()] = wp
 
 		return s
@@ -269,7 +269,7 @@ func TestHandlePodStateDegradation(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			pod      *types.Pod
+			pod      *models.Pod
 		}
 		want struct {
 			err      string
@@ -283,10 +283,10 @@ func TestHandlePodStateDegradation(t *testing.T) {
 
 		s := suit{name: "successful state handle pod degradation"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
-		pod := getPodAsset(task, types.StateDegradation, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
+		pod := getPodAsset(task, models.StateDegradation, models.EmptyString)
 
 		s.args.pod = pod
 		s.args.jobState = js
@@ -295,11 +295,11 @@ func TestHandlePodStateDegradation(t *testing.T) {
 
 		wt := getTaskCopy(task)
 		wp := getPodCopy(pod)
-		wp.Status.State = types.StateDegradation
+		wp.Status.State = models.StateDegradation
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.pod.list[wt.SelfLink().String()] = wp
 
 		return s
@@ -317,7 +317,7 @@ func TestHandlePodStateDestroy(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			pod      *types.Pod
+			pod      *models.Pod
 		}
 		want struct {
 			err      string
@@ -331,10 +331,10 @@ func TestHandlePodStateDestroy(t *testing.T) {
 
 		s := suit{name: "successful state handle pod destroy"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
-		pod := getPodAsset(task, types.StateDestroy, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
+		pod := getPodAsset(task, models.StateDestroy, models.EmptyString)
 
 		s.args.pod = pod
 		s.args.jobState = js
@@ -343,11 +343,11 @@ func TestHandlePodStateDestroy(t *testing.T) {
 
 		wt := getTaskCopy(task)
 		wp := getPodCopy(pod)
-		wp.Status.State = types.StateDestroy
+		wp.Status.State = models.StateDestroy
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		delete(s.want.jobState.pod.list, wt.SelfLink().String())
 
 		return s
@@ -357,10 +357,10 @@ func TestHandlePodStateDestroy(t *testing.T) {
 
 		s := suit{name: "successful state handle pod destroy and spec destroy true and node empty"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
-		pod := getPodAsset(task, types.StateDestroy, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
+		pod := getPodAsset(task, models.StateDestroy, models.EmptyString)
 		pod.Spec.State.Destroy = true
 
 		s.args.pod = pod
@@ -370,11 +370,11 @@ func TestHandlePodStateDestroy(t *testing.T) {
 
 		wt := getTaskCopy(task)
 		wp := getPodCopy(pod)
-		wp.Status.State = types.StateDestroyed
+		wp.Status.State = models.StateDestroyed
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		delete(s.want.jobState.pod.list, wt.SelfLink().String())
 
 		return s
@@ -392,7 +392,7 @@ func TestHandlePodStateDestroyed(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			pod      *types.Pod
+			pod      *models.Pod
 		}
 		want struct {
 			err      string
@@ -406,10 +406,10 @@ func TestHandlePodStateDestroyed(t *testing.T) {
 
 		s := suit{name: "successful state handle pod destroyed"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
-		pod := getPodAsset(task, types.StateDestroyed, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
+		pod := getPodAsset(task, models.StateDestroyed, models.EmptyString)
 
 		s.args.pod = pod
 		s.args.jobState = js
@@ -418,11 +418,11 @@ func TestHandlePodStateDestroyed(t *testing.T) {
 
 		wt := getTaskCopy(task)
 		wp := getPodCopy(pod)
-		wp.Status.State = types.StateDestroyed
+		wp.Status.State = models.StateDestroyed
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		delete(s.want.jobState.pod.list, wt.SelfLink().String())
 
 		return s
@@ -434,22 +434,22 @@ func TestHandlePodStateDestroyed(t *testing.T) {
 
 }
 
-func getPodAsset(t *types.Task, state, message string) *types.Pod {
+func getPodAsset(t *models.Task, state, message string) *models.Pod {
 
-	p := new(types.Pod)
+	p := new(models.Pod)
 
 	p.Meta.SetDefault()
 	p.Meta.Namespace = t.Meta.Namespace
 	p.Meta.Name = strings.Split(generator.GetUUIDV4(), "-")[4][5:]
 	p.Meta.Namespace = t.Meta.Namespace
 
-	sl, _ := types.NewPodSelfLink(types.KindTask, t.SelfLink().String(), p.Meta.Name)
+	sl, _ := models.NewPodSelfLink(models.KindTask, t.SelfLink().String(), p.Meta.Name)
 	p.Meta.SelfLink = *sl
 
 	p.Status.State = state
 	p.Status.Message = message
 
-	if state == types.StateReady {
+	if state == models.StateReady {
 		p.Status.Running = true
 	}
 
@@ -459,7 +459,7 @@ func getPodAsset(t *types.Task, state, message string) *types.Pod {
 	return p
 }
 
-func getPodCopy(pod *types.Pod) *types.Pod {
+func getPodCopy(pod *models.Pod) *models.Pod {
 	p := *pod
 	return &p
 }

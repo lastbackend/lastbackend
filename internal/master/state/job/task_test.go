@@ -28,13 +28,13 @@ import (
 	"github.com/lastbackend/lastbackend/internal/master/state/cluster"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/generator"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
-func testTaskObserver(t *testing.T, name, werr string, wjs *JobState, js *JobState, task *types.Task) {
+func testTaskObserver(t *testing.T, name, werr string, wjs *JobState, js *JobState, task *models.Task) {
 	var (
 		ctx = context.Background()
 		stg = envs.Get().GetStorage()
@@ -54,7 +54,7 @@ func testTaskObserver(t *testing.T, name, werr string, wjs *JobState, js *JobSta
 	t.Run(name, func(t *testing.T) {
 
 		err := taskObserve(js, task)
-		if werr != types.EmptyString {
+		if werr != models.EmptyString {
 
 			if assert.NoError(t, err, "error should be presented") {
 				return
@@ -85,7 +85,7 @@ func TestHandleTaskStateCreated(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			task     *types.Task
+			task     *models.Task
 		}
 		want struct {
 			err      string
@@ -99,20 +99,20 @@ func TestHandleTaskStateCreated(t *testing.T) {
 
 		s := suit{name: "successful state handle without tasks should set task in queued state"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateCreated, types.EmptyString)
+		task := getTaskAsset(job, models.StateCreated, models.EmptyString)
 
 		s.args.task = task
 		s.args.jobState = js
 		s.args.jobState.task.list[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateQueued
+		wt.Status.State = models.StateQueued
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 
 		return s
@@ -122,11 +122,11 @@ func TestHandleTaskStateCreated(t *testing.T) {
 
 		s := suit{name: "failed state handle without tasks should set task in error state"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateCreated, types.EmptyString)
-		volume := &types.SpecTemplateVolume{
-			Volume: types.SpecTemplateVolumeClaim{Name: "demo"},
+		task := getTaskAsset(job, models.StateCreated, models.EmptyString)
+		volume := &models.SpecTemplateVolume{
+			Volume: models.SpecTemplateVolumeClaim{Name: "demo"},
 		}
 		task.Spec.Template.Volumes = append(task.Spec.Template.Volumes, volume)
 
@@ -135,13 +135,13 @@ func TestHandleTaskStateCreated(t *testing.T) {
 		s.args.jobState.task.list[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateError
+		wt.Status.State = models.StateError
 		wt.Status.Error = true
 		wt.Status.Message = fmt.Sprintf("%s: volume not found", strings.Title(volume.Volume.Name))
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 
 		return s
@@ -159,7 +159,7 @@ func TestHandleTaskStateQueued(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			task     *types.Task
+			task     *models.Task
 		}
 		want struct {
 			err      string
@@ -173,20 +173,20 @@ func TestHandleTaskStateQueued(t *testing.T) {
 
 		s := suit{name: "successful state handle without tasks should set task in provision state"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateQueued, types.EmptyString)
+		task := getTaskAsset(job, models.StateQueued, models.EmptyString)
 
 		s.args.task = task
 		s.args.jobState = js
 		s.args.jobState.task.list[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateProvision
+		wt.Status.State = models.StateProvision
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateRunning
+		s.want.jobState.job.Status.State = models.StateRunning
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.task.queue[wt.SelfLink().String()] = wt
 
@@ -197,10 +197,10 @@ func TestHandleTaskStateQueued(t *testing.T) {
 
 		s := suit{name: "successful state handle with tasks in queue should be two task in provision state"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task1 := getTaskAsset(job, types.StateQueued, types.EmptyString)
-		task2 := getTaskAsset(job, types.StateQueued, types.EmptyString)
+		task1 := getTaskAsset(job, models.StateQueued, models.EmptyString)
+		task2 := getTaskAsset(job, models.StateQueued, models.EmptyString)
 
 		s.args.task = task2
 		s.args.jobState = js
@@ -209,13 +209,13 @@ func TestHandleTaskStateQueued(t *testing.T) {
 		s.args.jobState.task.list[task2.SelfLink().String()] = task2
 
 		wt1 := getTaskCopy(task1)
-		wt1.Status.State = types.StateProvision
+		wt1.Status.State = models.StateProvision
 		wt2 := getTaskCopy(task2)
-		wt2.Status.State = types.StateQueued
+		wt2.Status.State = models.StateQueued
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateRunning
+		s.want.jobState.job.Status.State = models.StateRunning
 		s.want.jobState.task.list[wt1.SelfLink().String()] = wt1
 		s.want.jobState.task.list[wt2.SelfLink().String()] = wt2
 		s.want.jobState.task.queue[wt1.SelfLink().String()] = wt1
@@ -228,11 +228,11 @@ func TestHandleTaskStateQueued(t *testing.T) {
 
 		s := suit{name: "successful state handle with tasks in active should be two task in provisioned state because limits 2"}
 
-		job := getJobAsset(types.StateRunning, types.EmptyString)
+		job := getJobAsset(models.StateRunning, models.EmptyString)
 		job.Spec.Concurrency.Limit = 2
 		js := getJobStateAsset(job)
-		task1 := getTaskAsset(job, types.StateProvision, types.EmptyString)
-		task2 := getTaskAsset(job, types.StateQueued, types.EmptyString)
+		task1 := getTaskAsset(job, models.StateProvision, models.EmptyString)
+		task2 := getTaskAsset(job, models.StateQueued, models.EmptyString)
 
 		s.args.task = task2
 		s.args.jobState = js
@@ -241,13 +241,13 @@ func TestHandleTaskStateQueued(t *testing.T) {
 		s.args.jobState.task.list[task2.SelfLink().String()] = task2
 
 		wt1 := getTaskCopy(task1)
-		wt1.Status.State = types.StateProvision
+		wt1.Status.State = models.StateProvision
 		wt2 := getTaskCopy(task2)
-		wt2.Status.State = types.StateProvision
+		wt2.Status.State = models.StateProvision
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateRunning
+		s.want.jobState.job.Status.State = models.StateRunning
 		s.want.jobState.task.list[wt1.SelfLink().String()] = wt1
 		s.want.jobState.task.list[wt2.SelfLink().String()] = wt2
 		s.want.jobState.task.active[wt1.SelfLink().String()] = wt1
@@ -260,10 +260,10 @@ func TestHandleTaskStateQueued(t *testing.T) {
 
 		s := suit{name: "successful state handle with tasks in active should be task in queue state because limits 1"}
 
-		job := getJobAsset(types.StateRunning, types.EmptyString)
+		job := getJobAsset(models.StateRunning, models.EmptyString)
 		js := getJobStateAsset(job)
-		task1 := getTaskAsset(job, types.StateProvision, types.EmptyString)
-		task2 := getTaskAsset(job, types.StateQueued, types.EmptyString)
+		task1 := getTaskAsset(job, models.StateProvision, models.EmptyString)
+		task2 := getTaskAsset(job, models.StateQueued, models.EmptyString)
 
 		s.args.task = task2
 		s.args.jobState = js
@@ -272,13 +272,13 @@ func TestHandleTaskStateQueued(t *testing.T) {
 		s.args.jobState.task.list[task2.SelfLink().String()] = task2
 
 		wt1 := getTaskCopy(task1)
-		wt1.Status.State = types.StateProvision
+		wt1.Status.State = models.StateProvision
 		wt2 := getTaskCopy(task2)
-		wt2.Status.State = types.StateQueued
+		wt2.Status.State = models.StateQueued
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateRunning
+		s.want.jobState.job.Status.State = models.StateRunning
 		s.want.jobState.task.list[wt1.SelfLink().String()] = wt1
 		s.want.jobState.task.list[wt2.SelfLink().String()] = wt2
 		s.want.jobState.task.active[wt1.SelfLink().String()] = wt1
@@ -299,8 +299,8 @@ func TestHandleTaskStateProvision(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			job      *types.Job
-			task     *types.Task
+			job      *models.Job
+			task     *models.Task
 		}
 		want struct {
 			err      string
@@ -314,9 +314,9 @@ func TestHandleTaskStateProvision(t *testing.T) {
 
 		s := suit{name: "successful state handle provision task without pod"}
 
-		job := getJobAsset(types.StateRunning, types.EmptyString)
+		job := getJobAsset(models.StateRunning, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
 
 		s.args.task = task
 		s.args.jobState = js
@@ -325,12 +325,12 @@ func TestHandleTaskStateProvision(t *testing.T) {
 		s.args.jobState.task.queue[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateProvision
+		wt.Status.State = models.StateProvision
 		pod, _ := podCreate(task)
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateRunning
+		s.want.jobState.job.Status.State = models.StateRunning
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.task.active[wt.SelfLink().String()] = wt
 		s.want.jobState.pod.list[wt.SelfLink().String()] = pod
@@ -343,20 +343,20 @@ func TestHandleTaskStateProvision(t *testing.T) {
 
 		s := suit{name: "successful state handle have not task in queue"}
 
-		job := getJobAsset(types.StateRunning, types.EmptyString)
+		job := getJobAsset(models.StateRunning, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
 
 		s.args.task = task
 		s.args.jobState = js
 		s.args.jobState.task.list[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateQueued
+		wt.Status.State = models.StateQueued
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateRunning
+		s.want.jobState.job.Status.State = models.StateRunning
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 
 		return s
@@ -366,9 +366,9 @@ func TestHandleTaskStateProvision(t *testing.T) {
 
 		s := suit{name: "successful state handle provision task with pod"}
 
-		job := getJobAsset(types.StateRunning, types.EmptyString)
+		job := getJobAsset(models.StateRunning, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
 		pod, _ := podCreate(task)
 
 		s.args.task = task
@@ -378,16 +378,16 @@ func TestHandleTaskStateProvision(t *testing.T) {
 		s.args.jobState.pod.list[task.SelfLink().String()] = pod
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateExited
+		wt.Status.State = models.StateExited
 		wt.Status.Error = true
 		wt.Status.Message = errors.New(fmt.Sprintf("pod %s can not be manage: node not attached", pod.Meta.SelfLink.String())).Error()
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateRunning
+		s.want.jobState.job.Status.State = models.StateRunning
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.task.finished = append(s.want.jobState.task.finished, wt)
-		s.want.jobState.pod.list = make(map[string]*types.Pod, 0)
+		s.want.jobState.pod.list = make(map[string]*models.Pod, 0)
 		delete(s.want.jobState.task.queue, task.SelfLink().String())
 
 		return s
@@ -397,20 +397,20 @@ func TestHandleTaskStateProvision(t *testing.T) {
 
 		s := suit{name: "successful state handle provision task not queue"}
 
-		job := getJobAsset(types.StateRunning, types.EmptyString)
+		job := getJobAsset(models.StateRunning, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
 
 		s.args.task = task
 		s.args.jobState = js
 		s.args.jobState.task.list[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateQueued
+		wt.Status.State = models.StateQueued
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateRunning
+		s.want.jobState.job.Status.State = models.StateRunning
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 
 		return s
@@ -420,11 +420,11 @@ func TestHandleTaskStateProvision(t *testing.T) {
 
 		s := suit{name: "successful state handle provision task and pod in status destroy"}
 
-		job := getJobAsset(types.StateRunning, types.EmptyString)
+		job := getJobAsset(models.StateRunning, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
 		pod, _ := podCreate(task)
-		pod.Status.State = types.StateDestroy
+		pod.Status.State = models.StateDestroy
 
 		s.args.task = task
 		s.args.jobState = js
@@ -433,11 +433,11 @@ func TestHandleTaskStateProvision(t *testing.T) {
 		s.args.jobState.pod.list[task.SelfLink().String()] = pod
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateProvision
+		wt.Status.State = models.StateProvision
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateRunning
+		s.want.jobState.job.Status.State = models.StateRunning
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.task.queue[wt.SelfLink().String()] = wt
 
@@ -448,14 +448,14 @@ func TestHandleTaskStateProvision(t *testing.T) {
 
 		s := suit{name: "successful state handle provision task with pod and finished more 5"}
 
-		job := getJobAsset(types.StateRunning, types.EmptyString)
+		job := getJobAsset(models.StateRunning, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
-		task1 := getTaskAsset(job, types.StateExited, types.EmptyString)
-		task2 := getTaskAsset(job, types.StateExited, types.EmptyString)
-		task3 := getTaskAsset(job, types.StateExited, types.EmptyString)
-		task4 := getTaskAsset(job, types.StateExited, types.EmptyString)
-		task5 := getTaskAsset(job, types.StateExited, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
+		task1 := getTaskAsset(job, models.StateExited, models.EmptyString)
+		task2 := getTaskAsset(job, models.StateExited, models.EmptyString)
+		task3 := getTaskAsset(job, models.StateExited, models.EmptyString)
+		task4 := getTaskAsset(job, models.StateExited, models.EmptyString)
+		task5 := getTaskAsset(job, models.StateExited, models.EmptyString)
 		pod, _ := podCreate(task)
 
 		s.args.task = task
@@ -470,16 +470,16 @@ func TestHandleTaskStateProvision(t *testing.T) {
 		s.args.jobState.task.finished = append(s.args.jobState.task.finished, task5)
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateExited
+		wt.Status.State = models.StateExited
 		wt.Status.Error = true
 		wt.Status.Message = errors.New(fmt.Sprintf("pod %s can not be manage: node not attached", pod.Meta.SelfLink.String())).Error()
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateRunning
+		s.want.jobState.job.Status.State = models.StateRunning
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.task.finished = append(s.want.jobState.task.finished, wt)
-		s.want.jobState.pod.list = make(map[string]*types.Pod, 0)
+		s.want.jobState.pod.list = make(map[string]*models.Pod, 0)
 		s.want.jobState.task.finished = s.want.jobState.task.finished[1:]
 		delete(s.want.jobState.task.queue, task.SelfLink().String())
 
@@ -491,9 +491,9 @@ func TestHandleTaskStateProvision(t *testing.T) {
 	for _, tt := range tests {
 		testTaskObserver(t, tt.name, tt.want.err, tt.want.jobState, tt.args.jobState, tt.args.task)
 
-		if tt.args.task.Status.State == types.StateProvision && len(tt.args.jobState.task.active) > 0 {
+		if tt.args.task.Status.State == models.StateProvision && len(tt.args.jobState.task.active) > 0 {
 
-			list := types.NewPodList()
+			list := models.NewPodList()
 
 			filter := stg.Filter().Pod().ByTask(tt.args.task.Meta.Namespace, tt.args.job.Meta.Name, tt.args.task.Meta.Name)
 
@@ -528,7 +528,7 @@ func TestHandleTaskStateRunning(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			task     *types.Task
+			task     *models.Task
 		}
 		want struct {
 			err      string
@@ -542,9 +542,9 @@ func TestHandleTaskStateRunning(t *testing.T) {
 
 		s := suit{name: "successful state handle running task"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateRunning, types.EmptyString)
+		task := getTaskAsset(job, models.StateRunning, models.EmptyString)
 
 		s.args.task = task
 		s.args.jobState = js
@@ -552,11 +552,11 @@ func TestHandleTaskStateRunning(t *testing.T) {
 		s.args.jobState.task.active[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateRunning
+		wt.Status.State = models.StateRunning
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.task.active[wt.SelfLink().String()] = wt
 
@@ -573,7 +573,7 @@ func TestHandleTaskStateError(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			task     *types.Task
+			task     *models.Task
 		}
 		want struct {
 			err      string
@@ -587,21 +587,21 @@ func TestHandleTaskStateError(t *testing.T) {
 
 		s := suit{name: "successful state handle error task"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateError, types.EmptyString)
+		task := getTaskAsset(job, models.StateError, models.EmptyString)
 
 		s.args.task = task
 		s.args.jobState = js
 		s.args.jobState.task.list[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateExited
+		wt.Status.State = models.StateExited
 		wt.Status.Error = true
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.task.finished = append(s.want.jobState.task.finished, wt)
 
@@ -612,9 +612,9 @@ func TestHandleTaskStateError(t *testing.T) {
 
 		s := suit{name: "successful state handle error task and set in queued"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateError, types.EmptyString)
+		task := getTaskAsset(job, models.StateError, models.EmptyString)
 
 		s.args.task = task
 		s.args.jobState = js
@@ -622,12 +622,12 @@ func TestHandleTaskStateError(t *testing.T) {
 		s.args.jobState.task.queue[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateExited
+		wt.Status.State = models.StateExited
 		wt.Status.Error = true
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.task.finished = append(s.want.jobState.task.finished, wt)
 		delete(s.want.jobState.task.queue, task.SelfLink().String())
@@ -639,9 +639,9 @@ func TestHandleTaskStateError(t *testing.T) {
 
 		s := suit{name: "successful state handle error task and set in active"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateError, types.EmptyString)
+		task := getTaskAsset(job, models.StateError, models.EmptyString)
 
 		s.args.task = task
 		s.args.jobState = js
@@ -649,12 +649,12 @@ func TestHandleTaskStateError(t *testing.T) {
 		s.args.jobState.task.active[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateExited
+		wt.Status.State = models.StateExited
 		wt.Status.Error = true
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.task.finished = append(s.want.jobState.task.finished, wt)
 		delete(s.want.jobState.task.active, task.SelfLink().String())
@@ -672,7 +672,7 @@ func TestHandleTaskStateCanceled(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			task     *types.Task
+			task     *models.Task
 		}
 		want struct {
 			err      string
@@ -686,21 +686,21 @@ func TestHandleTaskStateCanceled(t *testing.T) {
 
 		s := suit{name: "successful state handle canceled task"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateCanceled, types.EmptyString)
+		task := getTaskAsset(job, models.StateCanceled, models.EmptyString)
 
 		s.args.task = task
 		s.args.jobState = js
 		s.args.jobState.task.list[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateExited
+		wt.Status.State = models.StateExited
 		wt.Status.Canceled = true
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.task.finished = append(s.want.jobState.task.finished, wt)
 
@@ -711,9 +711,9 @@ func TestHandleTaskStateCanceled(t *testing.T) {
 
 		s := suit{name: "successful state handle canceled task in queued"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateCanceled, types.EmptyString)
+		task := getTaskAsset(job, models.StateCanceled, models.EmptyString)
 
 		s.args.task = task
 		s.args.jobState = js
@@ -721,12 +721,12 @@ func TestHandleTaskStateCanceled(t *testing.T) {
 		s.args.jobState.task.queue[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateExited
+		wt.Status.State = models.StateExited
 		wt.Status.Canceled = true
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.task.finished = append(s.want.jobState.task.finished, wt)
 		delete(s.want.jobState.task.queue, task.SelfLink().String())
@@ -738,9 +738,9 @@ func TestHandleTaskStateCanceled(t *testing.T) {
 
 		s := suit{name: "successful state handle canceled task in active"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateCanceled, types.EmptyString)
+		task := getTaskAsset(job, models.StateCanceled, models.EmptyString)
 
 		s.args.task = task
 		s.args.jobState = js
@@ -748,12 +748,12 @@ func TestHandleTaskStateCanceled(t *testing.T) {
 		s.args.jobState.task.active[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateExited
+		wt.Status.State = models.StateExited
 		wt.Status.Canceled = true
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.task.finished = append(s.want.jobState.task.finished, wt)
 		delete(s.want.jobState.task.active, task.SelfLink().String())
@@ -772,7 +772,7 @@ func TestHandleTaskStateExited(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			task     *types.Task
+			task     *models.Task
 		}
 		want struct {
 			err      string
@@ -786,9 +786,9 @@ func TestHandleTaskStateExited(t *testing.T) {
 
 		s := suit{name: "successful state handle exited task"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateExited, types.EmptyString)
+		task := getTaskAsset(job, models.StateExited, models.EmptyString)
 		task.Status.Done = true
 
 		s.args.task = task
@@ -796,12 +796,12 @@ func TestHandleTaskStateExited(t *testing.T) {
 		s.args.jobState.task.list[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateExited
+		wt.Status.State = models.StateExited
 		wt.Status.Done = true
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.task.finished = append(s.want.jobState.task.finished, wt)
 
@@ -812,9 +812,9 @@ func TestHandleTaskStateExited(t *testing.T) {
 
 		s := suit{name: "successful state handle canceled task in queued"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateExited, types.EmptyString)
+		task := getTaskAsset(job, models.StateExited, models.EmptyString)
 		task.Status.Done = true
 
 		s.args.task = task
@@ -823,12 +823,12 @@ func TestHandleTaskStateExited(t *testing.T) {
 		s.args.jobState.task.queue[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateExited
+		wt.Status.State = models.StateExited
 		wt.Status.Done = true
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.task.finished = append(s.want.jobState.task.finished, wt)
 		delete(s.want.jobState.task.queue, task.SelfLink().String())
@@ -840,9 +840,9 @@ func TestHandleTaskStateExited(t *testing.T) {
 
 		s := suit{name: "successful state handle canceled task in active"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateExited, types.EmptyString)
+		task := getTaskAsset(job, models.StateExited, models.EmptyString)
 		task.Status.Done = true
 
 		s.args.task = task
@@ -851,12 +851,12 @@ func TestHandleTaskStateExited(t *testing.T) {
 		s.args.jobState.task.active[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateExited
+		wt.Status.State = models.StateExited
 		wt.Status.Done = true
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.task.finished = append(s.want.jobState.task.finished, wt)
 		delete(s.want.jobState.task.active, task.SelfLink().String())
@@ -874,7 +874,7 @@ func TestHandleTaskStateDestroy(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			task     *types.Task
+			task     *models.Task
 		}
 		want struct {
 			err      string
@@ -888,20 +888,20 @@ func TestHandleTaskStateDestroy(t *testing.T) {
 
 		s := suit{name: "successful state handle destroy task with destroy state and without pod"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateDestroy, types.EmptyString)
+		task := getTaskAsset(job, models.StateDestroy, models.EmptyString)
 
 		s.args.task = task
 		s.args.jobState = js
 		s.args.jobState.task.list[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateDestroyed
+		wt.Status.State = models.StateDestroyed
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 
 		return s
@@ -911,9 +911,9 @@ func TestHandleTaskStateDestroy(t *testing.T) {
 
 		s := suit{name: "successful state handle destroy task with destroy state and with pod with not destroy state"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateDestroy, types.EmptyString)
+		task := getTaskAsset(job, models.StateDestroy, models.EmptyString)
 		pod, _ := podCreate(task)
 
 		s.args.task = task
@@ -922,11 +922,11 @@ func TestHandleTaskStateDestroy(t *testing.T) {
 		s.args.jobState.pod.list[task.SelfLink().String()] = pod
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateDestroy
+		wt.Status.State = models.StateDestroy
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		delete(s.want.jobState.pod.list, wt.SelfLink().String())
 
@@ -937,11 +937,11 @@ func TestHandleTaskStateDestroy(t *testing.T) {
 
 		s := suit{name: "successful state handle destroy task with destroy state and with pod with destroy state and without node"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateDestroy, types.EmptyString)
+		task := getTaskAsset(job, models.StateDestroy, models.EmptyString)
 		pod, _ := podCreate(task)
-		pod.Status.State = types.StateProvision
+		pod.Status.State = models.StateProvision
 		pod.Spec.State.Destroy = true
 
 		s.args.task = task
@@ -950,11 +950,11 @@ func TestHandleTaskStateDestroy(t *testing.T) {
 		s.args.jobState.pod.list[task.SelfLink().String()] = pod
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateDestroy
+		wt.Status.State = models.StateDestroy
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		delete(s.want.jobState.pod.list, wt.SelfLink().String())
 
@@ -965,11 +965,11 @@ func TestHandleTaskStateDestroy(t *testing.T) {
 
 		s := suit{name: "successful state handle destroy task with destroy state and with pod with destroy state and with node"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateDestroy, types.EmptyString)
+		task := getTaskAsset(job, models.StateDestroy, models.EmptyString)
 		pod, _ := podCreate(task)
-		pod.Status.State = types.StateProvision
+		pod.Status.State = models.StateProvision
 		pod.Spec.State.Destroy = true
 		pod.Meta.Node = "local"
 
@@ -979,14 +979,14 @@ func TestHandleTaskStateDestroy(t *testing.T) {
 		s.args.jobState.pod.list[task.SelfLink().String()] = pod
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateDestroy
+		wt.Status.State = models.StateDestroy
 		wp := getPodCopy(pod)
-		wp.Status.State = types.StateDestroy
+		wp.Status.State = models.StateDestroy
 		wp.Spec.State.Destroy = true
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.pod.list[wt.SelfLink().String()] = wp
 
@@ -1003,7 +1003,7 @@ func TestHandleTaskStateDestroyed(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			task     *types.Task
+			task     *models.Task
 		}
 		want struct {
 			err      string
@@ -1017,25 +1017,25 @@ func TestHandleTaskStateDestroyed(t *testing.T) {
 
 		s := suit{name: "successful state handle destroyed task without pod"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateDestroyed, types.EmptyString)
+		task := getTaskAsset(job, models.StateDestroyed, models.EmptyString)
 
 		s.args.task = task
 		s.args.jobState = js
 		s.args.jobState.task.list[task.SelfLink().String()] = task
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateDestroyed
+		wt.Status.State = models.StateDestroyed
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
-		s.want.jobState.task.list = make(map[string]*types.Task, 0)
-		s.want.jobState.task.queue = make(map[string]*types.Task, 0)
-		s.want.jobState.task.active = make(map[string]*types.Task, 0)
-		s.want.jobState.task.finished = make([]*types.Task, 0)
-		s.want.jobState.pod.list = make(map[string]*types.Pod, 0)
+		s.want.jobState.job.Status.State = models.StateWaiting
+		s.want.jobState.task.list = make(map[string]*models.Task, 0)
+		s.want.jobState.task.queue = make(map[string]*models.Task, 0)
+		s.want.jobState.task.active = make(map[string]*models.Task, 0)
+		s.want.jobState.task.finished = make([]*models.Task, 0)
+		s.want.jobState.pod.list = make(map[string]*models.Pod, 0)
 
 		return s
 	}())
@@ -1044,9 +1044,9 @@ func TestHandleTaskStateDestroyed(t *testing.T) {
 
 		s := suit{name: "successful state handle destroyed task without pod"}
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		js := getJobStateAsset(job)
-		task := getTaskAsset(job, types.StateDestroyed, types.EmptyString)
+		task := getTaskAsset(job, models.StateDestroyed, models.EmptyString)
 		pod, _ := podCreate(task)
 
 		s.args.task = task
@@ -1055,12 +1055,12 @@ func TestHandleTaskStateDestroyed(t *testing.T) {
 		s.args.jobState.pod.list[task.SelfLink().String()] = pod
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateDestroy
+		wt.Status.State = models.StateDestroy
 		wp := getPodCopy(pod)
 
-		s.want.err = types.EmptyString
+		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
-		s.want.jobState.job.Status.State = types.StateWaiting
+		s.want.jobState.job.Status.State = models.StateWaiting
 		s.want.jobState.task.list[wt.SelfLink().String()] = wt
 		s.want.jobState.pod.list[wt.SelfLink().String()] = wp
 
@@ -1084,11 +1084,11 @@ func TestTaskStatusState(t *testing.T) {
 		name string
 		args struct {
 			jobState *JobState
-			task     *types.Task
-			pod      *types.Pod
+			task     *models.Task
+			pod      *models.Pod
 		}
 		want struct {
-			t *types.Task
+			t *models.Task
 		}
 		wantErr  bool
 		preHook  func() error
@@ -1102,13 +1102,13 @@ func TestTaskStatusState(t *testing.T) {
 		ctx := context.Background()
 
 		job := getJobAsset("build", "system")
-		job.Status.State = types.StateRunning
+		job.Status.State = models.StateRunning
 		js := NewJobState(cluster.NewClusterState(), job)
-		task := getTaskAsset(job, types.StateCreated, types.EmptyString)
+		task := getTaskAsset(job, models.StateCreated, models.EmptyString)
 
 		pod, _ := podCreate(task)
 		assert.NotNil(t, pod)
-		pod.Status.State = types.StateProvision
+		pod.Status.State = models.StateProvision
 
 		s := suit{name: "set task created -> provision state (pod: provision)"}
 		s.ctx = ctx
@@ -1118,7 +1118,7 @@ func TestTaskStatusState(t *testing.T) {
 		s.args.pod = pod
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateProvision
+		wt.Status.State = models.StateProvision
 
 		s.want.t = wt
 
@@ -1147,13 +1147,13 @@ func TestTaskStatusState(t *testing.T) {
 		ctx := context.Background()
 
 		job := getJobAsset("build", "system")
-		job.Status.State = types.StateRunning
+		job.Status.State = models.StateRunning
 		js := NewJobState(cluster.NewClusterState(), job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
 
 		pod, _ := podCreate(task)
 		assert.NotNil(t, pod)
-		pod.Status.State = types.StateProvision
+		pod.Status.State = models.StateProvision
 
 		s := suit{name: "set task provision -> provision state (pod: provision)"}
 		s.ctx = ctx
@@ -1163,7 +1163,7 @@ func TestTaskStatusState(t *testing.T) {
 		s.args.pod = pod
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateProvision
+		wt.Status.State = models.StateProvision
 
 		s.want.t = wt
 
@@ -1192,12 +1192,12 @@ func TestTaskStatusState(t *testing.T) {
 		ctx := context.Background()
 
 		job := getJobAsset("build", "system")
-		job.Status.State = types.StateRunning
+		job.Status.State = models.StateRunning
 		js := NewJobState(cluster.NewClusterState(), job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
 
 		pod, _ := podCreate(task)
-		pod.Status.State = types.StateError
+		pod.Status.State = models.StateError
 
 		s := suit{name: "set task provision -> exited state (pod: error)"}
 		s.ctx = ctx
@@ -1206,7 +1206,7 @@ func TestTaskStatusState(t *testing.T) {
 		s.args.pod = pod
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateError
+		wt.Status.State = models.StateError
 		wt.Status.Error = true
 
 		s.want.t = wt
@@ -1236,12 +1236,12 @@ func TestTaskStatusState(t *testing.T) {
 		ctx := context.Background()
 
 		job := getJobAsset("build", "system")
-		job.Status.State = types.StateRunning
+		job.Status.State = models.StateRunning
 		js := NewJobState(cluster.NewClusterState(), job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
 
 		pod, _ := podCreate(task)
-		pod.Status.State = types.StateDestroy
+		pod.Status.State = models.StateDestroy
 
 		s := suit{name: "set task provision -> exited state (pod: destroy)"}
 		s.ctx = ctx
@@ -1250,7 +1250,7 @@ func TestTaskStatusState(t *testing.T) {
 		s.args.pod = pod
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateExited
+		wt.Status.State = models.StateExited
 		wt.Status.Done = true
 		s.want.t = wt
 
@@ -1279,12 +1279,12 @@ func TestTaskStatusState(t *testing.T) {
 		ctx := context.Background()
 
 		job := getJobAsset("build", "system")
-		job.Status.State = types.StateRunning
+		job.Status.State = models.StateRunning
 		js := NewJobState(cluster.NewClusterState(), job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
 
 		pod, _ := podCreate(task)
-		pod.Status.State = types.StateDestroyed
+		pod.Status.State = models.StateDestroyed
 
 		s := suit{name: "set task provision -> exited state (pod: destroyed)"}
 		s.ctx = ctx
@@ -1293,7 +1293,7 @@ func TestTaskStatusState(t *testing.T) {
 		s.args.pod = pod
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateExited
+		wt.Status.State = models.StateExited
 		wt.Status.Done = true
 		s.want.t = wt
 
@@ -1322,13 +1322,13 @@ func TestTaskStatusState(t *testing.T) {
 		ctx := context.Background()
 
 		job := getJobAsset("build", "system")
-		job.Status.State = types.StateRunning
+		job.Status.State = models.StateRunning
 		js := NewJobState(cluster.NewClusterState(), job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
 
 		pod, _ := podCreate(task)
-		pod.Status.State = types.StateExited
-		pod.Status.Status = types.StateError
+		pod.Status.State = models.StateExited
+		pod.Status.Status = models.StateError
 
 		s := suit{name: "set task provision -> exited state (pod: exited and status error)"}
 		s.ctx = ctx
@@ -1337,7 +1337,7 @@ func TestTaskStatusState(t *testing.T) {
 		s.args.pod = pod
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateExited
+		wt.Status.State = models.StateExited
 		wt.Status.Done = true
 		s.want.t = wt
 
@@ -1366,13 +1366,13 @@ func TestTaskStatusState(t *testing.T) {
 		ctx := context.Background()
 
 		job := getJobAsset("build", "system")
-		job.Status.State = types.StateRunning
+		job.Status.State = models.StateRunning
 		js := NewJobState(cluster.NewClusterState(), job)
-		task := getTaskAsset(job, types.StateProvision, types.EmptyString)
+		task := getTaskAsset(job, models.StateProvision, models.EmptyString)
 		task.Status.Error = true
 
 		pod, _ := podCreate(task)
-		pod.Status.State = types.StateExited
+		pod.Status.State = models.StateExited
 
 		s := suit{name: "set task provision -> exited state (pod: exited)"}
 		s.ctx = ctx
@@ -1381,7 +1381,7 @@ func TestTaskStatusState(t *testing.T) {
 		s.args.pod = pod
 
 		wt := getTaskCopy(task)
-		wt.Status.State = types.StateExited
+		wt.Status.State = models.StateExited
 		wt.Status.Done = true
 		s.want.t = wt
 
@@ -1449,10 +1449,10 @@ func TestTaskCreate(t *testing.T) {
 		ctx  context.Context
 		name string
 		args struct {
-			j  *types.Job
-			mf *types.TaskManifest
+			j  *models.Job
+			mf *models.TaskManifest
 		}
-		want     *types.Task
+		want     *models.Task
 		wantErr  bool
 		err      string
 		preHook  func() error
@@ -1463,7 +1463,7 @@ func TestTaskCreate(t *testing.T) {
 
 	tests = append(tests, func() suit {
 
-		job := getJobAsset(types.StateWaiting, types.EmptyString)
+		job := getJobAsset(models.StateWaiting, models.EmptyString)
 		manifest := getTaskManifestAsset("demo")
 
 		s := suit{name: "successful task creation"}
@@ -1471,7 +1471,7 @@ func TestTaskCreate(t *testing.T) {
 		s.args.j = job
 		s.args.mf = manifest
 
-		s.want = getTaskAssetWithName(job, types.StateCreated, types.EmptyString, "demo")
+		s.want = getTaskAssetWithName(job, models.StateCreated, models.EmptyString, "demo")
 
 		return s
 	}())
@@ -1504,7 +1504,7 @@ func TestTaskCreate(t *testing.T) {
 			assert.Equal(t, tc.want.Meta.SelfLink.String(), task.Meta.SelfLink.String(), "task self_link mismatch")
 			assert.Equal(t, tc.want.Status.State, task.Status.State, "task state mismatch")
 
-			var stgTask = new(types.Task)
+			var stgTask = new(models.Task)
 
 			if err := stg.Get(tc.ctx, stg.Collection().Task(), task.SelfLink().String(), stgTask, nil); err != nil {
 				t.Log(err)
@@ -1520,42 +1520,42 @@ func TestTaskCreate(t *testing.T) {
 
 }
 
-func getTaskAsset(job *types.Job, state, message string) *types.Task {
+func getTaskAsset(job *models.Job, state, message string) *models.Task {
 	return getTaskAssetWithName(job, state, message, generator.GetUUIDV4())
 }
 
-func getTaskAssetWithName(job *types.Job, state, message, name string) *types.Task {
+func getTaskAssetWithName(job *models.Job, state, message, name string) *models.Task {
 
-	t := new(types.Task)
+	t := new(models.Task)
 
 	t.Meta.SetDefault()
 	t.Meta.Namespace = job.Meta.Namespace
 	t.Meta.Job = job.SelfLink().String()
 	t.Meta.Name = name
-	t.Meta.SelfLink = *types.NewTaskSelfLink(job.Meta.Namespace, job.Meta.Name, t.Meta.Name)
+	t.Meta.SelfLink = *models.NewTaskSelfLink(job.Meta.Namespace, job.Meta.Name, t.Meta.Name)
 
 	t.Status.State = state
 	t.Status.Message = message
-	t.Status.Dependencies.Volumes = make(map[string]types.StatusDependency, 0)
-	t.Status.Dependencies.Secrets = make(map[string]types.StatusDependency, 0)
-	t.Status.Dependencies.Configs = make(map[string]types.StatusDependency, 0)
+	t.Status.Dependencies.Volumes = make(map[string]models.StatusDependency, 0)
+	t.Status.Dependencies.Secrets = make(map[string]models.StatusDependency, 0)
+	t.Status.Dependencies.Configs = make(map[string]models.StatusDependency, 0)
 
 	t.Spec.State = job.Spec.State
 
-	t.Spec.Template.Containers = make(types.SpecTemplateContainers, 0)
-	t.Spec.Template.Containers = append(t.Spec.Template.Containers, &types.SpecTemplateContainer{
+	t.Spec.Template.Containers = make(models.SpecTemplateContainers, 0)
+	t.Spec.Template.Containers = append(t.Spec.Template.Containers, &models.SpecTemplateContainer{
 		Name: "demo",
 	})
 
 	return t
 }
 
-func getTaskCopy(task *types.Task) *types.Task {
+func getTaskCopy(task *models.Task) *models.Task {
 	t := *task
 	return &t
 }
 
-func compareTaskProperties(old *types.Task, new *types.Task) error {
+func compareTaskProperties(old *models.Task, new *models.Task) error {
 
 	compareStringSlice := func(a, b []string) bool {
 		if len(a) != len(b) {
@@ -1768,8 +1768,8 @@ func compareTaskProperties(old *types.Task, new *types.Task) error {
 	return nil
 }
 
-func getTaskManifestAsset(name string) *types.TaskManifest {
-	t := new(types.TaskManifest)
+func getTaskManifestAsset(name string) *models.TaskManifest {
+	t := new(models.TaskManifest)
 	_ = json.Unmarshal([]byte(taskManifest), t)
 	t.Meta.Name = &name
 

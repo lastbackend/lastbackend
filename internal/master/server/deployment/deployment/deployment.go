@@ -20,13 +20,14 @@ package deployment
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/lastbackend/lastbackend/internal/api/envs"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/pkg/service"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/tools/log"
-	"net/http"
 )
 
 const (
@@ -34,9 +35,9 @@ const (
 	logLevel  = 3
 )
 
-func Fetch(ctx context.Context, namespace, service, name string) (*types.Deployment, *errors.Err) {
+func Fetch(ctx context.Context, namespace, service, name string) (*models.Deployment, *errors.Err) {
 
-	nm := model.NewDeploymentModel(ctx, envs.Get().GetStorage())
+	nm := service.NewDeploymentModel(ctx, envs.Get().GetStorage())
 	dep, err := nm.Get(namespace, service, name)
 
 	if err != nil {
@@ -53,7 +54,7 @@ func Fetch(ctx context.Context, namespace, service, name string) (*types.Deploym
 	return dep, nil
 }
 
-func Apply(ctx context.Context, ns *types.Namespace, svc *types.Service, mf *request.DeploymentManifest, opts *request.DeploymentUpdateOptions) (*types.Deployment, *errors.Err) {
+func Apply(ctx context.Context, ns *models.Namespace, svc *models.Service, mf *request.DeploymentManifest, opts *request.DeploymentUpdateOptions) (*models.Deployment, *errors.Err) {
 
 	if mf.Meta.Name == nil {
 		return nil, errors.New("service").BadParameter("meta.name")
@@ -73,9 +74,9 @@ func Apply(ctx context.Context, ns *types.Namespace, svc *types.Service, mf *req
 	return Update(ctx, ns, svc, dep, mf, opts)
 }
 
-func Create(ctx context.Context, ns *types.Namespace, svc *types.Service, mf *request.DeploymentManifest) (*types.Deployment, *errors.Err) {
+func Create(ctx context.Context, ns *models.Namespace, svc *models.Service, mf *request.DeploymentManifest) (*models.Deployment, *errors.Err) {
 
-	dm := model.NewDeploymentModel(ctx, envs.Get().GetStorage())
+	dm := service.NewDeploymentModel(ctx, envs.Get().GetStorage())
 
 	if mf.Meta.Name != nil {
 
@@ -93,10 +94,10 @@ func Create(ctx context.Context, ns *types.Namespace, svc *types.Service, mf *re
 		}
 	}
 
-	dep := new(types.Deployment)
+	dep := new(models.Deployment)
 	mf.SetDeploymentMeta(dep)
 
-	dep.Meta.SelfLink = *types.NewDeploymentSelfLink(ns.Meta.Name, svc.Meta.Name, *mf.Meta.Name)
+	dep.Meta.SelfLink = *models.NewDeploymentSelfLink(ns.Meta.Name, svc.Meta.Name, *mf.Meta.Name)
 	dep.Meta.Namespace = ns.Meta.Name
 	dep.Meta.Endpoint = svc.Meta.Endpoint
 
@@ -113,9 +114,9 @@ func Create(ctx context.Context, ns *types.Namespace, svc *types.Service, mf *re
 	return dep, nil
 }
 
-func Update(ctx context.Context, ns *types.Namespace, svc *types.Service, dep *types.Deployment, mf *request.DeploymentManifest, opts *request.DeploymentUpdateOptions) (*types.Deployment, *errors.Err) {
+func Update(ctx context.Context, ns *models.Namespace, svc *models.Service, dep *models.Deployment, mf *request.DeploymentManifest, opts *request.DeploymentUpdateOptions) (*models.Deployment, *errors.Err) {
 
-	dm := model.NewDeploymentModel(ctx, envs.Get().GetStorage())
+	dm := service.NewDeploymentModel(ctx, envs.Get().GetStorage())
 	mf.SetDeploymentMeta(dep)
 
 	dep.Meta.Endpoint = svc.Meta.Endpoint

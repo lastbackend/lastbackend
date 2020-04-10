@@ -22,14 +22,14 @@ import (
 	"context"
 	d "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/events"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
-func (r *Runtime) Subscribe(ctx context.Context) (chan *types.Image, error) {
+func (r *Runtime) Subscribe(ctx context.Context) (chan *models.Image, error) {
 
 	log.V(logLevel).Debug("Create new event listener subscribe")
-	var cs = make(chan *types.Image)
+	var cs = make(chan *models.Image)
 
 	go func() {
 
@@ -49,10 +49,10 @@ func (r *Runtime) Subscribe(ctx context.Context) (chan *types.Image, error) {
 
 				log.V(logLevel).Debugf("Image %s", e.ID)
 
-				if e.Action == types.StateDestroy {
-					c := new(types.Image)
+				if e.Action == models.StateDestroy {
+					c := new(models.Image)
 					c.Meta.ID = e.ID
-					c.Status.State = types.StateDestroyed
+					c.Status.State = models.StateDestroyed
 					cs <- c
 					break
 				}

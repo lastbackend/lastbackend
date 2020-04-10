@@ -20,10 +20,9 @@ package endpoint
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/discovery/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/model"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/discovery/envs"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
 
@@ -37,9 +36,9 @@ func Watch(ctx context.Context) {
 	log.V(logLevel).Debugf("%s:restore:> watch change endpoint start", logPrefix)
 
 	var (
-		em    = model.NewEndpointModel(ctx, envs.Get().GetStorage())
+		em    = service.NewEndpointModel(ctx, envs.Get().GetStorage())
 		cache = envs.Get().GetCache().Endpoint()
-		event = make(chan types.EndpointEvent)
+		event = make(chan models.EndpointEvent)
 	)
 
 	go func() {
@@ -55,13 +54,13 @@ func Watch(ctx context.Context) {
 					endpoint := e.Data
 
 					switch e.Action {
-					case types.EventActionCreate:
+					case models.EventActionCreate:
 						fallthrough
-					case types.EventActionUpdate:
+					case models.EventActionUpdate:
 						cache.Del(endpoint.Spec.Domain)
 						envs.Get().GetCache().Endpoint().Set(endpoint.Spec.Domain, []string{endpoint.Spec.IP})
 						continue
-					case types.EventActionDelete:
+					case models.EventActionDelete:
 						cache.Del(endpoint.Spec.Domain)
 						continue
 					}

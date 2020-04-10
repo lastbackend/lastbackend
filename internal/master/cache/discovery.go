@@ -19,32 +19,32 @@
 package cache
 
 import (
-	"github.com/lastbackend/lastbackend/tools/log"
 	"sync"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 type CacheDiscoveryManifest struct {
 	lock      sync.RWMutex
-	manifests map[string]*types.DiscoveryManifest
+	manifests map[string]*models.DiscoveryManifest
 }
 
-func (c *CacheDiscoveryManifest) SetSubnetManifest(cidr string, s *types.SubnetManifest) {
+func (c *CacheDiscoveryManifest) SetSubnetManifest(cidr string, s *models.SubnetManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
 	for n := range c.manifests {
 
 		if _, ok := c.manifests[n].Network[cidr]; !ok {
-			c.manifests[n].Network = make(map[string]*types.SubnetManifest)
+			c.manifests[n].Network = make(map[string]*models.SubnetManifest)
 		}
 
 		c.manifests[n].Network[cidr] = s
 	}
 }
 
-func (c *CacheDiscoveryManifest) Get(discovery string) *types.DiscoveryManifest {
+func (c *CacheDiscoveryManifest) Get(discovery string) *models.DiscoveryManifest {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if s, ok := c.manifests[discovery]; !ok {
@@ -57,7 +57,7 @@ func (c *CacheDiscoveryManifest) Get(discovery string) *types.DiscoveryManifest 
 func (c *CacheDiscoveryManifest) Flush(discovery string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	c.manifests[discovery] = new(types.DiscoveryManifest)
+	c.manifests[discovery] = new(models.DiscoveryManifest)
 }
 
 func (c *CacheDiscoveryManifest) Clear(discovery string) {
@@ -69,6 +69,6 @@ func (c *CacheDiscoveryManifest) Clear(discovery string) {
 
 func NewCacheDiscoveryManifest() *CacheDiscoveryManifest {
 	c := new(CacheDiscoveryManifest)
-	c.manifests = make(map[string]*types.DiscoveryManifest, 0)
+	c.manifests = make(map[string]*models.DiscoveryManifest, 0)
 	return c
 }

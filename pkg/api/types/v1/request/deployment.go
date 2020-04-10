@@ -20,7 +20,7 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"gopkg.in/yaml.v2"
 )
 
@@ -57,9 +57,9 @@ func (s *DeploymentManifest) ToYaml() ([]byte, error) {
 	return yaml.Marshal(s)
 }
 
-func (s *DeploymentManifest) SetDeploymentMeta(dep *types.Deployment) {
+func (s *DeploymentManifest) SetDeploymentMeta(dep *models.Deployment) {
 
-	if dep.Meta.Name == types.EmptyString {
+	if dep.Meta.Name == models.EmptyString {
 		dep.Meta.Name = *s.Meta.Name
 	}
 
@@ -73,11 +73,11 @@ func (s *DeploymentManifest) SetDeploymentMeta(dep *types.Deployment) {
 
 }
 
-func (s *DeploymentManifest) SetDeploymentSpec(dep *types.Deployment) (err error) {
+func (s *DeploymentManifest) SetDeploymentSpec(dep *models.Deployment) (err error) {
 
 	defer func() {
 		if s.Spec.Replicas != nil {
-			dep.Status.State = types.StateProvision
+			dep.Status.State = models.StateProvision
 			return
 		}
 	}()
@@ -103,8 +103,8 @@ func (s *DeploymentManifest) SetDeploymentSpec(dep *types.Deployment) (err error
 	return nil
 }
 
-func (s *DeploymentManifest) GetManifest() *types.DeploymentManifest {
-	sm := new(types.DeploymentManifest)
+func (s *DeploymentManifest) GetManifest() *models.DeploymentManifest {
+	sm := new(models.DeploymentManifest)
 	return sm
 }
 

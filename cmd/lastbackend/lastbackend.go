@@ -59,16 +59,8 @@
 // swagger:meta
 package main
 
-import (
-	"os"
-
-	"github.com/lastbackend/lastbackend/pkg/cli/lastbackend"
-)
+import "github.com/lastbackend/lastbackend/internal/cli"
 
 func main() {
-	command := lastbackend.NewRootCommand()
-
-	if err := command.Execute(); err != nil {
-		os.Exit(1)
-	}
+	cli.New().Execute()
 }

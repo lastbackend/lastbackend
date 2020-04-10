@@ -21,7 +21,7 @@ package exporter
 import (
 	"time"
 
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/proxy"
 	"github.com/lastbackend/lastbackend/tools/log"
 )
@@ -32,7 +32,7 @@ type Exporter struct {
 	client *proxy.Client
 }
 
-func (c *Exporter) Proxy(msg types.ProxyMessage) error {
+func (c *Exporter) Proxy(msg models.ProxyMessage) error {
 
 	if !c.ready {
 		// TODO: cache messages due to reconnect

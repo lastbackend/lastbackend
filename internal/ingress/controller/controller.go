@@ -20,14 +20,15 @@ package controller
 
 import (
 	"context"
+	"sync"
+	"time"
+
 	"github.com/lastbackend/lastbackend/internal/ingress/envs"
 	"github.com/lastbackend/lastbackend/internal/ingress/runtime"
-	"github.com/lastbackend/lastbackend/internal/pkg/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/tools/log"
-	"sync"
-	"time"
 )
 
 const (
@@ -40,8 +41,8 @@ type Controller struct {
 	runtime *runtime.Runtime
 	cache   struct {
 		lock      sync.RWMutex
-		resources types.IngressStatus
-		routes    map[string]*types.RouteStatus
+		resources models.IngressStatus
+		routes    map[string]*models.RouteStatus
 	}
 }
 
@@ -49,7 +50,7 @@ func New(r *runtime.Runtime) *Controller {
 	var c = new(Controller)
 	c.ctx = context.Background()
 	c.runtime = r
-	c.cache.routes = make(map[string]*types.RouteStatus, 0)
+	c.cache.routes = make(map[string]*models.RouteStatus, 0)
 	return c
 }
 
@@ -88,7 +89,7 @@ func (c *Controller) Sync() {
 
 	for range ticker.C {
 		opts := new(request.IngressStatusOptions)
-		opts.Routes = make(map[string]*types.RouteStatus, 0)
+		opts.Routes = make(map[string]*models.RouteStatus, 0)
 
 		c.cache.lock.Lock()
 		var i = 0
@@ -140,7 +141,7 @@ func (c *Controller) Subscribe() {
 				c.cache.lock.Lock()
 				st := envs.Get().GetState().Routes().GetRouteStatus(r)
 				if st == nil {
-					c.cache.routes[r] = &types.RouteStatus{State: types.StateDestroyed}
+					c.cache.routes[r] = &models.RouteStatus{State: models.StateDestroyed}
 				} else {
 					c.cache.routes[r] = st
 				}
