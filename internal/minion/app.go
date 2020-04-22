@@ -21,6 +21,8 @@ package minion
 import (
 	"context"
 	"errors"
+	"github.com/lastbackend/lastbackend/internal/minion/containerd"
+	"github.com/lastbackend/lastbackend/internal/minion/rootless"
 	"os"
 
 	"github.com/lastbackend/lastbackend/internal/minion/controller"
@@ -39,10 +41,16 @@ import (
 )
 
 type App struct {
+	ctx       context.Context
+	ctxCancel context.CancelFunc
+
 	v          *viper.Viper
 	HttpServer *server.HttpServer
 	State      *state.State
 	Runtime    *runtime.Runtime
+
+	DataDir  string
+	Rootless bool
 }
 
 func New(v *viper.Viper) (*App, error) {
@@ -58,7 +66,11 @@ func New(v *viper.Viper) (*App, error) {
 	}
 
 	app := new(App)
+	app.DataDir = v.GetString("data_dir")
+	app.Rootless = v.GetBool("rootless")
 	app.v = v
+
+	app.ctx, app.ctxCancel = context.WithCancel(context.Background())
 
 	if err := app.init(); err != nil {
 		return nil, err
@@ -70,11 +82,26 @@ func New(v *viper.Viper) (*App, error) {
 func (app App) Run() error {
 	log := logger.WithContext(context.Background())
 	log.Infof("Run minion service")
+
+	if app.Rootless {
+		if err := rootless.Rootless(app.DataDir); err != nil {
+			return err
+		}
+	}
+
+	cfg := new(containerd.Config)
+	// TODO: SET CONFIG
+
+	if err := containerd.Run(app.ctx, cfg); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (app *App) Stop() {
 	app.Runtime.Stop()
+	app.ctxCancel()
 }
 
 func (app *App) init() error {

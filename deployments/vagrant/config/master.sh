@@ -5,7 +5,7 @@ set -e
 export ETCD_ENDPOINTS=
 
 # Specify the version (vX.Y.Z) of Kubernetes assets to deploy
-export K8S_VER=v1.5.4_coreos.0
+export LB_VER=v1.5.4_coreos.0
 
 # Hyperkube image repository to use.
 export HYPERKUBE_IMAGE_REPO=quay.io/coreos/hyperkube
@@ -23,7 +23,7 @@ export SERVICE_IP_RANGE=10.3.0.0/24
 
 # The IP address of the Kubernetes API Service
 # If the SERVICE_IP_RANGE is changed above, this must be set to the first IP in that range.
-export K8S_SERVICE_IP=10.3.0.1
+export LB_SERVICE_IP=10.3.0.1
 
 # The IP address of the cluster DNS service.
 # This IP must be in the range of the SERVICE_IP_RANGE and cannot be the first IP in the range.
@@ -47,7 +47,7 @@ fi
 # -------------
 
 function init_config {
-    local REQUIRED=('ADVERTISE_IP' 'POD_NETWORK' 'ETCD_ENDPOINTS' 'SERVICE_IP_RANGE' 'K8S_SERVICE_IP' 'DNS_SERVICE_IP' 'K8S_VER' 'HYPERKUBE_IMAGE_REPO' 'USE_CALICO')
+    local REQUIRED=('ADVERTISE_IP' 'POD_NETWORK' 'ETCD_ENDPOINTS' 'SERVICE_IP_RANGE' 'LB_SERVICE_IP' 'DNS_SERVICE_IP' 'LB_VER' 'HYPERKUBE_IMAGE_REPO' 'USE_CALICO')
 
     if [ -f $ENV_FILE ]; then
         export $(cat $ENV_FILE | xargs)
@@ -182,7 +182,7 @@ spec:
   hostNetwork: true
   containers:
   - name: kube-proxy
-    image: ${HYPERKUBE_IMAGE_REPO}:$K8S_VER
+    image: ${HYPERKUBE_IMAGE_REPO}:$LB_VER
     command:
     - /hyperkube
     - proxy
@@ -221,7 +221,7 @@ spec:
   hostNetwork: true
   containers:
   - name: kube-apiserver
-    image: ${HYPERKUBE_IMAGE_REPO}:$K8S_VER
+    image: ${HYPERKUBE_IMAGE_REPO}:$LB_VER
     command:
     - /hyperkube
     - apiserver
@@ -282,7 +282,7 @@ metadata:
 spec:
   containers:
   - name: kube-controller-manager
-    image: ${HYPERKUBE_IMAGE_REPO}:$K8S_VER
+    image: ${HYPERKUBE_IMAGE_REPO}:$LB_VER
     command:
     - /hyperkube
     - controller-manager
@@ -332,7 +332,7 @@ spec:
   hostNetwork: true
   containers:
   - name: kube-scheduler
-    image: ${HYPERKUBE_IMAGE_REPO}:$K8S_VER
+    image: ${HYPERKUBE_IMAGE_REPO}:$LB_VER
     command:
     - /hyperkube
     - scheduler
@@ -362,7 +362,7 @@ metadata:
   name: kube-dns
   namespace: kube-system
   labels:
-    k8s-app: kube-dns
+    lb-app: kube-dns
     kubernetes.io/cluster-service: "true"
 spec:
   strategy:
@@ -371,11 +371,11 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      k8s-app: kube-dns
+      lb-app: kube-dns
   template:
     metadata:
       labels:
-        k8s-app: kube-dns
+        lb-app: kube-dns
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
@@ -507,13 +507,13 @@ metadata:
   name: kube-dns-autoscaler
   namespace: kube-system
   labels:
-    k8s-app: kube-dns-autoscaler
+    lb-app: kube-dns-autoscaler
     kubernetes.io/cluster-service: "true"
 spec:
   template:
     metadata:
       labels:
-        k8s-app: kube-dns-autoscaler
+        lb-app: kube-dns-autoscaler
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
@@ -548,12 +548,12 @@ metadata:
   name: kube-dns
   namespace: kube-system
   labels:
-    k8s-app: kube-dns
+    lb-app: kube-dns
     kubernetes.io/cluster-service: "true"
     kubernetes.io/name: "KubeDNS"
 spec:
   selector:
-    k8s-app: kube-dns
+    lb-app: kube-dns
   clusterIP: ${DNS_SERVICE_IP}
   ports:
   - name: dns
@@ -576,19 +576,19 @@ metadata:
   name: heapster-v1.2.0
   namespace: kube-system
   labels:
-    k8s-app: heapster
+    lb-app: heapster
     kubernetes.io/cluster-service: "true"
     version: v1.2.0
 spec:
   replicas: 1
   selector:
     matchLabels:
-      k8s-app: heapster
+      lb-app: heapster
       version: v1.2.0
   template:
     metadata:
       labels:
-        k8s-app: heapster
+        lb-app: heapster
         version: v1.2.0
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
@@ -657,7 +657,7 @@ spec:
     - port: 80
       targetPort: 8082
   selector:
-    k8s-app: heapster
+    lb-app: heapster
 EOF
     fi
 
@@ -672,16 +672,16 @@ metadata:
   name: kubernetes-dashboard
   namespace: kube-system
   labels:
-    k8s-app: kubernetes-dashboard
+    lb-app: kubernetes-dashboard
     kubernetes.io/cluster-service: "true"
 spec:
   selector:
     matchLabels:
-      k8s-app: kubernetes-dashboard
+      lb-app: kubernetes-dashboard
   template:
     metadata:
       labels:
-        k8s-app: kubernetes-dashboard
+        lb-app: kubernetes-dashboard
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
@@ -719,11 +719,11 @@ metadata:
   name: kubernetes-dashboard
   namespace: kube-system
   labels:
-    k8s-app: kubernetes-dashboard
+    lb-app: kubernetes-dashboard
     kubernetes.io/cluster-service: "true"
 spec:
   selector:
-    k8s-app: kubernetes-dashboard
+    lb-app: kubernetes-dashboard
   ports:
   - port: 80
     targetPort: 9090
@@ -813,9 +813,9 @@ data:
           "etcd_endpoints": "__ETCD_ENDPOINTS__",
           "log_level": "info",
           "policy": {
-              "type": "k8s",
-              "k8s_api_root": "https://__KUBERNETES_SERVICE_HOST__:__KUBERNETES_SERVICE_PORT__",
-              "k8s_auth_token": "__SERVICEACCOUNT_TOKEN__"
+              "type": "lb",
+              "lb_api_root": "https://__KUBERNETES_SERVICE_HOST__:__KUBERNETES_SERVICE_PORT__",
+              "lb_auth_token": "__SERVICEACCOUNT_TOKEN__"
           },
           "kubernetes": {
               "kubeconfig": "/etc/kubernetes/cni/net.d/__KUBECONFIG_FILENAME__"
@@ -832,15 +832,15 @@ metadata:
   name: calico-node
   namespace: kube-system
   labels:
-    k8s-app: calico-node
+    lb-app: calico-node
 spec:
   selector:
     matchLabels:
-      k8s-app: calico-node
+      lb-app: calico-node
   template:
     metadata:
       labels:
-        k8s-app: calico-node
+        lb-app: calico-node
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
         scheduler.alpha.kubernetes.io/tolerations: |
@@ -928,14 +928,14 @@ spec:
             path: /etc/resolv.conf
 ---
 # This manifest deploys the Calico policy controller on Kubernetes.
-# See https://github.com/projectcalico/k8s-policy
+# See https://github.com/projectcalico/lb-policy
 apiVersion: extensions/v1beta1
 kind: ReplicaSet
 metadata:
   name: calico-policy-controller
   namespace: kube-system
   labels:
-    k8s-app: calico-policy
+    lb-app: calico-policy
 spec:
   # The policy controller can only have a single active instance.
   replicas: 1
@@ -944,7 +944,7 @@ spec:
       name: calico-policy-controller
       namespace: kube-system
       labels:
-        k8s-app: calico-policy
+        lb-app: calico-policy
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
         scheduler.alpha.kubernetes.io/tolerations: |
@@ -966,7 +966,7 @@ spec:
                   key: etcd_endpoints
             # The location of the Kubernetes API.  Use the default Kubernetes
             # service for API access.
-            - name: K8S_API
+            - name: LB_API
               value: "https://kubernetes.default:443"
             # Since we're running in the host namespace and might not have KubeDNS
             # access, configure the container's /etc/hosts to resolve
@@ -985,14 +985,14 @@ function start_addons {
     done
 
     echo
-    echo "K8S: DNS addon"
+    echo "LB: DNS addon"
     curl --silent -H "Content-Type: application/yaml" -XPOST -d"$(cat /srv/kubernetes/manifests/kube-dns-de.yaml)" "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments" > /dev/null
     curl --silent -H "Content-Type: application/yaml" -XPOST -d"$(cat /srv/kubernetes/manifests/kube-dns-svc.yaml)" "http://127.0.0.1:8080/api/v1/namespaces/kube-system/services" > /dev/null
     curl --silent -H "Content-Type: application/yaml" -XPOST -d"$(cat /srv/kubernetes/manifests/kube-dns-autoscaler-de.yaml)" "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments" > /dev/null
-    echo "K8S: Heapster addon"
+    echo "LB: Heapster addon"
     curl --silent -H "Content-Type: application/yaml" -XPOST -d"$(cat /srv/kubernetes/manifests/heapster-de.yaml)" "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments" > /dev/null
     curl --silent -H "Content-Type: application/yaml" -XPOST -d"$(cat /srv/kubernetes/manifests/heapster-svc.yaml)" "http://127.0.0.1:8080/api/v1/namespaces/kube-system/services" > /dev/null
-    echo "K8S: Dashboard addon"
+    echo "LB: Dashboard addon"
     curl --silent -H "Content-Type: application/yaml" -XPOST -d"$(cat /srv/kubernetes/manifests/kube-dashboard-de.yaml)" "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments" > /dev/null
     curl --silent -H "Content-Type: application/yaml" -XPOST -d"$(cat /srv/kubernetes/manifests/kube-dashboard-svc.yaml)" "http://127.0.0.1:8080/api/v1/namespaces/kube-system/services" > /dev/null
 }
@@ -1007,7 +1007,7 @@ function start_calico {
     echo "Deploying Calico"
     # Deploy Calico
     #TODO: change to rkt once this is resolved (https://github.com/coreos/rkt/issues/3181)
-    docker run --rm --net=host -v /srv/kubernetes/manifests:/host/manifests $HYPERKUBE_IMAGE_REPO:$K8S_VER /hyperkube kubectl apply -f /host/manifests/calico.yaml
+    docker run --rm --net=host -v /srv/kubernetes/manifests:/host/manifests $HYPERKUBE_IMAGE_REPO:$LB_VER /hyperkube kubectl apply -f /host/manifests/calico.yaml
 }
 
 init_config

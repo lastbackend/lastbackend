@@ -49,6 +49,7 @@ type CRI interface {
 	Copy(ctx context.Context, ID, path string, content io.Reader) error
 	Wait(ctx context.Context, ID string) error
 	Subscribe(ctx context.Context, container chan *models.Container) error
+	Close() error
 }
 
 func New(v *viper.Viper) (CRI, error) {

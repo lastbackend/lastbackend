@@ -339,3 +339,7 @@ func (r *Runtime) Inspect(ctx context.Context, id string) (*models.Image, error)
 
 	return image, err
 }
+
+func (r *Runtime) Close() error {
+	return r.client.Close()
+}

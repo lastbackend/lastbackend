@@ -210,3 +210,7 @@ func (r *Runtime) Copy(ctx context.Context, ID, path string, content io.Reader) 
 		AllowOverwriteDirWithFile: true,
 	})
 }
+
+func (r *Runtime) Close() error {
+	return r.client.Close()
+}

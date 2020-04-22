@@ -10,7 +10,7 @@ export ETCD_ENDPOINTS=
 export CONTROLLER_ENDPOINT=
 
 # Specify the version (vX.Y.Z) of Kubernetes assets to deploy
-export K8S_VER=v1.5.4_coreos.0
+export LB_VER=v1.5.4_coreos.0
 
 # Hyperkube image repository to use.
 export HYPERKUBE_IMAGE_REPO=quay.io/coreos/hyperkube
@@ -44,7 +44,7 @@ fi
 # -------------
 
 function init_config {
-    local REQUIRED=( 'ADVERTISE_IP' 'ETCD_ENDPOINTS' 'CONTROLLER_ENDPOINT' 'DNS_SERVICE_IP' 'K8S_VER' 'HYPERKUBE_IMAGE_REPO' 'USE_CALICO' )
+    local REQUIRED=( 'ADVERTISE_IP' 'ETCD_ENDPOINTS' 'CONTROLLER_ENDPOINT' 'DNS_SERVICE_IP' 'LB_VER' 'HYPERKUBE_IMAGE_REPO' 'USE_CALICO' )
 
     if [ -f $ENV_FILE ]; then
         export $(cat $ENV_FILE | xargs)
@@ -70,7 +70,7 @@ function init_templates {
         mkdir -p $(dirname $TEMPLATE)
         cat << EOF > $TEMPLATE
 [Service]
-Environment=KUBELET_IMAGE_TAG=${K8S_VER}
+Environment=KUBELET_IMAGE_TAG=${LB_VER}
 Environment=KUBELET_IMAGE_URL=${HYPERKUBE_IMAGE_REPO}
 Environment="RKT_RUN_ARGS=--uuid-file-save=${uuid_file} \
   --volume dns,kind=host,source=/etc/resolv.conf \
@@ -207,7 +207,7 @@ spec:
   hostNetwork: true
   containers:
   - name: kube-proxy
-    image: ${HYPERKUBE_IMAGE_REPO}:$K8S_VER
+    image: ${HYPERKUBE_IMAGE_REPO}:$LB_VER
     command:
     - /hyperkube
     - proxy

@@ -24,13 +24,14 @@ import (
 	"io"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cii/containerd"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cii/docker"
 	"github.com/spf13/viper"
 )
 
 const (
-	logLevel     = 5
-	dockerDriver = "docker"
+	dockerDriver     = "docker"
+	containerDDriver = "containerd"
 )
 
 // IMI - Image System Interface
@@ -43,6 +44,7 @@ type CII interface {
 	List(ctx context.Context) ([]*models.Image, error)
 	Inspect(ctx context.Context, id string) (*models.Image, error)
 	Subscribe(ctx context.Context) (chan *models.Image, error)
+	Close() error
 }
 
 func New(v *viper.Viper) (CII, error) {
@@ -58,8 +60,19 @@ func New(v *viper.Viper) (CII, error) {
 			cfg.TLS.CertPath = v.GetString("container.iri.docker.tls.cert_file")
 			cfg.TLS.KeyPath = v.GetString("container.iri.docker.tls.key_file")
 		}
-
 		return docker.New(cfg)
+	case containerDDriver:
+		cfg := containerd.Config{}
+		cfg.Host = v.GetString("container.iri.containerd.host")
+		cfg.Version = v.GetString("container.iri.containerd.version")
+
+		if v.IsSet("container.iri.containerd.tls.verify") && v.GetBool("container.iri.containerd.tls.verify") {
+			cfg.TLS = new(containerd.TLSConfig)
+			cfg.TLS.CAPath = v.GetString("container.iri.containerd.tls.ca_file")
+			cfg.TLS.CertPath = v.GetString("container.iri.containerd.tls.cert_file")
+			cfg.TLS.KeyPath = v.GetString("container.iri.containerd.tls.key_file")
+		}
+		return containerd.New(cfg)
 	default:
 		return nil, fmt.Errorf("image runtime <%s> interface not supported", v.GetString("container.iri.type"))
 	}
