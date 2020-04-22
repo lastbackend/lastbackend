@@ -20,6 +20,7 @@ package controller
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"io/ioutil"
 	"sync"
 	"time"
@@ -31,7 +32,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/client/cluster"
 	"github.com/lastbackend/lastbackend/pkg/network"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/spf13/viper"
 )
 
@@ -73,8 +73,8 @@ func New(r *runtime.Runtime, rest cluster.IClient, network *network.Network, sta
 }
 
 func (c *Controller) Connect(v *viper.Viper) error {
-
-	log.V(logLevel).Debugf("%s:connect:> connect init", logPrefix)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s:connect:> connect init", logPrefix)
 
 	opts := v1.Request().Node().NodeConnectOptions()
 	opts.Info = c.state.Node().Info
@@ -115,18 +115,18 @@ func (c *Controller) Connect(v *viper.Viper) error {
 	}
 
 	for {
-		log.V(logLevel).Debugf("%s:connect:> establish connection", logPrefix)
+		log.Debugf("%s:connect:> establish connection", logPrefix)
 		if err := c.restClient.V1().Cluster().Node(c.state.Node().Info.Hostname).Connect(c.ctx, opts); err == nil {
 			return nil
 		} else {
-			log.V(logLevel).Errorf("%s:connect:> establish connection err: %s", logPrefix, err.Error())
+			log.Errorf("%s:connect:> establish connection err: %s", logPrefix, err.Error())
 			time.Sleep(3 * time.Second)
 		}
 	}
 }
 
 func (c *Controller) Sync() error {
-
+	log := logger.WithContext(context.Background())
 	log.Debugf("%s start node sync", logPrefix)
 
 	ticker := time.NewTicker(time.Second * 5)
@@ -196,6 +196,7 @@ func (c *Controller) Sync() error {
 }
 
 func (c *Controller) Subscribe() {
+	log := logger.WithContext(context.Background())
 	var (
 		pods    = make(chan string)
 		volumes = make(chan string)

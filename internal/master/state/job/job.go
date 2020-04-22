@@ -34,7 +34,7 @@ const (
 // jobObserve manage handlers based on job state
 func jobObserve(js *JobState, job *models.Job) (err error) {
 
-	log.V(logLevel).Debugf("%s:> observe start: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
+	log.Debugf("%s:> observe start: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 
 	switch job.Status.State {
 	// Check job created state triggers
@@ -57,7 +57,7 @@ func jobObserve(js *JobState, job *models.Job) (err error) {
 		err = handleJobStateDestroyed(js, job)
 	}
 	if err != nil {
-		log.V(logLevel).Debugf("%s:observe:jobStateCreated:> handle job with state %s err:> %s", logPrefix, job.Status.State, err.Error())
+		log.Debugf("%s:observe:jobStateCreated:> handle job with state %s err:> %s", logPrefix, job.Status.State, err.Error())
 		return err
 	}
 
@@ -65,14 +65,14 @@ func jobObserve(js *JobState, job *models.Job) (err error) {
 		return nil
 	}
 
-	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
+	log.Debugf("%s:> observe finish: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 
 	return nil
 }
 
 // handleJobStateCreated handles job created state
 func handleJobStateCreated(js *JobState, job *models.Job) error {
-	log.V(logLevel).Debugf("%s:> handleJobStateCreated: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
+	log.Debugf("%s:> handleJobStateCreated: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 
 	if js.provider != nil {
 		go js.Provider()
@@ -88,26 +88,26 @@ func handleJobStateCreated(js *JobState, job *models.Job) error {
 
 // handleJobStateRunning handles job provision state
 func handleJobStateRunning(js *JobState, job *models.Job) error {
-	log.V(logLevel).Debugf("%s:> handleJobStateRunning: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
+	log.Debugf("%s:> handleJobStateRunning: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 	return nil
 }
 
 // handleJobStatePaused handles job ready state
 func handleJobStatePaused(js *JobState, job *models.Job) error {
-	log.V(logLevel).Debugf("%s:> handleJobStatePaused: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
+	log.Debugf("%s:> handleJobStatePaused: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 	return nil
 }
 
 // handleJobStateError handles job error state
 func handleJobStateError(js *JobState, job *models.Job) error {
-	log.V(logLevel).Debugf("%s:> handleJobStateError: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
+	log.Debugf("%s:> handleJobStateError: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 	return nil
 }
 
 // handleJobStateDestroy handles job destroy state
 func handleJobStateDestroy(js *JobState, job *models.Job) (err error) {
 
-	log.V(logLevel).Debugf("%s:> handleJobStateDestroy: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
+	log.Debugf("%s:> handleJobStateDestroy: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 
 	tm := service.NewTaskModel(context.Background(), js.storage)
 
@@ -143,7 +143,7 @@ func handleJobStateDestroy(js *JobState, job *models.Job) (err error) {
 // handleJobStateDestroyed handles job destroyed state
 func handleJobStateDestroyed(js *JobState, job *models.Job) (err error) {
 
-	log.V(logLevel).Debugf("%s:> handleJobStateDestroyed: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
+	log.Debugf("%s:> handleJobStateDestroyed: %s > %s", logJobPrefix, job.SelfLink(), job.Status.State)
 
 	if len(js.task.list) > 0 {
 		tm := service.NewTaskModel(context.Background(), js.storage)

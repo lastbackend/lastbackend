@@ -23,7 +23,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/client/cluster/config"
 	"github.com/lastbackend/lastbackend/pkg/client/cluster/http/v1"
 	"github.com/lastbackend/lastbackend/pkg/client/cluster/types"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 type Client struct {
@@ -66,7 +65,7 @@ func New(endpoint string, cfg *config.Config) (*Client, error) {
 
 	client, err := request.NewRESTClient(endpoint, opts)
 	if err != nil {
-		log.Errorf("can not initialize client: %s", err.Error())
+		return nil, err
 	}
 
 	cl.client = client

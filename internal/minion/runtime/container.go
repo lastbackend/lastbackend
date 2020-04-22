@@ -21,15 +21,16 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"path"
 	"strings"
 	"time"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 func (r Runtime) containerInspect(ctx context.Context, container *models.PodContainer) error {
+	log := logger.WithContext(context.Background())
 	info, err := r.cri.Inspect(ctx, container.ID)
 	if err != nil {
 		switch err {
@@ -132,7 +133,7 @@ func (r Runtime) containerSubscribe(ctx context.Context) error {
 }
 
 func (r Runtime) containerManifestCreate(ctx context.Context, pod string, spec *models.SpecTemplateContainer) (*models.ContainerManifest, error) {
-
+	log := logger.WithContext(context.Background())
 	mf := models.NewContainerManifest(spec)
 
 	var (

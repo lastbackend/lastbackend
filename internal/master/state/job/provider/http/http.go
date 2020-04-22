@@ -82,7 +82,7 @@ func (h *JobHttpProvider) Fetch() (*models.TaskManifest, error) {
 
 func New(cfg *models.JobSpecProviderHTTP) (*JobHttpProvider, error) {
 
-	log.V(logLevel).Debug("Use http task watcher")
+	log.Debug("Use http task watcher")
 
 	var (
 		provider *JobHttpProvider

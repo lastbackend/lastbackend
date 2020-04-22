@@ -19,11 +19,11 @@
 package utils
 
 import (
+	"context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"net"
 	"syscall"
-
-	"github.com/lastbackend/lastbackend/tools/log"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/vishvananda/netlink"
@@ -51,6 +51,7 @@ func GetIfaceByName(name string) (*net.Interface, net.IP, error) {
 }
 
 func GetDefaultInterface() (*net.Interface, net.IP, error) {
+	log := logger.WithContext(context.Background())
 	var iface *net.Interface
 	var ifaceAddr net.IP
 	var err error

@@ -33,7 +33,7 @@ const (
 
 func Watch(ctx context.Context) {
 
-	log.V(logLevel).Debugf("%s:restore:> watch change endpoint start", logPrefix)
+	log.Debugf("%s:restore:> watch change endpoint start", logPrefix)
 
 	var (
 		em    = service.NewEndpointModel(ctx, envs.Get().GetStorage())

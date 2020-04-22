@@ -19,8 +19,9 @@
 package state
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"sync"
 )
 
@@ -47,19 +48,22 @@ func (s *VolumesState) Watch(watcher chan string, done chan bool) {
 }
 
 func (s *VolumesState) GetVolumes() map[string]models.VolumeStatus {
-	log.V(logLevel).Debugf("%s get volumes", logVolumePrefix)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get volumes", logVolumePrefix)
 	return s.volumes
 }
 
 func (s *VolumesState) SetVolumes(key string, volumes []*models.VolumeStatus) {
-	log.V(logLevel).Debugf("%s set volumes: %#v", logVolumePrefix, volumes)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s set volumes: %#v", logVolumePrefix, volumes)
 	for _, vol := range volumes {
 		s.volumes[key] = *vol
 	}
 }
 
 func (s *VolumesState) GetVolume(key string) *models.VolumeStatus {
-	log.V(logLevel).Debugf("%s get volume: %s", logVolumePrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get volume: %s", logVolumePrefix, key)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	v, ok := s.volumes[key]
@@ -70,12 +74,14 @@ func (s *VolumesState) GetVolume(key string) *models.VolumeStatus {
 }
 
 func (s *VolumesState) AddVolume(key string, v *models.VolumeStatus) {
-	log.V(logLevel).Debugf("%s add volume: %s > %s", logVolumePrefix, key, v.State)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s add volume: %s > %s", logVolumePrefix, key, v.State)
 	s.SetVolume(key, v)
 }
 
 func (s *VolumesState) SetVolume(key string, v *models.VolumeStatus) {
-	log.V(logLevel).Debugf("%s set volume: %s > %s", logVolumePrefix, key, v.State)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s set volume: %s > %s", logVolumePrefix, key, v.State)
 	s.lock.Lock()
 	s.volumes[key] = *v
 	s.lock.Unlock()
@@ -83,7 +89,8 @@ func (s *VolumesState) SetVolume(key string, v *models.VolumeStatus) {
 }
 
 func (s *VolumesState) DelVolume(key string) {
-	log.V(logLevel).Debugf("%s del volume: %#v", logVolumePrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s del volume: %#v", logVolumePrefix, key)
 	s.lock.Lock()
 	if _, ok := s.volumes[key]; ok {
 		delete(s.volumes, key)
@@ -93,7 +100,8 @@ func (s *VolumesState) DelVolume(key string) {
 }
 
 func (s *VolumesState) GetClaim(key string) *models.VolumeClaim {
-	log.V(logLevel).Debugf("%s get claim: %s", logVolumePrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get claim: %s", logVolumePrefix, key)
 	v, ok := s.claims[key]
 	if !ok {
 		return nil
@@ -102,19 +110,22 @@ func (s *VolumesState) GetClaim(key string) *models.VolumeClaim {
 }
 
 func (s *VolumesState) AddClaim(key string, vc *models.VolumeClaim) {
-	log.V(logLevel).Debugf("%s add claim: %s", logVolumePrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s add claim: %s", logVolumePrefix, key)
 	s.SetClaim(key, vc)
 }
 
 func (s *VolumesState) SetClaim(key string, vc *models.VolumeClaim) {
-	log.V(logLevel).Debugf("%s set claim: %s", logVolumePrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s set claim: %s", logVolumePrefix, key)
 	s.lock.Lock()
 	s.claims[key] = *vc
 	s.lock.Unlock()
 }
 
 func (s *VolumesState) DelClaim(key string) {
-	log.V(logLevel).Debugf("%s del claim: %#v", logVolumePrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s del claim: %#v", logVolumePrefix, key)
 	s.lock.Lock()
 	if _, ok := s.claims[key]; ok {
 		delete(s.claims, key)
@@ -123,29 +134,32 @@ func (s *VolumesState) DelClaim(key string) {
 }
 
 func (s *VolumesState) SetLocal(key string) {
-	log.V(logLevel).Debugf("%s set volume: %s as local", logVolumePrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s set volume: %s as local", logVolumePrefix, key)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.local[key] = true
 }
 
 func (s *VolumesState) DelLocal(key string) {
-	log.V(logLevel).Debugf("%s del volume: %s from local", logVolumePrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s del volume: %s from local", logVolumePrefix, key)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.local[key] = true
 }
 
 func (s *VolumesState) IsLocal(key string) bool {
-	log.V(logLevel).Debugf("%s check volume: %s is local", logVolumePrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s check volume: %s is local", logVolumePrefix, key)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	if _, ok := s.local[key]; ok {
-		log.V(logLevel).Debugf("%s volume: %s is local", logVolumePrefix, key)
+		log.Debugf("%s volume: %s is local", logVolumePrefix, key)
 		return true
 	}
 
-	log.V(logLevel).Debugf("%s volume: %s is not local", logVolumePrefix, key)
+	log.Debugf("%s volume: %s is not local", logVolumePrefix, key)
 	return false
 }

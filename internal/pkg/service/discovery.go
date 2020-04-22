@@ -43,7 +43,7 @@ func (n *Discovery) List() (*models.DiscoveryList, error) {
 	list := models.NewDiscoveryList()
 
 	if err := n.storage.List(n.context, n.storage.Collection().Discovery().Info(), "", list, nil); err != nil {
-		log.V(logLevel).Errorf("%s:list:> get discovery list err: %v", logDiscoveryPrefix, err)
+		log.Errorf("%s:list:> get discovery list err: %v", logDiscoveryPrefix, err)
 		return nil, err
 	}
 
@@ -52,11 +52,11 @@ func (n *Discovery) List() (*models.DiscoveryList, error) {
 
 func (n *Discovery) Put(discovery *models.Discovery) error {
 
-	log.V(logLevel).Debugf("%s:create:> create discovery in cluster", logDiscoveryPrefix)
+	log.Debugf("%s:create:> create discovery in cluster", logDiscoveryPrefix)
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Discovery().Info(),
 		discovery.SelfLink().String(), discovery, nil); err != nil {
-		log.V(logLevel).Errorf("%s:create:> insert discovery err: %v", logDiscoveryPrefix, err)
+		log.Errorf("%s:create:> insert discovery err: %v", logDiscoveryPrefix, err)
 		return err
 	}
 
@@ -65,7 +65,7 @@ func (n *Discovery) Put(discovery *models.Discovery) error {
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Discovery().Status(),
 		discovery.SelfLink().String(), discovery.Status, opts); err != nil {
-		log.V(logLevel).Errorf("%s:create:> insert discovery status err: %v", logDiscoveryPrefix, err)
+		log.Errorf("%s:create:> insert discovery status err: %v", logDiscoveryPrefix, err)
 		return err
 	}
 
@@ -74,7 +74,7 @@ func (n *Discovery) Put(discovery *models.Discovery) error {
 
 func (n *Discovery) Get(name string) (*models.Discovery, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get by name %s", logDiscoveryPrefix, name)
+	log.Debugf("%s:get:> get by name %s", logDiscoveryPrefix, name)
 
 	discovery := new(models.Discovery)
 	discovery.Meta.SelfLink = *models.NewDiscoverySelfLink(name)
@@ -83,11 +83,11 @@ func (n *Discovery) Get(name string) (*models.Discovery, error) {
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> get: discovery %s not found", logDiscoveryPrefix, name)
+			log.Warnf("%s:get:> get: discovery %s not found", logDiscoveryPrefix, name)
 			return nil, nil
 		}
 
-		log.V(logLevel).Debugf("%s:get:> get discovery `%s` err: %v", logDiscoveryPrefix, name, err)
+		log.Debugf("%s:get:> get discovery `%s` err: %v", logDiscoveryPrefix, name, err)
 		return nil, err
 	}
 
@@ -96,7 +96,7 @@ func (n *Discovery) Get(name string) (*models.Discovery, error) {
 
 func (n *Discovery) Set(discovery *models.Discovery) error {
 
-	log.V(logLevel).Debugf("%s:get:> get by name %s", logDiscoveryPrefix, discovery.Meta.Name)
+	log.Debugf("%s:get:> get by name %s", logDiscoveryPrefix, discovery.Meta.Name)
 
 	opts := storage.GetOpts()
 	opts.Force = true
@@ -104,13 +104,13 @@ func (n *Discovery) Set(discovery *models.Discovery) error {
 	err := n.storage.Set(n.context, n.storage.Collection().Discovery().Info(),
 		discovery.SelfLink().String(), discovery, nil)
 	if err != nil {
-		log.V(logLevel).Debugf("%s:get:> set discovery `%s` err: %v", logDiscoveryPrefix, discovery.Meta.Name, err)
+		log.Debugf("%s:get:> set discovery `%s` err: %v", logDiscoveryPrefix, discovery.Meta.Name, err)
 		return err
 	}
 
 	if err := n.storage.Set(n.context, n.storage.Collection().Discovery().Status(),
 		discovery.SelfLink().String(), discovery.Status, nil); err != nil {
-		log.V(logLevel).Debugf("%s:get:> set discovery status `%s` err: %v", logDiscoveryPrefix, discovery.Meta.Name, err)
+		log.Debugf("%s:get:> set discovery status `%s` err: %v", logDiscoveryPrefix, discovery.Meta.Name, err)
 		return err
 	}
 
@@ -119,7 +119,7 @@ func (n *Discovery) Set(discovery *models.Discovery) error {
 
 func (n *Discovery) SetOnline(discovery *models.Discovery) error {
 
-	log.V(logLevel).Debugf("%s:get:> get by name %s", logDiscoveryPrefix, discovery.Meta.Name)
+	log.Debugf("%s:get:> get by name %s", logDiscoveryPrefix, discovery.Meta.Name)
 
 	opts := storage.GetOpts()
 	opts.Force = true
@@ -127,7 +127,7 @@ func (n *Discovery) SetOnline(discovery *models.Discovery) error {
 	err := n.storage.Set(n.context, n.storage.Collection().Discovery().Status(),
 		discovery.SelfLink().String(), discovery.Status, nil)
 	if err != nil {
-		log.V(logLevel).Debugf("%s:get:> set discovery `%s` err: %v", logDiscoveryPrefix, discovery.Meta.Name, err)
+		log.Debugf("%s:get:> set discovery `%s` err: %v", logDiscoveryPrefix, discovery.Meta.Name, err)
 		return err
 	}
 
@@ -136,10 +136,10 @@ func (n *Discovery) SetOnline(discovery *models.Discovery) error {
 
 func (n *Discovery) Remove(discovery *models.Discovery) error {
 
-	log.V(logLevel).Debugf("%s:remove:> remove discovery %s", logDiscoveryPrefix, discovery.Meta.Name)
+	log.Debugf("%s:remove:> remove discovery %s", logDiscoveryPrefix, discovery.Meta.Name)
 
 	if err := n.storage.Del(n.context, n.storage.Collection().Discovery().Info(), discovery.SelfLink().String()); err != nil {
-		log.V(logLevel).Debugf("%s:remove:> remove discovery err: %v", logDiscoveryPrefix, err)
+		log.Debugf("%s:remove:> remove discovery err: %v", logDiscoveryPrefix, err)
 		return err
 	}
 
@@ -148,7 +148,7 @@ func (n *Discovery) Remove(discovery *models.Discovery) error {
 
 func (n *Discovery) Watch(ch chan models.DiscoveryEvent, rev *int64) error {
 
-	log.V(logLevel).Debugf("%s:watch:> watch routes", logDiscoveryPrefix)
+	log.Debugf("%s:watch:> watch routes", logDiscoveryPrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()
@@ -192,7 +192,7 @@ func (n *Discovery) Watch(ch chan models.DiscoveryEvent, rev *int64) error {
 
 func (n *Discovery) WatchOnline(ch chan models.DiscoveryStatusEvent) error {
 
-	log.V(logLevel).Debugf("%s:watch:> watch routes", logDiscoveryPrefix)
+	log.Debugf("%s:watch:> watch routes", logDiscoveryPrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

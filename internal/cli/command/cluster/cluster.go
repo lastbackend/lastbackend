@@ -23,9 +23,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"github.com/lastbackend/lastbackend/internal/cli/service"
 	"github.com/lastbackend/lastbackend/internal/cli/views"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/spf13/cobra"
 )
 
@@ -55,6 +55,8 @@ const clusterSelectExample = `
 `
 
 func (c *command) NewClusterCmd(clusterService *service.ClusterService) *cobra.Command {
+	log := logger.WithContext(context.Background())
+
 	cmd := &cobra.Command{
 		Use:   "cluster",
 		Short: "Manage your cluster",

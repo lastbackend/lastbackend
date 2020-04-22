@@ -19,8 +19,9 @@
 package state
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"sync"
 )
 
@@ -32,12 +33,14 @@ type TaskState struct {
 }
 
 func (s *TaskState) AddTask(key string, task *models.NodeTask) {
-	log.V(logLevel).Debugf("%s add cancel func pod: %s", logTaskPrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s add cancel func pod: %s", logTaskPrefix, key)
 	s.tasks[key] = *task
 }
 
 func (s *TaskState) GetTask(key string) *models.NodeTask {
-	log.V(logLevel).Debugf("%s get cancel func pod: %s", logTaskPrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get cancel func pod: %s", logTaskPrefix, key)
 
 	if _, ok := s.tasks[key]; ok {
 		t := s.tasks[key]
@@ -48,6 +51,7 @@ func (s *TaskState) GetTask(key string) *models.NodeTask {
 }
 
 func (s *TaskState) DelTask(pod *models.Pod) {
-	log.V(logLevel).Debugf("%s del cancel func pod: %s", logTaskPrefix, pod.SelfLink())
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s del cancel func pod: %s", logTaskPrefix, pod.SelfLink())
 	delete(s.tasks, pod.Meta.Name)
 }

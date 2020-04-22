@@ -21,16 +21,16 @@ package runtime
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"strings"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
-	"golang.org/x/net/context"
+		"golang.org/x/net/context"
 )
 
 func (r Runtime) ImagePull(ctx context.Context, namespace string, image *models.SpecTemplateContainerImage) error {
-
+	log := logger.WithContext(context.Background())
 	var (
 		mf = new(models.ImageManifest)
 	)
@@ -93,6 +93,7 @@ func (r Runtime) ImagePull(ctx context.Context, namespace string, image *models.
 }
 
 func (r Runtime) ImageRemove(ctx context.Context, link string) error {
+	log := logger.WithContext(context.Background())
 	if err := r.cii.Remove(ctx, link); err != nil {
 		log.Warnf("Can-not remove unnecessary image %s: %s", link, err)
 	}

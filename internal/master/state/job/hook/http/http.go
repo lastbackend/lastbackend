@@ -65,13 +65,13 @@ func (h *JobHttpHook) Execute(task *models.Task) (err error) {
 		return err
 	}
 
-	log.V(logLevel).Debugf("http:job:hook:> response Status: %s", resp.Status)
+	log.Debugf("http:job:hook:> response Status: %s", resp.Status)
 
 	return nil
 }
 
 func New(cfg *models.JobSpecHookHTTP) (hook *JobHttpHook, err error) {
-	log.V(logLevel).Debug("Use http hook")
+	log.Debug("Use http hook")
 	hook = new(JobHttpHook)
 	hook.config = cfg
 	return hook, err

@@ -20,11 +20,11 @@ package network
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/network/state"
-	"github.com/lastbackend/lastbackend/tools/log"
-)
+	)
 
 const logLevel = 3
 
@@ -37,7 +37,7 @@ func (n *Network) Info(ctx context.Context) *models.NetworkState {
 }
 
 func (n *Network) SubnetRestore(ctx context.Context) error {
-
+	log := logger.WithContext(context.Background())
 	sn, err := n.cni.Subnets(ctx)
 	if err != nil {
 		log.Errorf("Can-not get subnet list from CNI err: %v", err)
@@ -51,7 +51,7 @@ func (n *Network) SubnetRestore(ctx context.Context) error {
 }
 
 func (n *Network) SubnetManage(ctx context.Context, cidr string, sn *models.SubnetManifest) error {
-
+	log := logger.WithContext(context.Background())
 	subnets := n.state.Subnets().GetSubnets()
 	if state, ok := subnets[cidr]; ok {
 
@@ -89,7 +89,7 @@ func (n *Network) SubnetManage(ctx context.Context, cidr string, sn *models.Subn
 }
 
 func (n *Network) SubnetDestroy(ctx context.Context, cidr string) error {
-
+	log := logger.WithContext(context.Background())
 	sn := n.state.Subnets().GetSubnet(cidr)
 
 	if err := n.cni.Destroy(ctx, sn); err != nil {

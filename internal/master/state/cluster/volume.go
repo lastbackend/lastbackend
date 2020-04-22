@@ -34,7 +34,7 @@ const (
 
 func volumeObserve(ss *ClusterState, d *models.Volume) error {
 
-	log.V(logLevel).Debugf("%s:> observe start: %s > %s", logPrefixVolume, d.SelfLink().String(), d.Status.State)
+	log.Debugf("%s:> observe start: %s > %s", logPrefixVolume, d.SelfLink().String(), d.Status.State)
 
 	switch d.Status.State {
 	case models.StateCreated:
@@ -81,19 +81,19 @@ func volumeObserve(ss *ClusterState, d *models.Volume) error {
 		ss.volume.list[d.SelfLink().String()] = d
 	}
 
-	log.V(logLevel).Debugf("%s:> observe state: %s > %s", logPrefixVolume, d.SelfLink().String(), d.Status.State)
+	log.Debugf("%s:> observe state: %s > %s", logPrefixVolume, d.SelfLink().String(), d.Status.State)
 
 	if err := clusterStatusState(ss); err != nil {
 		return err
 	}
 
-	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logPrefixVolume, d.SelfLink().String(), d.Status.State)
+	log.Debugf("%s:> observe finish: %s > %s", logPrefixVolume, d.SelfLink().String(), d.Status.State)
 
 	return nil
 }
 
 func handleVolumeStateCreated(cs *ClusterState, v *models.Volume) error {
-	log.V(logLevel).Debugf("%s:> handleVolumeStateCreated: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
+	log.Debugf("%s:> handleVolumeStateCreated: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 
 	if err := volumeProvision(cs, v); err != nil {
 		return err
@@ -102,7 +102,7 @@ func handleVolumeStateCreated(cs *ClusterState, v *models.Volume) error {
 }
 
 func handleVolumeStateProvision(cs *ClusterState, v *models.Volume) error {
-	log.V(logLevel).Debugf("%s:> handleVolumeStateProvision: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
+	log.Debugf("%s:> handleVolumeStateProvision: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 
 	if err := volumeProvision(cs, v); err != nil {
 		return err
@@ -111,17 +111,17 @@ func handleVolumeStateProvision(cs *ClusterState, v *models.Volume) error {
 }
 
 func handleVolumeStateReady(cs *ClusterState, v *models.Volume) error {
-	log.V(logLevel).Debugf("%s:> handleVolumeStateReady: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
+	log.Debugf("%s:> handleVolumeStateReady: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 	return nil
 }
 
 func handleVolumeStateError(cs *ClusterState, v *models.Volume) error {
-	log.V(logLevel).Debugf("%s:> handleVolumeStateError: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
+	log.Debugf("%s:> handleVolumeStateError: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 	return nil
 }
 
 func handleVolumeStateDestroy(cs *ClusterState, v *models.Volume) error {
-	log.V(logLevel).Debugf("%s:> handleVolumeStateDestroy: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
+	log.Debugf("%s:> handleVolumeStateDestroy: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 
 	if err := volumeDestroy(cs, v); err != nil {
 		log.Errorf("%s", err.Error())
@@ -132,7 +132,7 @@ func handleVolumeStateDestroy(cs *ClusterState, v *models.Volume) error {
 }
 
 func handleVolumeStateDestroyed(cs *ClusterState, v *models.Volume) error {
-	log.V(logLevel).Debugf("%s:> handleVolumeStateDestroyed: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
+	log.Debugf("%s:> handleVolumeStateDestroyed: %s > %s", logPrefixVolume, v.SelfLink().String(), v.Status.State)
 
 	if err := volumeRemove(cs, v); err != nil {
 		log.Errorf("%s", err.Error())
@@ -313,7 +313,7 @@ func volumeRemove(cs *ClusterState, volume *models.Volume) (err error) {
 
 func volumeManifestAdd(stg storage.IStorage, vol *models.Volume) error {
 
-	log.V(logLevel).Debugf("%s: create volume manifest for node: %s", logPrefixVolume, vol.SelfLink().String())
+	log.Debugf("%s: create volume manifest for node: %s", logPrefixVolume, vol.SelfLink().String())
 
 	var vm = new(models.VolumeManifest)
 
@@ -348,7 +348,7 @@ func volumeManifestSet(stg storage.IStorage, vol *models.Volume) error {
 
 	// Update manifest
 	if m == nil {
-		log.V(logLevel).Debugf("%s: create volume for node: %s", logPrefixVolume, vol.SelfLink().String())
+		log.Debugf("%s: create volume for node: %s", logPrefixVolume, vol.SelfLink().String())
 		ms := models.VolumeManifest(vol.Spec)
 		m = &ms
 	} else {

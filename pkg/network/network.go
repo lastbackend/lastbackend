@@ -19,11 +19,12 @@
 package network
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/network/state"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
-	"github.com/lastbackend/lastbackend/tools/log"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"github.com/spf13/viper"
 )
 
@@ -42,7 +43,7 @@ type Network struct {
 }
 
 func New(v *viper.Viper) (*Network, error) {
-
+	log := logger.WithContext(context.Background())
 	var err error
 
 	net := new(Network)

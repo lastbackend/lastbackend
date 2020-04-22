@@ -23,11 +23,10 @@ import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/internal/util/generator"
 	"github.com/lastbackend/lastbackend/internal/util/resource"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"strings"
-
+	"context"
 	"time"
-
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const (
@@ -258,6 +257,7 @@ type ContainerStatusInfoPort struct {
 }
 
 func (cs *ContainerSpec) CommandToString() string {
+	log := logger.WithContext(context.Background())
 	res, err := convertSliceToString(cs.Command)
 	if err != nil {
 		log.Errorf("Can-not convert command value to string: %s", err)
@@ -267,12 +267,14 @@ func (cs *ContainerSpec) CommandToString() string {
 }
 
 func (cs *ContainerSpec) CommandFromString(command string) {
+	log := logger.WithContext(context.Background())
 	if err := json.Unmarshal([]byte(command), &cs.Command); err != nil {
 		log.Errorf("Can-not convert command value from string: %s", err)
 	}
 }
 
 func (cs *ContainerSpec) EntrypointToString() string {
+	log := logger.WithContext(context.Background())
 	res, err := convertSliceToString(cs.Entrypoint)
 	if err != nil {
 		log.Errorf("Can-not convert entrypoint value to string: %s", err)
@@ -282,12 +284,14 @@ func (cs *ContainerSpec) EntrypointToString() string {
 }
 
 func (cs *ContainerSpec) EntrypointFromString(entrypoint string) {
+	log := logger.WithContext(context.Background())
 	if err := json.Unmarshal([]byte(entrypoint), &cs.Entrypoint); err != nil {
 		log.Errorf("Can-not convert entrypoint value from string: %s", err)
 	}
 }
 
 func (cs *ContainerSpec) DNSServerToString() string {
+	log := logger.WithContext(context.Background())
 	res, err := convertSliceToString(cs.DNS.Server)
 	if err != nil {
 		log.Errorf("Can-not convert dns server value to string: %s", err)
@@ -297,12 +301,14 @@ func (cs *ContainerSpec) DNSServerToString() string {
 }
 
 func (cs *ContainerSpec) DNSServerFromString(server string) {
+	log := logger.WithContext(context.Background())
 	if err := json.Unmarshal([]byte(server), &cs.DNS.Server); err != nil {
 		log.Errorf("Can-not convert dns server value from string: %s", err)
 	}
 }
 
 func (cs *ContainerSpec) DNSSearchToString() string {
+	log := logger.WithContext(context.Background())
 	res, err := convertSliceToString(cs.DNS.Search)
 	if err != nil {
 		log.Errorf("Can-not convert dns search value to string: %s", err)
@@ -312,12 +318,14 @@ func (cs *ContainerSpec) DNSSearchToString() string {
 }
 
 func (cs *ContainerSpec) DNSSearchFromString(search string) {
+	log := logger.WithContext(context.Background())
 	if err := json.Unmarshal([]byte(search), &cs.DNS.Search); err != nil {
 		log.Errorf("Can-not convert dns search value from string: %s", err)
 	}
 }
 
 func (cs *ContainerSpec) DNSOptionsToString() string {
+	log := logger.WithContext(context.Background())
 	res, err := convertSliceToString(cs.DNS.Options)
 	if err != nil {
 		log.Errorf("Can-not convert dns options value to string: %s", err)
@@ -327,12 +335,14 @@ func (cs *ContainerSpec) DNSOptionsToString() string {
 }
 
 func (cs *ContainerSpec) DNSOptionsFromString(options string) {
+	log := logger.WithContext(context.Background())
 	if err := json.Unmarshal([]byte(options), &cs.DNS.Options); err != nil {
 		log.Errorf("Can-not convert dns options value from string: %s", err)
 	}
 }
 
 func (cs *ContainerSpec) VolumesToString() string {
+	log := logger.WithContext(context.Background())
 	b, err := json.Marshal(cs.Volumes)
 	if err != nil {
 		log.Errorf("Can-not convert volumes value to string: %s", err)
@@ -345,12 +355,14 @@ func (cs *ContainerSpec) VolumesToString() string {
 }
 
 func (cs *ContainerSpec) VolumesFromString(volumes string) {
+	log := logger.WithContext(context.Background())
 	if err := json.Unmarshal([]byte(volumes), &cs.Volumes); err != nil {
 		log.Errorf("Can-not convert volumes value from string: %s", err)
 	}
 }
 
 func (cs *ContainerSpec) ENVsToString() string {
+	log := logger.WithContext(context.Background())
 	res, err := convertSliceToString(cs.EnvVars)
 	if err != nil {
 		log.Errorf("Can-not convert envs value to string: %s", err)
@@ -360,12 +372,14 @@ func (cs *ContainerSpec) ENVsToString() string {
 }
 
 func (cs *ContainerSpec) ENVsFromString(envs string) {
+	log := logger.WithContext(context.Background())
 	if err := json.Unmarshal([]byte(envs), &cs.EnvVars); err != nil {
 		log.Errorf("Can-not convert envs value from string: %s", err)
 	}
 }
 
 func (cs *ContainerSpec) PortsToString() string {
+	log := logger.WithContext(context.Background())
 	if cs == nil {
 		return EmptyStringSlice
 	}
@@ -381,12 +395,14 @@ func (cs *ContainerSpec) PortsToString() string {
 }
 
 func (cs *ContainerSpec) PortsFromString(ports string) {
+	log := logger.WithContext(context.Background())
 	if err := json.Unmarshal([]byte(ports), &cs.Ports); err != nil {
 		log.Errorf("Can-not convert ports value from string: %s", err)
 	}
 }
 
 func convertSliceToString(slice []string) (string, error) {
+	log := logger.WithContext(context.Background())
 	if slice == nil {
 		return EmptyStringSlice, nil
 	}

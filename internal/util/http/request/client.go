@@ -21,7 +21,7 @@ package request
 import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/internal/util/serializer"
-	"github.com/pkg/errors"
+	"errors"
 	"net/http"
 	"net/url"
 	"strings"
@@ -90,7 +90,7 @@ func withTLSClientConfig(cfg *Config) func(*http.Client) error {
 
 		tc, err := NewTLSConfig(cfg)
 		if err != nil {
-			return errors.Wrap(err, "failed to create tls config")
+			return errors.New(fmt.Sprintf("%v: failed to create tls config", err))
 		}
 
 		if transport, ok := c.Transport.(*http.Transport); ok {
@@ -98,7 +98,7 @@ func withTLSClientConfig(cfg *Config) func(*http.Client) error {
 			return nil
 		}
 
-		return errors.Errorf("cannot apply tls config to transport: %T", c.Transport)
+		return errors.New(fmt.Sprintf("cannot apply tls config to transport: %T", c.Transport))
 	}
 }
 

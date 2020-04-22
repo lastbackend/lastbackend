@@ -25,7 +25,6 @@ import (
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cii/containerd"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cii/docker"
 	"github.com/spf13/viper"
 )
 
@@ -49,22 +48,22 @@ type CII interface {
 
 func New(v *viper.Viper) (CII, error) {
 	switch v.GetString("container.iri.type") {
-	case dockerDriver:
-		cfg := docker.Config{}
-		cfg.Host = v.GetString("container.iri.docker.host")
-		cfg.Version = v.GetString("container.iri.docker.version")
-
-		if v.IsSet("container.iri.docker.tls.verify") && v.GetBool("container.iri.docker.tls.verify") {
-			cfg.TLS = new(docker.TLSConfig)
-			cfg.TLS.CAPath = v.GetString("container.iri.docker.tls.ca_file")
-			cfg.TLS.CertPath = v.GetString("container.iri.docker.tls.cert_file")
-			cfg.TLS.KeyPath = v.GetString("container.iri.docker.tls.key_file")
-		}
-		return docker.New(cfg)
+	//case dockerDriver:
+	//	cfg := docker.Config{}
+	//	cfg.Host = v.GetString("container.iri.docker.host")
+	//	cfg.Version = v.GetString("container.iri.docker.version")
+	//
+	//	if v.IsSet("container.iri.docker.tls.verify") && v.GetBool("container.iri.docker.tls.verify") {
+	//		cfg.TLS = new(docker.TLSConfig)
+	//		cfg.TLS.CAPath = v.GetString("container.iri.docker.tls.ca_file")
+	//		cfg.TLS.CertPath = v.GetString("container.iri.docker.tls.cert_file")
+	//		cfg.TLS.KeyPath = v.GetString("container.iri.docker.tls.key_file")
+	//	}
+	//	return docker.New(cfg)
 	case containerDDriver:
 		cfg := containerd.Config{}
-		cfg.Host = v.GetString("container.iri.containerd.host")
-		cfg.Version = v.GetString("container.iri.containerd.version")
+		//cfg.Host = v.GetString("container.iri.containerd.host")
+		//cfg.Version = v.GetString("container.iri.containerd.version")
 
 		if v.IsSet("container.iri.containerd.tls.verify") && v.GetBool("container.iri.containerd.tls.verify") {
 			cfg.TLS = new(containerd.TLSConfig)

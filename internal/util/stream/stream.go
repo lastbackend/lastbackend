@@ -141,9 +141,9 @@ func (s *Stream) Flush() {
 }
 
 func (s *Stream) Close() {
-	log.V(logLevel).Debug("close stream connection")
+	log.Debug("close stream connection")
 	if !s.close {
-		log.V(logLevel).Debug("connection needs to be closed")
+		log.Debug("connection needs to be closed")
 		s.Flush()
 		s.stream.Disconnect()
 	}
@@ -161,7 +161,7 @@ func (s *Stream) AddSocketBackend(endpoint string) *Stream {
 }
 
 func (s *Stream) AddHttpWriter(writer http.ResponseWriter) *Stream {
-	log.V(logLevel).Debug("add http backend")
+	log.Debug("add http backend")
 	s.stream = backend.NewHttpWriterBackend(writer)
 	return s
 }

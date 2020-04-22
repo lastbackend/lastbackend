@@ -20,23 +20,23 @@ package runtime
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"time"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
-)
+	)
 
 const (
 	logTaskPrefix = "node:runtime:task"
 )
 
 func (r Runtime) taskExecute(ctx context.Context, pod string, task models.SpecRuntimeTask, m models.ContainerManifest, ps *models.PodStatus) error {
-
+	log := logger.WithContext(context.Background())
 	status := ps.AddTask(task.Name)
 	status.SetStarted()
 
 	r.state.Pods().SetPod(pod, ps)
-	log.V(logLevel).Debugf("%s task %s start", logTaskPrefix, task.Name)
+	log.Debugf("%s task %s start", logTaskPrefix, task.Name)
 
 	m.Name = ""
 	m.Labels[models.ContainerTypeRuntime] = models.ContainerTypeRuntimeTask
@@ -75,7 +75,7 @@ func (r Runtime) taskExecute(ctx context.Context, pod string, task models.SpecRu
 	//========================================================================================
 	// start container =======================================================================
 	//========================================================================================
-	log.V(logLevel).Debugf("%s container created: %s", logTaskPrefix, c.ID)
+	log.Debugf("%s container created: %s", logTaskPrefix, c.ID)
 
 	if err := r.cri.Start(ctx, c.ID); err != nil {
 
@@ -119,7 +119,7 @@ func (r Runtime) taskExecute(ctx context.Context, pod string, task models.SpecRu
 	//	io.Copy(os.Stdout, req)
 	//}()
 
-	log.V(logLevel).Debugf("%s container wait: %s", logTaskPrefix, c.ID)
+	log.Debugf("%s container wait: %s", logTaskPrefix, c.ID)
 	if err := r.cri.Wait(ctx, c.ID); err != nil {
 		log.Errorf("%s error: %s", logTaskPrefix, err.Error())
 		c.State.Error = models.PodContainerStateError{
@@ -179,8 +179,8 @@ func (r Runtime) taskExecute(ctx context.Context, pod string, task models.SpecRu
 }
 
 func (r Runtime) taskCommandFinish(ctx context.Context, c *models.PodContainer) error {
-
-	log.V(logLevel).Debugf("%s container remove: %s", logTaskPrefix, c.ID)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s container remove: %s", logTaskPrefix, c.ID)
 	if err := r.cri.Remove(ctx, c.ID, true, true); err != nil {
 		log.Errorf("%s error: %s", logTaskPrefix, err.Error())
 		return err

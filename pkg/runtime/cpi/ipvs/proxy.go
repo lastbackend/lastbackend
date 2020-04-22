@@ -71,7 +71,7 @@ func (p *Proxy) Info(ctx context.Context) (map[string]*models.EndpointState, err
 // Create new proxy rules
 func (p *Proxy) Create(ctx context.Context, manifest *models.EndpointManifest) (*models.EndpointState, error) {
 
-	log.V(logLevel).Debugf("%s create ipvs virtual server with ip %s: and upstreams %v", logIPVSPrefix, manifest.IP, manifest.Upstreams)
+	log.Debugf("%s create ipvs virtual server with ip %s: and upstreams %v", logIPVSPrefix, manifest.IP, manifest.Upstreams)
 
 	var (
 		err   error
@@ -87,7 +87,7 @@ func (p *Proxy) Create(ctx context.Context, manifest *models.EndpointManifest) (
 	defer func() {
 		if err != nil {
 			for _, svc := range csvcs {
-				log.V(logLevel).Debugf("%s delete service: %s", logIPVSPrefix, svc.srvc.Address.String())
+				log.Debugf("%s delete service: %s", logIPVSPrefix, svc.srvc.Address.String())
 				p.ipvs.DelService(svc.srvc)
 			}
 		}
@@ -96,17 +96,17 @@ func (p *Proxy) Create(ctx context.Context, manifest *models.EndpointManifest) (
 	for _, svc := range svcs {
 
 		if len(svc.dest) == 0 {
-			log.V(logLevel).Debugf("%s skip creating service, destinations not exists", logIPVSPrefix)
+			log.Debugf("%s skip creating service, destinations not exists", logIPVSPrefix)
 			return nil, nil
 		}
 
-		log.V(logLevel).Debugf("%s create new service: %s", logIPVSPrefix, svc.srvc.Address.String())
+		log.Debugf("%s create new service: %s", logIPVSPrefix, svc.srvc.Address.String())
 		if err := p.ipvs.NewService(svc.srvc); err != nil {
 			log.Errorf("%s create service err: %s", logIPVSPrefix, err.Error())
 		}
 
 		for _, dest := range svc.dest {
-			log.V(logLevel).Debugf("%s create new destination %s for service: %s", logIPVSPrefix,
+			log.Debugf("%s create new destination %s for service: %s", logIPVSPrefix,
 				dest.Address.String(), svc.srvc.Address.String())
 
 			if err := p.ipvs.NewDestination(svc.srvc, dest); err != nil {
@@ -331,7 +331,7 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*models.EndpointState,
 			}
 
 			if prt != 0 && prt != dest.Port {
-				log.V(logLevel).Debugf("%s dest port mismatch %d != %d", logIPVSPrefix, prt, dest.Port)
+				log.Debugf("%s dest port mismatch %d != %d", logIPVSPrefix, prt, dest.Port)
 				break
 			}
 
@@ -493,7 +493,7 @@ func New(v *viper.Viper) (*Proxy, error) {
 		log.Debugf("%s ipvs interface not found: create new", logIPVSPrefix)
 		if err := netlink.LinkAdd(&link); err != nil {
 			if err == syscall.EEXIST {
-				log.V(logLevel).Debugf("%s device already exists: %s", logIPVSPrefix, link.Name)
+				log.Debugf("%s device already exists: %s", logIPVSPrefix, link.Name)
 
 				l, err := netlink.LinkByName(link.Name)
 				if err != nil {

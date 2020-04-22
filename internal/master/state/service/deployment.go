@@ -33,7 +33,7 @@ const logDeploymentPrefix = "state:observer:deployment"
 
 func deploymentObserve(ss *ServiceState, d *models.Deployment) error {
 
-	log.V(logLevel).Debugf("%s:> observe start: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+	log.Debugf("%s:> observe start: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	if _, ok := ss.pod.list[d.SelfLink().String()]; !ok {
 		ss.pod.list[d.SelfLink().String()] = make(map[string]*models.Pod)
@@ -90,7 +90,7 @@ func deploymentObserve(ss *ServiceState, d *models.Deployment) error {
 		ss.deployment.list[d.SelfLink().String()] = d
 	}
 
-	log.V(logLevel).Debugf("%s:> observe state: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+	log.Debugf("%s:> observe state: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	if err := endpointCheck(ss); err != nil {
 		return err
@@ -100,14 +100,14 @@ func deploymentObserve(ss *ServiceState, d *models.Deployment) error {
 		return err
 	}
 
-	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+	log.Debugf("%s:> observe finish: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	return nil
 }
 
 func handleDeploymentStateCreated(ss *ServiceState, d *models.Deployment) error {
 
-	log.V(logLevel).Debugf("%s:> handleDeploymentStateCreated: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+	log.Debugf("%s:> handleDeploymentStateCreated: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	ss.deployment.provision = d
 
@@ -148,7 +148,7 @@ func handleDeploymentStateCreated(ss *ServiceState, d *models.Deployment) error 
 
 func handleDeploymentStateProvision(ss *ServiceState, d *models.Deployment) error {
 
-	log.V(logLevel).Debugf("%s:> handleDeploymentStateProvision: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+	log.Debugf("%s:> handleDeploymentStateProvision: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	if ss.deployment.provision != nil {
 		if ss.deployment.provision.Spec.Template.Updated.After(d.Spec.Template.Updated) {
@@ -168,7 +168,7 @@ func handleDeploymentStateProvision(ss *ServiceState, d *models.Deployment) erro
 
 func handleDeploymentStateReady(ss *ServiceState, d *models.Deployment) error {
 
-	log.V(logLevel).Debugf("%s:> handleDeploymentStateReady: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+	log.Debugf("%s:> handleDeploymentStateReady: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	if ss.deployment.active != nil {
 		if ss.deployment.active.SelfLink().String() != d.SelfLink().String() {
@@ -196,7 +196,7 @@ func handleDeploymentStateReady(ss *ServiceState, d *models.Deployment) error {
 
 func handleDeploymentStateError(ss *ServiceState, d *models.Deployment) error {
 
-	log.V(logLevel).Debugf("%s:> handleDeploymentStateError: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+	log.Debugf("%s:> handleDeploymentStateError: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	if ss.deployment.active == nil {
 		ss.deployment.provision = nil
@@ -218,7 +218,7 @@ func handleDeploymentStateError(ss *ServiceState, d *models.Deployment) error {
 
 func handleDeploymentStateDegradation(ss *ServiceState, d *models.Deployment) error {
 
-	log.V(logLevel).Debugf("%s:> handleDeploymentStateDegradation: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+	log.Debugf("%s:> handleDeploymentStateDegradation: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	if err := deploymentPodProvision(ss, d); err != nil {
 		log.Errorf("%s", err.Error())
@@ -246,7 +246,7 @@ func handleDeploymentStateDegradation(ss *ServiceState, d *models.Deployment) er
 
 func handleDeploymentStateDestroy(ss *ServiceState, d *models.Deployment) error {
 
-	log.V(logLevel).Debugf("%s:> handleDeploymentStateDestroy: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+	log.Debugf("%s:> handleDeploymentStateDestroy: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	if ss.deployment.provision != nil {
 		if ss.deployment.provision.SelfLink() == d.SelfLink() {
@@ -268,7 +268,7 @@ func handleDeploymentStateDestroy(ss *ServiceState, d *models.Deployment) error 
 
 func handleDeploymentStateDestroyed(ss *ServiceState, d *models.Deployment) error {
 
-	log.V(logLevel).Debugf("%s:> handleDeploymentStateDestroyed: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+	log.Debugf("%s:> handleDeploymentStateDestroyed: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	if ss.deployment.provision != nil {
 		if ss.deployment.provision.SelfLink().String() == d.SelfLink().String() {
@@ -472,7 +472,7 @@ func deploymentCheckSelectors(ss *ServiceState, d *models.Deployment) (err error
 
 		vl, err := vm.ListByNamespace(d.Meta.Namespace)
 		if err != nil {
-			log.V(logLevel).Errorf("%s:create:> create deployment, volume list err: %s", logPrefix, err.Error())
+			log.Errorf("%s:create:> create deployment, volume list err: %s", logPrefix, err.Error())
 			return err
 		}
 
@@ -489,12 +489,12 @@ func deploymentCheckSelectors(ss *ServiceState, d *models.Deployment) (err error
 				f = true
 
 				if v.Status.State != models.StateReady {
-					log.V(logLevel).Errorf("%s:create:> create deployment err: volume is not ready yet: %s", logPrefix, v.Meta.Name)
+					log.Errorf("%s:create:> create deployment err: volume is not ready yet: %s", logPrefix, v.Meta.Name)
 					return errors.New(v.Meta.Name).Volume().NotReady(v.Meta.Name)
 				}
 
 				if v.Meta.Node == models.EmptyString {
-					log.V(logLevel).Errorf("%s:create:> create deployment err: volume is not provisioned yet: %s", logPrefix, v.Meta.Name)
+					log.Errorf("%s:create:> create deployment err: volume is not provisioned yet: %s", logPrefix, v.Meta.Name)
 					return errors.New(v.Meta.Name).Volume().NotProvisioned(v.Meta.Name)
 				}
 
@@ -508,7 +508,7 @@ func deploymentCheckSelectors(ss *ServiceState, d *models.Deployment) (err error
 			}
 
 			if !f {
-				log.V(logLevel).Errorf("%s:create:> create deployment err: volume is not found: %s", logPrefix, name)
+				log.Errorf("%s:create:> create deployment err: volume is not found: %s", logPrefix, name)
 				return errors.New(name).Volume().NotFound(name)
 			}
 		}
@@ -611,7 +611,7 @@ func deploymentPodProvision(ss *ServiceState, d *models.Deployment) (err error) 
 		}
 
 		if d.Spec.Replicas > total {
-			log.V(logLevel).Debugf("create additional replica: %d -> %d", total, d.Spec.Replicas)
+			log.Debugf("create additional replica: %d -> %d", total, d.Spec.Replicas)
 			p, err := podCreate(ss.storage, d)
 			if err != nil {
 				log.Errorf("%s", err.Error())
@@ -623,7 +623,7 @@ func deploymentPodProvision(ss *ServiceState, d *models.Deployment) (err error) 
 		}
 
 		if d.Spec.Replicas < total {
-			log.V(logLevel).Debugf("remove unneeded replica: %d -> %d", total, d.Spec.Replicas)
+			log.Debugf("remove unneeded replica: %d -> %d", total, d.Spec.Replicas)
 			for _, s := range st {
 
 				if len(state[s]) > 0 {
@@ -740,7 +740,7 @@ func deploymentScale(stg storage.IStorage, d *models.Deployment, replicas int) e
 
 func deploymentStatusState(stg storage.IStorage, d *models.Deployment, pl map[string]*models.Pod) (err error) {
 
-	log.V(logLevel).Debugf("%s:> deploymentStatusState: start: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+	log.Debugf("%s:> deploymentStatusState: start: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	t := d.Meta.Updated
 	defer func() {
@@ -881,7 +881,7 @@ func deploymentStatusState(stg storage.IStorage, d *models.Deployment, pl map[st
 		break
 	}
 
-	log.V(logLevel).Debugf("%s:> deploymentStatusState: finish: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+	log.Debugf("%s:> deploymentStatusState: finish: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	return nil
 }

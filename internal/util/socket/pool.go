@@ -21,13 +21,6 @@ package socket
 import (
 	"fmt"
 	"sync"
-
-	"github.com/lastbackend/lastbackend/tools/log"
-)
-
-const (
-	logLevel  = 3
-	logPrefix = "utils:socket"
 )
 
 // Pool contains a connections used by the same id
@@ -49,24 +42,20 @@ type Pool struct {
 
 // Listen broker channels to manage connections and broadcast data
 func (p *Pool) Listen() {
-	log.V(logLevel).Debugf("%s:pool:listen:> listen broker channels to manage connections and broadcast data", logPrefix)
 
 	go func() {
 		for {
 			select {
 			case m := <-p.broadcast:
-				log.V(logLevel).Debugf("%s:pool:listen:> broker %s broadcast: %s", logPrefix, p.ID, string(m))
 
 				for c := range p.conns {
 					c.Write(m)
 				}
 
 			case c := <-p.join:
-				log.V(logLevel).Debugf("%s:pool:listen:> join connection to broker: %s", logPrefix, p.ID)
 				p.conns[c] = true
 
 			case c := <-p.leave:
-				log.V(logLevel).Debugf("%s:pool:listen:> leave connection from broker: %s", logPrefix, p.ID)
 
 				delete(p.conns, c)
 
@@ -76,14 +65,12 @@ func (p *Pool) Listen() {
 					close(p.join)
 					close(p.leave)
 
-					log.V(logLevel).Debugf("%s:pool:listen:> broker closed successful", logPrefix)
-
 					p.close <- p
 					return
 				}
 
 			case m := <-p.ignore:
-				log.V(logLevel).Debugf("%s:pool:listen:> incoming data processing disabled: %s", logPrefix, string(m))
+				fmt.Println("incoming data processing disabled ", string(m))
 			}
 
 		}
@@ -93,19 +80,16 @@ func (p *Pool) Listen() {
 
 // Broadcast message to connections
 func (p Pool) Broadcast(event, op, entity string, msg []byte) {
-	log.V(logLevel).Debugf("%s:pool:broadcast:> broadcast message to connections", logPrefix)
 	p.broadcast <- []byte(fmt.Sprintf("{\"event\":\"%s\", \"operation\":\"%s\", \"entity\":\"%s\", \"payload\":%s}", event, op, entity, string(msg)))
 }
 
 // manage connection and attach it to broker
 func (p Pool) Leave(s *Socket) {
-	log.V(logLevel).Debugf("%s:pool:manage:> drop connection from broker", logPrefix)
 	p.leave <- s
 }
 
 // Ping connection to stay it online
 func (p Pool) Ping() {
-	log.V(7).Debugf("%s:pool:ping:> ping connection to stay it online", logPrefix)
 	for c := range p.conns {
 		c.Ping()
 	}

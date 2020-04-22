@@ -20,18 +20,18 @@ package runtime
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"time"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
-)
+	)
 
 const (
 	logServicePrefix = "node:runtime:service"
 )
 
 func (r Runtime) serviceStart(ctx context.Context, pod string, m *models.ContainerManifest, status *models.PodStatus) error {
-
+	log := logger.WithContext(context.Background())
 	var (
 		err error
 		c   = new(models.PodContainer)
@@ -74,7 +74,7 @@ func (r Runtime) serviceStart(ctx context.Context, pod string, m *models.Contain
 	}
 
 	r.state.Pods().SetPod(pod, status)
-	log.V(logLevel).Debugf("%s container created: %s", logServicePrefix, c.ID)
+	log.Debugf("%s container created: %s", logServicePrefix, c.ID)
 
 	if err := r.cri.Start(ctx, c.ID); err != nil {
 
@@ -97,7 +97,7 @@ func (r Runtime) serviceStart(ctx context.Context, pod string, m *models.Contain
 		return err
 	}
 
-	log.V(logLevel).Debugf("%s container started: %s", logServicePrefix, c.ID)
+	log.Debugf("%s container started: %s", logServicePrefix, c.ID)
 
 	if err := r.containerInspect(context.Background(), c); err != nil {
 		log.Errorf("%s inspect container after create: err %s", logServicePrefix, err.Error())

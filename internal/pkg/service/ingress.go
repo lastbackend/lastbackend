@@ -41,7 +41,7 @@ func (n *Ingress) List() (*models.IngressList, error) {
 	list := models.NewIngressList()
 
 	if err := n.storage.List(n.context, n.storage.Collection().Ingress().Info(), "", list, nil); err != nil {
-		log.V(logLevel).Errorf("%s:list:> get ingress list err: %v", logIngressPrefix, err)
+		log.Errorf("%s:list:> get ingress list err: %v", logIngressPrefix, err)
 		return nil, err
 	}
 
@@ -50,11 +50,11 @@ func (n *Ingress) List() (*models.IngressList, error) {
 
 func (n *Ingress) Put(ingress *models.Ingress) error {
 
-	log.V(logLevel).Debugf("%s:create:> create ingress in cluster", logIngressPrefix)
+	log.Debugf("%s:create:> create ingress in cluster", logIngressPrefix)
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Ingress().Info(),
 		ingress.SelfLink().String(), ingress, nil); err != nil {
-		log.V(logLevel).Errorf("%s:create:> insert ingress err: %v", logIngressPrefix, err)
+		log.Errorf("%s:create:> insert ingress err: %v", logIngressPrefix, err)
 		return err
 	}
 
@@ -63,11 +63,11 @@ func (n *Ingress) Put(ingress *models.Ingress) error {
 
 func (n *Ingress) Set(ingress *models.Ingress) error {
 
-	log.V(logLevel).Debugf("%s:create:> create ingress in cluster", logIngressPrefix)
+	log.Debugf("%s:create:> create ingress in cluster", logIngressPrefix)
 
 	if err := n.storage.Set(n.context, n.storage.Collection().Ingress().Info(),
 		ingress.SelfLink().String(), ingress, nil); err != nil {
-		log.V(logLevel).Errorf("%s:create:> insert ingress err: %v", logIngressPrefix, err)
+		log.Errorf("%s:create:> insert ingress err: %v", logIngressPrefix, err)
 		return err
 	}
 
@@ -76,18 +76,18 @@ func (n *Ingress) Set(ingress *models.Ingress) error {
 
 func (n *Ingress) Get(selflink string) (*models.Ingress, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get by selflink %s", logIngressPrefix, selflink)
+	log.Debugf("%s:get:> get by selflink %s", logIngressPrefix, selflink)
 
 	ingress := new(models.Ingress)
 	err := n.storage.Get(n.context, n.storage.Collection().Ingress().Info(), selflink, ingress, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> get: ingress %s not found", logIngressPrefix, selflink)
+			log.Warnf("%s:get:> get: ingress %s not found", logIngressPrefix, selflink)
 			return nil, nil
 		}
 
-		log.V(logLevel).Debugf("%s:get:> get ingress `%s` err: %v", logIngressPrefix, selflink, err)
+		log.Debugf("%s:get:> get ingress `%s` err: %v", logIngressPrefix, selflink, err)
 		return nil, err
 	}
 
@@ -96,10 +96,10 @@ func (n *Ingress) Get(selflink string) (*models.Ingress, error) {
 
 func (n *Ingress) Remove(ingress *models.Ingress) error {
 
-	log.V(logLevel).Debugf("%s:remove:> remove ingress %s", logIngressPrefix, ingress.Meta.Name)
+	log.Debugf("%s:remove:> remove ingress %s", logIngressPrefix, ingress.Meta.Name)
 
 	if err := n.storage.Del(n.context, n.storage.Collection().Ingress().Info(), ingress.SelfLink().String()); err != nil {
-		log.V(logLevel).Debugf("%s:remove:> remove ingress err: %v", logIngressPrefix, err)
+		log.Debugf("%s:remove:> remove ingress err: %v", logIngressPrefix, err)
 		return err
 	}
 
@@ -108,7 +108,7 @@ func (n *Ingress) Remove(ingress *models.Ingress) error {
 
 func (n *Ingress) Watch(ch chan models.IngressEvent, rev *int64) error {
 
-	log.V(logLevel).Debugf("%s:watch:> watch routes", logIngressPrefix)
+	log.Debugf("%s:watch:> watch routes", logIngressPrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

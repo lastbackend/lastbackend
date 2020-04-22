@@ -20,15 +20,15 @@ package runtime
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"strings"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 func (r Runtime) ConfigManage(ctx context.Context, name string, cfg *models.ConfigManifest) error {
-
-	log.V(logLevel).Debugf("Manage config: %s", name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("Manage config: %s", name)
 
 	if cfg.State == models.StateDestroyed {
 		r.ConfigRemove(ctx, name)
@@ -44,8 +44,8 @@ func (r Runtime) ConfigManage(ctx context.Context, name string, cfg *models.Conf
 }
 
 func (r Runtime) ConfigCreate(ctx context.Context, name string, cfg *models.ConfigManifest) error {
-
-	log.V(logLevel).Debugf("create config: %s", name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("create config: %s", name)
 
 	ok := r.state.Configs().GetConfig(name)
 	if ok != nil {
@@ -57,8 +57,8 @@ func (r Runtime) ConfigCreate(ctx context.Context, name string, cfg *models.Conf
 }
 
 func (r Runtime) ConfigUpdate(ctx context.Context, name string, cfg *models.ConfigManifest) error {
-
-	log.V(logLevel).Debugf("update config: %s", name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("update config: %s", name)
 
 	r.state.Configs().SetConfig(name, cfg)
 	return nil
@@ -66,8 +66,8 @@ func (r Runtime) ConfigUpdate(ctx context.Context, name string, cfg *models.Conf
 }
 
 func (r Runtime) ConfigRemove(ctx context.Context, name string) {
-
-	log.V(logLevel).Debugf("remove config: %s", name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("remove config: %s", name)
 
 	r.state.Configs().DelConfig(name)
 }

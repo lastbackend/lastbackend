@@ -19,7 +19,7 @@
 package socket
 
 import (
-	"github.com/lastbackend/lastbackend/tools/log"
+	"fmt"
 	"sync"
 )
 
@@ -41,7 +41,6 @@ type Controller struct {
 
 // Listen controller channels to manage pools
 func (c *Controller) Listen() {
-	log.V(logLevel).Debugf("%s:controller:listen:> listen controller channels to manage pools", logPrefix)
 
 	go func() {
 		for {
@@ -98,7 +97,7 @@ func (c *Controller) Listen() {
 				c.Lock()
 				delete(c.pools, p.ID)
 				if err := c.Clean(p.ID); err != nil {
-					log.Errorf("%s:controller:listen:> connection pool clean err: %v", logPrefix, err)
+				fmt.Println(err)
 				}
 				c.Unlock()
 			}
@@ -117,13 +116,11 @@ func (c *Controller) Broadcast(event, op, entity string, data []byte) error {
 
 // Get returns named broker by id
 func (c *Controller) Get(id string) *Pool {
-	log.V(logLevel).Debugf("%s:controller:get:> get returns named broker by id %s", logPrefix, id)
 	return c.pools[id]
 }
 
 // Add create and return new connections broker
 func (c *Controller) Add(id string, sock *Socket) *Pool {
-	log.V(logLevel).Debugf("%s:controller:add:> create new connections broker %s", logPrefix, id)
 
 	var p = new(Pool)
 	p.ID = id
@@ -151,7 +148,6 @@ func (c *Controller) Add(id string, sock *Socket) *Pool {
 
 // Attach connection to pool
 func (c *Controller) Attach(pool *Pool, sock *Socket) {
-	log.V(logLevel).Debugf("%s:controller:attach:> attach connection to pool", logPrefix)
 	pool.manage(sock)
 
 	c.Lock()
@@ -160,13 +156,11 @@ func (c *Controller) Attach(pool *Pool, sock *Socket) {
 }
 
 func (c *Controller) Clean(id string) error {
-	log.V(logLevel).Debugf("%s:controller:clean:> remove broker session %s", logPrefix, id)
 	return nil
 }
 
 // Ping all pools and internal connections
 func (c *Controller) Ping() {
-	log.V(7).Debugf("%s:ping:> ping all pools and internal connections", logPrefix)
 	for _, p := range c.pools {
 		p.Ping()
 	}

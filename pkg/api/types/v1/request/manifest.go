@@ -21,7 +21,6 @@ package request
 import (
 	"github.com/lastbackend/lastbackend/internal/util/compare"
 	"github.com/lastbackend/lastbackend/internal/util/resource"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"strings"
 	"time"
 
@@ -1446,6 +1445,5 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *models.ManifestSpecTem
 }
 
 func handleErr(msg string, e error) error {
-	log.Errorf("decode resource %s error: %s", msg, e.Error())
 	return e
 }

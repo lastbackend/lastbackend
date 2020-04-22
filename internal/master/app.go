@@ -22,8 +22,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/master/state"
 
+	"github.com/lastbackend/lastbackend/internal/master/state"
 	"github.com/lastbackend/lastbackend/internal/master/server"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/tools/logger"

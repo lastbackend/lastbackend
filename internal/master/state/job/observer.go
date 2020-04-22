@@ -84,7 +84,7 @@ func (js *JobState) Namespace() string {
 
 func (js *JobState) Restore() error {
 
-	log.V(logLevel).Debugf("%s:restore state for job: %s", logPrefix, js.job.SelfLink())
+	log.Debugf("%s:restore state for job: %s", logPrefix, js.job.SelfLink())
 
 	var (
 		err error
@@ -155,26 +155,26 @@ func (js *JobState) Observe() {
 		select {
 
 		case pod := <-js.observers.pod:
-			log.V(logLevel).Debugf("%s:observe:pod:> %s", logPrefix, pod.SelfLink())
+			log.Debugf("%s:observe:pod:> %s", logPrefix, pod.SelfLink())
 			if err := PodObserve(js, pod); err != nil {
-				log.V(logLevel).Errorf("%s:observe:pod:> err: %s", logPrefix, err.Error())
+				log.Errorf("%s:observe:pod:> err: %s", logPrefix, err.Error())
 				break
 			}
 		case task := <-js.observers.task:
 
-			log.V(logLevel).Debugf("%s:observe:task:> %s (%s)", logPrefix, task.SelfLink(), task.Status.State)
+			log.Debugf("%s:observe:task:> %s (%s)", logPrefix, task.SelfLink(), task.Status.State)
 
 			if err := taskObserve(js, task); err != nil {
-				log.V(logLevel).Errorf("%s:observe:task err:> %s", logPrefix, err.Error())
+				log.Errorf("%s:observe:task err:> %s", logPrefix, err.Error())
 				break
 			}
 		case job := <-js.observers.job:
-			log.V(logLevel).Debugf("%s:observe:job:> %s", logPrefix, job.SelfLink())
+			log.Debugf("%s:observe:job:> %s", logPrefix, job.SelfLink())
 
 			js.job = job
 
 			if err := jobObserve(js, job); err != nil {
-				log.V(logLevel).Errorf("%s:observe:job:> err: %s", logPrefix, err.Error())
+				log.Errorf("%s:observe:job:> err: %s", logPrefix, err.Error())
 				break
 			}
 

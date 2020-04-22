@@ -155,7 +155,7 @@ func endpointAdd(ss *ServiceState, svc *models.Service) error {
 	}
 
 	if ss.endpoint.endpoint == nil {
-		log.V(logLevel).Debugf("%s> create endpoint error: %s", logPrefix, errors.New("endpoint is nil"))
+		log.Debugf("%s> create endpoint error: %s", logPrefix, errors.New("endpoint is nil"))
 		return nil
 	}
 	return nil
@@ -331,7 +331,7 @@ func endpointManifestAdd(ss *ServiceState) error {
 	)
 
 	if ss.endpoint.endpoint == nil {
-		log.V(logLevel).Debugf("%s> create endpoint manifest error: %s", logPrefix, errors.New("endpoint is nil"))
+		log.Debugf("%s> create endpoint manifest error: %s", logPrefix, errors.New("endpoint is nil"))
 		return nil
 	}
 
@@ -384,7 +384,7 @@ func endpointManifestSet(ss *ServiceState) error {
 	)
 
 	if ss.endpoint.endpoint == nil {
-		log.V(logLevel).Debugf("%s> update endpoint manifest error: %s", logPrefix, errors.New("endpoint is nil"))
+		log.Debugf("%s> update endpoint manifest error: %s", logPrefix, errors.New("endpoint is nil"))
 		return nil
 	}
 

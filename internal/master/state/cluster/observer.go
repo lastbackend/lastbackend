@@ -107,7 +107,7 @@ func (cs *ClusterState) Observe() {
 // Loop cluster state from storage
 func (cs *ClusterState) Loop() error {
 
-	log.V(logLevel).Debug("restore cluster state")
+	log.Debug("restore cluster state")
 	var err error
 
 	// Get cluster info

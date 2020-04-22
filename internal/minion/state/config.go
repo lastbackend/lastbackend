@@ -19,10 +19,11 @@
 package state
 
 import (
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"sync"
+	"context"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const logConfigPrefix = "state:config:>"
@@ -33,19 +34,22 @@ type ConfigState struct {
 }
 
 func (s *ConfigState) GetConfigs() map[string]*models.ConfigManifest {
-	log.V(logLevel).Debugf("%s get pods", logConfigPrefix)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get pods", logConfigPrefix)
 	return s.configs
 }
 
 func (s *ConfigState) SetConfigs(configs map[string]*models.ConfigManifest) {
-	log.V(logLevel).Debugf("%s set configs: %d", logConfigPrefix, len(configs))
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s set configs: %d", logConfigPrefix, len(configs))
 	for h, config := range configs {
 		s.configs[h] = config
 	}
 }
 
 func (s *ConfigState) GetConfig(name string) *models.ConfigManifest {
-	log.V(logLevel).Debugf("%s get config: %s", logConfigPrefix, name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get config: %s", logConfigPrefix, name)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	cfg, ok := s.configs[name]
@@ -56,12 +60,14 @@ func (s *ConfigState) GetConfig(name string) *models.ConfigManifest {
 }
 
 func (s *ConfigState) AddConfig(name string, config *models.ConfigManifest) {
-	log.V(logLevel).Debugf("%s add config: %s", logConfigPrefix, name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s add config: %s", logConfigPrefix, name)
 	s.SetConfig(name, config)
 }
 
 func (s *ConfigState) SetConfig(name string, config *models.ConfigManifest) {
-	log.V(logLevel).Debugf("%s set config: %s", logConfigPrefix, name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s set config: %s", logConfigPrefix, name)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -73,7 +79,8 @@ func (s *ConfigState) SetConfig(name string, config *models.ConfigManifest) {
 }
 
 func (s *ConfigState) DelConfig(name string) {
-	log.V(logLevel).Debugf("%s del config: %s", logConfigPrefix, name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s del config: %s", logConfigPrefix, name)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if _, ok := s.configs[name]; ok {

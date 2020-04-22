@@ -67,7 +67,7 @@ func (r *Runtime) Loop() {
 		lead = make(chan bool)
 	)
 
-	log.V(logLevel).Debug("Controller: Container: Loop")
+	log.Debug("Controller: Container: Loop")
 
 	go func() {
 		for {
@@ -80,22 +80,22 @@ func (r *Runtime) Loop() {
 
 					if l {
 						if r.active {
-							log.V(logLevel).Debug("Container: is already marked as lead -> skip")
+							log.Debug("Container: is already marked as lead -> skip")
 							continue
 						}
 
-						log.V(logLevel).Debug("Container: Mark as lead")
+						log.Debug("Container: Mark as lead")
 						r.active = true
 						r.observer.Loop()
 
 					} else {
 
 						if !r.active {
-							log.V(logLevel).Debug("Container: is already marked as slave -> skip")
+							log.Debug("Container: is already marked as slave -> skip")
 							continue
 						}
 
-						log.V(logLevel).Debug("Container: Mark as slave")
+						log.Debug("Container: Mark as slave")
 						r.active = false
 						r.observer.Stop()
 					}

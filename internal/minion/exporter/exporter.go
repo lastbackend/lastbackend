@@ -19,11 +19,11 @@
 package exporter
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/proxy"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 type Exporter struct {
@@ -45,7 +45,7 @@ func (c *Exporter) Proxy(msg models.ProxyMessage) error {
 func (c *Exporter) Listen() {
 	for {
 		if err := c.srv.Listen(c.Proxy); err != nil {
-			log.Errorf(err.Error())
+			fmt.Println(err.Error())
 		}
 		<-time.NewTimer(3 * time.Second).C
 	}

@@ -41,10 +41,10 @@ type Route struct {
 
 func (r *Route) Runtime() (*models.System, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get route runtime info", logRoutePrefix)
+	log.Debugf("%s:get:> get route runtime info", logRoutePrefix)
 	runtime, err := r.storage.Info(r.context, r.storage.Collection().Pod(), "")
 	if err != nil {
-		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logRoutePrefix, err)
+		log.Errorf("%s:get:> get runtime info error: %s", logRoutePrefix, err)
 		return &runtime.System, err
 	}
 	return &runtime.System, nil
@@ -52,14 +52,14 @@ func (r *Route) Runtime() (*models.System, error) {
 
 func (r *Route) List() (*models.RouteList, error) {
 
-	log.V(logLevel).Debugf("%s:listspec:> list specs", logRoutePrefix)
+	log.Debugf("%s:listspec:> list specs", logRoutePrefix)
 
 	list := models.NewRouteList()
 
 	//TODO: change map to list
 	err := r.storage.List(r.context, r.storage.Collection().Route(), models.EmptyString, list, nil)
 	if err != nil {
-		log.V(logLevel).Error("%s:listbynamespace:> list route err: %v", logRoutePrefix, err)
+		log.Error("%s:listbynamespace:> list route err: %v", logRoutePrefix, err)
 		return list, err
 	}
 
@@ -68,24 +68,24 @@ func (r *Route) List() (*models.RouteList, error) {
 
 func (r *Route) ListByNamespace(namespace string) (*models.RouteList, error) {
 
-	log.V(logLevel).Debug("%s:listbynamespace:> list route", logRoutePrefix)
+	log.Debug("%s:listbynamespace:> list route", logRoutePrefix)
 
 	list := models.NewRouteList()
 
 	err := r.storage.List(r.context, r.storage.Collection().Route(), r.storage.Filter().Route().ByNamespace(namespace), list, nil)
 	if err != nil {
-		log.V(logLevel).Error("%s:listbynamespace:> list route err: %v", logRoutePrefix, err)
+		log.Error("%s:listbynamespace:> list route err: %v", logRoutePrefix, err)
 		return list, err
 	}
 
-	log.V(logLevel).Debugf("%s:listbynamespace:> list route result: %d", logRoutePrefix, len(list.Items))
+	log.Debugf("%s:listbynamespace:> list route result: %d", logRoutePrefix, len(list.Items))
 
 	return list, nil
 }
 
 func (r *Route) Get(namespace, name string) (*models.Route, error) {
 
-	log.V(logLevel).Debug("%s:get:> get route by id %s/%s", logRoutePrefix, namespace, name)
+	log.Debug("%s:get:> get route by id %s/%s", logRoutePrefix, namespace, name)
 
 	route := new(models.Route)
 	key := models.NewRouteSelfLink(namespace, name).String()
@@ -93,11 +93,11 @@ func (r *Route) Get(namespace, name string) (*models.Route, error) {
 	err := r.storage.Get(r.context, r.storage.Collection().Route(), key, &route, nil)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logRoutePrefix, namespace, name)
+			log.Warnf("%s:get:> in namespace %s by name %s not found", logRoutePrefix, namespace, name)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> in namespace %s by name %s error: %v", logRoutePrefix, namespace, name, err)
+		log.Errorf("%s:get:> in namespace %s by name %s error: %v", logRoutePrefix, namespace, name, err)
 		return nil, err
 	}
 
@@ -106,13 +106,13 @@ func (r *Route) Get(namespace, name string) (*models.Route, error) {
 
 func (r *Route) Add(namespace *models.Namespace, route *models.Route) (*models.Route, error) {
 
-	log.V(logLevel).Debugf("%s:create:> create route %#v", logRoutePrefix, route.Meta.Name)
+	log.Debugf("%s:create:> create route %#v", logRoutePrefix, route.Meta.Name)
 
 	route.Status.State = models.StateCreated
 
 	if err := r.storage.Put(r.context, r.storage.Collection().Route(),
 		route.SelfLink().String(), route, nil); err != nil {
-		log.V(logLevel).Errorf("%s:create:> insert route err: %v", logRoutePrefix, err)
+		log.Errorf("%s:create:> insert route err: %v", logRoutePrefix, err)
 		return nil, err
 	}
 
@@ -121,11 +121,11 @@ func (r *Route) Add(namespace *models.Namespace, route *models.Route) (*models.R
 
 func (r *Route) Set(route *models.Route) (*models.Route, error) {
 
-	log.V(logLevel).Debugf("%s:update:> update route %s", logRoutePrefix, route.Meta.Name)
+	log.Debugf("%s:update:> update route %s", logRoutePrefix, route.Meta.Name)
 
 	if err := r.storage.Set(r.context, r.storage.Collection().Route(),
 		route.SelfLink().String(), route, nil); err != nil {
-		log.V(logLevel).Errorf("%s:update:> update route err: %v", logRoutePrefix, err)
+		log.Errorf("%s:update:> update route err: %v", logRoutePrefix, err)
 		return nil, err
 	}
 
@@ -134,11 +134,11 @@ func (r *Route) Set(route *models.Route) (*models.Route, error) {
 
 func (r *Route) Del(route *models.Route) error {
 
-	log.V(logLevel).Debugf("%s:remove:> remove route %#v", logRoutePrefix, route)
+	log.Debugf("%s:remove:> remove route %#v", logRoutePrefix, route)
 
 	if err := r.storage.Del(r.context, r.storage.Collection().Route(),
 		route.SelfLink().String()); err != nil {
-		log.V(logLevel).Errorf("%s:remove:> remove route  err: %v", logRoutePrefix, err)
+		log.Errorf("%s:remove:> remove route  err: %v", logRoutePrefix, err)
 		return err
 	}
 
@@ -147,7 +147,7 @@ func (r *Route) Del(route *models.Route) error {
 
 func (r *Route) Watch(ch chan models.RouteEvent, rev *int64) error {
 
-	log.V(logLevel).Debugf("%s:watch:> watch routes", logRoutePrefix)
+	log.Debugf("%s:watch:> watch routes", logRoutePrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()
@@ -190,7 +190,7 @@ func (r *Route) Watch(ch chan models.RouteEvent, rev *int64) error {
 }
 
 func (r *Route) ManifestMap(ingress string) (*models.RouteManifestMap, error) {
-	log.V(logLevel).Debug("%s:ManifestMap:> get route manifest map by ingress %s", logRoutePrefix, ingress)
+	log.Debug("%s:ManifestMap:> get route manifest map by ingress %s", logRoutePrefix, ingress)
 
 	var (
 		mf = models.NewRouteManifestMap()
@@ -209,7 +209,7 @@ func (r *Route) ManifestMap(ingress string) (*models.RouteManifestMap, error) {
 }
 
 func (r *Route) ManifestGet(ingress, route string) (*models.RouteManifest, error) {
-	log.V(logLevel).Debug("%s:ManifestGet:> get route manifest by name %s", logRoutePrefix, route)
+	log.Debug("%s:ManifestGet:> get route manifest by name %s", logRoutePrefix, route)
 
 	var (
 		mf = new(models.RouteManifest)
@@ -229,7 +229,7 @@ func (r *Route) ManifestGet(ingress, route string) (*models.RouteManifest, error
 
 func (r *Route) ManifestAdd(ingress, route string, manifest *models.RouteManifest) error {
 
-	log.V(logLevel).Debugf("%s:ManifestAdd:> ", logRoutePrefix)
+	log.Debugf("%s:ManifestAdd:> ", logRoutePrefix)
 
 	if err := r.storage.Put(r.context, r.storage.Collection().Manifest().Route(ingress), route, manifest, nil); err != nil {
 		log.Errorf("%s:ManifestAdd:> err :%s", logRoutePrefix, err.Error())
@@ -240,7 +240,7 @@ func (r *Route) ManifestAdd(ingress, route string, manifest *models.RouteManifes
 }
 
 func (r *Route) ManifestSet(ingress, route string, manifest *models.RouteManifest) error {
-	log.V(logLevel).Debugf("%s:ManifestSet:> ", logRoutePrefix)
+	log.Debugf("%s:ManifestSet:> ", logRoutePrefix)
 
 	if err := r.storage.Set(r.context, r.storage.Collection().Manifest().Route(ingress), route, manifest, nil); err != nil {
 		log.Errorf("%s:ManifestSet:> err :%s", logRoutePrefix, err.Error())
@@ -251,7 +251,7 @@ func (r *Route) ManifestSet(ingress, route string, manifest *models.RouteManifes
 }
 
 func (r *Route) ManifestDel(ingress, route string) error {
-	log.V(logLevel).Debugf("%s:ManifestDel:> %s on ingress %s", logRoutePrefix, route, ingress)
+	log.Debugf("%s:ManifestDel:> %s on ingress %s", logRoutePrefix, route, ingress)
 
 	if err := r.storage.Del(r.context, r.storage.Collection().Manifest().Route(ingress), route); err != nil {
 		log.Errorf("%s:ManifestDel:> err :%s", logRoutePrefix, err.Error())
@@ -262,7 +262,7 @@ func (r *Route) ManifestDel(ingress, route string) error {
 }
 
 func (r *Route) ManifestWatch(ingress string, ch chan models.RouteManifestEvent, rev *int64) error {
-	log.V(logLevel).Debugf("%s:watch:> watch routes manifest", logRoutePrefix)
+	log.Debugf("%s:watch:> watch routes manifest", logRoutePrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

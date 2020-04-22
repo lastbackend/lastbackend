@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"io"
 	"net/http"
 	"os"
@@ -33,8 +34,7 @@ import (
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/cleaner"
 	"github.com/lastbackend/lastbackend/internal/util/filesystem"
-	"github.com/lastbackend/lastbackend/tools/log"
-)
+	)
 
 const (
 	logPodPrefix               = "node:runtime:pod:>"
@@ -59,7 +59,8 @@ const tplScript = `
 `
 
 func (r Runtime) PodManage(ctx context.Context, key string, manifest *models.PodManifest) error {
-	log.V(logLevel).Debugf("%s provision pod: %s", logPodPrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s provision pod: %s", logPodPrefix, key)
 
 	//==========================================================================
 	// Destroy pod =============================================================
@@ -69,7 +70,7 @@ func (r Runtime) PodManage(ctx context.Context, key string, manifest *models.Pod
 	if manifest.State.Destroy {
 
 		if task := r.state.Tasks().GetTask(key); task != nil {
-			log.V(logLevel).Debugf("%s cancel pod creating: %s", logPodPrefix, key)
+			log.Debugf("%s cancel pod creating: %s", logPodPrefix, key)
 			task.Cancel()
 		}
 
@@ -83,7 +84,7 @@ func (r Runtime) PodManage(ctx context.Context, key string, manifest *models.Pod
 			return nil
 		}
 
-		log.V(logLevel).Debugf("%s pod found > destroy it: %s", logPodPrefix, key)
+		log.Debugf("%s pod found > destroy it: %s", logPodPrefix, key)
 
 		r.PodDestroy(ctx, key, p)
 
@@ -132,7 +133,7 @@ func (r Runtime) PodManage(ctx context.Context, key string, manifest *models.Pod
 					vol := r.state.Volumes().GetVolume(name)
 
 					if vol == nil {
-						log.V(logLevel).Debugf("%s update pod volume: volume not found: create %s: %s", logPodPrefix, key, v.Name)
+						log.Debugf("%s update pod volume: volume not found: create %s: %s", logPodPrefix, key, v.Name)
 
 						vs, err := r.PodVolumeCreate(ctx, key, v)
 						if err != nil {
@@ -167,7 +168,7 @@ func (r Runtime) PodManage(ctx context.Context, key string, manifest *models.Pod
 		}
 	}
 
-	log.V(logLevel).Debugf("%s pod not found > create it: %s", logPodPrefix, key)
+	log.Debugf("%s pod not found > create it: %s", logPodPrefix, key)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	r.state.Tasks().AddTask(key, &models.NodeTask{Cancel: cancel})
@@ -205,7 +206,7 @@ func (r Runtime) PodRestart(ctx context.Context, key string) error {
 }
 
 func (r Runtime) PodCreate(ctx context.Context, key string, manifest *models.PodManifest) (*models.PodStatus, error) {
-
+	log := logger.WithContext(context.Background())
 	var (
 		status    = models.NewPodStatus()
 		namespace = r.getPodNamespace(key)
@@ -219,7 +220,7 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *models.Pod
 		}
 	)
 
-	log.V(logLevel).Debugf("%s create pod: %s", logPodPrefix, key)
+	log.Debugf("%s create pod: %s", logPodPrefix, key)
 
 	//==========================================================================
 	// Pull image ==============================================================
@@ -229,7 +230,7 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *models.Pod
 
 	r.state.Pods().AddPod(key, status)
 
-	log.V(logLevel).Debugf("%s have %d volumes", logPodPrefix, len(manifest.Template.Volumes))
+	log.Debugf("%s have %d volumes", logPodPrefix, len(manifest.Template.Volumes))
 	for _, v := range manifest.Template.Volumes {
 
 		var name string
@@ -241,7 +242,7 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *models.Pod
 
 		vol := r.state.Volumes().GetVolume(name)
 		if vol == nil {
-			log.V(logLevel).Debugf("%s update pod volume: volume not found: create %s: %s", logPodPrefix, key, v.Name)
+			log.Debugf("%s update pod volume: volume not found: create %s: %s", logPodPrefix, key, v.Name)
 
 			vs, err := r.PodVolumeCreate(ctx, key, v)
 			if err != nil {
@@ -294,10 +295,10 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *models.Pod
 		r.state.Pods().SetPod(key, status)
 	}
 
-	log.V(logLevel).Debugf("%s have %d images", logPodPrefix, len(manifest.Template.Containers))
+	log.Debugf("%s have %d images", logPodPrefix, len(manifest.Template.Containers))
 
 	for _, c := range manifest.Template.Containers {
-		log.V(logLevel).Debugf("%s pull image %s for pod if needed", logPodPrefix, c.Image.Name)
+		log.Debugf("%s pull image %s for pod if needed", logPodPrefix, c.Image.Name)
 		if err := r.ImagePull(ctx, namespace, &c.Image); err != nil {
 			log.Errorf("%s can not pull image: %s", logPodPrefix, err.Error())
 			return setError(err)
@@ -319,7 +320,7 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *models.Pod
 	for _, s := range manifest.Template.Containers {
 		for _, e := range s.EnvVars {
 			if e.Secret.Name != models.EmptyString {
-				log.V(logLevel).Debugf("%s get secret info from api", logPodPrefix)
+				log.Debugf("%s get secret info from api", logPodPrefix)
 				if err := r.SecretCreate(ctx, namespace, e.Secret.Name); err != nil {
 					log.Errorf("%s can not fetch secret from api", logPodPrefix)
 				}
@@ -401,7 +402,7 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *models.Pod
 	// run tasks
 	for _, t := range manifest.Runtime.Tasks {
 
-		log.V(logLevel).Debugf("%s start task %s", logPodPrefix, t.Name)
+		log.Debugf("%s start task %s", logPodPrefix, t.Name)
 
 		var f, e bool
 
@@ -501,16 +502,16 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *models.Pod
 }
 
 func (r Runtime) PodClean(ctx context.Context, status *models.PodStatus) {
-
+	log := logger.WithContext(context.Background())
 	for _, c := range status.Runtime.Services {
-		log.V(logLevel).Debugf("%s remove unnecessary container: %s", logPodPrefix, c.ID)
+		log.Debugf("%s remove unnecessary container: %s", logPodPrefix, c.ID)
 		if err := r.cri.Remove(ctx, c.ID, true, true); err != nil {
 			log.Warnf("%s can-not remove unnecessary container %s: %s", logPodPrefix, c.ID, err)
 		}
 	}
 
 	for _, c := range status.Runtime.Services {
-		log.V(logLevel).Debugf("%s try to clean image: %s", logPodPrefix, c.Image.Name)
+		log.Debugf("%s try to clean image: %s", logPodPrefix, c.Image.Name)
 		//if err := ImageRemove(ctx, c.Image.Name); err != nil {
 		//	log.Errorf("%s can not remove image: %s", logPodPrefix, err.Error())
 		//	continue
@@ -520,7 +521,8 @@ func (r Runtime) PodClean(ctx context.Context, status *models.PodStatus) {
 }
 
 func (r Runtime) PodExit(ctx context.Context, pod string, status *models.PodStatus, clean bool) {
-	log.V(logLevel).Debugf("%s exit pod: %s", logPodPrefix, pod)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s exit pod: %s", logPodPrefix, pod)
 
 	timeout := time.Duration(3 * time.Second)
 	for _, c := range status.Runtime.Services {
@@ -563,7 +565,8 @@ func (r Runtime) PodExit(ctx context.Context, pod string, status *models.PodStat
 }
 
 func (r Runtime) PodDestroy(ctx context.Context, pod string, status *models.PodStatus) {
-	log.V(logLevel).Debugf("%s try to remove pod: %s", logPodPrefix, pod)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s try to remove pod: %s", logPodPrefix, pod)
 
 	r.PodClean(ctx, status)
 	r.state.Pods().DelPod(pod)
@@ -588,8 +591,8 @@ func (r Runtime) PodDestroy(ctx context.Context, pod string, status *models.PodS
 }
 
 func (r Runtime) PodRestore(ctx context.Context) error {
-
-	log.V(logLevel).Debugf("%s runtime restore state", logPodPrefix)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s runtime restore state", logPodPrefix)
 
 	cl, err := r.cri.List(ctx, true)
 	if err != nil {
@@ -603,7 +606,7 @@ func (r Runtime) PodRestore(ctx context.Context) error {
 			continue
 		}
 
-		log.V(logLevel).Debugf("%s pod [%s] > container restore %s", logPodPrefix, c.Pod, c.ID)
+		log.Debugf("%s pod [%s] > container restore %s", logPodPrefix, c.Pod, c.ID)
 
 		status := r.state.Pods().GetPod(c.Pod)
 		if status == nil {
@@ -680,17 +683,17 @@ func (r Runtime) PodRestore(ctx context.Context) error {
 		status.Runtime.Services[cs.ID] = cs
 		status.Network.PodIP = c.Network.IPAddress
 
-		log.V(logLevel).Debugf("%s container restored %s", logPodPrefix, c.ID)
+		log.Debugf("%s container restored %s", logPodPrefix, c.ID)
 		r.state.Pods().SetPod(key, status)
-		log.V(logLevel).Debugf("%s Pod restored %s: %s", key, status.State)
+		log.Debugf("%s Pod restored %s: %s", key, status.State)
 	}
 
 	return nil
 }
 
 func (r Runtime) PodLogs(ctx context.Context, id string, follow bool, s io.Writer, doneChan chan bool) error {
-
-	log.V(logLevel).Debugf("%s get container [%s] logs streaming", logPodPrefix, id)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get container [%s] logs streaming", logPodPrefix, id)
 
 	var (
 		cri    = r.cri
@@ -704,7 +707,7 @@ func (r Runtime) PodLogs(ctx context.Context, id string, follow bool, s io.Write
 		return err
 	}
 	defer func() {
-		log.V(logLevel).Debugf("%s stop container [%s] logs streaming", logPodPrefix, id)
+		log.Debugf("%s stop container [%s] logs streaming", logPodPrefix, id)
 		ctx.Done()
 		close(done)
 		req.Close()
@@ -722,7 +725,7 @@ func (r Runtime) PodLogs(ctx context.Context, id string, follow bool, s io.Write
 				if err != nil {
 
 					if err == context.Canceled {
-						log.V(logLevel).Debugf("%s Stream is canceled", logPodPrefix)
+						log.Debugf("%s Stream is canceled", logPodPrefix)
 						return
 					}
 
@@ -763,8 +766,8 @@ func (r Runtime) PodLogs(ctx context.Context, id string, follow bool, s io.Write
 }
 
 func (r Runtime) PodSpecCheck(ctx context.Context, key string, manifest *models.PodManifest) bool {
-
-	log.V(logLevel).Infof("%s pod check spec pod: %s", logPodPrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Infof("%s pod check spec pod: %s", logPodPrefix, key)
 
 	state := r.state.Pods().GetPod(key)
 
@@ -1009,8 +1012,8 @@ func (r Runtime) PodSpecCheck(ctx context.Context, key string, manifest *models.
 }
 
 func (r Runtime) PodVolumesCheck(ctx context.Context, pod string, spec []*models.SpecTemplateVolume) bool {
-
-	log.V(logLevel).Debugf("%s check pod volumes: %s: %d", logPodPrefix, pod, len(spec))
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s check pod volumes: %s: %d", logPodPrefix, pod, len(spec))
 
 	for _, v := range spec {
 
@@ -1041,8 +1044,8 @@ func (r Runtime) PodVolumesCheck(ctx context.Context, pod string, spec []*models
 }
 
 func (r Runtime) PodVolumeUpdate(ctx context.Context, pod string, spec *models.SpecTemplateVolume) (*models.VolumeStatus, error) {
-
-	log.V(logLevel).Debugf("%s update pod volume: %s: %s", logPodPrefix, pod, spec.Name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s update pod volume: %s: %s", logPodPrefix, pod, spec.Name)
 
 	path := strings.Replace(pod, ":", "-", -1)
 	path = fmt.Sprintf("%s-%s", path, spec.Name)
@@ -1071,8 +1074,8 @@ func (r Runtime) PodVolumeUpdate(ctx context.Context, pod string, spec *models.S
 }
 
 func (r Runtime) PodVolumeAttach(ctx context.Context, pod string, spec *models.SpecTemplateVolume) (*models.VolumeClaim, error) {
-
-	log.V(logLevel).Debugf("%s attach pod volume: %s: %s", logPodPrefix, pod, spec.Name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s attach pod volume: %s: %s", logPodPrefix, pod, spec.Name)
 
 	var name = fmt.Sprintf("%s:%s", r.getPodNamespace(pod), spec.Name)
 
@@ -1093,8 +1096,8 @@ func (r Runtime) PodVolumeAttach(ctx context.Context, pod string, spec *models.S
 }
 
 func (r Runtime) PodVolumeCreate(ctx context.Context, pod string, spec *models.SpecTemplateVolume) (*models.VolumeStatus, error) {
-
-	log.V(logLevel).Debugf("%s create pod volume: %s:%s", logPodPrefix, pod, spec.Name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s create pod volume: %s:%s", logPodPrefix, pod, spec.Name)
 
 	hostPath := strings.Replace(pod, ":", "-", -1)
 	hostPath = fmt.Sprintf("%s-%s", hostPath, spec.Name)

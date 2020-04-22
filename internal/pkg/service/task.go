@@ -39,10 +39,10 @@ type Task struct {
 
 func (t *Task) Runtime() (*models.System, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get task runtime info", logTaskPrefix)
+	log.Debugf("%s:get:> get task runtime info", logTaskPrefix)
 	runtime, err := t.storage.Info(t.context, t.storage.Collection().Task(), "")
 	if err != nil {
-		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logTaskPrefix, err)
+		log.Errorf("%s:get:> get runtime info error: %s", logTaskPrefix, err)
 		return &runtime.System, err
 	}
 	return &runtime.System, nil
@@ -50,18 +50,18 @@ func (t *Task) Runtime() (*models.System, error) {
 
 func (t *Task) Get(selflink string) (*models.Task, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get by selflink %s", logTaskPrefix, selflink)
+	log.Debugf("%s:get:> get by selflink %s", logTaskPrefix, selflink)
 
 	task := new(models.Task)
 	err := t.storage.Get(t.context, t.storage.Collection().Task(), selflink, task, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> get task by selflink %s not found", logTaskPrefix, selflink)
+			log.Warnf("%s:get:> get task by selflink %s not found", logTaskPrefix, selflink)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> get task by selflink %s error: %v", logTaskPrefix, selflink, err)
+		log.Errorf("%s:get:> get task by selflink %s error: %v", logTaskPrefix, selflink, err)
 		return nil, err
 	}
 
@@ -69,33 +69,33 @@ func (t *Task) Get(selflink string) (*models.Task, error) {
 }
 
 func (t *Task) ListByNamespace(namespace string) (*models.TaskList, error) {
-	log.V(logLevel).Debugf("%s:list:> by namespace %s", logTaskPrefix, namespace)
+	log.Debugf("%s:list:> by namespace %s", logTaskPrefix, namespace)
 	tasks := models.NewTaskList()
 
 	q := t.storage.Filter().Task().ByNamespace(namespace)
 	err := t.storage.List(t.context, t.storage.Collection().Task(), q, tasks, nil)
 	if err != nil {
-		log.V(logLevel).Error("%s:list:> by namespace %s err: %v", logTaskPrefix, namespace, err)
+		log.Error("%s:list:> by namespace %s err: %v", logTaskPrefix, namespace, err)
 		return nil, err
 	}
 
-	log.V(logLevel).Debugf("%s:list:> by namespace %s result: %d", logTaskPrefix, namespace, len(tasks.Items))
+	log.Debugf("%s:list:> by namespace %s result: %d", logTaskPrefix, namespace, len(tasks.Items))
 
 	return tasks, nil
 }
 
 func (t *Task) ListByJob(namespace, job string) (*models.TaskList, error) {
-	log.V(logLevel).Debugf("%s:list:> by namespace %s", logTaskPrefix, namespace)
+	log.Debugf("%s:list:> by namespace %s", logTaskPrefix, namespace)
 	tasks := models.NewTaskList()
 
 	q := t.storage.Filter().Task().ByJob(namespace, job)
 	err := t.storage.List(t.context, t.storage.Collection().Task(), q, tasks, nil)
 	if err != nil {
-		log.V(logLevel).Error("%s:list:> by namespace %s err: %v", logTaskPrefix, namespace, err)
+		log.Error("%s:list:> by namespace %s err: %v", logTaskPrefix, namespace, err)
 		return nil, err
 	}
 
-	log.V(logLevel).Debugf("%s:list:> by namespace %s result: %d", logTaskPrefix, namespace, len(tasks.Items))
+	log.Debugf("%s:list:> by namespace %s result: %d", logTaskPrefix, namespace, len(tasks.Items))
 
 	return tasks, nil
 }
@@ -116,7 +116,7 @@ func (t *Task) Create(task *models.Task) (*models.Task, error) {
 // Cancel task
 func (t *Task) Cancel(task *models.Task) error {
 
-	log.V(logLevel).Debugf("%s:cancel:> cancel task %s", logTaskPrefix, task.Meta.Name)
+	log.Debugf("%s:cancel:> cancel task %s", logTaskPrefix, task.Meta.Name)
 
 	// mark task for destroy
 	task.Spec.State.Cancel = true
@@ -125,7 +125,7 @@ func (t *Task) Cancel(task *models.Task) error {
 
 	if err := t.storage.Set(t.context, t.storage.Collection().Task(),
 		task.SelfLink().String(), task, nil); err != nil {
-		log.V(logLevel).Debugf("%s:destroy: destroy task %s err: %v", logTaskPrefix, task.Meta.Name, err)
+		log.Debugf("%s:destroy: destroy task %s err: %v", logTaskPrefix, task.Meta.Name, err)
 		return err
 	}
 
@@ -135,11 +135,11 @@ func (t *Task) Cancel(task *models.Task) error {
 // Update task
 func (t *Task) Set(task *models.Task) error {
 
-	log.V(logLevel).Debugf("%s:set:> set task %s", logTaskPrefix, task.Meta.Name)
+	log.Debugf("%s:set:> set task %s", logTaskPrefix, task.Meta.Name)
 
 	if err := t.storage.Set(t.context, t.storage.Collection().Task(),
 		task.SelfLink().String(), task, nil); err != nil {
-		log.V(logLevel).Debugf("%s:set: set task %s err: %v", logTaskPrefix, task.Meta.Name, err)
+		log.Debugf("%s:set: set task %s err: %v", logTaskPrefix, task.Meta.Name, err)
 		return err
 	}
 
@@ -149,7 +149,7 @@ func (t *Task) Set(task *models.Task) error {
 // Destroy task
 func (t *Task) Destroy(task *models.Task) error {
 
-	log.V(logLevel).Debugf("%s:destroy:> destroy task %s", logTaskPrefix, task.Meta.Name)
+	log.Debugf("%s:destroy:> destroy task %s", logTaskPrefix, task.Meta.Name)
 
 	// mark task for destroy
 	task.Spec.State.Destroy = true
@@ -158,7 +158,7 @@ func (t *Task) Destroy(task *models.Task) error {
 
 	if err := t.storage.Set(t.context, t.storage.Collection().Task(),
 		task.SelfLink().String(), task, nil); err != nil {
-		log.V(logLevel).Debugf("%s:destroy:> destroy task %s err: %v", logTaskPrefix, task.Meta.Name, err)
+		log.Debugf("%s:destroy:> destroy task %s err: %v", logTaskPrefix, task.Meta.Name, err)
 		return err
 	}
 
@@ -168,10 +168,10 @@ func (t *Task) Destroy(task *models.Task) error {
 // Remove task
 func (t *Task) Remove(task *models.Task) error {
 
-	log.V(logLevel).Debugf("%s:remove:> remove task %s", logTaskPrefix, task.Meta.Name)
+	log.Debugf("%s:remove:> remove task %s", logTaskPrefix, task.Meta.Name)
 	if err := t.storage.Del(t.context, t.storage.Collection().Task(),
 		task.SelfLink().String()); err != nil {
-		log.V(logLevel).Debugf("%s:remove:> remove task %s err: %v", logTaskPrefix, task.Meta.Name, err)
+		log.Debugf("%s:remove:> remove task %s err: %v", logTaskPrefix, task.Meta.Name, err)
 		return err
 	}
 
@@ -184,7 +184,7 @@ func (t *Task) Watch(dt chan models.TaskEvent, rev *int64) error {
 	done := make(chan bool)
 	watcher := storage.NewWatcher()
 
-	log.V(logLevel).Debugf("%s:watch:> watch tasks", logTaskPrefix)
+	log.Debugf("%s:watch:> watch tasks", logTaskPrefix)
 
 	go func() {
 		for {

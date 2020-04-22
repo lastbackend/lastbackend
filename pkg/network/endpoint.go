@@ -20,11 +20,11 @@ package network
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/network/state"
-	"github.com/lastbackend/lastbackend/tools/log"
-)
+	)
 
 const (
 	logEndpointPrefix = "network:endpoint:>"
@@ -35,7 +35,8 @@ func (n *Network) Endpoints() *state.EndpointState {
 }
 
 func (n *Network) EndpointManage(ctx context.Context, key string, manifest *models.EndpointManifest) error {
-	log.V(logLevel).Debugf("%s manage: %s", logEndpointPrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s manage: %s", logEndpointPrefix, key)
 
 	state := n.state.Endpoints().GetEndpoint(key)
 
@@ -46,7 +47,7 @@ func (n *Network) EndpointManage(ctx context.Context, key string, manifest *mode
 			return nil
 		}
 
-		log.V(logLevel).Debugf("%s check endpoint: %s", logEndpointPrefix, key)
+		log.Debugf("%s check endpoint: %s", logEndpointPrefix, key)
 		if !endpointEqual(manifest, state) {
 			state, err := n.EndpointUpdate(ctx, key, state, manifest)
 			if err != nil {
@@ -75,7 +76,8 @@ func (n *Network) EndpointManage(ctx context.Context, key string, manifest *mode
 }
 
 func (n *Network) EndpointRestore(ctx context.Context) error {
-	log.V(logLevel).Debugf("%s restore", logEndpointPrefix)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s restore", logEndpointPrefix)
 	cpi := n.cpi
 	endpoints, err := cpi.Info(ctx)
 	if err != nil {
@@ -87,62 +89,65 @@ func (n *Network) EndpointRestore(ctx context.Context) error {
 }
 
 func (n *Network) EndpointCreate(ctx context.Context, key string, manifest *models.EndpointManifest) (*models.EndpointState, error) {
-	log.V(logLevel).Debugf("%s create %s", logEndpointPrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s create %s", logEndpointPrefix, key)
 	cpi := n.cpi
 	return cpi.Create(ctx, manifest)
 }
 
 func (n *Network) EndpointUpdate(ctx context.Context, endpoint string, state *models.EndpointState, manifest *models.EndpointManifest) (*models.EndpointState, error) {
-	log.V(logLevel).Debugf("%s update %s", logEndpointPrefix, endpoint)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s update %s", logEndpointPrefix, endpoint)
 	cpi := n.cpi
 	return cpi.Update(ctx, state, manifest)
 }
 
 func (n *Network) EndpointDestroy(ctx context.Context, endpoint string, state *models.EndpointState) error {
-	log.V(logLevel).Debugf("%s destroy: %s", logEndpointPrefix, endpoint)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s destroy: %s", logEndpointPrefix, endpoint)
 	cpi := n.cpi
 	return cpi.Destroy(ctx, state)
 }
 
 func endpointEqual(manifest *models.EndpointManifest, state *models.EndpointState) bool {
-
+	log := logger.WithContext(context.Background())
 	if state.IP != manifest.IP {
-		log.V(logLevel).Debugf("%s ips not match %s != %s", logEndpointPrefix, manifest.IP, state.IP)
+		log.Debugf("%s ips not match %s != %s", logEndpointPrefix, manifest.IP, state.IP)
 		return false
 	}
 
 	if manifest.Strategy.Route != manifest.Strategy.Route {
-		log.V(logLevel).Debugf("%s route strategy not match %s != %s", logEndpointPrefix, manifest.Strategy.Route, state.Strategy.Route)
+		log.Debugf("%s route strategy not match %s != %s", logEndpointPrefix, manifest.Strategy.Route, state.Strategy.Route)
 		return false
 	}
 
 	if manifest.Strategy.Bind != manifest.Strategy.Bind {
-		log.V(logLevel).Debugf("%s bind strategy not match %s != %s", logEndpointPrefix, manifest.Strategy.Bind, state.Strategy.Bind)
+		log.Debugf("%s bind strategy not match %s != %s", logEndpointPrefix, manifest.Strategy.Bind, state.Strategy.Bind)
 		return false
 	}
 
 	for port, pm := range manifest.PortMap {
 
 		if _, ok := state.PortMap[port]; !ok {
-			log.V(logLevel).Debugf("%s portmap not found %s", logEndpointPrefix, pm)
+			log.Debugf("%s portmap not found %s", logEndpointPrefix, pm)
 			return false
 		}
 
 		if state.PortMap[port] != pm {
-			log.V(logLevel).Debugf("%s portmap not match %s != %s", logEndpointPrefix, pm, state.PortMap[port])
+			log.Debugf("%s portmap not match %s != %s", logEndpointPrefix, pm, state.PortMap[port])
 			return false
 		}
 	}
 
 	for port, pm := range state.PortMap {
 		if _, ok := manifest.PortMap[port]; !ok {
-			log.V(logLevel).Debugf("%s portmap should be deleted %#v", logEndpointPrefix, pm)
+			log.Debugf("%s portmap should be deleted %#v", logEndpointPrefix, pm)
 			return false
 		}
 	}
 
 	if len(manifest.Upstreams) != len(state.Upstreams) {
-		log.V(logLevel).Debugf("%s upstreams count changed %d != %d", logEndpointPrefix, len(manifest.Upstreams), len(state.Upstreams))
+		log.Debugf("%s upstreams count changed %d != %d", logEndpointPrefix, len(manifest.Upstreams), len(state.Upstreams))
 		return false
 	}
 
@@ -154,7 +159,7 @@ func endpointEqual(manifest *models.EndpointManifest, state *models.EndpointStat
 			}
 		}
 		if !f {
-			log.V(logLevel).Debugf("%s upstream not found: %s", logEndpointPrefix, up)
+			log.Debugf("%s upstream not found: %s", logEndpointPrefix, up)
 			return false
 		}
 	}
@@ -167,7 +172,7 @@ func endpointEqual(manifest *models.EndpointManifest, state *models.EndpointStat
 			}
 		}
 		if !f {
-			log.V(logLevel).Debugf("%s upstream should be deleted: %s", logEndpointPrefix, up)
+			log.Debugf("%s upstream should be deleted: %s", logEndpointPrefix, up)
 			return false
 		}
 	}

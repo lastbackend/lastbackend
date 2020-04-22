@@ -19,8 +19,9 @@
 package state
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"strings"
 	"sync"
 )
@@ -33,12 +34,14 @@ type ImageState struct {
 }
 
 func (s *ImageState) GetImages() map[string]*models.Image {
-	log.V(logLevel).Debugf("%s get images", logImagePrefix)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get images", logImagePrefix)
 	return s.images
 }
 
 func (s *ImageState) SetImages(images map[string]*models.Image) {
-	log.V(logLevel).Debugf("%s set images: %d", logImagePrefix, len(images))
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s set images: %d", logImagePrefix, len(images))
 	for _, image := range images {
 		for _, tag := range image.Meta.Tags {
 			s.images[tag] = image
@@ -48,7 +51,8 @@ func (s *ImageState) SetImages(images map[string]*models.Image) {
 }
 
 func (s *ImageState) GetImage(tag string) *models.Image {
-	log.V(logLevel).Debugf("%s get image: %s", logImagePrefix, tag)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get image: %s", logImagePrefix, tag)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -64,12 +68,14 @@ func (s *ImageState) GetImage(tag string) *models.Image {
 }
 
 func (s *ImageState) AddImage(tag string, image *models.Image) {
-	log.V(logLevel).Debugf("%s add image: %s", logImagePrefix, image.Meta.Name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s add image: %s", logImagePrefix, image.Meta.Name)
 	s.SetImage(tag, image)
 }
 
 func (s *ImageState) SetImage(tag string, image *models.Image) {
-	log.V(logLevel).Debugf("%s set image: %s", logImagePrefix, image.Meta.Name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s set image: %s", logImagePrefix, image.Meta.Name)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -81,7 +87,8 @@ func (s *ImageState) SetImage(tag string, image *models.Image) {
 }
 
 func (s *ImageState) DelImage(link string) {
-	log.V(logLevel).Debugf("%s del image: %s", logImagePrefix, link)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s del image: %s", logImagePrefix, link)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if _, ok := s.images[link]; ok {

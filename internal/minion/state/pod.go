@@ -19,11 +19,12 @@
 package state
 
 import (
+	"context"
 	"errors"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"sync"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const logPodPrefix = "node:state:pods:>"
@@ -55,22 +56,26 @@ func (s *PodState) Watch(watcher chan string, done chan bool) {
 }
 
 func (s *PodState) GetPodsCount() int {
-	log.V(logLevel).Debugf("%s: get pods count: %d", logPodPrefix, s.stats.pods)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: get pods count: %d", logPodPrefix, s.stats.pods)
 	return s.stats.pods
 }
 
 func (s *PodState) GetContainersCount() int {
-	log.V(logLevel).Debugf("%s: get containers count: %d", logPodPrefix, s.stats.containers)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: get containers count: %d", logPodPrefix, s.stats.containers)
 	return s.stats.containers
 }
 
 func (s *PodState) GetPods() map[string]*models.PodStatus {
-	log.V(logLevel).Debugf("%s: get pods", logPodPrefix)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: get pods", logPodPrefix)
 	return s.pods
 }
 
 func (s *PodState) SetPods(pods map[string]*models.PodStatus) {
-	log.V(logLevel).Debugf("%s: set pods: %d", logPodPrefix, len(pods))
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: set pods: %d", logPodPrefix, len(pods))
 	for key, pod := range pods {
 		state(pod)
 		s.pods[key] = pod
@@ -79,7 +84,8 @@ func (s *PodState) SetPods(pods map[string]*models.PodStatus) {
 }
 
 func (s *PodState) GetPod(key string) *models.PodStatus {
-	log.V(logLevel).Debugf("%s: get pod: %s", logPodPrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: get pod: %s", logPodPrefix, key)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	pod, ok := s.pods[key]
@@ -90,19 +96,22 @@ func (s *PodState) GetPod(key string) *models.PodStatus {
 }
 
 func (s *PodState) AddPod(key string, pod *models.PodStatus) {
-	log.V(logLevel).Debugf("%s: add pod: %s: %s ", logPodPrefix, key, pod.Status)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: add pod: %s: %s ", logPodPrefix, key, pod.Status)
 	s.SetPod(key, pod)
 }
 
 func (s *PodState) SetLocal(key string) {
-	log.V(logLevel).Debugf("%s: set pod: %s as local", logPodPrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: set pod: %s as local", logPodPrefix, key)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.local[key] = true
 }
 
 func (s *PodState) IsLocal(key string) bool {
-	log.V(logLevel).Debugf("%s: check pod: %s is local", logPodPrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: check pod: %s is local", logPodPrefix, key)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if _, ok := s.local[key]; ok {
@@ -113,7 +122,8 @@ func (s *PodState) IsLocal(key string) bool {
 }
 
 func (s *PodState) SetPod(key string, pod *models.PodStatus) {
-	log.V(logLevel).Debugf("%s: set pod %s: %s", logPodPrefix, key, pod.Status)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: set pod %s: %s", logPodPrefix, key, pod.Status)
 
 	s.lock.Lock()
 	if _, ok := s.pods[key]; ok {
@@ -136,7 +146,8 @@ func (s *PodState) SetPod(key string, pod *models.PodStatus) {
 }
 
 func (s *PodState) DelPod(key string) {
-	log.V(logLevel).Debugf("%s: del pod: %s", logPodPrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: del pod: %s", logPodPrefix, key)
 	s.lock.Lock()
 	if _, ok := s.pods[key]; ok {
 		delete(s.pods, key)
@@ -147,7 +158,8 @@ func (s *PodState) DelPod(key string) {
 }
 
 func (s *PodState) GetContainer(id string) *models.PodContainer {
-	log.V(logLevel).Debugf("%s: get container: %s", logPodPrefix, id)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: get container: %s", logPodPrefix, id)
 	c, ok := s.containers[id]
 	if !ok {
 		return nil
@@ -156,7 +168,8 @@ func (s *PodState) GetContainer(id string) *models.PodContainer {
 }
 
 func (s *PodState) AddContainer(c *models.PodContainer) {
-	log.V(logLevel).Debugf("%s: add container: %s", logPodPrefix, c.ID)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: add container: %s", logPodPrefix, c.ID)
 	s.lock.Lock()
 	if _, ok := s.containers[c.ID]; !ok {
 		s.stats.containers++
@@ -167,7 +180,8 @@ func (s *PodState) AddContainer(c *models.PodContainer) {
 }
 
 func (s *PodState) SetContainer(c *models.PodContainer) {
-	log.V(logLevel).Debugf("%s: set container: %s", logPodPrefix, c.ID)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: set container: %s", logPodPrefix, c.ID)
 	s.lock.Lock()
 
 	if _, ok := s.containers[c.ID]; !ok {
@@ -179,7 +193,8 @@ func (s *PodState) SetContainer(c *models.PodContainer) {
 }
 
 func (s *PodState) DelContainer(c *models.PodContainer) {
-	log.V(logLevel).Debugf("%s: del container: %s", logPodPrefix, c.ID)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: del container: %s", logPodPrefix, c.ID)
 	s.lock.Lock()
 	if _, ok := s.containers[c.ID]; ok {
 		delete(s.containers, c.ID)

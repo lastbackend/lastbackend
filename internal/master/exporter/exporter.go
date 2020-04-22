@@ -53,7 +53,7 @@ func New() *Exporter {
 }
 
 func (c *Exporter) Connect(ctx context.Context) error {
-	log.V(logLevel).Debugf("%s:connect:> connect init", logPrefix)
+	log.Debugf("%s:connect:> connect init", logPrefix)
 
 	return nil
 }

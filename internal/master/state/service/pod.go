@@ -35,7 +35,7 @@ const logPodPrefix = "state:observer:pod"
 // PodObserve function manages pod handlers based on pod state
 func PodObserve(ss *ServiceState, p *models.Pod) error {
 
-	log.V(logLevel).Debugf("%s:> observe start: %s > state %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
+	log.Debugf("%s:> observe start: %s > state %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 	// Call pod state manager methods
 	switch p.Status.State {
 	case models.StateCreated:
@@ -80,7 +80,7 @@ func PodObserve(ss *ServiceState, p *models.Pod) error {
 
 	}
 
-	log.V(logLevel).Debugf("%s:> observe state finish: %s", logPodPrefix, p.SelfLink().String())
+	log.Debugf("%s:> observe state finish: %s", logPodPrefix, p.SelfLink().String())
 
 	_, sl := p.SelfLink().Parent()
 
@@ -95,11 +95,11 @@ func PodObserve(ss *ServiceState, p *models.Pod) error {
 
 	d, ok := ss.deployment.list[sl.String()]
 	if !ok {
-		log.V(logLevel).Debugf("%s:> deployment node found: %s", logPodPrefix, sl.String())
+		log.Debugf("%s:> deployment node found: %s", logPodPrefix, sl.String())
 		return nil
 	}
 
-	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
+	log.Debugf("%s:> observe finish: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 
 	if err := deploymentStatusState(ss.storage, d, pl); err != nil {
 		return err
@@ -118,18 +118,18 @@ func PodObserve(ss *ServiceState, p *models.Pod) error {
 
 func handlePodStateCreated(ss *ServiceState, p *models.Pod) error {
 
-	log.V(logLevel).Debugf("%s:> handlePodStateCreated: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
+	log.Debugf("%s:> handlePodStateCreated: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 
 	if err := podProvision(ss, p); err != nil {
 		return err
 	}
-	log.V(logLevel).Debugf("%s handle pod create state finish: %s : %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
+	log.Debugf("%s handle pod create state finish: %s : %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 	return nil
 }
 
 func handlePodStateProvision(ss *ServiceState, p *models.Pod) error {
 
-	log.V(logLevel).Debugf("%s:> handlePodStateProvision: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
+	log.Debugf("%s:> handlePodStateProvision: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 
 	if err := podProvision(ss, p); err != nil {
 		return err
@@ -139,28 +139,28 @@ func handlePodStateProvision(ss *ServiceState, p *models.Pod) error {
 
 func handlePodStateReady(ss *ServiceState, p *models.Pod) error {
 
-	log.V(logLevel).Debugf("%s:> handlePodStateReady: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
+	log.Debugf("%s:> handlePodStateReady: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 
 	return nil
 }
 
 func handlePodStateError(ss *ServiceState, p *models.Pod) error {
 
-	log.V(logLevel).Debugf("%s:> handlePodStateError: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
+	log.Debugf("%s:> handlePodStateError: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 
 	return nil
 }
 
 func handlePodStateDegradation(ss *ServiceState, p *models.Pod) error {
 
-	log.V(logLevel).Debugf("%s:> handlePodStateDegradation: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
+	log.Debugf("%s:> handlePodStateDegradation: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 
 	return nil
 }
 
 func handlePodStateDestroy(ss *ServiceState, p *models.Pod) error {
 
-	log.V(logLevel).Debugf("%s:> handlePodStateDestroy: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
+	log.Debugf("%s:> handlePodStateDestroy: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 
 	if err := podDestroy(ss, p); err != nil {
 		log.Errorf("%s", err.Error())
@@ -172,7 +172,7 @@ func handlePodStateDestroy(ss *ServiceState, p *models.Pod) error {
 
 func handlePodStateDestroyed(ss *ServiceState, p *models.Pod) error {
 
-	log.V(logLevel).Debugf("%s:> handlePodStateDestroyed: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
+	log.Debugf("%s:> handlePodStateDestroyed: %s > %s", logPodPrefix, p.SelfLink().String(), p.Status.State)
 
 	if err := podRemove(ss, p); err != nil {
 		log.Errorf("%s", err.Error())

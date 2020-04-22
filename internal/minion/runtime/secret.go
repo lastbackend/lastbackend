@@ -20,14 +20,14 @@ package runtime
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"strings"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
-)
+	)
 
 func (r Runtime) SecretGet(ctx context.Context, namespace, name string) (*models.Secret, error) {
-
+	log := logger.WithContext(context.Background())
 	cli := r.retClient
 	if cli == nil {
 		return nil, nil
@@ -48,7 +48,7 @@ func (r Runtime) SecretGet(ctx context.Context, namespace, name string) (*models
 }
 
 func (r Runtime) SecretCreate(ctx context.Context, namespace, name string) error {
-
+	log := logger.WithContext(context.Background())
 	cli := r.retClient
 	if cli == nil {
 		return nil
@@ -71,7 +71,7 @@ func (r Runtime) SecretCreate(ctx context.Context, namespace, name string) error
 }
 
 func (r Runtime) SecretUpdate(ctx context.Context, selflink string) error {
-
+	log := logger.WithContext(context.Background())
 	cli := r.retClient
 	if cli == nil {
 		return nil

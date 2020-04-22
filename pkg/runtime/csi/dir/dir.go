@@ -24,7 +24,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
+		"github.com/lastbackend/lastbackend/tools/logger"
 	"io"
 	"io/ioutil"
 	"os"
@@ -99,7 +99,7 @@ func (s *Storage) FilesList(ctx context.Context, state *models.VolumeState) ([]s
 }
 
 func (s *Storage) FilesPut(ctx context.Context, state *models.VolumeState, files map[string]string) error {
-
+	log := logger.WithContext(context.Background())
 	for file, data := range files {
 		path := filepath.Join(state.Path, file)
 		var f *os.File
@@ -190,7 +190,7 @@ func (s *Storage) Remove(ctx context.Context, state *models.VolumeState) error {
 }
 
 func Get(path string) (*Storage, error) {
-
+	log := logger.WithContext(context.Background())
 	log.Debug("Initialize dir storage interface")
 	var s = new(Storage)
 

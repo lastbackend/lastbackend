@@ -20,12 +20,13 @@ package cluster
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/internal/pkg/service"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"time"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const (
@@ -33,8 +34,8 @@ const (
 )
 
 func routeObserve(ss *ClusterState, d *models.Route) error {
-
-	log.V(logLevel).Debugf("%s:> observe start: %s > %s", logPrefixRoute, d.SelfLink().String(), d.Status.State)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s:> observe start: %s > %s", logPrefixRoute, d.SelfLink().String(), d.Status.State)
 
 	switch d.Status.State {
 	case models.StateCreated:
@@ -75,13 +76,14 @@ func routeObserve(ss *ClusterState, d *models.Route) error {
 		break
 	}
 
-	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logPrefixRoute, d.SelfLink().String(), d.Status.State)
+	log.Debugf("%s:> observe finish: %s > %s", logPrefixRoute, d.SelfLink().String(), d.Status.State)
 
 	return nil
 }
 
 func handleRouteStateCreated(cs *ClusterState, v *models.Route) error {
-	log.V(logLevel).Debugf("%s:> handleRouteStateCreated: %s > %s", logPrefixRoute, v.SelfLink().String(), v.Status.State)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s:> handleRouteStateCreated: %s > %s", logPrefixRoute, v.SelfLink().String(), v.Status.State)
 
 	if err := routeProvision(cs, v); err != nil {
 		return err
@@ -90,7 +92,8 @@ func handleRouteStateCreated(cs *ClusterState, v *models.Route) error {
 }
 
 func handleRouteStateProvision(cs *ClusterState, v *models.Route) error {
-	log.V(logLevel).Debugf("%s:> handleRouteStateProvision: %s > %s", logPrefixRoute, v.SelfLink().String(), v.Status.State)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s:> handleRouteStateProvision: %s > %s", logPrefixRoute, v.SelfLink().String(), v.Status.State)
 
 	if err := routeProvision(cs, v); err != nil {
 		return err
@@ -99,17 +102,20 @@ func handleRouteStateProvision(cs *ClusterState, v *models.Route) error {
 }
 
 func handleRouteStateReady(cs *ClusterState, v *models.Route) error {
-	log.V(logLevel).Debugf("%s:> handleRouteStateReady: %s > %s", logPrefixRoute, v.SelfLink().String(), v.Status.State)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s:> handleRouteStateReady: %s > %s", logPrefixRoute, v.SelfLink().String(), v.Status.State)
 	return nil
 }
 
 func handleRouteStateError(cs *ClusterState, v *models.Route) error {
-	log.V(logLevel).Debugf("%s:> handleRouteStateError: %s > %s", logPrefixRoute, v.SelfLink().String(), v.Status.State)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s:> handleRouteStateError: %s > %s", logPrefixRoute, v.SelfLink().String(), v.Status.State)
 	return nil
 }
 
 func handleRouteStateDestroy(cs *ClusterState, v *models.Route) error {
-	log.V(logLevel).Debugf("%s:> handleRouteStateDestroy: %s > %s", logPrefixRoute, v.SelfLink().String(), v.Status.State)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s:> handleRouteStateDestroy: %s > %s", logPrefixRoute, v.SelfLink().String(), v.Status.State)
 
 	if err := routeDestroy(cs, v); err != nil {
 		log.Errorf("%s", err.Error())
@@ -120,7 +126,8 @@ func handleRouteStateDestroy(cs *ClusterState, v *models.Route) error {
 }
 
 func handleRouteStateDestroyed(cs *ClusterState, v *models.Route) error {
-	log.V(logLevel).Debugf("%s:> handleRouteStateDestroyed: %s > %s", logPrefixRoute, v.SelfLink().String(), v.Status.State)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s:> handleRouteStateDestroyed: %s > %s", logPrefixRoute, v.SelfLink().String(), v.Status.State)
 
 	if err := routeRemove(cs, v); err != nil {
 		log.Errorf("%s", err.Error())
@@ -131,7 +138,7 @@ func handleRouteStateDestroyed(cs *ClusterState, v *models.Route) error {
 }
 
 func routeUpdate(stg storage.IStorage, v *models.Route, timestamp time.Time) error {
-
+	log := logger.WithContext(context.Background())
 	if timestamp.Before(v.Meta.Updated) {
 		vm := service.NewRouteModel(context.Background(), stg)
 		if _, err := vm.Set(v); err != nil {
@@ -144,7 +151,7 @@ func routeUpdate(stg storage.IStorage, v *models.Route, timestamp time.Time) err
 }
 
 func routeProvision(cs *ClusterState, route *models.Route) (err error) {
-
+	log := logger.WithContext(context.Background())
 	t := route.Meta.Updated
 
 	defer func() {
@@ -302,7 +309,7 @@ func routeDestroy(cs *ClusterState, route *models.Route) (err error) {
 }
 
 func routeRemove(cs *ClusterState, route *models.Route) (err error) {
-
+	log := logger.WithContext(context.Background())
 	vm := service.NewRouteModel(context.Background(), cs.storage)
 	if err = routeManifestDel(cs.storage, route); err != nil {
 		return err
@@ -317,8 +324,8 @@ func routeRemove(cs *ClusterState, route *models.Route) (err error) {
 }
 
 func routeManifestAdd(stg storage.IStorage, route *models.Route) error {
-
-	log.V(logLevel).Debugf("%s: create route manifest for node: %s", logPrefixRoute, route.SelfLink().String())
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: create route manifest for node: %s", logPrefixRoute, route.SelfLink().String())
 
 	var mf = new(models.RouteManifest)
 	mf.Set(route)
@@ -332,7 +339,7 @@ func routeManifestAdd(stg storage.IStorage, route *models.Route) error {
 }
 
 func routeManifestSet(stg storage.IStorage, route *models.Route) error {
-
+	log := logger.WithContext(context.Background())
 	var (
 		mf  *models.RouteManifest
 		err error
@@ -350,7 +357,7 @@ func routeManifestSet(stg storage.IStorage, route *models.Route) error {
 
 		if route.Status.State != models.StateDestroy && route.Status.State != models.StateDestroyed {
 
-			log.V(logLevel).Debugf("%s: create route manifest for ingress: %s", logPrefixRoute, route.SelfLink().String())
+			log.Debugf("%s: create route manifest for ingress: %s", logPrefixRoute, route.SelfLink().String())
 
 			mf = new(models.RouteManifest)
 			mf.Set(route)

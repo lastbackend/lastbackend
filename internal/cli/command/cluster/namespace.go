@@ -21,6 +21,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -30,7 +31,6 @@ import (
 	"github.com/lastbackend/lastbackend/internal/util/decoder"
 	v1 "github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -66,6 +66,7 @@ const namespaceApplyExample = `
 `
 
 func (c *command) NewNamespaceCmd() *cobra.Command {
+	log := logger.WithContext(context.Background())
 	cmd := &cobra.Command{
 		Use:   "namespace",
 		Short: "Manage your namespaces",

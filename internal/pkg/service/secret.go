@@ -39,10 +39,10 @@ type Secret struct {
 
 func (n *Secret) Runtime() (*models.System, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get secret runtime info", logSecretPrefix)
+	log.Debugf("%s:get:> get secret runtime info", logSecretPrefix)
 	runtime, err := n.storage.Info(n.context, n.storage.Collection().Secret(), "")
 	if err != nil {
-		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logSecretPrefix, err)
+		log.Errorf("%s:get:> get runtime info error: %s", logSecretPrefix, err)
 		return &runtime.System, err
 	}
 	return &runtime.System, nil
@@ -50,7 +50,7 @@ func (n *Secret) Runtime() (*models.System, error) {
 
 func (n *Secret) Get(namespace, name string) (*models.Secret, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get secret by id %s/%s", logSecretPrefix, name)
+	log.Debugf("%s:get:> get secret by id %s/%s", logSecretPrefix, name)
 
 	item := new(models.Secret)
 	sl := models.NewSecretSelfLink(namespace, name).String()
@@ -59,11 +59,11 @@ func (n *Secret) Get(namespace, name string) (*models.Secret, error) {
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logSecretPrefix, name)
+			log.Warnf("%s:get:> in namespace %s by name %s not found", logSecretPrefix, name)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> in namespace %s by name %s error: %s", logSecretPrefix, name, err)
+		log.Errorf("%s:get:> in namespace %s by name %s error: %s", logSecretPrefix, name, err)
 		return nil, err
 	}
 
@@ -74,7 +74,7 @@ func (n *Secret) List(filter string) (*models.SecretList, error) {
 
 	var f string
 
-	log.V(logLevel).Debugf("%s:list:> get secrets list by namespace", logSecretPrefix)
+	log.Debugf("%s:list:> get secrets list by namespace", logSecretPrefix)
 
 	list := models.NewSecretList()
 	if filter != models.EmptyString {
@@ -83,18 +83,18 @@ func (n *Secret) List(filter string) (*models.SecretList, error) {
 
 	err := n.storage.List(n.context, n.storage.Collection().Secret(), f, list, nil)
 	if err != nil {
-		log.V(logLevel).Error("%s:list:> get secrets list by namespace err: %s", logSecretPrefix, err)
+		log.Error("%s:list:> get secrets list by namespace err: %s", logSecretPrefix, err)
 		return list, err
 	}
 
-	log.V(logLevel).Debugf("%s:list:> get secrets list by namespace result: %d", logSecretPrefix, len(list.Items))
+	log.Debugf("%s:list:> get secrets list by namespace result: %d", logSecretPrefix, len(list.Items))
 
 	return list, nil
 }
 
 func (n *Secret) Create(namespace *models.Namespace, secret *models.Secret) (*models.Secret, error) {
 
-	log.V(logLevel).Debugf("%s:create:> create secret %#v", logSecretPrefix, secret.Meta.Name)
+	log.Debugf("%s:create:> create secret %#v", logSecretPrefix, secret.Meta.Name)
 
 	secret.Meta.SetDefault()
 	secret.Meta.Namespace = namespace.Meta.Name
@@ -102,7 +102,7 @@ func (n *Secret) Create(namespace *models.Namespace, secret *models.Secret) (*mo
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Secret(),
 		secret.SelfLink().String(), secret, nil); err != nil {
-		log.V(logLevel).Errorf("%s:create:> insert secret err: %v", logSecretPrefix, err)
+		log.Errorf("%s:create:> insert secret err: %v", logSecretPrefix, err)
 		return nil, err
 	}
 
@@ -111,11 +111,11 @@ func (n *Secret) Create(namespace *models.Namespace, secret *models.Secret) (*mo
 
 func (n *Secret) Update(secret *models.Secret) (*models.Secret, error) {
 
-	log.V(logLevel).Debugf("%s:update:> update secret %s", logSecretPrefix, secret.Meta.Name)
+	log.Debugf("%s:update:> update secret %s", logSecretPrefix, secret.Meta.Name)
 
 	if err := n.storage.Set(n.context, n.storage.Collection().Secret(),
 		secret.SelfLink().String(), secret, nil); err != nil {
-		log.V(logLevel).Errorf("%s:update:> update secret err: %s", logSecretPrefix, err)
+		log.Errorf("%s:update:> update secret err: %s", logSecretPrefix, err)
 		return nil, err
 	}
 
@@ -124,11 +124,11 @@ func (n *Secret) Update(secret *models.Secret) (*models.Secret, error) {
 
 func (n *Secret) Remove(secret *models.Secret) error {
 
-	log.V(logLevel).Debugf("%s:remove:> remove secret %#v", logSecretPrefix, secret)
+	log.Debugf("%s:remove:> remove secret %#v", logSecretPrefix, secret)
 
 	if err := n.storage.Del(n.context, n.storage.Collection().Secret(),
 		secret.SelfLink().String()); err != nil {
-		log.V(logLevel).Errorf("%s:remove:> remove secret  err: %s", logSecretPrefix, err)
+		log.Errorf("%s:remove:> remove secret  err: %s", logSecretPrefix, err)
 		return err
 	}
 
@@ -137,7 +137,7 @@ func (n *Secret) Remove(secret *models.Secret) error {
 
 func (n *Secret) Watch(ch chan models.SecretEvent, rev *int64) error {
 
-	log.V(logLevel).Debugf("%s:watch:> watch secret", logSecretPrefix)
+	log.Debugf("%s:watch:> watch secret", logSecretPrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

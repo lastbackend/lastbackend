@@ -21,9 +21,9 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/tools/logger"
 
 	"github.com/lastbackend/lastbackend/internal/cli/views"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/spf13/cobra"
 )
 
@@ -38,6 +38,7 @@ const nodeInspectExample = `
 `
 
 func (c *command) NewNodeCmd() *cobra.Command {
+	log := logger.WithContext(context.Background())
 	cmd := &cobra.Command{
 		Use:   "node",
 		Short: "Manage cluster nodes",

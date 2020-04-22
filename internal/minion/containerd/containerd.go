@@ -15,9 +15,9 @@ import (
 	"github.com/lastbackend/lastbackend/internal/minion/containerd/templates"
 	"github.com/lastbackend/lastbackend/internal/util/filesystem"
 	"github.com/lastbackend/lastbackend/tools/logger"
-	"github.com/natefinch/lumberjack"
+	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 	"github.com/opencontainers/runc/libcontainer/system"
-	"github.com/pkg/errors"
+	"errors"
 	"gopkg.in/yaml.v3"
 )
 
@@ -145,7 +145,7 @@ func setupContainerdConfig(ctx context.Context, cfg *Config) error {
 
 	selEnabled, selConfigured, err := selinuxStatus()
 	if err != nil {
-		return errors.Wrap(err, "failed to detect selinux")
+		return errors.New(fmt.Sprintf( "%v: failed to detect selinux", err))
 	}
 
 	containerdConfig.SELinuxEnabled = selEnabled

@@ -19,10 +19,11 @@
 package state
 
 import (
+	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"sync"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const logSecretPrefix = "state:secret:>"
@@ -33,19 +34,22 @@ type SecretsState struct {
 }
 
 func (s *SecretsState) GetSecrets() map[string]models.Secret {
-	log.V(logLevel).Debugf("%s get pods", logSecretPrefix)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get pods", logSecretPrefix)
 	return s.secrets
 }
 
 func (s *SecretsState) SetSecrets(secrets map[string]*models.Secret) {
-	log.V(logLevel).Debugf("%s set secrets: %d", logSecretPrefix, len(secrets))
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s set secrets: %d", logSecretPrefix, len(secrets))
 	for h, secret := range secrets {
 		s.secrets[h] = *secret
 	}
 }
 
 func (s *SecretsState) GetSecret(name string) *models.Secret {
-	log.V(logLevel).Debugf("%s get secret: %s", logSecretPrefix, name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get secret: %s", logSecretPrefix, name)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	pod, ok := s.secrets[name]
@@ -56,12 +60,14 @@ func (s *SecretsState) GetSecret(name string) *models.Secret {
 }
 
 func (s *SecretsState) AddSecret(name string, secret *models.Secret) {
-	log.V(logLevel).Debugf("%s add secret: %s", logSecretPrefix, name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s add secret: %s", logSecretPrefix, name)
 	s.SetSecret(name, secret)
 }
 
 func (s *SecretsState) SetSecret(name string, secret *models.Secret) {
-	log.V(logLevel).Debugf("%s set secret: %s", logSecretPrefix, name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s set secret: %s", logSecretPrefix, name)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -73,7 +79,8 @@ func (s *SecretsState) SetSecret(name string, secret *models.Secret) {
 }
 
 func (s *SecretsState) DelSecret(name string) {
-	log.V(logLevel).Debugf("%s del secret: %s", logSecretPrefix, name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s del secret: %s", logSecretPrefix, name)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if _, ok := s.secrets[name]; ok {

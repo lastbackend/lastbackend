@@ -19,10 +19,11 @@
 package state
 
 import (
+	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"sync"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const logEndpointPrefix = "state:endpoints:>"
@@ -42,7 +43,8 @@ func (es *EndpointState) SetHash(hash string) {
 }
 
 func (es *EndpointState) GetEndpoints() map[string]*models.EndpointState {
-	log.V(logLevel).Debugf("%s get endpoints", logEndpointPrefix)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get endpoints", logEndpointPrefix)
 	return es.endpoints
 }
 
@@ -56,7 +58,8 @@ func (es *EndpointState) SetEndpoints(endpoints map[string]*models.EndpointState
 }
 
 func (es *EndpointState) GetEndpoint(key string) *models.EndpointState {
-	log.V(logLevel).Debugf("%s: get endpoint: %s", logEndpointPrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: get endpoint: %s", logEndpointPrefix, key)
 	es.lock.Lock()
 	defer es.lock.Unlock()
 
@@ -69,21 +72,24 @@ func (es *EndpointState) GetEndpoint(key string) *models.EndpointState {
 }
 
 func (es *EndpointState) AddEndpoint(key string, endpoint *models.EndpointState) {
-	log.V(logLevel).Debugf("%s: add endpoint %s: %s", logEndpointPrefix, key, endpoint.IP)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: add endpoint %s: %s", logEndpointPrefix, key, endpoint.IP)
 	es.lock.Lock()
 	defer es.lock.Unlock()
 	es.endpoints[key] = endpoint
 }
 
 func (es *EndpointState) SetEndpoint(key string, endpoint *models.EndpointState) {
-	log.V(logLevel).Debugf("%s: set endpoint %s: %s", logEndpointPrefix, key, endpoint.IP)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: set endpoint %s: %s", logEndpointPrefix, key, endpoint.IP)
 	es.lock.Lock()
 	defer es.lock.Unlock()
 	es.endpoints[key] = endpoint
 }
 
 func (es *EndpointState) DelEndpoint(key string) {
-	log.V(logLevel).Debugf("%s: del endpoint %s", logEndpointPrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: del endpoint %s", logEndpointPrefix, key)
 	es.lock.Lock()
 	defer es.lock.Unlock()
 	delete(es.endpoints, key)

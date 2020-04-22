@@ -22,6 +22,7 @@ package vxlan
 import (
 	"context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"net"
 	"syscall"
 
@@ -29,7 +30,6 @@ import (
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni/utils"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/vishvananda/netlink"
 )
 
@@ -51,7 +51,7 @@ type NetworkInterface struct {
 }
 
 func New(iface string) (*Network, error) {
-
+	log := logger.WithContext(context.Background())
 	var (
 		nt  = new(Network)
 		err error
@@ -96,7 +96,7 @@ func New(iface string) (*Network, error) {
 }
 
 func (n *Network) SetSubnetFromDevice(name string) error {
-
+	log := logger.WithContext(context.Background())
 	iface, _, err := utils.GetIfaceByName(name)
 	if err != nil {
 		log.Errorf("Can not find interface by name %s", name)
@@ -149,7 +149,7 @@ func (n *Network) SetSubnetFromDevice(name string) error {
 }
 
 func (n *Network) AddInterface() error {
-
+	log := logger.WithContext(context.Background())
 	var err error
 
 	if n.Device, err = NewDevice(DeviceCreateOpts{
@@ -188,11 +188,11 @@ func (n *Network) Destroy(ctx context.Context, network *models.NetworkState) err
 }
 
 func (n *Network) Create(ctx context.Context, network *models.SubnetManifest) (*models.NetworkState, error) {
-
-	log.V(logLevel).Debugf("Connect to node to network: %v > %v", network.CIDR, network.IFace.Addr)
+	log := logger.WithContext(context.Background())
+	log.Debugf("Connect to node to network: %v > %v", network.CIDR, network.IFace.Addr)
 
 	if n.CIDR.String() == network.CIDR {
-		log.V(logLevel).Debug("Skip local network provision")
+		log.Debug("Skip local network provision")
 		return n.Info(ctx), nil
 	}
 
@@ -204,14 +204,14 @@ func (n *Network) Create(ctx context.Context, network *models.SubnetManifest) (*
 	}
 
 	// Add ARP record
-	log.V(logLevel).Debugf("Add new ARP record to %v :> %v", lladdr, network.Addr)
+	log.Debugf("Add new ARP record to %v :> %v", lladdr, network.Addr)
 	if err := n.Device.AddARP(lladdr, net.ParseIP(network.IFace.Addr)); err != nil {
 		log.Errorf("Can not add ARP record: %s", err.Error())
 		return nil, err
 	}
 
 	// Add FDB record
-	log.V(logLevel).Debugf("Add new FDB record to %v :> %v", network.IFace.HAddr, network.Addr)
+	log.Debugf("Add new FDB record to %v :> %v", network.IFace.HAddr, network.Addr)
 	if err := n.Device.AddFDB(lladdr, net.ParseIP(network.Addr)); err != nil {
 		log.Errorf("Can not add FDB record: %s", err.Error())
 		if err := n.Device.DelARP(lladdr, net.ParseIP(network.IFace.Addr)); err != nil {
@@ -220,7 +220,7 @@ func (n *Network) Create(ctx context.Context, network *models.SubnetManifest) (*
 	}
 
 	// Add route
-	log.V(logLevel).Debugf("Add new route record for %v :> %v", network.CIDR, network.IFace.Addr)
+	log.Debugf("Add new route record for %v :> %v", network.CIDR, network.IFace.Addr)
 
 	_, ipn, err := net.ParseCIDR(network.CIDR)
 	if err != nil {
@@ -238,7 +238,7 @@ func (n *Network) Create(ctx context.Context, network *models.SubnetManifest) (*
 
 	if err := netlink.RouteReplace(&vxlanRoute); err != nil {
 		log.Errorf("Add xvlan route err: %s", err.Error())
-		log.V(logLevel).Debug("Clean up added before records")
+		log.Debug("Clean up added before records")
 
 		if err := n.Device.DelARP(lladdr, net.ParseIP(network.IFace.Addr)); err != nil {
 			log.Errorf("Can not del ARP record: %s", err.Error())
@@ -289,8 +289,8 @@ func (n *Network) Replace(ctx context.Context, state *models.NetworkState, manif
 }
 
 func (n *Network) Subnets(ctx context.Context) (map[string]*models.NetworkState, error) {
-
-	log.V(logLevel).Debug("Get current subnets list")
+	log := logger.WithContext(context.Background())
+	log.Debug("Get current subnets list")
 
 	var (
 		subnets = make(map[string]*models.NetworkState)
@@ -341,7 +341,7 @@ func (n *Network) Subnets(ctx context.Context) (map[string]*models.NetworkState,
 	}
 
 	for r, sn := range subnets {
-		log.V(logLevel).Debugf("SubnetSpec [%s]: %v", r, sn)
+		log.Debugf("SubnetSpec [%s]: %v", r, sn)
 	}
 
 	return subnets, nil

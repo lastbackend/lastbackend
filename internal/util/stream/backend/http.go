@@ -39,7 +39,7 @@ func (hw *HttpWriter) Write(data []byte) {
 
 	_, err = hw.writer.Write(data)
 	if err == context.Canceled {
-		log.V(logLevel).Debug("Stream is canceled")
+		log.Debug("Stream is canceled")
 		hw.done <- true
 		return
 	}

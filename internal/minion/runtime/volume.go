@@ -20,20 +20,20 @@ package runtime
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"strings"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
-)
+	)
 
 const (
 	logVolumePrefix = "node:runtime:volume:>"
 )
 
 func (r Runtime) VolumeManage(ctx context.Context, key string, manifest *models.VolumeManifest) error {
-
-	log.V(logLevel).Debugf("%s provision volume: %s", logVolumePrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s provision volume: %s", logVolumePrefix, key)
 
 	//==========================================================================
 	// Destroy volume ==========================================================
@@ -52,7 +52,7 @@ func (r Runtime) VolumeManage(ctx context.Context, key string, manifest *models.
 			return nil
 		}
 
-		log.V(logLevel).Debugf("%s volume found > destroy it: %s", logVolumePrefix, key)
+		log.Debugf("%s volume found > destroy it: %s", logVolumePrefix, key)
 
 		if err := r.VolumeDestroy(ctx, key); err != nil {
 			log.Errorf("%s can not destroy volume: %s", logVolumePrefix, err.Error())
@@ -76,7 +76,7 @@ func (r Runtime) VolumeManage(ctx context.Context, key string, manifest *models.
 		}
 	}
 
-	log.V(logLevel).Debugf("%s volume not found > create it: %s", logVolumePrefix, key)
+	log.Debugf("%s volume not found > create it: %s", logVolumePrefix, key)
 
 	status, err := r.VolumeCreate(ctx, key, manifest)
 	if err != nil {
@@ -89,10 +89,10 @@ func (r Runtime) VolumeManage(ctx context.Context, key string, manifest *models.
 }
 
 func (r Runtime) VolumeCreate(ctx context.Context, name string, mf *models.VolumeManifest) (*models.VolumeStatus, error) {
-
+	log := logger.WithContext(context.Background())
 	var status = new(models.VolumeStatus)
 
-	log.V(logLevel).Debugf("%s create volume: %s", logVolumePrefix, mf)
+	log.Debugf("%s create volume: %s", logVolumePrefix, mf)
 	if mf.Type == models.EmptyString {
 		mf.Type = models.KindVolumeHostDir
 	}
@@ -121,8 +121,8 @@ func (r Runtime) VolumeCreate(ctx context.Context, name string, mf *models.Volum
 }
 
 func (r Runtime) VolumeDestroy(ctx context.Context, name string) error {
-
-	log.V(logLevel).Debugf("%s destroy volume: %s", logVolumePrefix, name)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s destroy volume: %s", logVolumePrefix, name)
 
 	vol := r.state.Volumes().GetVolume(name)
 
@@ -152,7 +152,7 @@ func (r Runtime) VolumeDestroy(ctx context.Context, name string) error {
 }
 
 func (r Runtime) VolumeRestore(ctx context.Context) error {
-
+	log := logger.WithContext(context.Background())
 	log.Debugf("%s start volumes restore", logVolumePrefix)
 
 	for t := range r.csi {
@@ -190,16 +190,19 @@ func (r Runtime) VolumeRestore(ctx context.Context) error {
 }
 
 func (r Runtime) VolumeSetSecretData(ctx context.Context, name string, secret string) error {
+	log := logger.WithContext(context.Background())
 	log.Debugf("%s volume set secret data: %s > %s", logVolumePrefix, secret, name)
 	return nil
 }
 
 func (r Runtime) VolumeCheckSecretData(ctx context.Context, name string, secret string) (bool, error) {
+	log := logger.WithContext(context.Background())
 	log.Debugf("%s volume check secret data: %s > %s", logVolumePrefix, secret, name)
 	return true, nil
 }
 
 func (r Runtime) VolumeCheckConfigData(ctx context.Context, name string, config string) (bool, error) {
+	log := logger.WithContext(context.Background())
 	log.Debugf("%s volume check config data: %s > %s", logVolumePrefix, config, name)
 
 	vol := r.state.Volumes().GetVolume(name)
@@ -224,7 +227,7 @@ func (r Runtime) VolumeCheckConfigData(ctx context.Context, name string, config 
 }
 
 func (r Runtime) VolumeSetConfigData(ctx context.Context, name string, config string) error {
-
+	log := logger.WithContext(context.Background())
 	log.Debugf("%s set volume config data: %s > %s", logVolumePrefix, config, name)
 
 	vol := r.state.Volumes().GetVolume(name)

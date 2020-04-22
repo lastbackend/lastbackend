@@ -114,7 +114,7 @@ func (r *Runtime) Logs(ctx context.Context, ID string, stdout, stderr, follow bo
 
 func (r *Runtime) Inspect(ctx context.Context, ID string) (*models.Container, error) {
 
-	log.V(logLevel).Debug("Docker: Container Inspect")
+	log.Debug("Docker: Container Inspect")
 
 	info, err := r.client.ContainerInspect(ctx, ID)
 	if err != nil {

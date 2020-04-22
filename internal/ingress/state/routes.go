@@ -58,7 +58,7 @@ func (rs *RouteState) SetHash(hash string) {
 }
 
 func (rs *RouteState) GetRouteManifests() map[string]*models.RouteManifest {
-	log.V(logLevel).Debugf("%s get route manifests", logRoutePrefix)
+	log.Debugf("%s get route manifests", logRoutePrefix)
 
 	var manifests = make(map[string]*models.RouteManifest, 0)
 	for k, route := range rs.routes {
@@ -71,7 +71,7 @@ func (rs *RouteState) GetRouteManifests() map[string]*models.RouteManifest {
 }
 
 func (rs *RouteState) GetRouteManifest(key string) *models.RouteManifest {
-	log.V(logLevel).Debugf("%s: get route manifest: %s", logRoutePrefix, key)
+	log.Debugf("%s: get route manifest: %s", logRoutePrefix, key)
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
 
@@ -84,7 +84,7 @@ func (rs *RouteState) GetRouteManifest(key string) *models.RouteManifest {
 }
 
 func (rs *RouteState) AddRouteManifest(key string, route *models.RouteManifest) {
-	log.V(logLevel).Debugf("%s: add route manifest: %s", logRoutePrefix, key)
+	log.Debugf("%s: add route manifest: %s", logRoutePrefix, key)
 	rs.lock.Lock()
 	rt, ok := rs.routes[key]
 	if !ok {
@@ -102,7 +102,7 @@ func (rs *RouteState) AddRouteManifest(key string, route *models.RouteManifest) 
 
 func (rs *RouteState) SetRouteManifest(key string, route *models.RouteManifest) {
 	rs.lock.Lock()
-	log.V(logLevel).Debugf("%s: set route manifest: %s", logRoutePrefix, key)
+	log.Debugf("%s: set route manifest: %s", logRoutePrefix, key)
 	rt, ok := rs.routes[key]
 	if !ok {
 		rs.routes[key] = struct {
@@ -119,7 +119,7 @@ func (rs *RouteState) SetRouteManifest(key string, route *models.RouteManifest) 
 
 func (rs *RouteState) DelRouteManifests(key string) {
 	rs.lock.Lock()
-	log.V(logLevel).Debugf("%s: del route manifest: %s", logRoutePrefix, key)
+	log.Debugf("%s: del route manifest: %s", logRoutePrefix, key)
 	rt, ok := rs.routes[key]
 	if ok {
 		rt.manifest = nil
@@ -129,7 +129,7 @@ func (rs *RouteState) DelRouteManifests(key string) {
 }
 
 func (rs *RouteState) GetRouteStatuses() map[string]*models.RouteStatus {
-	log.V(logLevel).Debugf("%s get route statuses", logRoutePrefix)
+	log.Debugf("%s get route statuses", logRoutePrefix)
 
 	var statuses = make(map[string]*models.RouteStatus, 0)
 	for k, route := range rs.routes {
@@ -140,7 +140,7 @@ func (rs *RouteState) GetRouteStatuses() map[string]*models.RouteStatus {
 }
 
 func (rs *RouteState) GetRouteStatus(key string) *models.RouteStatus {
-	log.V(logLevel).Debugf("%s: get route status: %s", logRoutePrefix, key)
+	log.Debugf("%s: get route status: %s", logRoutePrefix, key)
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
 
@@ -153,7 +153,7 @@ func (rs *RouteState) GetRouteStatus(key string) *models.RouteStatus {
 }
 
 func (rs *RouteState) AddRouteStatus(key string, status *models.RouteStatus) {
-	log.V(logLevel).Debugf("%s: add route status: %s", logRoutePrefix, key)
+	log.Debugf("%s: add route status: %s", logRoutePrefix, key)
 	rs.lock.Lock()
 	rt, ok := rs.routes[key]
 	if !ok {
@@ -171,7 +171,7 @@ func (rs *RouteState) AddRouteStatus(key string, status *models.RouteStatus) {
 
 func (rs *RouteState) SetRouteStatus(key string, status *models.RouteStatus) {
 	rs.lock.Lock()
-	log.V(logLevel).Debugf("%s: set route status: %s", logRoutePrefix, key)
+	log.Debugf("%s: set route status: %s", logRoutePrefix, key)
 	rt, ok := rs.routes[key]
 	if !ok {
 		rs.routes[key] = struct {
@@ -188,7 +188,7 @@ func (rs *RouteState) SetRouteStatus(key string, status *models.RouteStatus) {
 
 func (rs *RouteState) DelRoute(key string) {
 	rs.lock.Lock()
-	log.V(logLevel).Debugf("%s: del route: %s", logRoutePrefix, key)
+	log.Debugf("%s: del route: %s", logRoutePrefix, key)
 	delete(rs.routes, key)
 	rs.lock.Unlock()
 	rs.dispatch(key)

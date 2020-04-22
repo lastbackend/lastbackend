@@ -28,7 +28,7 @@ import (
 
 func other(w dns.ResponseWriter, r *dns.Msg) {
 
-	log.V(logLevel).Debugf("%s:other:> dns request `.`", logPrefix)
+	log.Debugf("%s:other:> dns request `.`", logPrefix)
 
 	var (
 		v4 bool
@@ -41,22 +41,22 @@ func other(w dns.ResponseWriter, r *dns.Msg) {
 
 	switch r.Opcode {
 	case dns.OpcodeQuery:
-		log.V(logLevel).Debugf("%s:other:> dns.OpcodeQuery", logPrefix)
+		log.Debugf("%s:other:> dns.OpcodeQuery", logPrefix)
 
 		for _, q := range m.Question {
 
 			switch r.Question[0].Qtype {
 			case dns.TypeTXT:
-				log.V(logLevel).Debugf("%s:other:> get txt type query", logPrefix)
+				log.Debugf("%s:other:> get txt type query", logPrefix)
 				t := new(dns.TXT)
 				t.Hdr = dns.RR_Header{Name: q.Name, Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 0}
 				m.Answer = append(m.Answer, t)
 				m.Extra = append(m.Extra, rr)
 			default:
-				log.V(logLevel).Debugf("%s:other:> get unknown query type", logPrefix)
+				log.Debugf("%s:other:> get unknown query type", logPrefix)
 				fallthrough
 			case dns.TypeAAAA, dns.TypeA:
-				log.V(logLevel).Debugf("%s:other:> get A or AAAA type query", logPrefix)
+				log.Debugf("%s:other:> get A or AAAA type query", logPrefix)
 
 				if q.Name[len(q.Name)-1:] != "." {
 					q.Name += "."
@@ -65,7 +65,7 @@ func other(w dns.ResponseWriter, r *dns.Msg) {
 				// GenerateConfig A and AAAA records
 				ips := make([]net.IP, 0)
 
-				log.V(logLevel).Debugf("%s:other:> ips list: %#v for %s", logPrefix, ips, q.Name)
+				log.Debugf("%s:other:> ips list: %#v for %s", logPrefix, ips, q.Name)
 
 				for _, ip := range ips {
 					v4 = ip.To4() != nil
@@ -85,20 +85,20 @@ func other(w dns.ResponseWriter, r *dns.Msg) {
 			}
 		}
 	case dns.OpcodeUpdate:
-		log.V(logLevel).Debugf("%s:other:> dns.OpcodeUpdate", logPrefix)
+		log.Debugf("%s:other:> dns.OpcodeUpdate", logPrefix)
 	}
 
 	if r.IsTsig() != nil {
 		if w.TsigStatus() == nil {
 			m.SetTsig(r.Extra[len(r.Extra)-1].(*dns.TSIG).Hdr.Name, dns.HmacMD5, 300, time.Now().Unix())
 		} else {
-			log.V(logLevel).Errorf("%s:other:> tsig status err: %s", logPrefix, w.TsigStatus())
+			log.Errorf("%s:other:> tsig status err: %s", logPrefix, w.TsigStatus())
 		}
 	}
 
-	log.V(logLevel).Debugf("%s:other:> send message info  %#v", logPrefix, m)
+	log.Debugf("%s:other:> send message info  %#v", logPrefix, m)
 
 	if err := w.WriteMsg(m); err != nil {
-		log.V(logLevel).Errorf("%s:other:> write message err: %v", logPrefix, err)
+		log.Errorf("%s:other:> write message err: %v", logPrefix, err)
 	}
 }
