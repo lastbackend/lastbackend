@@ -18,40 +18,12 @@
 
 package containerd
 
-import "github.com/containerd/containerd"
+import (
+	"context"
 
-const defaultNamespace = "lstbknd"
-const containerdDefaultAddress = "/run/containerd/containerd.sock"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+)
 
-type Runtime struct {
-	client *containerd.Client
-}
-
-type Config struct {
-	Address string
-	TLS     *TLSConfig
-}
-
-type TLSConfig struct {
-	CAPath   string
-	CertPath string
-	KeyPath  string
-}
-
-func New(cfg Config) (*Runtime, error) {
-	r := new(Runtime)
-
-	address := cfg.Address
-	if len(cfg.Address)== 0 {
-		address= containerdDefaultAddress
-	}
-
-	client, err := containerd.New(address, containerd.WithDefaultNamespace(defaultNamespace))
-	if err != nil {
-		return nil, err
-	}
-
-	r.client = client
-
-	return r, nil
+func (r *Runtime) Subscribe(ctx context.Context, container chan *models.Container) error {
+	return nil
 }

@@ -380,7 +380,7 @@ func TestHandleTaskStateProvision(t *testing.T) {
 		wt := getTaskCopy(task)
 		wt.Status.State = models.StateExited
 		wt.Status.Error = true
-		wt.Status.Message = errors.New(fmt.Sprintf("pod %s can not be manage: node not attached", pod.Meta.SelfLink.String())).Error()
+		wt.Status.Message = fmt.Errorf("pod %s can not be manage: node not attached", pod.Meta.SelfLink.String()).Error()
 
 		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)
@@ -472,7 +472,7 @@ func TestHandleTaskStateProvision(t *testing.T) {
 		wt := getTaskCopy(task)
 		wt.Status.State = models.StateExited
 		wt.Status.Error = true
-		wt.Status.Message = errors.New(fmt.Sprintf("pod %s can not be manage: node not attached", pod.Meta.SelfLink.String())).Error()
+		wt.Status.Message = fmt.Errorf("pod %s can not be manage: node not attached", pod.Meta.SelfLink.String()).Error()
 
 		s.want.err = models.EmptyString
 		s.want.jobState = getJobStateCopy(s.args.jobState)

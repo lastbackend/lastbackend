@@ -42,8 +42,8 @@ func New(cfg Config) (*Runtime, error) {
 	r := new(Runtime)
 
 	address := cfg.Address
-	if len(cfg.Address)== 0 {
-		address= containerdDefaultAddress
+	if len(cfg.Address) == 0 {
+		address = containerdDefaultAddress
 	}
 
 	client, err := containerd.New(address, containerd.WithDefaultNamespace(defaultNamespace))

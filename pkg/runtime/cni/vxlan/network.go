@@ -74,7 +74,7 @@ func New(iface string) (*Network, error) {
 	}
 
 	if nt.ExtIface.Iface == nil || nt.ExtIface.IfaceAddr == nil {
-		return nt, errors.New(fmt.Sprintf("can not initialize external ineterface for VxLAN: %s", iface))
+		return nt, fmt.Errorf("can not initialize external ineterface for VxLAN: %s", iface)
 	}
 
 	log.Debugf("external interface: %s:%s", nt.ExtIface.Iface.Name, nt.ExtIface.IfaceAddr.String())

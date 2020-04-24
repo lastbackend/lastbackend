@@ -581,10 +581,10 @@ func compareJobStateProperties(old *JobState, new *JobState) error {
 
 	if old.job != nil {
 		if old.job.Status.State != new.job.Status.State {
-			return errors.New(fmt.Sprintf("job status state is different %s != %s", old.job.Status.State, new.job.Status.State))
+			return fmt.Errorf("job status state is different %s != %s", old.job.Status.State, new.job.Status.State)
 		}
 		if old.job.Status.Message != new.job.Status.Message {
-			return errors.New(fmt.Sprintf("job status message is different %s != %s", old.job.Status.Message, new.job.Status.Message))
+			return fmt.Errorf("job status message is different %s != %s", old.job.Status.Message, new.job.Status.Message)
 		}
 
 	}

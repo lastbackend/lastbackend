@@ -40,42 +40,59 @@ func (r *Runtime) Pull(ctx context.Context, spec *models.ImageManifest, out io.W
 		return nil, err
 	}
 
-	// TODO: set structure fields
-	img := new(models.Image)
-	img.Meta.Name = image.Name()
-	img.Meta.Digest = image.Target().Digest.String()
+	res := new(models.Image)
+	res.Meta.Name = image.Name()
 
-	return img, nil
+	return res, nil
 }
 
 func (r *Runtime) Push(ctx context.Context, spec *models.ImageManifest, out io.Writer) (*models.Image, error) {
-	//err := r.client.Push(ctx, "docker.io/library/redis:latest", image.Target())
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
+	// err := r.client.Push(ctx, "docker.io/library/redis:latest", image.Target())
+	// if err != nil {
+	// return nil, err
+	// }
+
 	//// TODO: set structure fields
-	//img := new(models.Image)
+	res := new(models.Image)
 	//img.Meta.Name = image.Name()
 	//img.Meta.Digest = image.Target().Digest.String()
 
-	return nil, nil
+	return res, nil
 }
 
 func (r *Runtime) Build(ctx context.Context, stream io.Reader, spec *models.SpecBuildImage, out io.Writer) (*models.Image, error) {
 	return nil, nil
 }
 
-func (r *Runtime) Remove(ctx context.Context, ID string) error {
-	return nil
+func (r *Runtime) Remove(ctx context.Context, name string) error {
+	return r.client.ImageService().Delete(ctx, name)
 }
 
-func (r *Runtime) List(ctx context.Context) ([]*models.Image, error) {
-	return nil, nil
+func (r *Runtime) List(ctx context.Context, filters ...string) ([]*models.Image, error) {
+	images, err := r.client.ImageService().List(ctx, filters...)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*models.Image, 0)
+	for _, image := range images {
+		item := new(models.Image)
+		item.Meta.Name = image.Name
+		res = append(res, item)
+	}
+
+	return res, nil
 }
 
-func (r *Runtime) Inspect(ctx context.Context, id string) (*models.Image, error) {
-	return nil, nil
+func (r *Runtime) Inspect(ctx context.Context, name string) (*models.Image, error) {
+	image, err := r.client.ImageService().Get(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(models.Image)
+	res.Meta.Name = image.Name
+	return res, nil
 }
 
 func (r *Runtime) Close() error {

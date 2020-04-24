@@ -68,7 +68,6 @@ func Listen(host string, port int, router http.Handler) error {
 	return http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), router)
 }
 
-
 func ListenWithTLS(host string, port int, caFile, certFile, keyFile string, router http.Handler) error {
 
 	server := &http.Server{

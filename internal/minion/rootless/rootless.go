@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"errors"
 	"github.com/lastbackend/lastbackend/tools/logger"
 	"github.com/rootless-containers/rootlesskit/pkg/child"
 	"github.com/rootless-containers/rootlesskit/pkg/copyup/tmpfssymlink"
@@ -80,14 +79,14 @@ func parseCIDR(s string) (*net.IPNet, error) {
 		return nil, err
 	}
 	if !ip.Equal(ipnet.IP) {
-		return nil, errors.New(fmt.Sprintf("cidr must be like 10.0.2.0/24, not like 10.0.2.100/24"))
+		return nil, fmt.Errorf("cidr must be like 10.0.2.0/24, not like 10.0.2.100/24")
 	}
 	return ipnet, nil
 }
 
 func createParentOpt(stateDir string) (*parent.Opt, error) {
 	if err := os.MkdirAll(stateDir, 0755); err != nil {
-		return nil, errors.New(fmt.Sprintf("failed to mkdir %s err: %v", stateDir, err))
+		return nil, fmt.Errorf("failed to mkdir %s err: %v", stateDir, err)
 	}
 
 	stateDir, err := ioutil.TempDir("", "rootless")

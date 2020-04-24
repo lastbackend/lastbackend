@@ -9,9 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"errors"
-	"golang.org/x/sys/unix"
 	"github.com/lastbackend/lastbackend/tools/logger"
+	"golang.org/x/sys/unix"
 )
 
 func setupMounts(stateDir string) error {
@@ -26,7 +25,7 @@ func setupMounts(stateDir string) error {
 
 	for _, v := range mountMap {
 		if err := setupMount(v[0], v[1]); err != nil {
-			return errors.New(fmt.Sprintf("%v: failed to setup mount %s => %s", err, v[0], v[1]))
+			return fmt.Errorf("%v: failed to setup mount %s => %s", err, v[0], v[1])
 		}
 	}
 
@@ -36,7 +35,6 @@ func setupMounts(stateDir string) error {
 func setupMount(target, dir string) error {
 	log := logger.WithContext(context.Background())
 	log.Infof("Init minion service")
-
 
 	toCreate := target
 	for {
@@ -52,16 +50,16 @@ func setupMount(target, dir string) error {
 	}
 
 	if err := os.MkdirAll(toCreate, 0700); err != nil {
-		return errors.New(fmt.Sprintf("%v: failed to create directory %s", err, toCreate))
+		return fmt.Errorf("%v: failed to create directory %s", err, toCreate)
 	}
 
 	log.Debug("Mounting none ", toCreate, " tmpfs")
 	if err := unix.Mount("none", toCreate, "tmpfs", 0, ""); err != nil {
-		return errors.New(fmt.Sprintf("%v: failed to mount tmpfs to %s", err, toCreate))
+		return fmt.Errorf("%v: failed to mount tmpfs to %s", err, toCreate)
 	}
 
 	if err := os.MkdirAll(target, 0700); err != nil {
-		return errors.New(fmt.Sprintf("%v: failed to create directory %s", err, target))
+		return fmt.Errorf("%v: failed to create directory %s", err, target)
 	}
 
 	if dir == "" {
@@ -69,7 +67,7 @@ func setupMount(target, dir string) error {
 	}
 
 	if err := os.MkdirAll(dir, 0700); err != nil {
-		return errors.New(fmt.Sprintf("%v: failed to create directory %s", err, dir))
+		return fmt.Errorf("%v: failed to create directory %s", err, dir)
 	}
 
 	log.Debug("Mounting ", dir, target, " none bind")

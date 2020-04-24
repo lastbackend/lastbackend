@@ -23,9 +23,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/lastbackend/lastbackend/internal/master/state"
 	"github.com/lastbackend/lastbackend/internal/master/server"
+	"github.com/lastbackend/lastbackend/internal/master/state"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
+	"github.com/lastbackend/lastbackend/internal/util/filesystem"
 	"github.com/lastbackend/lastbackend/tools/logger"
 	"github.com/spf13/viper"
 )
@@ -42,6 +43,7 @@ func New(v *viper.Viper) (*App, error) {
 
 	loggerOpts := logger.Configuration{}
 	loggerOpts.EnableConsole = true
+
 	if v.GetBool("debug") {
 		loggerOpts.ConsoleLevel = logger.Debug
 	}
@@ -80,10 +82,20 @@ func (app *App) Stop() {
 
 func (app *App) init() error {
 
+	workdir, err := filesystem.DetermineHomePath(app.v.GetString("workdir"), app.v.GetBool("rootless"))
+	if err != nil {
+		return err
+	}
+
+	// Set storage config settings
+	app.v.Set("storage.driver", storage.BboltDriver)
+	app.v.Set("storage.bbolt.dir", workdir)
+
 	stg, err := storage.Get(app.v)
 	if err != nil {
 		return fmt.Errorf("cannot initialize storage: %v", err)
 	}
+
 	app.State = state.NewState(context.Background(), stg)
 	app.HttpServer = server.NewServer(app.State, stg, app.v)
 

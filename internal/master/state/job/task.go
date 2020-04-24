@@ -406,7 +406,7 @@ func taskProvision(js *JobState, task *models.Task) (err error) {
 
 		if p.Meta.Node == models.EmptyString {
 			err := errors.New("node not attached")
-			return errors.New(fmt.Sprintf("pod %s can not be manage: %v", p.Meta.SelfLink.String(), err))
+			return fmt.Errorf("pod %s can not be manage: %v", p.Meta.SelfLink.String(), err)
 		}
 
 		m, err := pm.ManifestGet(p.Meta.Node, p.SelfLink().String())

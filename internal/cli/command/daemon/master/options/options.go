@@ -27,6 +27,7 @@ import (
 )
 
 type MasterFlags struct {
+	Workdir            string `yaml:"workdir" mapstructure:"workdir"`
 	AccessToken        string `yaml:"token" mapstructure:"token"`
 	ClusterName        string `yaml:"name" mapstructure:"name"`
 	ClusterDescription string `yaml:"description" mapstructure:"description"`
@@ -51,20 +52,8 @@ type MasterFlags struct {
 		External string `yaml:"external" mapstructure:"external"`
 	} `yaml:"domain" mapstructure:"domain"`
 
-	Storage struct {
-		Driver string `yaml:"driver" mapstructure:"driver"`
-		Etcd   struct {
-			Endpoints []string `yaml:"endpoints" mapstructure:"endpoints"`
-			Prefix    string   `yaml:"prefix" mapstructure:"prefix"`
-			TLS       struct {
-				FileCert string `yaml:"cert" mapstructure:"cert"`
-				FileKey  string `yaml:"key" mapstructure:"key"`
-				FileCA   string `yaml:"ca" mapstructure:"ca"`
-			} `yaml:"tls" mapstructure:"tls"`
-		} `yaml:"etcd" mapstructure:"etcd"`
-	} `yaml:"storage" mapstructure:"storage"`
-
-	CIDR string `yaml:"cidr" mapstructure:"cidr"`
+	CIDR     string `yaml:"cidr" mapstructure:"cidr"`
+	Rootless bool   `yaml:"rootless" mapstructure:"rootless"`
 }
 
 func (cfg MasterFlags) LoadViper(v *viper.Viper) *viper.Viper {
@@ -114,5 +103,7 @@ func (f *MasterFlags) AddFlags(flags *pflag.FlagSet) {
 	fs.StringVarP(&f.Domain.Internal, "domain-internal", "", "lb.local", "Default external domain for cluster")
 	fs.StringVarP(&f.Domain.External, "domain-external", "", "", "Internal domain name for cluster")
 	fs.StringVarP(&f.CIDR, "services-cidr", "", "172.0.0.0/24", "Services IP CIDR for internal IPAM service")
+	fs.StringVarP(&f.Workdir, "workdir", "", "/${HOME}/.lastbackend/", "Set directory path to hold state")
+	fs.BoolVarP(&f.Rootless, "rootless", "", false, "Run rootless")
 
 }

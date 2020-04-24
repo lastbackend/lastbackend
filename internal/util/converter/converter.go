@@ -68,7 +68,7 @@ func ParseBool(str string) (bool, error) {
 	case "0", "f", "F", "false", "FALSE", "False":
 		return false, nil
 	}
-	return false, errors.New(fmt.Sprintf("parse bool string: %s", str))
+	return false, fmt.Errorf("parse bool string: %s", str)
 }
 
 func Int64ToInt(i int64) int {

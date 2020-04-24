@@ -21,12 +21,13 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/client/cluster"
-	"github.com/lastbackend/lastbackend/tools/logger"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+
+	"github.com/lastbackend/lastbackend/pkg/client/cluster"
+	"github.com/lastbackend/lastbackend/tools/logger"
+	"gopkg.in/yaml.v3"
 
 	"github.com/lastbackend/lastbackend/internal/minion/exporter"
 	"github.com/lastbackend/lastbackend/internal/minion/state"
@@ -49,20 +50,21 @@ type Runtime struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	csi       map[string]csi.CSI
-	cri       cri.CRI
-	cii       cii.CII
-	network   *network.Network
-	state     *state.State
-	exporter  *exporter.Exporter
-	retClient cluster.IClient
-	workdir   string
+	csi         map[string]csi.CSI
+	cri         cri.CRI
+	cii         cii.CII
+	network     *network.Network
+	state       *state.State
+	exporter    *exporter.Exporter
+	retClient   cluster.IClient
+	workdir     string
+	manifestDir string
 
 	spec chan *models.NodeManifest
 }
 
 // NewRuntime method return new runtime pointer
-func New(cri cri.CRI, cii cii.CII, csi map[string]csi.CSI, ntw *network.Network, stt *state.State, exp *exporter.Exporter, workdir string) (*Runtime, error) {
+func New(cri cri.CRI, cii cii.CII, csi map[string]csi.CSI, ntw *network.Network, stt *state.State, exp *exporter.Exporter, workdir, manifestDir string) (*Runtime, error) {
 
 	r := new(Runtime)
 	r.ctx, r.cancel = context.WithCancel(context.Background())
@@ -73,12 +75,31 @@ func New(cri cri.CRI, cii cii.CII, csi map[string]csi.CSI, ntw *network.Network,
 	r.state = stt
 	r.exporter = exp
 	r.workdir = workdir
+	r.manifestDir = manifestDir
 
 	r.spec = make(chan *models.NodeManifest, 0)
 	return r, nil
 }
 
-// Restore node runtime state
+// NewRuntime run daemon
+func (r *Runtime) Run() error {
+
+	if err := r.Restore(); err != nil {
+		return err
+	}
+
+	r.Subscribe()
+	r.Loop()
+
+	if r.manifestDir != models.EmptyString {
+		r.Provision(r.manifestDir)
+	}
+
+	go r.exporter.Listen()
+
+	return nil
+}
+
 func (r *Runtime) Restore() error {
 	log := logger.WithContext(context.Background())
 	log.Debugf("%s:restore:> restore init", logNodeRuntimePrefix)

@@ -75,6 +75,7 @@ func NewCommand() *cobra.Command {
 			help, err := cleanFlagSet.GetBool("help")
 			if err != nil {
 				fmt.Println(`"help" flag is non-bool, programmer error, please correct`)
+				return
 			}
 			if help {
 				cmd.Help()
@@ -84,14 +85,17 @@ func NewCommand() *cobra.Command {
 			agent, err := cleanFlagSet.GetBool("agent")
 			if err != nil {
 				fmt.Println(`"agent" flag is non-bool, programmer error, please correct`)
+				return
 			}
 			noSchedule, err := cleanFlagSet.GetBool("no-schedule")
 			if err != nil {
 				fmt.Println(`"no-schedule" flag is non-bool, programmer error, please correct`)
+				return
 			}
 			cfgFile, err := cleanFlagSet.GetString("config")
 			if err != nil {
 				fmt.Println(`"config" flag is non-string, programmer error, please correct`)
+				return
 			}
 
 			//fmt.Println("2 ::::", verbose, cfgFile, agent, noSchedule)
@@ -130,7 +134,10 @@ func NewCommand() *cobra.Command {
 				}
 			}
 
-			Run(masterViper, minionViper, &RunOptions{DisableMaster: agent, DisableMinion: noSchedule})
+			if err := Run(masterViper, minionViper, &RunOptions{DisableMaster: agent, DisableMinion: noSchedule}); err != nil {
+				fmt.Println(err)
+				return
+			}
 		},
 	}
 
@@ -163,11 +170,10 @@ type RunOptions struct {
 	Verbose       bool
 }
 
-func Run(masterViper *viper.Viper, minionViper *viper.Viper, opts *RunOptions) {
+func Run(masterViper *viper.Viper, minionViper *viper.Viper, opts *RunOptions) error {
 
 	var (
 		sigs = make(chan os.Signal)
-		done = make(chan bool, 1)
 		err  error
 	)
 
@@ -177,9 +183,9 @@ func Run(masterViper *viper.Viper, minionViper *viper.Viper, opts *RunOptions) {
 
 	if opts.DisableMinion && opts.DisableMaster {
 		fmt.Println("\n#################################")
-		fmt.Println("### All services was disabled ###")
+		fmt.Println("### All services was disable ###")
 		fmt.Println("#################################\n")
-		return
+		return nil
 	}
 
 	var masterApp *master.App
@@ -188,40 +194,36 @@ func Run(masterViper *viper.Viper, minionViper *viper.Viper, opts *RunOptions) {
 	if !opts.DisableMaster {
 		masterApp, err = master.New(masterViper)
 		if err != nil {
-			panic(fmt.Sprintf("Create master application err: %v", err))
+			return fmt.Errorf("Create master application err: %v", err)
 		}
 
 		if err := masterApp.Run(); err != nil {
-			panic(fmt.Sprintf("Run master application err: %v", err))
+			return fmt.Errorf("Run master application err: %v", err)
 		}
 	}
 
 	if !opts.DisableMinion {
 		minionApp, err = minion.New(minionViper)
 		if err != nil {
-			panic(fmt.Sprintf("Create minion application err: %v", err))
+			return fmt.Errorf("Create minion application err: %v", err)
 		}
 
 		if err := minionApp.Run(); err != nil {
-			panic(fmt.Sprintf("Run minion application err: %v", err))
+			return fmt.Errorf("Run minion application err: %v", err)
 		}
 	}
 
-	go func() {
-		for {
-			select {
-			case <-sigs:
-				if !opts.DisableMaster {
-					masterApp.Stop()
-				}
-				if !opts.DisableMaster {
-					minionApp.Stop()
-				}
-				done <- true
-				return
+	for {
+		select {
+		case <-sigs:
+			if !opts.DisableMaster {
+				masterApp.Stop()
 			}
+			if !opts.DisableMaster {
+				minionApp.Stop()
+			}
+			return nil
 		}
-	}()
+	}
 
-	<-done
 }

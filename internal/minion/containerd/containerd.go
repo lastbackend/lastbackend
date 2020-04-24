@@ -15,9 +15,8 @@ import (
 	"github.com/lastbackend/lastbackend/internal/minion/containerd/templates"
 	"github.com/lastbackend/lastbackend/internal/util/filesystem"
 	"github.com/lastbackend/lastbackend/tools/logger"
-	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 	"github.com/opencontainers/runc/libcontainer/system"
-	"errors"
+	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 	"gopkg.in/yaml.v3"
 )
 
@@ -26,39 +25,121 @@ const (
 )
 
 type Containerd struct {
-	Address  string
-	Log      string
-	Root     string
-	State    string
-	Config   string
-	Template string
-	Opt      string
+	ctx    context.Context
+	cancel context.CancelFunc
+
+	address        string
+	opt            string
+	config         string
+	template       string
+	registry       string
+	state          string
+	root           string
+	disableSELinux bool
+	images         string
+	log            string
 }
 
 type Config struct {
-	Containerd      Containerd
-	PrivateRegistry string
-	DisableSELinux  bool
-	Images          string
+	// The containerd managed opt directory provides a way for users to install containerd
+	// dependencies using the existing distribution infrastructure.
+	Opt            string
+	Address        string
+	ConfigPath     string
+	Template       string
+	Registry       string
+	State          string
+	Root           string
+	DisableSELinux bool
+	Images         string
+	Log            string
 }
 
-func Run(ctx context.Context, cfg *Config) error {
+func New(cfg *Config) (*Containerd, error) {
 
-	log := logger.WithContext(ctx)
+	log := logger.WithContext(context.Background())
 
-	if err := setupContainerdConfig(ctx, cfg); err != nil {
-		return err
+	if cfg == nil {
+		cfg = new(Config)
 	}
 
-	go runContainerdServer(ctx, cfg)
+	c := new(Containerd)
+	c.ctx, c.cancel = context.WithCancel(context.Background())
+	c.address = cfg.Address
+	c.opt = cfg.Opt
+	c.config = cfg.ConfigPath
+	c.template = cfg.Template
+	c.registry = cfg.Registry
+	c.state = cfg.State
+	c.root = cfg.Root
+	c.disableSELinux = cfg.DisableSELinux
+	c.images = cfg.Images
+	c.log = cfg.Log
+
+	var containerdTemplate string
+
+	registryConfig, err := c.preparePrivateRegistry()
+	if err != nil {
+		return nil, err
+	}
+
+	containerdConfig := templates.ContainerdConfig{
+		Opt:               cfg.Opt,
+		IsRunningInUserNS: system.RunningInUserNS(),
+		RegistryConfig:    registryConfig,
+	}
+
+	selEnabled, selConfigured, err := selinuxStatus()
+	if err != nil {
+		return nil, fmt.Errorf("%v: failed to detect selinux", err)
+	}
+
+	containerdConfig.SELinuxEnabled = selEnabled
+
+	if cfg.DisableSELinux {
+		containerdConfig.SELinuxEnabled = false
+		if selEnabled {
+			log.Warn("SELinux is enabled for system but has been disabled for containerd by override")
+		}
+	}
+
+	if containerdConfig.SELinuxEnabled && !selConfigured {
+		log.Warnf("SELinux is enabled for last.backend but process is not running in context '%s', last.backend-selinux policy may need to be applied", SELinuxContextType)
+	}
+
+	containerdTemplateBytes, err := ioutil.ReadFile(cfg.Template)
+	if err == nil {
+		containerdTemplate = string(containerdTemplateBytes)
+	} else if os.IsNotExist(err) {
+		containerdTemplate = templates.ContainerdConfigTemplate
+	} else {
+		return nil, err
+	}
+	parsedTemplate, err := templates.ParseTemplateFromConfig(containerdTemplate, containerdConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := filesystem.WriteFile(cfg.ConfigPath, parsedTemplate); err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+
+func (c *Containerd) Run() error {
+
+	log := logger.WithContext(context.Background())
+
+	go c.runServer()
 
 	for {
-		cli, err := containerd.New("unix://" + cfg.Containerd.Address)
+		cli, err := containerd.New("unix://" + c.address)
 		if err != nil {
 			break
 		}
 
-		_, err = cli.Version(ctx)
+		_, err = cli.Version(c.ctx)
 		if err == nil {
 			cli.Close()
 			break
@@ -68,23 +149,27 @@ func Run(ctx context.Context, cfg *Config) error {
 		log.Infof("Waiting for containerd server startup: %v", err)
 
 		select {
-		case <-ctx.Done():
-			return ctx.Err()
+		case <-c.ctx.Done():
+			return c.ctx.Err()
 		case <-time.After(time.Second):
 		}
 	}
 
-	return preloadImages(ctx, cfg)
+	return c.preloadImages()
 }
 
-func preloadImages(ctx context.Context, cfg *Config) error {
-	log := logger.WithContext(ctx)
+func (c *Containerd) Stop() {
+	c.cancel()
+}
 
-	fileInfo, err := os.Stat(cfg.Images)
+func (c Containerd) preloadImages() error {
+	log := logger.WithContext(c.ctx)
+
+	fileInfo, err := os.Stat(c.images)
 	if os.IsNotExist(err) {
 		return nil
 	} else if err != nil {
-		log.Errorf("Unable to find images in %s: %v", cfg.Images, err)
+		log.Errorf("Unable to find images in %s: %v", c.images, err)
 		return nil
 	}
 
@@ -92,13 +177,13 @@ func preloadImages(ctx context.Context, cfg *Config) error {
 		return nil
 	}
 
-	fileInfos, err := ioutil.ReadDir(cfg.Images)
+	fileInfos, err := ioutil.ReadDir(c.images)
 	if err != nil {
-		log.Errorf("Unable to read images in %s: %v", cfg.Images, err)
+		log.Errorf("Unable to read images in %s: %v", c.images, err)
 		return nil
 	}
 
-	client, err := containerd.New(cfg.Containerd.Address)
+	client, err := containerd.New(c.address)
 	if err != nil {
 		return err
 	}
@@ -109,7 +194,7 @@ func preloadImages(ctx context.Context, cfg *Config) error {
 			continue
 		}
 
-		filePath := filepath.Join(cfg.Images, fileInfo.Name())
+		filePath := filepath.Join(c.images, fileInfo.Name())
 
 		file, err := os.Open(filePath)
 		if err != nil {
@@ -127,61 +212,11 @@ func preloadImages(ctx context.Context, cfg *Config) error {
 	return nil
 }
 
-func setupContainerdConfig(ctx context.Context, cfg *Config) error {
-	log := logger.WithContext(ctx)
-
-	var containerdTemplate string
-
-	registryConfig, err := preparePrivateRegistry(ctx, cfg)
-	if err != nil {
-		return err
-	}
-
-	containerdConfig := templates.ContainerdConfig{
-		Opt:               cfg.Containerd.Opt,
-		IsRunningInUserNS: system.RunningInUserNS(),
-		RegistryConfig:    registryConfig,
-	}
-
-	selEnabled, selConfigured, err := selinuxStatus()
-	if err != nil {
-		return errors.New(fmt.Sprintf( "%v: failed to detect selinux", err))
-	}
-
-	containerdConfig.SELinuxEnabled = selEnabled
-	if cfg.DisableSELinux {
-		containerdConfig.SELinuxEnabled = false
-		if selEnabled {
-			log.Warn("SELinux is enabled for system but has been disabled for containerd by override")
-		}
-	}
-
-	if containerdConfig.SELinuxEnabled && !selConfigured {
-		log.Warnf("SELinux is enabled for last.backend but process is not running in context '%s', last.backend-selinux policy may need to be applied", SELinuxContextType)
-	}
-
-	containerdTemplateBytes, err := ioutil.ReadFile(cfg.Containerd.Template)
-	if err == nil {
-		log.Infof("Using containerd template at %s", cfg.Containerd.Template)
-		containerdTemplate = string(containerdTemplateBytes)
-	} else if os.IsNotExist(err) {
-		containerdTemplate = templates.ContainerdConfigTemplate
-	} else {
-		return err
-	}
-	parsedTemplate, err := templates.ParseTemplateFromConfig(containerdTemplate, containerdConfig)
-	if err != nil {
-		return err
-	}
-
-	return filesystem.WriteFile(cfg.Containerd.Config, parsedTemplate)
-}
-
-func preparePrivateRegistry(ctx context.Context, cfg *Config) (*templates.Registry, error) {
-	log := logger.WithContext(ctx)
+func (c *Containerd) preparePrivateRegistry() (*templates.Registry, error) {
+	log := logger.WithContext(c.ctx)
 
 	regTpl := new(templates.Registry)
-	regFile, err := ioutil.ReadFile(cfg.PrivateRegistry)
+	regFile, err := ioutil.ReadFile(c.registry)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
@@ -189,7 +224,7 @@ func preparePrivateRegistry(ctx context.Context, cfg *Config) (*templates.Regist
 		return nil, err
 	}
 
-	log.Infof("Using registry config file at %s", cfg.PrivateRegistry)
+	log.Infof("Using registry config file at %s", c.registry)
 	if err := yaml.Unmarshal(regFile, &regTpl); err != nil {
 		return nil, err
 	}
@@ -197,7 +232,7 @@ func preparePrivateRegistry(ctx context.Context, cfg *Config) (*templates.Regist
 	return regTpl, nil
 }
 
-func setLoggerProvider(ctx context.Context, fileeName string) io.WriteCloser {
+func (c *Containerd) setLoggerProvider(ctx context.Context, fileeName string) io.WriteCloser {
 	log := logger.WithContext(ctx)
 	log.Infof("Logging containerd to %s", fileeName)
 
@@ -210,15 +245,15 @@ func setLoggerProvider(ctx context.Context, fileeName string) io.WriteCloser {
 	}
 }
 
-func runContainerdServer(ctx context.Context, cfg *Config) {
-	log := logger.WithContext(ctx)
+func (c *Containerd) runServer() {
+	log := logger.WithContext(c.ctx)
 
 	args := []string{
 		"containerd",
-		"-c", cfg.Containerd.Config,
-		"-a", cfg.Containerd.Address,
-		"--state", cfg.Containerd.State,
-		"--root", cfg.Containerd.Root,
+		"-c", c.config,
+		"-a", c.address,
+		"--state", c.state,
+		"--root", c.root,
 	}
 
 	if len(os.Getenv("CONTAINERD_LOG_LEVEL")) != 0 {
@@ -228,8 +263,8 @@ func runContainerdServer(ctx context.Context, cfg *Config) {
 	stdOut := io.Writer(os.Stdout)
 	stdErr := io.Writer(os.Stderr)
 
-	if cfg.Containerd.Log != "" {
-		stdOut = setLoggerProvider(ctx, cfg.Containerd.Log)
+	if c.log != "" {
+		stdOut = c.setLoggerProvider(c.ctx, c.log)
 		stdErr = stdOut
 	}
 

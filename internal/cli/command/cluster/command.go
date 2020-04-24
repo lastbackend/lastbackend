@@ -21,7 +21,6 @@ package cluster
 import (
 	"fmt"
 	"os"
-	"path"
 
 	"github.com/lastbackend/lastbackend/internal/cli/service"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/bbolt"
@@ -41,9 +40,10 @@ type command struct {
 func NewCommands() []*cobra.Command {
 	cmd := new(command)
 
-	stg, err := bbolt.New(bbolt.Options{Path: path.Join(filesystem.HomeDir(), ".lb")})
+	stg, err := bbolt.New(bbolt.Options{DbDir: filesystem.HomeDir(), DbName: ".cli-db"})
 	if err != nil {
-		panic(fmt.Sprintf("cannot initialize storage: %v", err))
+		fmt.Printf("cannot initialize storage: %v", err)
+		os.Exit(1)
 	}
 
 	sessionService := service.NewSessionService(stg)

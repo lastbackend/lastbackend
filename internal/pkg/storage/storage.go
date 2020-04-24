@@ -26,6 +26,11 @@ import (
 )
 
 const (
+	MockDriver  = "mock"
+	BboltDriver = "bbolt"
+)
+
+const (
 	NamespaceKind  types.Kind = "namespace"
 	ServiceKind    types.Kind = "service"
 	DeploymentKind types.Kind = "deployment"
@@ -61,11 +66,14 @@ type IStorage interface {
 func Get(v *viper.Viper) (IStorage, error) {
 
 	switch v.GetString("storage.driver") {
-	case "mock":
+	case MockDriver:
 		return mock.New()
+	case BboltDriver:
+		fallthrough
 	default:
 		opts := bbolt.Options{
-			Path: v.GetString("storage.bbolt.path"),
+			DbName: v.GetString("storage.bbolt.name"),
+			DbDir:  v.GetString("storage.bbolt.dir"),
 		}
 		return bbolt.New(opts)
 	}

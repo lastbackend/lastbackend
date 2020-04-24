@@ -5,31 +5,35 @@ verbose: 3
 security:
   token: lstbknd
 
+workdir: /${HOME}/.lastbackend/
+rootless: false
+
 # Cluster info
 name: "lastbackend"
 description: "lastbackend cluster"
+
+manifestdir: ""
+disable-selinux: false
 
 # System domains settings
 domain:
   internal: "lb.local"
   external: "lastbackend.lbdp.io"
 
-# Etcd database
-storage:
-  driver: "etcd"
-  etcd:
-    prefix: lastbackend
-    endpoints:
-      - "127.0.0.1:2379"
-
-# Cluster http-server settings
+# Http-server settings
 server:
   host: 0.0.0.0
-  port: 2967
+  port: 2992
   tls:
-    insecure: true
+    verify: false
+    ca: ""
+    cert: ""
+    key: ""
+
+registry:
+  config: ""
 
 # Last.Backend vault service settings
 vault:
-  endpoint: http://127.0.0.1:2965
-  token: d3ee20b4307141b8b52a6ba18029c88e
+  endpoint: ""
+  token: ""
