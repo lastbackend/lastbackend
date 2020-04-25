@@ -25,7 +25,7 @@ import (
 	"github.com/spf13/viper"
 	"strings"
 
-	"github.com/lastbackend/lastbackend/internal/cli/options"
+	"github.com/lastbackend/lastbackend/internal/cli/command/options"
 )
 
 const defaultEnvPrefix = "LB"

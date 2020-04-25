@@ -22,7 +22,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/lastbackend/lastbackend/internal/master/server"
 	"github.com/lastbackend/lastbackend/internal/master/state"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
@@ -84,6 +83,10 @@ func (app *App) init() error {
 
 	workdir, err := filesystem.DetermineHomePath(app.v.GetString("workdir"), app.v.GetBool("rootless"))
 	if err != nil {
+		return err
+	}
+
+	if err := filesystem.MkDir(workdir, 0755); err != nil {
 		return err
 	}
 

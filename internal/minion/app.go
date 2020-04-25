@@ -128,6 +128,10 @@ func (app *App) init() error {
 		return err
 	}
 
+	if err := filesystem.MkDir(workdir, 0755); err != nil {
+		return err
+	}
+fmt.Println(">>>>", app.v.GetBool("rootless"))
 	if app.v.GetBool("rootless") {
 		if err := rootless.Rootless(workdir); err != nil {
 			return err

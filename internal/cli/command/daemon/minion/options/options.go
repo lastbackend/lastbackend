@@ -20,7 +20,6 @@ package options
 
 import (
 	"bytes"
-
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
@@ -98,5 +97,4 @@ func (f *MinionFlags) AddFlags(mainfs *pflag.FlagSet) {
 	fs.StringVarP(&f.Registry.Config, "registry-config-path", "", "", "Registry configuration file path")
 	fs.BoolVarP(&f.Rootless, "rootless", "", false, "Run rootless")
 	fs.BoolVarP(&f.DisableSelinux, "disable-selinux", "", false, "Disable SELinux in containerd if currently enabled")
-
 }

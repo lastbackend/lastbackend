@@ -98,8 +98,6 @@ func NewCommand() *cobra.Command {
 				return
 			}
 
-			//fmt.Println("2 ::::", verbose, cfgFile, agent, noSchedule)
-
 			command.PrintFlags(cleanFlagSet)
 
 			masterViper := viper.New()
@@ -118,6 +116,8 @@ func NewCommand() *cobra.Command {
 				}
 			}
 
+			//masterFlags.LoadViper(masterViper)
+
 			minionViper := viper.New()
 			minionViper.AutomaticEnv()
 			minionViper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
@@ -133,6 +133,8 @@ func NewCommand() *cobra.Command {
 					return
 				}
 			}
+
+			//minionFlags.LoadViper(minionViper)
 
 			if err := Run(masterViper, minionViper, &RunOptions{DisableMaster: agent, DisableMinion: noSchedule}); err != nil {
 				fmt.Println(err)
