@@ -24,6 +24,7 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"time"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/types"
 	"github.com/lastbackend/lastbackend/internal/util/converter"
@@ -77,8 +78,8 @@ func New(options Options) (*Storage, error) {
 	if ok, _ := checkDirExists(options.DbDir); !ok {
 		return nil, fmt.Errorf("directory `%s` does not exists", options.DbDir)
 	}
-	
-	db, err := bolt.Open(path.Join(options.DbDir, options.DbName), 0755, nil)
+
+	db, err := bolt.Open(path.Join(options.DbDir, options.DbName), 0755, &bolt.Options{Timeout: 5 * time.Second})
 	if err != nil {
 		return nil, err
 	}

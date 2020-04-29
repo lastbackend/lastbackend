@@ -95,7 +95,7 @@ func (app *App) init() error {
 		return err
 	}
 
-	stg, err := storage.Get(storage.BboltDriver, storage.BboltConfig{DbDir: workdir})
+	stg, err := storage.Get(storage.BboltDriver, storage.BboltConfig{DbDir: workdir, DbName: ".server-db"})
 	if err != nil {
 		return fmt.Errorf("cannot initialize storage: %v", err)
 	}
