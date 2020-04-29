@@ -6,10 +6,10 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"time"
 
+	"github.com/containerd/containerd/cmd/containerd/command"
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/namespaces"
 	"github.com/lastbackend/lastbackend/internal/agent/containerd/templates"
@@ -242,35 +242,18 @@ func (c *Containerd) setLoggerProvider(ctx context.Context, fileeName string) io
 }
 
 func (c *Containerd) runServer() {
-	log := logger.WithContext(c.ctx)
 
 	args := []string{
-		"containerd",
 		"-c", c.config,
 		"-a", c.address,
 		"--state", c.state,
 		"--root", c.root,
 	}
 
-	if len(os.Getenv("CONTAINERD_LOG_LEVEL")) != 0 {
-		args = append(args, "-l", os.Getenv("CONTAINERD_LOG_LEVEL"))
-	}
-
-	stdOut := io.Writer(os.Stdout)
-	stdErr := io.Writer(os.Stderr)
-
-	if c.log != "" {
-		stdOut = c.setLoggerProvider(c.ctx, c.log)
-		stdErr = stdOut
-	}
-
-	log.Infof("Running containerd server")
-	cmd := exec.Command(args[0], args[1:]...)
-	cmd.Stdout = stdOut
-	cmd.Stderr = stdErr
-
-	if err := cmd.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "containerd: %s\n", err)
+	app:= command.App()
+	if err := app.Run(args); err != nil {
+		fmt.Println(fmt.Sprintf("containerd err: %v", err))
+		os.Exit(1)
 	}
 
 	os.Exit(1)
