@@ -22,22 +22,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
 	"path/filepath"
 
 	"github.com/lastbackend/lastbackend/internal/agent/config"
 	"github.com/lastbackend/lastbackend/internal/agent/containerd"
 	"github.com/lastbackend/lastbackend/internal/agent/controller"
-	"github.com/lastbackend/lastbackend/internal/agent/exporter"
 	"github.com/lastbackend/lastbackend/internal/agent/rootless"
 	"github.com/lastbackend/lastbackend/internal/agent/runtime"
 	"github.com/lastbackend/lastbackend/internal/agent/server"
 	"github.com/lastbackend/lastbackend/internal/agent/state"
-	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/filesystem"
-	"github.com/lastbackend/lastbackend/pkg/network"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cii"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cri"
 	"github.com/lastbackend/lastbackend/tools/logger"
 )
 
@@ -138,65 +132,24 @@ func (app *App) init() error {
 		}
 	}
 
-	copts := new(containerd.Config)
-	copts.Registry = app.config.Registry.Config
-	copts.ConfigPath = filepath.Join(workdir, "etc/containerd/config.toml")
-	copts.Root = filepath.Join(workdir, "containerd")
-	copts.Opt = filepath.Join(workdir, "containerd")
-	copts.State = "/run/lastbackend/containerd"
-	copts.Address = filepath.Join(copts.State, "containerd.sock")
-	copts.Template = filepath.Join(workdir, "etc/containerd/config.toml.tmpl")
+	cdConfig := containerd.Config{}
+	cdConfig.Registry = app.config.Registry.Config
+	cdConfig.ConfigPath = filepath.Join(workdir, "etc/containerd/config.toml")
+	cdConfig.Root = filepath.Join(workdir, "containerd")
+	cdConfig.Opt = filepath.Join(workdir, "containerd")
+	cdConfig.State = "/run/lastbackend/containerd"
+	cdConfig.Address = filepath.Join(cdConfig.State, "containerd.sock")
+	cdConfig.Template = filepath.Join(workdir, "etc/containerd/config.toml.tmpl")
 	if !app.config.Debug {
-		copts.Log = filepath.Join(workdir, "containerd/containerd.log")
+		cdConfig.Log = filepath.Join(workdir, "containerd/containerd.log")
 	}
 
-	app.Containerd, err = containerd.New(copts)
+	app.Containerd, err = containerd.New(cdConfig)
 	if err != nil {
 		return fmt.Errorf("Cannot initialize containerd: %v", err)
 	}
 
-	_cii, err := cii.New(cii.ContainerdDriver, cii.ContainerdConfig{Address: copts.Address})
-	if err != nil {
-		return fmt.Errorf("Cannot initialize iri: %v", err)
-	}
-
-	_cri, err := cri.New(cri.ContainerdDriver, cri.ContainerdConfig{Address: copts.Address})
-	if err != nil {
-		return fmt.Errorf("Cannot initialize cri: %v", err)
-	}
-
-	_csi := make(map[string]csi.CSI, 0)
-
-	// TODO: Implement csi initialization logic
-	//csis := app.config.GetStringMap("container.csi")
-	//if csis != nil {
-	//	for kind := range csis {
-	//		si, err := csi.New(kind, dir.Config{RootDir: filepath.Join(app.config.WorkDir, "csi")})
-	//		if err != nil {
-	//			log.Errorf("Cannot initialize [%s] csi: %v", kind, err)
-	//			return err
-	//		}
-	//		_csi[kind] = si
-	//	}
-	//}
-
-	_net, err := network.New(app.config)
-	if err != nil {
-		return fmt.Errorf("Can not initialize network: %v", err)
-	}
-
-	_state := state.New()
-
-	// TODO: Implement cluster state logic
-	//_state.Node().Info = runtime.NodeInfo()
-	//_state.Node().Status = runtime.NodeStatus()
-
-	_exp, err := exporter.NewExporter(_state.Node().Info.Hostname, models.EmptyString)
-	if err != nil {
-		return fmt.Errorf("Can not initialize collector: %v", err)
-	}
-
-	app.Runtime, err = runtime.New(_cri, _cii, _csi, _net, _state, _exp, app.config)
+	app.Runtime, err = runtime.New(app.config, cdConfig)
 	if err != nil {
 		return fmt.Errorf("Can not initialize runtime: %v", err)
 	}

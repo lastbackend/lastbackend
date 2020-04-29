@@ -34,7 +34,7 @@ import (
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/cleaner"
 	"github.com/lastbackend/lastbackend/internal/util/filesystem"
-	)
+)
 
 const (
 	logPodPrefix               = "node:runtime:pod:>"
@@ -442,8 +442,8 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *models.Pod
 			script := fmt.Sprintf(logScript, escaped, buf.String())
 
 			rootPath := defaultRootLocalStorgePath
-			if len(r.workdir) != 0 {
-				rootPath = r.workdir
+			if len(r.config.WorkDir) != 0 {
+				rootPath = r.config.WorkDir
 			}
 
 			filepath := path.Join(rootPath, strings.Replace(key, ":", "-", -1), "init")
@@ -577,8 +577,8 @@ func (r Runtime) PodDestroy(ctx context.Context, pod string, status *models.PodS
 	}
 
 	rootPath := defaultRootLocalStorgePath
-	if len(r.workdir) != 0 {
-		rootPath = r.workdir
+	if len(r.config.WorkDir) != 0 {
+		rootPath = r.config.WorkDir
 	}
 
 	dirPath := path.Join(rootPath, strings.Replace(pod, ":", "-", -1), "init")

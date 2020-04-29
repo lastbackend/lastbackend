@@ -37,3 +37,4 @@ coverage.txt
 /build/darwin/
 /build/linux/
 /build/windows/
+/.run/

@@ -21,24 +21,24 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/agent/config"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
 
-	"github.com/lastbackend/lastbackend/pkg/client/cluster"
-	"github.com/lastbackend/lastbackend/tools/logger"
-	"gopkg.in/yaml.v3"
-
+	"github.com/lastbackend/lastbackend/internal/agent/config"
+	"github.com/lastbackend/lastbackend/internal/agent/containerd"
 	"github.com/lastbackend/lastbackend/internal/agent/exporter"
 	"github.com/lastbackend/lastbackend/internal/agent/state"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/decoder"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/client/cluster"
 	"github.com/lastbackend/lastbackend/pkg/network"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cii"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
+	"github.com/lastbackend/lastbackend/tools/logger"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -51,32 +51,26 @@ type Runtime struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	csi         map[string]csi.CSI
-	cri         cri.CRI
-	cii         cii.CII
-	network     *network.Network
-	state       *state.State
-	exporter    *exporter.Exporter
-	retClient   cluster.IClient
-	workdir     string
-	manifestDir string
+	csi       map[string]csi.CSI
+	cri       cri.CRI
+	cii       cii.CII
+	network   *network.Network
+	state     *state.State
+	exporter  *exporter.Exporter
+	retClient cluster.IClient
+
+	config   config.Config
+	cdConfig containerd.Config
 
 	spec chan *models.NodeManifest
 }
 
 // NewRuntime method return new runtime pointer
-func New(cri cri.CRI, cii cii.CII, csi map[string]csi.CSI, ntw *network.Network, stt *state.State, exp *exporter.Exporter, cfg config.Config) (*Runtime, error) {
-
+func New(cfg config.Config, cdConfig containerd.Config) (*Runtime, error) {
 	r := new(Runtime)
 	r.ctx, r.cancel = context.WithCancel(context.Background())
-	r.csi = csi
-	r.cri = cri
-	r.cii = cii
-	r.network = ntw
-	r.state = stt
-	r.exporter = exp
-	r.workdir = cfg.WorkDir
-	r.manifestDir = cfg.ManifestDir
+	r.config = cfg
+	r.cdConfig = cdConfig
 
 	r.spec = make(chan *models.NodeManifest, 0)
 	return r, nil
@@ -85,6 +79,54 @@ func New(cri cri.CRI, cii cii.CII, csi map[string]csi.CSI, ntw *network.Network,
 // NewRuntime run daemon
 func (r *Runtime) Run() error {
 
+	_cii, err := cii.New(cii.ContainerdDriver, cii.ContainerdConfig{Address: r.cdConfig.Address})
+	if err != nil {
+		return fmt.Errorf("Cannot initialize iri: %v", err)
+	}
+
+	_cri, err := cri.New(cri.ContainerdDriver, cri.ContainerdConfig{Address: r.cdConfig.Address})
+	if err != nil {
+		return fmt.Errorf("Cannot initialize cri: %v", err)
+	}
+
+	_csi := make(map[string]csi.CSI, 0)
+
+	// TODO: Implement csi initialization logic
+	//csis := app.config.GetStringMap("container.csi")
+	//if csis != nil {
+	//	for kind := range csis {
+	//		si, err := csi.New(kind, dir.Config{RootDir: filepath.Join(app.config.WorkDir, "csi")})
+	//		if err != nil {
+	//			log.Errorf("Cannot initialize [%s] csi: %v", kind, err)
+	//			return err
+	//		}
+	//		csi[kind] = si
+	//	}
+	//}
+
+	_net, err := network.New(r.config)
+	if err != nil {
+		return fmt.Errorf("Can not initialize network: %v", err)
+	}
+
+	_state := state.New()
+
+	// TODO: Implement cluster state logic
+	//_state.Node().Info = runtime.NodeInfo()
+	//_state.Node().Status = runtime.NodeStatus()
+
+	exp, err := exporter.NewExporter(_state.Node().Info.Hostname, models.EmptyString)
+	if err != nil {
+		return fmt.Errorf("Can not initialize collector: %v", err)
+	}
+
+	r.csi = _csi
+	r.cri = _cri
+	r.cii = _cii
+	r.network = _net
+	r.state = _state
+	r.exporter = exp
+
 	if err := r.Restore(); err != nil {
 		return err
 	}
@@ -92,8 +134,8 @@ func (r *Runtime) Run() error {
 	r.Subscribe()
 	r.Loop()
 
-	if r.manifestDir != models.EmptyString {
-		r.Provision(r.manifestDir)
+	if r.config.ManifestDir != models.EmptyString {
+		r.Provision(r.config.ManifestDir)
 	}
 
 	go r.exporter.Listen()

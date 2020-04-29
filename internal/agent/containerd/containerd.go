@@ -55,13 +55,9 @@ type Config struct {
 	Log            string
 }
 
-func New(cfg *Config) (*Containerd, error) {
+func New(cfg Config) (*Containerd, error) {
 
 	log := logger.WithContext(context.Background())
-
-	if cfg == nil {
-		cfg = new(Config)
-	}
 
 	c := new(Containerd)
 	c.ctx, c.cancel = context.WithCancel(context.Background())
