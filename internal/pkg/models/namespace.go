@@ -51,6 +51,7 @@ type NamespaceManifest struct {
 
 type NamespaceResourceManifest interface {
 	SetNamespace(string)
+	Kind() string
 }
 
 type NamespaceResource interface {

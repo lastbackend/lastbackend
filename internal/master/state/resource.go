@@ -24,37 +24,26 @@ import (
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
-type ResourceController struct {
-}
-
-// List method returns slice of namespace resources
-func (ns *ResourceController) List(ctx context.Context, filter *ResourceFilter) (models.NamespaceResource, error) {
-	return nil, nil
-}
-
-// Get method returns namespace resource
-func (ns *ResourceController) Get(ctx context.Context, selflink models.SelfLink) (models.NamespaceResource, error) {
-	return nil, nil
-}
-
-// Put method insert namespace resource
-func (ns *ResourceController) Put(ctx context.Context, manifest models.NamespaceResourceManifest) (models.NamespaceResource, error) {
-	return nil, nil
-}
-
-// Set method updates namespace resource
-func (ns *ResourceController) Set(ctx context.Context, manifest models.NamespaceResourceManifest) (models.NamespaceResource, error) {
-	return nil, nil
-}
-
-// Del method removes namespace resource
-func (ns *ResourceController) Del(ctx context.Context, selflink models.SelfLink) (models.NamespaceResource, error) {
-	return nil, nil
+// ResourceController defines base resource controller methods
+type ResourceController interface {
+	// Run controller state
+	Run(ctx context.Context) error
+	// Restore controller state
+	Restore(ctx context.Context) error
+	// List method returns slice of namespace resources
+	List(ctx context.Context, filter *ResourceFilter) (models.NamespaceResourceList, error)
+	// Get method returns namespace resource
+	Get(ctx context.Context, selflink models.SelfLink) (models.NamespaceResource, error)
+	// Put method insert namespace resource
+	Put(ctx context.Context, manifest models.NamespaceResourceManifest) (models.NamespaceResource, error)
+	// Set method updates namespace resource
+	Set(ctx context.Context, manifest models.NamespaceResourceManifest) (models.NamespaceResource, error)
+	// Del method removes namespace resource
+	Del(ctx context.Context, selflink models.SelfLink) (models.NamespaceResource, error)
 }
 
 type ResourceFilter struct {
 	namespace []string
-	kind      []string
 }
 
 func (rf *ResourceFilter) WithNamespace(namespace ...string) *ResourceFilter {
@@ -63,19 +52,6 @@ func (rf *ResourceFilter) WithNamespace(namespace ...string) *ResourceFilter {
 			continue
 		}
 		rf.namespace = append(rf.namespace, ns)
-	}
-
-	return rf
-}
-
-func (rf *ResourceFilter) WithKind(kind ...string) *ResourceFilter {
-	for _, k := range kind {
-
-		if len(k) <= 0 {
-			continue
-		}
-
-		rf.kind = append(rf.kind, k)
 	}
 
 	return rf

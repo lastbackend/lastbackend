@@ -36,7 +36,6 @@ type SelfLink interface {
 	Parse(str string) error
 	String() string
 	Namespace() *NamespaceSelfLink
-	Parent() (string, SelfLink)
 	Name() string
 }
 

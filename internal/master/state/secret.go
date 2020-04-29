@@ -16,3 +16,7 @@
 //
 
 package state
+
+func init() {
+
+}
