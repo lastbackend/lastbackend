@@ -20,7 +20,8 @@ package utils
 
 import (
 	"bytes"
-	"github.com/lastbackend/lastbackend/tools/log"
+	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"os/exec"
 	"strings"
 )
@@ -36,7 +37,7 @@ type FDBRule struct {
 }
 
 func BridgeFDBList() ([]FDBRule, error) {
-
+	log := logger.WithContext(context.Background())
 	var rules []FDBRule
 
 	fdblcmd := exec.Command("bridge", "fdb")

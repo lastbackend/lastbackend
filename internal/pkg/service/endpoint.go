@@ -40,7 +40,7 @@ type Endpoint struct {
 
 func (e *Endpoint) Get(namespace, service string) (*models.Endpoint, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get endpoint by namespace %s and service %s", logEndpointPrefix, namespace, service)
+	log.Debugf("%s:get:> get endpoint by namespace %s and service %s", logEndpointPrefix, namespace, service)
 
 	item := new(models.Endpoint)
 
@@ -51,7 +51,7 @@ func (e *Endpoint) Get(namespace, service string) (*models.Endpoint, error) {
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> get endpoint err: %v", logEndpointPrefix, err)
+		log.Errorf("%s:get:> get endpoint err: %v", logEndpointPrefix, err)
 		return nil, err
 	}
 
@@ -59,7 +59,7 @@ func (e *Endpoint) Get(namespace, service string) (*models.Endpoint, error) {
 }
 
 func (e *Endpoint) ListByNamespace(namespace string) (*models.EndpointList, error) {
-	log.V(logLevel).Debugf("%s:listbynamespace:> in namespace: %s", namespace)
+	log.Debugf("%s:listbynamespace:> in namespace: %s", namespace)
 
 	list := models.NewEndpointList()
 
@@ -103,7 +103,7 @@ func (e *Endpoint) Create(namespace, service string, opts *models.EndpointCreate
 }
 
 func (e *Endpoint) Update(endpoint *models.Endpoint, opts *models.EndpointUpdateOptions) (*models.Endpoint, error) {
-	log.V(logLevel).Debugf("%s:update:> endpoint: %s", logEndpointPrefix, endpoint.SelfLink())
+	log.Debugf("%s:update:> endpoint: %s", logEndpointPrefix, endpoint.SelfLink())
 
 	if len(opts.Ports) != 0 {
 		endpoint.Spec.PortMap = make(map[uint16]string, 0)
@@ -140,10 +140,10 @@ func (e *Endpoint) SetSpec(endpoint *models.Endpoint, spec *models.EndpointSpec)
 }
 
 func (e *Endpoint) Remove(endpoint *models.Endpoint) error {
-	log.V(logLevel).Debugf("%s:remove:> remove endpoint %s", logEndpointPrefix, endpoint.Meta.Name)
+	log.Debugf("%s:remove:> remove endpoint %s", logEndpointPrefix, endpoint.Meta.Name)
 	if err := e.storage.Del(e.context, e.storage.Collection().Endpoint(),
 		endpoint.SelfLink().String()); err != nil {
-		log.V(logLevel).Debugf("%s:remove:> remove endpoint %s err: %v", logEndpointPrefix, endpoint.Meta.Name, err)
+		log.Debugf("%s:remove:> remove endpoint %s err: %v", logEndpointPrefix, endpoint.Meta.Name, err)
 		return err
 	}
 
@@ -153,7 +153,7 @@ func (e *Endpoint) Remove(endpoint *models.Endpoint) error {
 // Watch endpoint changes
 func (e *Endpoint) Watch(ch chan models.EndpointEvent, rev *int64) error {
 
-	log.V(logLevel).Debugf("%s:watch:> watch endpoint", logEndpointPrefix)
+	log.Debugf("%s:watch:> watch endpoint", logEndpointPrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()
@@ -196,7 +196,7 @@ func (e *Endpoint) Watch(ch chan models.EndpointEvent, rev *int64) error {
 
 // Get network subnet manifests map
 func (e *Endpoint) ManifestMap() (*models.EndpointManifestMap, error) {
-	log.V(logLevel).Debugf("%s:EndpointManifestMap:> ", logEndpointPrefix)
+	log.Debugf("%s:EndpointManifestMap:> ", logEndpointPrefix)
 
 	var (
 		mf = models.NewEndpointManifestMap()
@@ -212,7 +212,7 @@ func (e *Endpoint) ManifestMap() (*models.EndpointManifestMap, error) {
 
 // Get particular network manifest
 func (e *Endpoint) ManifestGet(selflink string) (*models.EndpointManifest, error) {
-	log.V(logLevel).Debugf("%s:EndpointManifestGet:> ", logEndpointPrefix)
+	log.Debugf("%s:EndpointManifestGet:> ", logEndpointPrefix)
 
 	var (
 		mf = new(models.EndpointManifest)
@@ -234,7 +234,7 @@ func (e *Endpoint) ManifestGet(selflink string) (*models.EndpointManifest, error
 // Add particular network manifest
 func (e *Endpoint) ManifestAdd(selflink string, manifest *models.EndpointManifest) error {
 
-	log.V(logLevel).Debugf("%s:EndpointManifestAdd:> ", logEndpointPrefix)
+	log.Debugf("%s:EndpointManifestAdd:> ", logEndpointPrefix)
 
 	if err := e.storage.Put(e.context,
 		e.storage.Collection().Manifest().Endpoint(),
@@ -249,7 +249,7 @@ func (e *Endpoint) ManifestAdd(selflink string, manifest *models.EndpointManifes
 
 // Set particular network manifest
 func (e *Endpoint) ManifestSet(selflink string, manifest *models.EndpointManifest) error {
-	log.V(logLevel).Debugf("%s:EndpointManifestSet:> ", logEndpointPrefix)
+	log.Debugf("%s:EndpointManifestSet:> ", logEndpointPrefix)
 
 	if err := e.storage.Set(e.context, e.storage.Collection().Manifest().Endpoint(), selflink, manifest, nil); err != nil {
 		log.Errorf("%s:EndpointManifestSet:> err :%s", logEndpointPrefix, err.Error())
@@ -261,7 +261,7 @@ func (e *Endpoint) ManifestSet(selflink string, manifest *models.EndpointManifes
 
 // Del particular network manifest
 func (e *Endpoint) ManifestDel(selflink string) error {
-	log.V(logLevel).Debugf("%s:EndpointManifestDel:> ", logEndpointPrefix)
+	log.Debugf("%s:EndpointManifestDel:> ", logEndpointPrefix)
 
 	if err := e.storage.Del(e.context, e.storage.Collection().Manifest().Endpoint(), selflink); err != nil {
 		log.Errorf("%s:EndpointManifestDel:> err :%s", logEndpointPrefix, err.Error())
@@ -273,7 +273,7 @@ func (e *Endpoint) ManifestDel(selflink string) error {
 
 // watch subnet manifests
 func (e *Endpoint) ManifestWatch(ch chan models.EndpointManifestEvent, rev *int64) error {
-	log.V(logLevel).Debugf("%s:EndpointManifestWatch:> watch manifest ", logEndpointPrefix)
+	log.Debugf("%s:EndpointManifestWatch:> watch manifest ", logEndpointPrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

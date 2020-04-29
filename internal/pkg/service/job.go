@@ -42,10 +42,10 @@ type Job struct {
 // System - get job runtime
 func (j *Job) Runtime() (*models.System, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get job runtime info", logJobPrefix)
+	log.Debugf("%s:get:> get job runtime info", logJobPrefix)
 	runtime, err := j.storage.Info(j.context, j.storage.Collection().Job(), "")
 	if err != nil {
-		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logJobPrefix, err)
+		log.Errorf("%s:get:> get runtime info error: %s", logJobPrefix, err)
 		return &runtime.System, err
 	}
 	return &runtime.System, nil
@@ -54,18 +54,18 @@ func (j *Job) Runtime() (*models.System, error) {
 // Get job by selflink
 func (j *Job) Get(selflink string) (*models.Job, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get by selflink %s", logJobPrefix, selflink)
+	log.Debugf("%s:get:> get by selflink %s", logJobPrefix, selflink)
 
 	job := new(models.Job)
 	err := j.storage.Get(j.context, j.storage.Collection().Job(), selflink, job, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> get job by selflink %s not found", logJobPrefix, selflink)
+			log.Warnf("%s:get:> get job by selflink %s not found", logJobPrefix, selflink)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> get job by selflink %s error: %v", logJobPrefix, selflink, err)
+		log.Errorf("%s:get:> get job by selflink %s error: %v", logJobPrefix, selflink, err)
 		return nil, err
 	}
 
@@ -74,17 +74,17 @@ func (j *Job) Get(selflink string) (*models.Job, error) {
 
 // ListByNamespace jobs
 func (j *Job) ListByNamespace(namespace string) (*models.JobList, error) {
-	log.V(logLevel).Debugf("%s:list:> by namespace %s", logJobPrefix, namespace)
+	log.Debugf("%s:list:> by namespace %s", logJobPrefix, namespace)
 	jobs := models.NewJobList()
 
 	q := j.storage.Filter().Job().ByNamespace(namespace)
 	err := j.storage.List(j.context, j.storage.Collection().Job(), q, jobs, nil)
 	if err != nil {
-		log.V(logLevel).Error("%s:list:> by namespace %s err: %v", logJobPrefix, namespace, err)
+		log.Error("%s:list:> by namespace %s err: %v", logJobPrefix, namespace, err)
 		return nil, err
 	}
 
-	log.V(logLevel).Debugf("%s:list:> by namespace %s result: %d", logJobPrefix, namespace, len(jobs.Items))
+	log.Debugf("%s:list:> by namespace %s result: %d", logJobPrefix, namespace, len(jobs.Items))
 
 	return jobs, nil
 }
@@ -107,7 +107,7 @@ func (j *Job) Create(job *models.Job) (*models.Job, error) {
 func (j *Job) Set(job *models.Job) error {
 
 	job.Meta.Updated = time.Now()
-	log.V(logLevel).Debugf("%s:update:> update job %s", logJobPrefix, job.Meta.Name)
+	log.Debugf("%s:update:> update job %s", logJobPrefix, job.Meta.Name)
 
 	if err := j.storage.Set(j.context, j.storage.Collection().Job(),
 		job.SelfLink().String(), job, nil); err != nil {
@@ -121,7 +121,7 @@ func (j *Job) Set(job *models.Job) error {
 // Pause job
 func (j *Job) Pause(job *models.Job) error {
 
-	log.V(logLevel).Debugf("%s:pause:> pause job %s", logJobPrefix, job.Meta.Name)
+	log.Debugf("%s:pause:> pause job %s", logJobPrefix, job.Meta.Name)
 
 	// mark job for destroy
 	job.Spec.Enabled = false
@@ -130,7 +130,7 @@ func (j *Job) Pause(job *models.Job) error {
 
 	if err := j.storage.Set(j.context, j.storage.Collection().Job(),
 		job.SelfLink().String(), job, nil); err != nil {
-		log.V(logLevel).Debugf("%s:pause: pause job %s err: %v", logJobPrefix, job.Meta.Name, err)
+		log.Debugf("%s:pause: pause job %s err: %v", logJobPrefix, job.Meta.Name, err)
 		return err
 	}
 
@@ -140,7 +140,7 @@ func (j *Job) Pause(job *models.Job) error {
 // Start job
 func (j *Job) Start(job *models.Job) error {
 
-	log.V(logLevel).Debugf("%s:start:> start job %s", logJobPrefix, job.Meta.Name)
+	log.Debugf("%s:start:> start job %s", logJobPrefix, job.Meta.Name)
 
 	// mark job for destroy
 	job.Spec.Enabled = true
@@ -149,7 +149,7 @@ func (j *Job) Start(job *models.Job) error {
 
 	if err := j.storage.Set(j.context, j.storage.Collection().Job(),
 		job.SelfLink().String(), job, nil); err != nil {
-		log.V(logLevel).Debugf("%s:destroy:> destroy job %s err: %v", logJobPrefix, job.Meta.Name, err)
+		log.Debugf("%s:destroy:> destroy job %s err: %v", logJobPrefix, job.Meta.Name, err)
 		return err
 	}
 
@@ -159,14 +159,14 @@ func (j *Job) Start(job *models.Job) error {
 // Destroy job
 func (j *Job) Destroy(job *models.Job) (*models.Job, error) {
 
-	log.V(logLevel).Debugf("%s:destroy:> destroy job %s", logServicePrefix, job.SelfLink().String())
+	log.Debugf("%s:destroy:> destroy job %s", logServicePrefix, job.SelfLink().String())
 
 	job.Status.State = models.StateDestroy
 	job.Spec.State.Destroy = true
 
 	if err := j.storage.Set(j.context, j.storage.Collection().Job(),
 		job.SelfLink().String(), job, nil); err != nil {
-		log.V(logLevel).Errorf("%s:destroy:> destroy job err: %v", logServicePrefix, err)
+		log.Errorf("%s:destroy:> destroy job err: %v", logServicePrefix, err)
 		return nil, err
 	}
 	return job, nil
@@ -175,10 +175,10 @@ func (j *Job) Destroy(job *models.Job) (*models.Job, error) {
 // Remove job
 func (j *Job) Remove(job *models.Job) error {
 
-	log.V(logLevel).Debugf("%s:remove:> remove job %s", logJobPrefix, job.Meta.Name)
+	log.Debugf("%s:remove:> remove job %s", logJobPrefix, job.Meta.Name)
 	if err := j.storage.Del(j.context, j.storage.Collection().Job(),
 		job.SelfLink().String()); err != nil {
-		log.V(logLevel).Debugf("%s:remove:> remove job %s err: %v", logJobPrefix, job.Meta.Name, err)
+		log.Debugf("%s:remove:> remove job %s err: %v", logJobPrefix, job.Meta.Name, err)
 		return err
 	}
 
@@ -191,7 +191,7 @@ func (j *Job) Watch(dt chan models.JobEvent, rev *int64) error {
 	done := make(chan bool)
 	watcher := storage.NewWatcher()
 
-	log.V(logLevel).Debugf("%s:watch:> watch jobs", logJobPrefix)
+	log.Debugf("%s:watch:> watch jobs", logJobPrefix)
 
 	go func() {
 		for {

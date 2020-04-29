@@ -39,10 +39,10 @@ type Config struct {
 
 func (n *Config) Runtime() (*models.System, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get config runtime info", logConfigPrefix)
+	log.Debugf("%s:get:> get config runtime info", logConfigPrefix)
 	runtime, err := n.storage.Info(n.context, n.storage.Collection().Config(), "")
 	if err != nil {
-		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logConfigPrefix, err)
+		log.Errorf("%s:get:> get runtime info error: %s", logConfigPrefix, err)
 		return &runtime.System, err
 	}
 	return &runtime.System, nil
@@ -50,7 +50,7 @@ func (n *Config) Runtime() (*models.System, error) {
 
 func (n *Config) Get(namespace, name string) (*models.Config, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get config by id %s/%s", logConfigPrefix, name)
+	log.Debugf("%s:get:> get config by id %s/%s", logConfigPrefix, name)
 
 	item := new(models.Config)
 
@@ -58,11 +58,11 @@ func (n *Config) Get(namespace, name string) (*models.Config, error) {
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logConfigPrefix, name)
+			log.Warnf("%s:get:> in namespace %s by name %s not found", logConfigPrefix, name)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> in namespace %s by name %s error: %s", logConfigPrefix, name, err)
+		log.Errorf("%s:get:> in namespace %s by name %s error: %s", logConfigPrefix, name, err)
 		return nil, err
 	}
 
@@ -73,7 +73,7 @@ func (n *Config) List(filter string) (*models.ConfigList, error) {
 
 	var f string
 
-	log.V(logLevel).Debugf("%s:list:> get configs list by namespace", logConfigPrefix)
+	log.Debugf("%s:list:> get configs list by namespace", logConfigPrefix)
 
 	list := models.NewConfigList()
 	if filter != models.EmptyString {
@@ -82,18 +82,18 @@ func (n *Config) List(filter string) (*models.ConfigList, error) {
 
 	err := n.storage.List(n.context, n.storage.Collection().Config(), f, list, nil)
 	if err != nil {
-		log.V(logLevel).Error("%s:list:> get configs list by namespace err: %s", logConfigPrefix, err)
+		log.Error("%s:list:> get configs list by namespace err: %s", logConfigPrefix, err)
 		return list, err
 	}
 
-	log.V(logLevel).Debugf("%s:list:> get configs list by namespace result: %d", logConfigPrefix, len(list.Items))
+	log.Debugf("%s:list:> get configs list by namespace result: %d", logConfigPrefix, len(list.Items))
 
 	return list, nil
 }
 
 func (n *Config) Create(namespace *models.Namespace, config *models.Config) (*models.Config, error) {
 
-	log.V(logLevel).Debugf("%s:create:> create config %#v", logConfigPrefix, config.Meta.Name)
+	log.Debugf("%s:create:> create config %#v", logConfigPrefix, config.Meta.Name)
 
 	config.Meta.SetDefault()
 	config.Meta.Namespace = namespace.Meta.Name
@@ -101,7 +101,7 @@ func (n *Config) Create(namespace *models.Namespace, config *models.Config) (*mo
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Config(),
 		config.SelfLink().String(), config, nil); err != nil {
-		log.V(logLevel).Errorf("%s:create:> insert config err: %v", logConfigPrefix, err)
+		log.Errorf("%s:create:> insert config err: %v", logConfigPrefix, err)
 		return nil, err
 	}
 
@@ -110,11 +110,11 @@ func (n *Config) Create(namespace *models.Namespace, config *models.Config) (*mo
 
 func (n *Config) Update(config *models.Config) (*models.Config, error) {
 
-	log.V(logLevel).Debugf("%s:update:> update config %s", logConfigPrefix, config.Meta.Name)
+	log.Debugf("%s:update:> update config %s", logConfigPrefix, config.Meta.Name)
 
 	if err := n.storage.Set(n.context, n.storage.Collection().Config(),
 		config.SelfLink().String(), config, nil); err != nil {
-		log.V(logLevel).Errorf("%s:update:> update config err: %s", logConfigPrefix, err)
+		log.Errorf("%s:update:> update config err: %s", logConfigPrefix, err)
 		return nil, err
 	}
 
@@ -123,11 +123,11 @@ func (n *Config) Update(config *models.Config) (*models.Config, error) {
 
 func (n *Config) Remove(config *models.Config) error {
 
-	log.V(logLevel).Debugf("%s:remove:> remove config %#v", logConfigPrefix, config)
+	log.Debugf("%s:remove:> remove config %#v", logConfigPrefix, config)
 
 	if err := n.storage.Del(n.context, n.storage.Collection().Config(),
 		config.SelfLink().String()); err != nil {
-		log.V(logLevel).Errorf("%s:remove:> remove config  err: %s", logConfigPrefix, err)
+		log.Errorf("%s:remove:> remove config  err: %s", logConfigPrefix, err)
 		return err
 	}
 
@@ -136,7 +136,7 @@ func (n *Config) Remove(config *models.Config) error {
 
 func (n *Config) Watch(ch chan models.ConfigEvent, rev *int64) error {
 
-	log.V(logLevel).Debugf("%s:watch:> watch config", logConfigPrefix)
+	log.Debugf("%s:watch:> watch config", logConfigPrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

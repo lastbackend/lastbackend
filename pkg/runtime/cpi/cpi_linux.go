@@ -23,7 +23,6 @@ import (
 	"context"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cpi/ipvs"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi/local"
 	"github.com/spf13/viper"
 )
@@ -37,8 +36,8 @@ type CPI interface {
 
 func New(v *viper.Viper) (CPI, error) {
 	switch v.GetString("network.cpi.type") {
-	case "ipvs":
-		return ipvs.New(v)
+	//case "ipvs":
+	//	return ipvs.New(v)
 	default:
 		return local.New()
 	}

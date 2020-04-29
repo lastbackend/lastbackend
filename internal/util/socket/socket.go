@@ -21,7 +21,6 @@ package socket
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"sync"
 	"time"
 
@@ -73,7 +72,7 @@ func (s *Socket) listen() {
 			case p := <-pipe:
 
 				if err := s.socket.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
-					log.Errorf(err.Error())
+					fmt.Println(err.Error())
 				}
 
 				s.Lock()
@@ -83,7 +82,7 @@ func (s *Socket) listen() {
 				if err != nil {
 
 					if err := s.disconnect(); err != nil {
-						log.Errorf(err.Error())
+						fmt.Println(err.Error())
 					}
 				}
 
@@ -108,16 +107,16 @@ func (s *Socket) listen() {
 
 			case <-s.close:
 				if err := s.socket.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
-					log.Errorf(err.Error())
+					fmt.Println(err.Error())
 				}
 
 				if err := s.socket.WriteMessage(websocket.CloseMessage,
 					websocket.FormatCloseMessage(websocket.CloseNormalClosure, "")); err != nil {
-					log.Errorf("ws, format close: %s", err.Error())
+					fmt.Println("ws, format close: %s", err.Error())
 				}
 
 				if err := s.disconnect(); err != nil {
-					log.Errorf("ws, disconnect: %s", err.Error())
+					fmt.Println("ws, disconnect: %s", err.Error())
 				}
 			}
 		}
@@ -147,7 +146,7 @@ func (s *Socket) listen() {
 
 			if err != nil {
 				s.done <- s
-				log.Errorf("read message err: %s", err.Error())
+				fmt.Println("read message err: %s", err.Error())
 				break
 			}
 

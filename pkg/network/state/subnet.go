@@ -19,8 +19,9 @@
 package state
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"sync"
 )
 
@@ -36,12 +37,14 @@ func (n *SubnetState) GetSubnets() map[string]models.NetworkState {
 }
 
 func (n *SubnetState) AddSubnet(cidr string, sn *models.NetworkState) {
-	log.V(logLevel).Debugf("%s add subnet: %s", logSubnetPrefix, cidr)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s add subnet: %s", logSubnetPrefix, cidr)
 	n.SetSubnet(cidr, sn)
 }
 
 func (n *SubnetState) SetSubnet(cidr string, sn *models.NetworkState) {
-	log.V(logLevel).Debugf("%s set subnet: %s", logSubnetPrefix, cidr)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s set subnet: %s", logSubnetPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 
@@ -53,7 +56,8 @@ func (n *SubnetState) SetSubnet(cidr string, sn *models.NetworkState) {
 }
 
 func (n *SubnetState) GetSubnet(cidr string) *models.NetworkState {
-	log.V(logLevel).Debugf("%s get subnet: %s", logSubnetPrefix, cidr)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get subnet: %s", logSubnetPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	s, ok := n.subnets[cidr]
@@ -64,7 +68,8 @@ func (n *SubnetState) GetSubnet(cidr string) *models.NetworkState {
 }
 
 func (n *SubnetState) DelSubnet(cidr string) {
-	log.V(logLevel).Debugf("%s del subnet: %s", logSubnetPrefix, cidr)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s del subnet: %s", logSubnetPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	if _, ok := n.subnets[cidr]; ok {

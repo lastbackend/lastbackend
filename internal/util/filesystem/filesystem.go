@@ -20,15 +20,24 @@ package filesystem
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 const (
-	LineSeparator = '\n'
+	LineSeparator      = '\n'
+	DefaultDataDir     = "/var/lib/lastbackend/"
+	DefaultHomeDataDir = "${HOME}/.lastbackend/"
+)
+
+var (
+	homes = []string{"$HOME", "${HOME}", "~"}
 )
 
 func LineSeek(lines int, f *os.File) (int64, error) {
@@ -172,3 +181,35 @@ func HomeDir() string {
 	return os.Getenv("HOME")
 }
 
+func WriteFile(name string, content string) error {
+	os.MkdirAll(filepath.Dir(name), 0755)
+	err := ioutil.WriteFile(name, []byte(content), 0644)
+	if err != nil {
+		return fmt.Errorf("%v: writing %s", err, name)
+	}
+	return nil
+}
+
+func ResolveHomePath(s string) (string, error) {
+	for _, home := range homes {
+		if strings.Contains(s, home) {
+			homeDir := HomeDir()
+			s = strings.Replace(s, home, homeDir, -1)
+		}
+	}
+	return s, nil
+}
+func DetermineHomePath(dirPath string, forceLocal bool) (string, error) {
+	if dirPath == "" {
+		if os.Getuid() == 0 && !forceLocal {
+			dirPath = DefaultDataDir
+		} else {
+			dirPath = DefaultHomeDataDir
+		}
+	}
+	dirPath, err := ResolveHomePath(dirPath)
+	if err != nil {
+		return "", fmt.Errorf("%v: resolving %s", err, dirPath)
+	}
+	return filepath.Abs(dirPath)
+}

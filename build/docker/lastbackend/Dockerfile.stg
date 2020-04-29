@@ -1,0 +1,20 @@
+FROM golang:1.14.2-alpine3.11
+
+ENV GO111MODULE on
+
+RUN apk add --no-cache ca-certificates
+
+RUN apk add --no-cache iptables \
+    linux-headers \
+    gcc \
+    musl-dev \
+    git  \
+    bash \
+    iproute2
+
+ADD . /go/src/github.com/lastbackend/lastbackend
+WORKDIR /go/src/github.com/lastbackend/lastbackend
+
+RUN go mod download
+
+EXPOSE 2967

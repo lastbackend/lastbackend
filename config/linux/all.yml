@@ -1,0 +1,47 @@
+---
+
+# Runtime
+verbose: 3
+security:
+  token: lstbknd
+
+workdir: /${HOME}/.lastbackend/
+rootless: false
+
+# Cluster info
+name: "lastbackend"
+description: "lastbackend cluster"
+
+manifestdir: ""
+disable-selinux: false
+
+# System domains settings
+domain:
+  internal: "lb.local"
+  external: "lastbackend.lbdp.io"
+
+# Http-server settings
+server:
+  host: 0.0.0.0
+  port: 2992
+  tls:
+    verify: false
+    ca: ""
+    cert: ""
+    key: ""
+
+api:
+  uri: "127.0.0.1:2967"
+  tls:
+    verify: false
+    ca: ""
+    cert: ""
+    key: ""
+
+registry:
+  config: ""
+
+# Last.Backend vault service settings
+vault:
+  endpoint: ""
+  token: ""

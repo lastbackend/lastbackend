@@ -41,17 +41,17 @@ type Cluster struct {
 // Info - get cluster info
 func (c *Cluster) Get() (*models.Cluster, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get info", logClusterPrefix)
+	log.Debugf("%s:get:> get info", logClusterPrefix)
 
 	cluster := new(models.Cluster)
 	err := c.storage.Get(c.context, c.storage.Collection().Cluster(), models.EmptyString, cluster, nil)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> cluster not found", logClusterPrefix)
+			log.Warnf("%s:get:> cluster not found", logClusterPrefix)
 			return cluster, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> get cluster err: %v", logClusterPrefix, err)
+		log.Errorf("%s:get:> get cluster err: %v", logClusterPrefix, err)
 		return nil, err
 	}
 
@@ -60,12 +60,12 @@ func (c *Cluster) Get() (*models.Cluster, error) {
 
 func (c *Cluster) Set(cluster *models.Cluster) error {
 
-	log.V(logLevel).Debugf("%s:set:> update Cluster %#v", logClusterPrefix, cluster)
+	log.Debugf("%s:set:> update Cluster %#v", logClusterPrefix, cluster)
 	opts := storage.GetOpts()
 	opts.Force = true
 
 	if err := c.storage.Set(c.context, c.storage.Collection().Cluster(), models.EmptyString, cluster, opts); err != nil {
-		log.V(logLevel).Errorf("%s:set:> update Cluster err: %v", logClusterPrefix, err)
+		log.Errorf("%s:set:> update Cluster err: %v", logClusterPrefix, err)
 		return err
 	}
 
@@ -75,7 +75,7 @@ func (c *Cluster) Set(cluster *models.Cluster) error {
 // Watch cluster changes
 func (c *Cluster) Watch(ch chan models.ClusterEvent) {
 
-	log.V(logLevel).Debugf("%s:watch:> watch cluster", logClusterPrefix)
+	log.Debugf("%s:watch:> watch cluster", logClusterPrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

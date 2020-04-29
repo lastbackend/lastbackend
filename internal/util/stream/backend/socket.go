@@ -195,7 +195,7 @@ func (s *Socket) listen() {
 				case websocket.CloseNormalClosure,
 					websocket.CloseGoingAway,
 					websocket.CloseNoStatusReceived:
-					log.V(logLevel).Debug("Web socket closed by client:", err)
+					log.Debug("Web socket closed by client:", err)
 					s.end <- nil
 					return
 				}
@@ -228,7 +228,7 @@ func (s *Socket) Disconnect() {
 func (s *Socket) End() error {
 	select {
 	case e := <-s.end:
-		log.V(logLevel).Debug("Socket ended")
+		log.Debug("Socket ended")
 		return e
 	}
 }

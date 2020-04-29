@@ -51,7 +51,7 @@ func New(r *runtime.Runtime) *Controller {
 
 func (c *Controller) Connect(ctx context.Context) error {
 
-	log.V(logLevel).Debugf("%s:connect:> connect init", logPrefix)
+	log.Debugf("%s:connect:> connect init", logPrefix)
 
 	opts := v1.Request().Exporter().ExporterConnectOptions()
 	opts.Info = envs.Get().GetState().Exporter().Info

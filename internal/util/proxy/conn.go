@@ -20,13 +20,13 @@ package proxy
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 	"net"
 	"time"
 
 	protoio "github.com/gogo/protobuf/io"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 type Conn struct {
@@ -75,11 +75,9 @@ func (c *Conn) Handle(handler Handler) {
 			err := dec.ReadMsg(&msg)
 			if err != nil {
 				if err == io.EOF {
-					log.Debug("shutting down logger goroutine due to file EOF")
 					c.done <- true
 					return
 				} else {
-					log.Warn("consume: error reading encoded message, trying to continue")
 					dec = protoio.NewUint32DelimitedReader(c, binary.BigEndian, 1e6)
 					continue
 				}
@@ -89,7 +87,6 @@ func (c *Conn) Handle(handler Handler) {
 			case KindMSG:
 				if handler != nil {
 					if err := handler(msg); err != nil {
-						log.Debug("msg handle err")
 						c.done <- true
 					}
 				}
@@ -103,7 +100,7 @@ func (c *Conn) Handle(handler Handler) {
 	for {
 		select {
 		case e := <-c.error:
-			log.Errorf(e)
+			fmt.Println(e)
 			return
 		case <-c.done:
 			return

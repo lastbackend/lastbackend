@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"io"
 	"os"
 	"strings"
@@ -30,7 +31,6 @@ import (
 	"github.com/lastbackend/lastbackend/internal/cli/views"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/spf13/cobra"
 )
 
@@ -65,6 +65,7 @@ const serviceLogsExample = `
 `
 
 func (c *command) NewServiceCmd() *cobra.Command {
+	log := logger.WithContext(context.Background())
 	cmd := &cobra.Command{
 		Use:   "service",
 		Short: "Manage your service",

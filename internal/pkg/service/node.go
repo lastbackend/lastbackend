@@ -38,13 +38,13 @@ type Node struct {
 }
 
 func (n *Node) List() (*models.NodeList, error) {
-	log.V(logLevel).Debugf("%s:list:> get nodes list", logNodePrefix)
+	log.Debugf("%s:list:> get nodes list", logNodePrefix)
 
 	nodes := models.NewNodeList()
 
 	err := n.storage.List(n.context, n.storage.Collection().Node().Info(), "", nodes, nil)
 	if err != nil {
-		log.V(logLevel).Debugf("%s:list:> get nodes list err: %v", logNodePrefix, err)
+		log.Debugf("%s:list:> get nodes list err: %v", logNodePrefix, err)
 		return nil, err
 	}
 	return nodes, nil
@@ -52,7 +52,7 @@ func (n *Node) List() (*models.NodeList, error) {
 
 func (n *Node) Put(opts *models.NodeCreateOptions) (*models.Node, error) {
 
-	log.V(logLevel).Debugf("%s:create:> create node in cluster", logNodePrefix)
+	log.Debugf("%s:create:> create node in cluster", logNodePrefix)
 
 	ni := new(models.Node)
 	ni.Meta.SetDefault()
@@ -74,7 +74,7 @@ func (n *Node) Put(opts *models.NodeCreateOptions) (*models.Node, error) {
 	}
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Node().Info(), ni.SelfLink().String(), ni, nil); err != nil {
-		log.V(logLevel).Debugf("%s:create:> insert node err: %v", logNodePrefix, err)
+		log.Debugf("%s:create:> insert node err: %v", logNodePrefix, err)
 		return nil, err
 	}
 
@@ -83,7 +83,7 @@ func (n *Node) Put(opts *models.NodeCreateOptions) (*models.Node, error) {
 
 func (n *Node) Get(hostname string) (*models.Node, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get by hostname %s", logNodePrefix, hostname)
+	log.Debugf("%s:get:> get by hostname %s", logNodePrefix, hostname)
 
 	node := new(models.Node)
 
@@ -93,11 +93,11 @@ func (n *Node) Get(hostname string) (*models.Node, error) {
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> get: node %s not found", logNodePrefix, hostname)
+			log.Warnf("%s:get:> get: node %s not found", logNodePrefix, hostname)
 			return nil, nil
 		}
 
-		log.V(logLevel).Debugf("%s:get:> get node `%s` err: %v", logNodePrefix, hostname, err)
+		log.Debugf("%s:get:> get node `%s` err: %v", logNodePrefix, hostname, err)
 		return nil, err
 	}
 
@@ -106,9 +106,9 @@ func (n *Node) Get(hostname string) (*models.Node, error) {
 
 func (n *Node) Set(node *models.Node) error {
 
-	log.V(logLevel).Debugf("%s:setmeta:> update Node %#v", logNodePrefix, node)
+	log.Debugf("%s:setmeta:> update Node %#v", logNodePrefix, node)
 	if err := n.storage.Set(n.context, n.storage.Collection().Node().Info(), node.SelfLink().String(), node, nil); err != nil {
-		log.V(logLevel).Errorf("%s:setmeta:> update Node meta err: %v", logNodePrefix, err)
+		log.Errorf("%s:setmeta:> update Node meta err: %v", logNodePrefix, err)
 		return err
 	}
 
@@ -117,10 +117,10 @@ func (n *Node) Set(node *models.Node) error {
 
 func (n *Node) Remove(node *models.Node) error {
 
-	log.V(logLevel).Debugf("%s:remove:> remove node %s", logNodePrefix, node.Meta.Name)
+	log.Debugf("%s:remove:> remove node %s", logNodePrefix, node.Meta.Name)
 
 	if err := n.storage.Del(n.context, n.storage.Collection().Node().Info(), node.SelfLink().String()); err != nil {
-		log.V(logLevel).Debugf("%s:remove:> remove node err: %v", logNodePrefix, err)
+		log.Debugf("%s:remove:> remove node err: %v", logNodePrefix, err)
 		return err
 	}
 
@@ -130,7 +130,7 @@ func (n *Node) Remove(node *models.Node) error {
 // Watch node changes
 func (n *Node) Watch(ch chan models.NodeEvent, rev *int64) error {
 
-	log.V(logLevel).Debugf("%s:watch:> watch node", logNodePrefix)
+	log.Debugf("%s:watch:> watch node", logNodePrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

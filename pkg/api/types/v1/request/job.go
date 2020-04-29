@@ -22,7 +22,7 @@ import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/resource"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type JobManifest struct {

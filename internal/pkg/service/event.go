@@ -37,10 +37,10 @@ type Event struct {
 
 func (e *Event) Runtime() (*models.System, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get events runtime info", logEventPrefix)
+	log.Debugf("%s:get:> get events runtime info", logEventPrefix)
 	runtime, err := e.storage.Info(e.context, e.storage.Collection().Root(), "")
 	if err != nil {
-		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logEventPrefix, err)
+		log.Errorf("%s:get:> get runtime info error: %s", logEventPrefix, err)
 		return &runtime.System, err
 	}
 	return &runtime.System, nil

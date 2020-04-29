@@ -51,7 +51,7 @@ func New(r *runtime.Runtime) *Controller {
 
 func (c *Controller) Connect(ctx context.Context) error {
 
-	log.V(logLevel).Debugf("%s:connect:> connect init", logPrefix)
+	log.Debugf("%s:connect:> connect init", logPrefix)
 
 	opts := v1.Request().Discovery().DiscoveryConnectOptions()
 	opts.Info = envs.Get().GetState().Discovery().Info
@@ -73,7 +73,7 @@ func (c *Controller) Sync(ctx context.Context) error {
 
 	log.Debugf("Start discovery sync")
 
-	log.V(logLevel).Debugf("%s:loop:> update current discovery service info", logPrefix)
+	log.Debugf("%s:loop:> update current discovery service info", logPrefix)
 	ticker := time.NewTicker(time.Second * 5)
 
 	for range ticker.C {

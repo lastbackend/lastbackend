@@ -30,14 +30,14 @@ func Listen(host string, port int) (*dns.DNS, error) {
 
 	var d = dns.DNS{}
 
-	log.V(logLevel).Debug(`Init discovery resources`)
+	log.Debug(`Init discovery resources`)
 
 	for pattern, resource := range resources.Map {
 		d.AddHandler(pattern, resource)
 	}
 
 	go func() {
-		log.V(logLevel).Debugf(`Start discovery %s service on %d port`, dns.TCP, port)
+		log.Debugf(`Start discovery %s service on %d port`, dns.TCP, port)
 		if err := d.Start(dns.TCP, host, port, nil); err != nil {
 			log.Errorf(`Start discovery %s service on %d port error: %s`, dns.TCP, port, err)
 			return
@@ -45,7 +45,7 @@ func Listen(host string, port int) (*dns.DNS, error) {
 	}()
 
 	go func() {
-		log.V(logLevel).Debugf(`Start discovery %s service on %d port`, dns.UDP, port)
+		log.Debugf(`Start discovery %s service on %d port`, dns.UDP, port)
 		if err := d.Start(dns.UDP, host, port, nil); err != nil {
 			log.Errorf(`Start discovery %s service on %d port error: %s`, dns.TCP, port, err)
 			return

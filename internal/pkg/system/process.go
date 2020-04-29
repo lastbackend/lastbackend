@@ -53,7 +53,7 @@ func (c *Process) Register(ctx context.Context, kind string, stg storage.IStorag
 		item = new(models.Process)
 	)
 
-	log.V(logLevel).Debugf("System: Process: Register: %s", kind)
+	log.Debugf("System: Process: Register: %s", kind)
 	item.Meta.SetDefault()
 	item.Meta.Kind = kind
 
@@ -88,7 +88,7 @@ func (c *Process) Register(ctx context.Context, kind string, stg storage.IStorag
 // and master election ttl option
 func (c *Process) HeartBeat(ctx context.Context, lead chan bool) {
 
-	log.V(logLevel).Debugf("System: Process: Start HeartBeat for: %s", c.process.Meta.Kind)
+	log.Debugf("System: Process: Start HeartBeat for: %s", c.process.Meta.Kind)
 	ticker := time.NewTicker(heartBeatInterval * time.Second)
 
 	opts := storage.GetOpts()
@@ -97,7 +97,7 @@ func (c *Process) HeartBeat(ctx context.Context, lead chan bool) {
 
 	for range ticker.C {
 		// Update process state
-		log.V(logLevel).Debug("System: Process: Beat")
+		log.Debug("System: Process: Beat")
 
 		l := false
 		opts := storage.GetOpts()
@@ -113,7 +113,7 @@ func (c *Process) HeartBeat(ctx context.Context, lead chan bool) {
 
 				err = c.storage.Put(ctx, c.storage.Collection().System(), leadKey, c.process, opts)
 				if err != nil && !errors.Storage().IsErrEntityExists(err) {
-					log.V(logLevel).Errorf("System: Process: create process ttl err: %s", err.Error())
+					log.Errorf("System: Process: create process ttl err: %s", err.Error())
 					return
 				}
 
@@ -144,7 +144,7 @@ func (c *Process) HeartBeat(ctx context.Context, lead chan bool) {
 
 		// Check election
 		if c.process.Meta.Lead {
-			log.V(logLevel).Debug("System: Process: Beat: Lead TTL update")
+			log.Debug("System: Process: Beat: Lead TTL update")
 
 			if err := c.storage.Set(ctx, c.storage.Collection().System(), fmt.Sprintf("%s/lead", c.process.Meta.Kind), c.process, opts); err != nil {
 				log.Errorf("System: Process: update process: %s", err.Error())

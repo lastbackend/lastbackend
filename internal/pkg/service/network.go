@@ -39,10 +39,10 @@ type Network struct {
 
 func (s *Network) Runtime() (*models.System, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get network runtime info", logNetworkPrefix)
+	log.Debugf("%s:get:> get network runtime info", logNetworkPrefix)
 	runtime, err := s.storage.Info(s.context, s.storage.Collection().Network(), "")
 	if err != nil {
-		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logNetworkPrefix, err)
+		log.Errorf("%s:get:> get runtime info error: %s", logNetworkPrefix, err)
 		return &runtime.System, err
 	}
 	return &runtime.System, nil
@@ -52,7 +52,7 @@ func (s *Network) Runtime() (*models.System, error) {
 // Get network info
 func (s *Network) Get() (*models.Network, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get network info", logNetworkPrefix)
+	log.Debugf("%s:get:> get network info", logNetworkPrefix)
 
 	net := new(models.Network)
 
@@ -60,11 +60,11 @@ func (s *Network) Get() (*models.Network, error) {
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> get network info not found", logNetworkPrefix)
+			log.Warnf("%s:get:> get network info not found", logNetworkPrefix)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> get network info  error: %v", logNetworkPrefix, err)
+		log.Errorf("%s:get:> get network info  error: %v", logNetworkPrefix, err)
 		return nil, err
 	}
 
@@ -74,10 +74,10 @@ func (s *Network) Get() (*models.Network, error) {
 // Create new network info
 func (s *Network) Put(net *models.Network) (*models.Network, error) {
 
-	log.V(logLevel).Debugf("%s:create:> put new network %#v", logNetworkPrefix)
+	log.Debugf("%s:create:> put new network %#v", logNetworkPrefix)
 
 	if err := s.storage.Put(s.context, s.storage.Collection().Network(), models.EmptyString, net, nil); err != nil {
-		log.V(logLevel).Errorf("%s:create:> insert network err: %v", logNetworkPrefix, err)
+		log.Errorf("%s:create:> insert network err: %v", logNetworkPrefix, err)
 		return nil, err
 	}
 
@@ -87,10 +87,10 @@ func (s *Network) Put(net *models.Network) (*models.Network, error) {
 // Update network in namespace
 func (s *Network) Set(net *models.Network) (*models.Network, error) {
 
-	log.V(logLevel).Debugf("%s:create:> put new network %#v", logNetworkPrefix)
+	log.Debugf("%s:create:> put new network %#v", logNetworkPrefix)
 
 	if err := s.storage.Set(s.context, s.storage.Collection().Network(), models.EmptyString, net, nil); err != nil {
-		log.V(logLevel).Errorf("%s:create:> insert network err: %v", logNetworkPrefix, err)
+		log.Errorf("%s:create:> insert network err: %v", logNetworkPrefix, err)
 		return nil, err
 	}
 
@@ -100,11 +100,11 @@ func (s *Network) Set(net *models.Network) (*models.Network, error) {
 // Remove network from storage
 func (s *Network) Del(net *models.Network) error {
 
-	log.V(logLevel).Debugf("%s:remove:> remove network %#v", logNetworkPrefix, net)
+	log.Debugf("%s:remove:> remove network %#v", logNetworkPrefix, net)
 
 	err := s.storage.Del(s.context, s.storage.Collection().Network(), models.EmptyString)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:remove:> remove network err: %v", logNetworkPrefix, err)
+		log.Errorf("%s:remove:> remove network err: %v", logNetworkPrefix, err)
 		return err
 	}
 
@@ -114,7 +114,7 @@ func (s *Network) Del(net *models.Network) error {
 // Watch network changes
 func (s *Network) Watch(ch chan models.NetworkEvent, rev *int64) error {
 
-	log.V(logLevel).Debugf("%s:watch:> watch network by spec changes", logNetworkPrefix)
+	log.Debugf("%s:watch:> watch network by spec changes", logNetworkPrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()
@@ -160,7 +160,7 @@ func (s *Network) Watch(ch chan models.NetworkEvent, rev *int64) error {
 // Get subnet list
 func (s *Network) SubnetList() ([]*models.Subnet, error) {
 
-	log.V(logLevel).Debugf("%s:SubnetList:> get snets %s", logNetworkPrefix)
+	log.Debugf("%s:SubnetList:> get snets %s", logNetworkPrefix)
 
 	snets := make([]*models.Subnet, 0)
 
@@ -168,11 +168,11 @@ func (s *Network) SubnetList() ([]*models.Subnet, error) {
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:SubnetList:> getsnets not found", logNetworkPrefix)
+			log.Warnf("%s:SubnetList:> getsnets not found", logNetworkPrefix)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:SubnetList:> get by name %s error: %v", logNetworkPrefix, err)
+		log.Errorf("%s:SubnetList:> get by name %s error: %v", logNetworkPrefix, err)
 		return nil, err
 	}
 
@@ -182,7 +182,7 @@ func (s *Network) SubnetList() ([]*models.Subnet, error) {
 // Get subnet by name
 func (s *Network) SubnetGet(cidr string) (*models.Subnet, error) {
 
-	log.V(logLevel).Debugf("%s:SubnetGet:> get by name %s", logNetworkPrefix, cidr)
+	log.Debugf("%s:SubnetGet:> get by name %s", logNetworkPrefix, cidr)
 
 	name := models.SubnetGetNameFromCIDR(cidr)
 	snet := new(models.Subnet)
@@ -192,11 +192,11 @@ func (s *Network) SubnetGet(cidr string) (*models.Subnet, error) {
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:SubnetGet:> get by name %s not found", logNetworkPrefix, name)
+			log.Warnf("%s:SubnetGet:> get by name %s not found", logNetworkPrefix, name)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:SubnetGet:> get by name %s error: %v", logNetworkPrefix, name, err)
+		log.Errorf("%s:SubnetGet:> get by name %s error: %v", logNetworkPrefix, name, err)
 		return nil, err
 	}
 
@@ -206,7 +206,7 @@ func (s *Network) SubnetGet(cidr string) (*models.Subnet, error) {
 // Create new subnet
 func (s *Network) SubnetPut(hostname string, spec models.SubnetSpec) (*models.Subnet, error) {
 
-	log.V(logLevel).Debugf("%s:SubnetPut:> put new subnet", logNetworkPrefix)
+	log.Debugf("%s:SubnetPut:> put new subnet", logNetworkPrefix)
 
 	snet := new(models.Subnet)
 	snet.Meta.SetDefault()
@@ -217,12 +217,12 @@ func (s *Network) SubnetPut(hostname string, spec models.SubnetSpec) (*models.Su
 
 	if err := s.storage.Put(s.context, s.storage.Collection().Subnet(),
 		snet.SelfLink().String(), snet, nil); err != nil {
-		log.V(logLevel).Errorf("%s:SubnetPut:> insert subnet err: %v", logNetworkPrefix, err)
+		log.Errorf("%s:SubnetPut:> insert subnet err: %v", logNetworkPrefix, err)
 		return nil, err
 	}
 
 	if err := s.SubnetManifestAdd(snet); err != nil {
-		log.V(logLevel).Errorf("%s:SubnetPut:> insert subnet manifest err: %v", logNetworkPrefix, err)
+		log.Errorf("%s:SubnetPut:> insert subnet manifest err: %v", logNetworkPrefix, err)
 		return nil, err
 	}
 
@@ -232,17 +232,17 @@ func (s *Network) SubnetPut(hostname string, spec models.SubnetSpec) (*models.Su
 // Update subnet
 func (s *Network) SubnetSet(snet *models.Subnet) error {
 
-	log.V(logLevel).Debugf("%s:SubnetSet:> set subnet", logNetworkPrefix)
+	log.Debugf("%s:SubnetSet:> set subnet", logNetworkPrefix)
 
 	if err := s.storage.Set(s.context, s.storage.Collection().Subnet(),
 		snet.SelfLink().String(), snet, nil); err != nil {
-		log.V(logLevel).Errorf("%s:SubnetSet:> err: %v", logNetworkPrefix, err)
+		log.Errorf("%s:SubnetSet:> err: %v", logNetworkPrefix, err)
 		return err
 	}
 
 	m, err := s.SubnetManifestGet(snet.SelfLink().String())
 	if err != nil {
-		log.V(logLevel).Errorf("%s:SubnetSet:> get manifest err: %v", logNetworkPrefix, err)
+		log.Errorf("%s:SubnetSet:> get manifest err: %v", logNetworkPrefix, err)
 		return err
 	}
 
@@ -252,7 +252,7 @@ func (s *Network) SubnetSet(snet *models.Subnet) error {
 
 	if !models.SubnetSpecEqual(&m.SubnetSpec, &snet.Spec) {
 		if err := s.SubnetManifestSet(m, snet); err != nil {
-			log.V(logLevel).Errorf("%s:SubnetPut:> insert subnet manifest err: %v", logNetworkPrefix, err)
+			log.Errorf("%s:SubnetPut:> insert subnet manifest err: %v", logNetworkPrefix, err)
 			return err
 		}
 	}
@@ -263,18 +263,18 @@ func (s *Network) SubnetSet(snet *models.Subnet) error {
 // Remove subnet
 func (s *Network) SubnetDel(name string) error {
 
-	log.V(logLevel).Debugf("%s:SubnetDel:> remove subnet", logNetworkPrefix)
+	log.Debugf("%s:SubnetDel:> remove subnet", logNetworkPrefix)
 	key := models.NewSubnetSelfLink(name).String()
 
 	err := s.storage.Del(s.context, s.storage.Collection().Network(), key)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:SubnetDel:> remove subnet err: %v", logNetworkPrefix, err)
+		log.Errorf("%s:SubnetDel:> remove subnet err: %v", logNetworkPrefix, err)
 		return err
 	}
 
 	if err := s.SubnetManifestDel(name); err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Errorf("%s:SubnetDel:> get manifest err: %v", logNetworkPrefix, err)
+			log.Errorf("%s:SubnetDel:> get manifest err: %v", logNetworkPrefix, err)
 			return err
 		}
 	}
@@ -319,7 +319,7 @@ func (s *Network) SubnetEqual(snet *models.Subnet, spec models.SubnetSpec) bool 
 // Watch network changes
 func (s *Network) SubnetWatch(ch chan models.SubnetEvent, rev *int64) error {
 
-	log.V(logLevel).Debugf("%s:watch:> watch subnet spec changes ", logNetworkPrefix)
+	log.Debugf("%s:watch:> watch subnet spec changes ", logNetworkPrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()
@@ -364,7 +364,7 @@ func (s *Network) SubnetWatch(ch chan models.SubnetEvent, rev *int64) error {
 
 // Get network subnet manifests map
 func (s *Network) SubnetManifestMap() (*models.SubnetManifestMap, error) {
-	log.V(logLevel).Debugf("%s:SubnetManifestMap:> ", logNetworkPrefix)
+	log.Debugf("%s:SubnetManifestMap:> ", logNetworkPrefix)
 
 	var (
 		mf = models.NewSubnetManifestMap()
@@ -380,7 +380,7 @@ func (s *Network) SubnetManifestMap() (*models.SubnetManifestMap, error) {
 
 // Get particular network manifest
 func (s *Network) SubnetManifestGet(name string) (*models.SubnetManifest, error) {
-	log.V(logLevel).Debugf("%s:SubnetManifestGet:> ", logNetworkPrefix)
+	log.Debugf("%s:SubnetManifestGet:> ", logNetworkPrefix)
 
 	var (
 		mf = new(models.SubnetManifest)
@@ -401,7 +401,7 @@ func (s *Network) SubnetManifestGet(name string) (*models.SubnetManifest, error)
 
 // Add particular network manifest
 func (s *Network) SubnetManifestAdd(snet *models.Subnet) error {
-	log.V(logLevel).Debugf("%s:SubnetManifestAdd:> ", logNetworkPrefix)
+	log.Debugf("%s:SubnetManifestAdd:> ", logNetworkPrefix)
 
 	m := new(models.SubnetManifest)
 	m.SubnetSpec = snet.Spec
@@ -417,7 +417,7 @@ func (s *Network) SubnetManifestAdd(snet *models.Subnet) error {
 
 // Set particular network manifest
 func (s *Network) SubnetManifestSet(m *models.SubnetManifest, snet *models.Subnet) error {
-	log.V(logLevel).Debugf("%s:SubnetManifestAdd:> ", logNetworkPrefix)
+	log.Debugf("%s:SubnetManifestAdd:> ", logNetworkPrefix)
 	m.SubnetSpec = snet.Spec
 	if err := s.storage.Set(s.context, s.storage.Collection().Manifest().Subnet(), snet.SelfLink().String(), m, nil); err != nil {
 		log.Errorf("%s:SubnetManifestAdd:> err :%s", logNetworkPrefix, err.Error())
@@ -428,7 +428,7 @@ func (s *Network) SubnetManifestSet(m *models.SubnetManifest, snet *models.Subne
 
 // Del particular network manifest
 func (s *Network) SubnetManifestDel(name string) error {
-	log.V(logLevel).Debugf("%s:SubnetManifestDel:> ", logNetworkPrefix)
+	log.Debugf("%s:SubnetManifestDel:> ", logNetworkPrefix)
 
 	if err := s.storage.Del(s.context, s.storage.Collection().Manifest().Subnet(), name); err != nil {
 		log.Errorf("%s:SubnetManifestDel:> err :%s", logNetworkPrefix, err.Error())
@@ -440,7 +440,7 @@ func (s *Network) SubnetManifestDel(name string) error {
 
 // watch subnet manifests
 func (s *Network) SubnetManifestWatch(ch chan models.SubnetManifestEvent, rev *int64) error {
-	log.V(logLevel).Debugf("%s:SubnetManifestWatch:> watch manifest ", logNetworkPrefix)
+	log.Debugf("%s:SubnetManifestWatch:> watch manifest ", logNetworkPrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

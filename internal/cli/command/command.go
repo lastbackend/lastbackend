@@ -22,10 +22,9 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"strings"
 
-	"github.com/lastbackend/lastbackend/internal/cli/options"
+	"github.com/lastbackend/lastbackend/internal/cli/command/options"
 )
 
 const defaultEnvPrefix = "LB"
@@ -34,8 +33,6 @@ const defaultConfigName = "config"
 const componentLB = "lb"
 
 func New() *cobra.Command {
-
-	cobra.OnInitialize(initConfig)
 
 	global := pflag.CommandLine
 
@@ -101,12 +98,4 @@ func WordSepNormalizeFunc(f *pflag.FlagSet, name string) pflag.NormalizedName {
 		return pflag.NormalizedName(strings.Replace(name, "_", "-", -1))
 	}
 	return pflag.NormalizedName(name)
-}
-
-func initConfig() {
-	viper.AutomaticEnv()
-	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	viper.SetEnvPrefix(defaultEnvPrefix)
-	viper.SetConfigType(defaultConfigType)
-	viper.SetConfigFile(viper.GetString(defaultConfigName))
 }

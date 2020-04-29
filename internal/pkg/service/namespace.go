@@ -50,7 +50,7 @@ func (n *NM) Set(Namespace) error {
 
 func (n *Namespace) List() (*models.NamespaceList, error) {
 
-	log.V(logLevel).Debugf("%s:list:> get namespaces list", logNamespacePrefix)
+	log.Debugf("%s:list:> get namespaces list", logNamespacePrefix)
 
 	var list = models.NewNamespaceList()
 
@@ -58,18 +58,18 @@ func (n *Namespace) List() (*models.NamespaceList, error) {
 
 	if err != nil {
 		log.Info(err.Error())
-		log.V(logLevel).Error("%s:list:> get namespaces list err: %v", logNamespacePrefix, err)
+		log.Error("%s:list:> get namespaces list err: %v", logNamespacePrefix, err)
 		return nil, err
 	}
 
-	log.V(logLevel).Debugf("%s:list:> get namespaces list result: %d", logNamespacePrefix, len(list.Items))
+	log.Debugf("%s:list:> get namespaces list result: %d", logNamespacePrefix, len(list.Items))
 
 	return list, nil
 }
 
 func (n *Namespace) Get(name string) (*models.Namespace, error) {
 
-	log.V(logLevel).Infof("%s:get:> get namespace %s", logNamespacePrefix, name)
+	log.Infof("%s:get:> get namespace %s", logNamespacePrefix, name)
 
 	if name == "" {
 		return nil, errors.New(errors.ArgumentIsEmpty)
@@ -81,11 +81,11 @@ func (n *Namespace) Get(name string) (*models.Namespace, error) {
 	err := n.storage.Get(n.context, n.storage.Collection().Namespace(), key, &namespace, nil)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> namespace by name `%s` not found", logNamespacePrefix, name)
+			log.Warnf("%s:get:> namespace by name `%s` not found", logNamespacePrefix, name)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> get namespace by name `%s` err: %v", logNamespacePrefix, name, err)
+		log.Errorf("%s:get:> get namespace by name `%s` err: %v", logNamespacePrefix, name, err)
 		return nil, err
 	}
 
@@ -94,12 +94,12 @@ func (n *Namespace) Get(name string) (*models.Namespace, error) {
 
 func (n *Namespace) Create(ns *models.Namespace) (*models.Namespace, error) {
 
-	log.V(logLevel).Debugf("%s:create:> create Namespace %#v", logNamespacePrefix, ns.Meta.Name)
+	log.Debugf("%s:create:> create Namespace %#v", logNamespacePrefix, ns.Meta.Name)
 
 	ns.Meta.SelfLink = *models.NewNamespaceSelfLink(ns.Meta.Name)
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Namespace(), ns.SelfLink().String(), ns, nil); err != nil {
-		log.V(logLevel).Errorf("%s:create:> insert namespace err: %v", logNamespacePrefix, err)
+		log.Errorf("%s:create:> insert namespace err: %v", logNamespacePrefix, err)
 		return nil, err
 	}
 
@@ -108,11 +108,11 @@ func (n *Namespace) Create(ns *models.Namespace) (*models.Namespace, error) {
 
 func (n *Namespace) Update(namespace *models.Namespace) error {
 
-	log.V(logLevel).Debugf("%s:update:> update Namespace %#v", logNamespacePrefix, namespace)
+	log.Debugf("%s:update:> update Namespace %#v", logNamespacePrefix, namespace)
 
 	if err := n.storage.Set(n.context, n.storage.Collection().Namespace(),
 		namespace.SelfLink().String(), namespace, nil); err != nil {
-		log.V(logLevel).Errorf("%s:update:> namespace update err: %v", logNamespacePrefix, err)
+		log.Errorf("%s:update:> namespace update err: %v", logNamespacePrefix, err)
 		return err
 	}
 
@@ -121,10 +121,10 @@ func (n *Namespace) Update(namespace *models.Namespace) error {
 
 func (n *Namespace) Remove(ns *models.Namespace) error {
 
-	log.V(logLevel).Debugf("%s:remove:> remove namespace %s", logNamespacePrefix, ns.Meta.Name)
+	log.Debugf("%s:remove:> remove namespace %s", logNamespacePrefix, ns.Meta.Name)
 
 	if err := n.storage.Del(n.context, n.storage.Collection().Namespace(), ns.SelfLink().String()); err != nil {
-		log.V(logLevel).Errorf("%s:remove:> remove namespace err: %v", logNamespacePrefix, err)
+		log.Errorf("%s:remove:> remove namespace err: %v", logNamespacePrefix, err)
 		return err
 	}
 
@@ -134,7 +134,7 @@ func (n *Namespace) Remove(ns *models.Namespace) error {
 // Watch namespace changes
 func (n *Namespace) Watch(ch chan models.NamespaceEvent) error {
 
-	log.V(logLevel).Debugf("%s:watch:> watch namespace", logNamespacePrefix)
+	log.Debugf("%s:watch:> watch namespace", logNamespacePrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

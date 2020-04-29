@@ -21,11 +21,11 @@ package network
 import (
 	"context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/tools/logger"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/network/state"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const (
@@ -50,8 +50,8 @@ func (n *Network) GetExternalDNS() []string {
 }
 
 func (n *Network) ResolverManage(ctx context.Context) error {
-
-	log.V(logLevel).Debugf("%s:> create resolver", logResolverPrefix)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s:> create resolver", logResolverPrefix)
 
 	manifest := new(models.EndpointManifest)
 	manifest.IP = n.resolver.ip
