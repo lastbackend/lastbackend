@@ -43,6 +43,16 @@ type Config struct {
 		} `yaml:"tls,omitempty"`
 	} `yaml:"server,omitempty"`
 
+	API struct {
+		Address string `yaml:"uri,omitempty"`
+		TLS     struct {
+			Verify   bool   `yaml:"verify,omitempty"`
+			FileCA   string `yaml:"ca,omitempty"`
+			FileCert string `yaml:"cert,omitempty"`
+			FileKey  string `yaml:"key,omitempty"`
+		} `yaml:"tls,omitempty"`
+	} `yaml:"api,omitempty"`
+
 	Registry struct {
 		Config string `yaml:"config,omitempty"`
 	} `yaml:"registry,omitempty"`

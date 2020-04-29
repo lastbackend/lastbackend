@@ -20,12 +20,13 @@ package daemon
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+
 	"github.com/lastbackend/lastbackend/internal/agent/config"
 	"github.com/lastbackend/lastbackend/internal/util/converter"
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
-	"os"
 )
 
 func SetAgentConfigFromFile(configPath string, cfg *config.Config) error {
@@ -46,29 +47,49 @@ func SetAgentConfigFromEnvs(cfg *config.Config) error {
 	if token != "" {
 		cfg.Security.Token = token
 	}
-	host := os.Getenv("LB_API_BIND_ADDRESS")
+	host := os.Getenv("LB_NODE_BIND_ADDRESS")
 	if token != "" {
 		cfg.Server.Host = host
 	}
-	port := os.Getenv("LB_API_BIND_PORT")
+	port := os.Getenv("LB_NODE_BIND_PORT")
 	if port != "" {
 		cfg.Server.Port = converter.StringToUint(port)
 	}
-	tlsVerify := os.Getenv("LB_API_TLS_VERIFY")
+	tlsVerify := os.Getenv("LB_NODE_TLS_VERIFY")
 	if tlsVerify != "" {
 		cfg.Server.TLS.Verify = converter.StringToBool(tlsVerify)
 	}
-	tlsCa := os.Getenv("LB_API_TLS_CA_FILE")
+	tlsCa := os.Getenv("LB_NODE_TLS_CA_FILE")
 	if tlsCa != "" {
 		cfg.Server.TLS.FileCA = tlsCa
 	}
-	tlsCert := os.Getenv("LB_API_TLS_CERT_FILE")
+	tlsCert := os.Getenv("LB_NODE_TLS_CERT_FILE")
 	if tlsCa != "" {
 		cfg.Server.TLS.FileCert = tlsCert
 	}
-	tlsKey := os.Getenv("LB_API_TLS_PRIVATE_KEY_FILE")
+	tlsKey := os.Getenv("LB_NODE_TLS_PRIVATE_KEY_FILE")
 	if tlsCa != "" {
 		cfg.Server.TLS.FileKey = tlsKey
+	}
+	apiAddress := os.Getenv("LB_API_ADDRESS")
+	if apiAddress != "" {
+		cfg.API.Address = apiAddress
+	}
+	apiTlsVerify := os.Getenv("LB_API_TLS_VERIFY")
+	if apiTlsVerify != "" {
+		cfg.API.TLS.Verify = converter.StringToBool(apiTlsVerify)
+	}
+	apiTlsCa := os.Getenv("LB_API_TLS_CA_FILE")
+	if apiTlsCa != "" {
+		cfg.API.TLS.FileCA = apiTlsCa
+	}
+	apiTlsCert := os.Getenv("LB_API_TLS_CERT_FILE")
+	if apiTlsCa != "" {
+		cfg.API.TLS.FileCert = apiTlsCert
+	}
+	apiTlsKey := os.Getenv("LB_API_TLS_PRIVATE_KEY_FILE")
+	if apiTlsCa != "" {
+		cfg.API.TLS.FileKey = apiTlsKey
 	}
 	workdir := os.Getenv("LB_WORKDIR")
 	if workdir != "" {
@@ -104,14 +125,39 @@ func SetAgentConfigFromFlags(flags *pflag.FlagSet, cfg *config.Config) error {
 		return fmt.Errorf(`"access-token" flag is non-string, programmer error, please correct`)
 	}
 
-	bindAddress, err := flags.GetString("api-bind-address")
+	bindAddress, err := flags.GetString("node-bind-address")
 	if err != nil {
 		return fmt.Errorf(`"bind-address" flag is non-string, programmer error, please correct`)
 	}
 
-	bindPort, err := flags.GetUint("api-bind-port")
+	bindPort, err := flags.GetUint("node-bind-port")
 	if err != nil {
 		return fmt.Errorf(`"bind-port" flag is non-uint, programmer error, please correct`)
+	}
+
+	tlsVerify, err := flags.GetBool("node-tls-verify")
+	if err != nil {
+		return fmt.Errorf(`"node-tls-verify" flag is non-bool, programmer error, please correct`)
+	}
+
+	tlsCaFile, err := flags.GetString("node-tls-ca-file")
+	if err != nil {
+		return fmt.Errorf(`"node-tls-ca-file" flag is non-string, programmer error, please correct`)
+	}
+
+	tlsCertFile, err := flags.GetString("node-tls-cert-file")
+	if err != nil {
+		return fmt.Errorf(`"node-tls-cert-file" flag is non-string, programmer error, please correct`)
+	}
+
+	tlsKeyFile, err := flags.GetString("node-tls-private-key-file")
+	if err != nil {
+		return fmt.Errorf(`"node-tls-private-key-file" flag is non-string, programmer error, please correct`)
+	}
+
+	apiAddress, err := flags.GetString("api-address")
+	if err != nil {
+		return fmt.Errorf(`"api-address" flag is non-string, programmer error, please correct`)
 	}
 
 	apiTlsVerify, err := flags.GetBool("api-tls-verify")
@@ -173,17 +219,32 @@ func SetAgentConfigFromFlags(flags *pflag.FlagSet, cfg *config.Config) error {
 	if bindPort != 0 && (cfg.Server.Port != 0 && bindPort != config.DefaultBindServerPort || cfg.Server.Port == 0) {
 		cfg.Server.Port = bindPort
 	}
+	if tlsVerify {
+		cfg.Server.TLS.Verify = tlsVerify
+	}
+	if tlsCaFile != "" {
+		cfg.Server.TLS.FileCA = tlsCaFile
+	}
+	if tlsCertFile != "" {
+		cfg.Server.TLS.FileCert = tlsCertFile
+	}
+	if tlsKeyFile != "" {
+		cfg.Server.TLS.FileKey = tlsKeyFile
+	}
+	if apiAddress != "" {
+		cfg.API.Address = apiAddress
+	}
 	if apiTlsVerify {
-		cfg.Server.TLS.Verify = apiTlsVerify
+		cfg.API.TLS.Verify = apiTlsVerify
 	}
 	if apiTlsCaFile != "" {
-		cfg.Server.TLS.FileCA = apiTlsCaFile
+		cfg.API.TLS.FileCA = apiTlsCaFile
 	}
 	if apiTlsCertFile != "" {
-		cfg.Server.TLS.FileCert = apiTlsCertFile
+		cfg.API.TLS.FileCert = apiTlsCertFile
 	}
 	if apiTlsKeyFile != "" {
-		cfg.Server.TLS.FileKey = apiTlsKeyFile
+		cfg.API.TLS.FileKey = apiTlsKeyFile
 	}
 	if workdir != "" && (cfg.WorkDir != "" && workdir != config.DefaultWorkDir || cfg.WorkDir == "") {
 		cfg.WorkDir = workdir

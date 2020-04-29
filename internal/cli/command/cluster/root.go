@@ -20,10 +20,10 @@ package cluster
 
 import (
 	"fmt"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"os"
 
 	"github.com/lastbackend/lastbackend/internal/cli/service"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage/bbolt"
 	"github.com/lastbackend/lastbackend/internal/util/filesystem"
 	"github.com/lastbackend/lastbackend/pkg/client/cluster"
 	"github.com/lastbackend/lastbackend/pkg/client/genesis"
@@ -40,7 +40,7 @@ type command struct {
 func NewCommands() []*cobra.Command {
 	cmd := new(command)
 
-	stg, err := bbolt.New(bbolt.Options{DbDir: filesystem.HomeDir(), DbName: ".cli-db"})
+	stg, err := storage.Get(storage.BboltDriver, storage.BboltConfig{DbDir: filesystem.HomeDir(), DbName: ".cli-db"})
 	if err != nil {
 		fmt.Printf("cannot initialize storage: %v", err)
 		os.Exit(1)

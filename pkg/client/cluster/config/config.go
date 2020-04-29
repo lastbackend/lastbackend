@@ -44,7 +44,7 @@ func (c Config) getDefault() *Config {
 // TLSConfig contains settings to enable transport layer security
 type TLSConfig struct {
 	// Server should be accessed without verifying the TLS certificate. For testing only.
-	Verify bool
+	Insecure bool
 
 	// Override for the server name passed to the server for SNI and used to verify certificates..
 	ServerName string

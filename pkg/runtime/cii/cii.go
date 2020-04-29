@@ -44,18 +44,18 @@ type CII interface {
 	Close() error
 }
 
-type ContainerdConfig struct {
-	Address string
-}
+type ContainerdConfig containerd.Config
 
 func New(driver string, opts interface{}) (CII, error) {
+
+	if opts == nil {
+		return nil, fmt.Errorf("options can not be is nil")
+	}
+
 	switch driver {
 	case ContainerdDriver:
 		o := opts.(ContainerdConfig)
-
-		cfg := containerd.Config{}
-		cfg.Address = o.Address
-		return containerd.New(cfg)
+		return containerd.New(containerd.Config(o))
 	default:
 		return nil, fmt.Errorf("container image runtime <%s> interface not supported", driver)
 	}

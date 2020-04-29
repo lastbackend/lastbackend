@@ -433,3 +433,15 @@ func (r *Runtime) Subscribe() {
 func (r *Runtime) Stop() {
 	r.cancel()
 }
+
+func (r *Runtime) GetConfig() config.Config {
+	return r.config
+}
+
+func (r *Runtime) GetState() *state.State {
+	return r.state
+}
+
+func (r *Runtime) GetNetwork() *network.Network {
+	return r.network
+}

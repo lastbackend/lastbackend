@@ -20,23 +20,24 @@ package controller
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/internal/agent/config"
+	"fmt"
 	"sync"
 	"time"
 
+	"github.com/lastbackend/lastbackend/internal/agent/config"
 	"github.com/lastbackend/lastbackend/internal/agent/runtime"
 	"github.com/lastbackend/lastbackend/internal/agent/state"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/client/cluster"
+	client "github.com/lastbackend/lastbackend/pkg/client/cluster"
 	"github.com/lastbackend/lastbackend/pkg/network"
 	"github.com/lastbackend/lastbackend/tools/logger"
 )
 
 const (
 	logPrefix = "client:>"
-	logLevel  = 3
 )
 
 type Controller struct {
@@ -53,22 +54,41 @@ type Controller struct {
 	}
 }
 
-func New(r *runtime.Runtime, rest cluster.IClient, network *network.Network, state *state.State) *Controller {
+func New(r *runtime.Runtime) (*Controller, error) {
+
+	cfg := client.NewConfig()
+	cfg.BearerToken = r.GetConfig().Security.Token
+
+	if r.GetConfig().API.TLS.Verify {
+		cfg.TLS = client.NewTLSConfig()
+		cfg.TLS.Insecure = !r.GetConfig().API.TLS.Verify
+		cfg.TLS.CertFile = r.GetConfig().API.TLS.FileCert
+		cfg.TLS.KeyFile = r.GetConfig().API.TLS.FileKey
+		cfg.TLS.CAFile = r.GetConfig().API.TLS.FileCA
+	}
+
+	endpoint := r.GetConfig().API.Address
+
+	rest, err := client.New(client.ClientHTTP, endpoint, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("Can not initialize http client: %v", err)
+	}
+
 	var c = new(Controller)
 	c.ctx = context.Background()
 	c.runtime = r
-	c.state = state
 	c.restClient = rest
-	c.network = network
+	c.state = r.GetState()
+	c.network = r.GetNetwork()
 	c.cache.pods = make(map[string]*models.PodStatus)
 	c.cache.volumes = make(map[string]*models.VolumeStatus)
 
-	pods := state.Pods().GetPods()
+	pods := c.state.Pods().GetPods()
 	for p, st := range pods {
 		c.cache.pods[p] = st
 	}
 
-	return c
+	return c, nil
 }
 
 func (c *Controller) Connect(cfg config.Config) error {

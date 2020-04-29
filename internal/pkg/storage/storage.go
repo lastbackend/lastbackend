@@ -63,9 +63,11 @@ type IStorage interface {
 	Close() error
 }
 
+type BboltConfig bbolt.Options
+
 func Get(driver string, opts interface{}) (IStorage, error) {
 
-	if opts == nil {
+	if driver != MockDriver && opts == nil {
 		return nil, fmt.Errorf("options can not be is nil")
 	}
 
@@ -75,7 +77,8 @@ func Get(driver string, opts interface{}) (IStorage, error) {
 	case BboltDriver:
 		fallthrough
 	default:
-		return bbolt.New(opts.(bbolt.Options))
+		o := opts.(BboltConfig)
+		return bbolt.New(bbolt.Options(o))
 	}
 }
 

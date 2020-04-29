@@ -24,7 +24,6 @@ import (
 	"fmt"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage/bbolt"
 	"github.com/lastbackend/lastbackend/internal/server/config"
 	"github.com/lastbackend/lastbackend/internal/server/server"
 	"github.com/lastbackend/lastbackend/internal/server/state"
@@ -96,7 +95,7 @@ func (app *App) init() error {
 		return err
 	}
 
-	stg, err := storage.Get(storage.BboltDriver, bbolt.Options{DbDir: workdir})
+	stg, err := storage.Get(storage.BboltDriver, storage.BboltConfig{DbDir: workdir})
 	if err != nil {
 		return fmt.Errorf("cannot initialize storage: %v", err)
 	}

@@ -22,6 +22,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"path/filepath"
 
 	"github.com/lastbackend/lastbackend/internal/agent/config"
@@ -30,7 +31,6 @@ import (
 	"github.com/lastbackend/lastbackend/internal/agent/rootless"
 	"github.com/lastbackend/lastbackend/internal/agent/runtime"
 	"github.com/lastbackend/lastbackend/internal/agent/server"
-	"github.com/lastbackend/lastbackend/internal/agent/state"
 	"github.com/lastbackend/lastbackend/internal/util/filesystem"
 	"github.com/lastbackend/lastbackend/tools/logger"
 )
@@ -42,7 +42,6 @@ type App struct {
 	config config.Config
 
 	HttpServer *server.HttpServer
-	State      *state.State
 	Runtime    *runtime.Runtime
 	Containerd *containerd.Containerd
 	Controller *controller.Controller
@@ -126,6 +125,11 @@ func (app *App) init() error {
 		return err
 	}
 
+	stg, err := storage.Get(storage.BboltDriver, storage.BboltConfig{DbDir: workdir})
+	if err != nil {
+		return fmt.Errorf("cannot initialize storage: %v", err)
+	}
+
 	if app.config.Rootless {
 		if err := rootless.Rootless(workdir); err != nil {
 			return err
@@ -154,29 +158,12 @@ func (app *App) init() error {
 		return fmt.Errorf("Can not initialize runtime: %v", err)
 	}
 
-	// TODO: Implement controller initialization logic
-	//if app.config.IsSet("api.uri") && len(app.config.GetString("api.uri")) != 0 {
-	//
-	//	cfg := client.NewConfig()
-	//	cfg.BearerToken = app.config.Security.Token
-	//
-	//	if app.config.IsSet("api.tls") && app.config.GetBool("api.tls.verify") {
-	//		cfg.TLS = client.NewTLSConfig()
-	//		cfg.TLS.Verify = app.config.GetBool("api.tls.verify")
-	//		cfg.TLS.CertFile = app.config.GetString("api.tls.cert")
-	//		cfg.TLS.KeyFile = app.config.GetString("api.tls.key")
-	//		cfg.TLS.CAFile = app.config.GetString("api.tls.ca")
-	//	}
-	//
-	//	endpoint := app.config.GetString("api.uri")
-	//
-	//	rest, err := client.New(client.ClientHTTP, endpoint, cfg)
-	//	if err != nil {
-	//		return fmt.Errorf("Can not initialize http client: %v", err)
-	//	}
-	//
-	//	app.Controller = controller.New(app.Runtime, rest, _net, _state)
-	//}
+	app.Controller, err = controller.New(app.Runtime)
+	if err != nil {
+		return fmt.Errorf("Can not initialize controller: %v", err)
+	}
+
+	app.HttpServer = server.NewServer(app.Runtime.GetState(), stg, app.config)
 
 	return nil
 }

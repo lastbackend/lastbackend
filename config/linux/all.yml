@@ -30,6 +30,14 @@ server:
     cert: ""
     key: ""
 
+api:
+  uri: "127.0.0.1:2967"
+  tls:
+    verify: false
+    ca: ""
+    cert: ""
+    key: ""
+
 registry:
   config: ""
 
