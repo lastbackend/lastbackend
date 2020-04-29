@@ -26,7 +26,6 @@ import (
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri/containerd"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -51,13 +50,19 @@ type CRI interface {
 	Close() error
 }
 
-func New(v *viper.Viper) (CRI, error) {
-	switch v.GetString("runtime.cri.type") {
+type ContainerdConfig struct {
+	Address string
+}
+
+func New(driver string, opts interface{}) (CRI, error) {
+	switch driver {
 	case ContainerdDriver:
+		o := opts.(ContainerdConfig)
+
 		cfg := containerd.Config{}
-		cfg.Address = v.GetString("runtime.cri.containerd.address")
+		cfg.Address = o.Address
 		return containerd.New(cfg)
 	default:
-		return nil, fmt.Errorf("container runtime <%s> interface not supported", v.GetString("container.cri.type"))
+		return nil, fmt.Errorf("container runtime <%s> interface not supported", driver)
 	}
 }

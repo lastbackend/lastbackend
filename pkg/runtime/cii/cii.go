@@ -25,7 +25,6 @@ import (
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cii/containerd"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -45,13 +44,19 @@ type CII interface {
 	Close() error
 }
 
-func New(v *viper.Viper) (CII, error) {
-	switch v.GetString("runtime.iri.type") {
+type ContainerdConfig struct {
+	Address string
+}
+
+func New(driver string, opts interface{}) (CII, error) {
+	switch driver {
 	case ContainerdDriver:
+		o := opts.(ContainerdConfig)
+
 		cfg := containerd.Config{}
-		cfg.Address = v.GetString("runtime.iri.containerd.address")
+		cfg.Address = o.Address
 		return containerd.New(cfg)
 	default:
-		return nil, fmt.Errorf("image runtime <%s> interface not supported", v.GetString("container.iri.type"))
+		return nil, fmt.Errorf("container image runtime <%s> interface not supported", driver)
 	}
 }

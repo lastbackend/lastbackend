@@ -22,7 +22,6 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi/dir"
-	"github.com/spf13/viper"
 )
 
 type CSI interface {
@@ -34,9 +33,10 @@ type CSI interface {
 	Remove(ctx context.Context, state *models.VolumeState) error
 }
 
-func New(kind string, v *viper.Viper) (CSI, error) {
+func New(kind string, opts interface{}) (CSI, error) {
 	switch kind {
 	default:
-		return dir.Get(v.GetString("container.csi.dir.root"))
+		cfg := opts.(dir.Config)
+		return dir.Get(cfg)
 	}
 }

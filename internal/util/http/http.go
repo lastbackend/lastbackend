@@ -64,11 +64,11 @@ func Handle(h http.HandlerFunc, middleware ...Middleware) http.HandlerFunc {
 	return h
 }
 
-func Listen(host string, port int, router http.Handler) error {
+func Listen(host string, port uint, router http.Handler) error {
 	return http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), router)
 }
 
-func ListenWithTLS(host string, port int, caFile, certFile, keyFile string, router http.Handler) error {
+func ListenWithTLS(host string, port uint, caFile, certFile, keyFile string, router http.Handler) error {
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", host, port),

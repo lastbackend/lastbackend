@@ -25,6 +25,7 @@ import (
 
 	"github.com/lastbackend/lastbackend/internal/cli/command"
 	"github.com/lastbackend/lastbackend/internal/cli/command/cluster"
+	"github.com/lastbackend/lastbackend/internal/cli/command/daemon"
 	"github.com/spf13/cobra"
 )
 
@@ -36,6 +37,7 @@ func New() *CLI {
 	c := new(CLI)
 	rootCmd := command.New()
 	rootCmd.AddCommand(command.VersionCmd)
+	rootCmd.AddCommand(daemon.NewCommand())
 	rootCmd.AddCommand(cluster.NewCommands()...)
 	c.rootCmd = rootCmd
 	return c
