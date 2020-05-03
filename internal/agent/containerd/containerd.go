@@ -18,6 +18,8 @@ import (
 	"github.com/opencontainers/runc/libcontainer/system"
 	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 	"gopkg.in/yaml.v3"
+	"github.com/containerd/containerd/services/server"
+	srvconfig "github.com/containerd/containerd/services/server/config"
 )
 
 const (
@@ -255,6 +257,16 @@ func (c *Containerd) runServer() {
 		fmt.Println(fmt.Sprintf("containerd err: %v", err))
 		os.Exit(1)
 	}
+
+	//
+	//cfg := new(srvconfig.Config)
+	//cfg.Root = c.root
+	//cfg.State = c.state
+	//
+	//scd, err :=server.New(c.ctx, cfg)
+	//if err != nil {
+	//	os.Exit(1)
+	//}
 
 	os.Exit(1)
 }
