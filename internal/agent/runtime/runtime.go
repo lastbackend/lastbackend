@@ -67,10 +67,18 @@ type Runtime struct {
 
 // NewRuntime method return new runtime pointer
 func New(cfg config.Config, cdConfig containerd.Config) (*Runtime, error) {
+
+	_net, err := network.New(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("Can not initialize network: %v", err)
+	}
+
 	r := new(Runtime)
 	r.ctx, r.cancel = context.WithCancel(context.Background())
 	r.config = cfg
 	r.cdConfig = cdConfig
+	r.network = _net
+	r.state = state.New()
 
 	r.spec = make(chan *models.NodeManifest, 0)
 	return r, nil
@@ -104,18 +112,11 @@ func (r *Runtime) Run() error {
 	//	}
 	//}
 
-	_net, err := network.New(r.config)
-	if err != nil {
-		return fmt.Errorf("Can not initialize network: %v", err)
-	}
-
-	_state := state.New()
-
 	// TODO: Implement cluster state logic
 	//_state.Node().Info = runtime.NodeInfo()
 	//_state.Node().Status = runtime.NodeStatus()
 
-	exp, err := exporter.NewExporter(_state.Node().Info.Hostname, models.EmptyString)
+	exp, err := exporter.NewExporter(r.state.Node().Info.Hostname, models.EmptyString)
 	if err != nil {
 		return fmt.Errorf("Can not initialize collector: %v", err)
 	}
@@ -123,8 +124,6 @@ func (r *Runtime) Run() error {
 	r.csi = _csi
 	r.cri = _cri
 	r.cii = _cii
-	r.network = _net
-	r.state = _state
 	r.exporter = exp
 
 	if err := r.Restore(); err != nil {
