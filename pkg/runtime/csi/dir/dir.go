@@ -24,7 +24,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"io"
 	"io/ioutil"
 	"os"
@@ -36,8 +36,8 @@ type Storage struct {
 	root string
 }
 
-type StorageOpts struct {
-	root string
+type Config struct {
+	RootDir string
 }
 
 func (s *Storage) List(ctx context.Context) (map[string]*models.VolumeState, error) {
@@ -99,7 +99,7 @@ func (s *Storage) FilesList(ctx context.Context, state *models.VolumeState) ([]s
 }
 
 func (s *Storage) FilesPut(ctx context.Context, state *models.VolumeState, files map[string]string) error {
-
+	log := logger.WithContext(context.Background())
 	for file, data := range files {
 		path := filepath.Join(state.Path, file)
 		var f *os.File
@@ -189,13 +189,13 @@ func (s *Storage) Remove(ctx context.Context, state *models.VolumeState) error {
 	return nil
 }
 
-func Get(path string) (*Storage, error) {
-
+func Get(cfg Config) (*Storage, error) {
+	log := logger.WithContext(context.Background())
 	log.Debug("Initialize dir storage interface")
 	var s = new(Storage)
 
-	if path != "" {
-		s.root = path
+	if cfg.RootDir != "" {
+		s.root = cfg.RootDir
 		log.Debugf("Initialize dir storage interface root: %s", s.root)
 	}
 

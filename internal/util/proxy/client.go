@@ -28,7 +28,6 @@ import (
 
 	protoio "github.com/gogo/protobuf/io"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 type Client struct {
@@ -68,7 +67,7 @@ func (p *Client) Connect() error {
 	p.sync.Unlock()
 
 	defer func() {
-		log.Debugf("closing connection to %v", conn.RemoteAddr())
+		fmt.Println("closing connection to ", conn.RemoteAddr())
 		_ = conn.Close()
 	}()
 
@@ -82,12 +81,12 @@ func (p *Client) Connect() error {
 			err := dec.ReadMsg(&msg)
 			if err != nil {
 				if err == io.EOF {
-					log.Debug("shutting down logger goroutine due to file EOF")
+					fmt.Println("shutting down logger goroutine due to file EOF")
 					p.active = false
 					p.done <- true
 					return
 				} else {
-					log.Warn("client: error reading message")
+					fmt.Println("client: error reading message")
 					dec = protoio.NewUint32DelimitedReader(conn, binary.BigEndian, 1e6)
 					return
 				}
@@ -97,7 +96,7 @@ func (p *Client) Connect() error {
 			case KindMSG:
 				if p.handler != nil {
 					if err := p.handler(msg); err != nil {
-						log.Debug("msg handle err")
+						fmt.Println("msg handle err")
 						p.done <- true
 					}
 				}

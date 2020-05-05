@@ -62,7 +62,7 @@ func Listen(host string, port int, opts *HttpOpts) error {
 		opts = new(HttpOpts)
 	}
 
-	log.V(logLevel).Debugf("%s:> listen HTTP server on %s:%d", logPrefix, host, port)
+	log.Debugf("%s:> listen HTTP server on %s:%d", logPrefix, host, port)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, "access_token", opts.BearerToken)
@@ -77,15 +77,15 @@ func Listen(host string, port int, opts *HttpOpts) error {
 	r.MethodNotAllowedHandler = notAllowed
 
 	for _, route := range Routes {
-		log.V(logLevel).Debugf("%s:> init route: %s", logPrefix, route.Path)
+		log.Debugf("%s:> init route: %s", logPrefix, route.Path)
 		r.Handle(route.Path, http.Handle(ctx, route.Handler, route.Middleware...)).Methods(route.Method)
 	}
 
 	if len(opts.CaFile) == 0 || len(opts.CertFile) == 0 || len(opts.KeyFile) == 0 {
-		log.V(logLevel).Debugf("%s:> run insecure http server", logPrefix)
+		log.Debugf("%s:> run insecure http server", logPrefix)
 		return http.Listen(host, port, r)
 	}
 
-	log.V(logLevel).Debugf("%s:> run http server with tls", logPrefix)
+	log.Debugf("%s:> run http server with tls", logPrefix)
 	return http.ListenWithTLS(host, port, opts.CaFile, opts.CertFile, opts.KeyFile, r)
 }

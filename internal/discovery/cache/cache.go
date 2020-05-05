@@ -34,7 +34,7 @@ type Cache struct {
 }
 
 func New(ttl time.Duration) *Cache {
-	log.V(logLevel).Debug("Cache: initialization cache storage")
+	log.Debug("Cache: initialization cache storage")
 
 	var duration = ttl
 	if duration == 0 {

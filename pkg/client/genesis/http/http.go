@@ -25,7 +25,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/client/genesis/http/v1/client"
 	rr "github.com/lastbackend/lastbackend/pkg/client/genesis/http/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/client/genesis/http/v1/views"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 type Client struct {
@@ -55,8 +54,8 @@ func New(endpoint string, cfg *config.Config) (*Client, error) {
 
 	cli, err := request.NewRESTClient(endpoint, opts)
 	if err != nil {
-		log.Errorf("can not initialize client: %s", err.Error())
-	}
+		return nil, err
+		}
 
 	cl.client = cli
 

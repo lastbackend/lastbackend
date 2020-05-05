@@ -41,17 +41,17 @@ type Volume struct {
 
 func (v *Volume) Runtime() (*models.System, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get services runtime info", logVolumePrefix)
+	log.Debugf("%s:get:> get services runtime info", logVolumePrefix)
 	runtime, err := v.storage.Info(v.context, v.storage.Collection().Volume(), "")
 	if err != nil {
-		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logVolumePrefix, err)
+		log.Errorf("%s:get:> get runtime info error: %s", logVolumePrefix, err)
 		return &runtime.System, err
 	}
 	return &runtime.System, nil
 }
 
 func (v *Volume) Get(namespace, name string) (*models.Volume, error) {
-	log.V(logLevel).Debugf("%s:get:> get volume by id %s/%s", logVolumePrefix, namespace, name)
+	log.Debugf("%s:get:> get volume by id %s/%s", logVolumePrefix, namespace, name)
 
 	item := new(models.Volume)
 	sl := models.NewVolumeSelfLink(namespace, name).String()
@@ -59,11 +59,11 @@ func (v *Volume) Get(namespace, name string) (*models.Volume, error) {
 	err := v.storage.Get(v.context, v.storage.Collection().Volume(), sl, &item, nil)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logVolumePrefix, namespace, name)
+			log.Warnf("%s:get:> in namespace %s by name %s not found", logVolumePrefix, namespace, name)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> in namespace %s by name %s error: %v", logVolumePrefix, namespace, name, err)
+		log.Errorf("%s:get:> in namespace %s by name %s error: %v", logVolumePrefix, namespace, name, err)
 		return nil, err
 	}
 
@@ -71,23 +71,23 @@ func (v *Volume) Get(namespace, name string) (*models.Volume, error) {
 }
 
 func (v *Volume) ListByNamespace(namespace string) (*models.VolumeList, error) {
-	log.V(logLevel).Debugf("%s:list:> get volumes list", logVolumePrefix)
+	log.Debugf("%s:list:> get volumes list", logVolumePrefix)
 
 	list := models.NewVolumeList()
 	filter := v.storage.Filter().Volume().ByNamespace(namespace)
 	err := v.storage.List(v.context, v.storage.Collection().Volume(), filter, list, nil)
 	if err != nil {
-		log.V(logLevel).Error("%s:list:> get volumes list err: %v", logVolumePrefix, err)
+		log.Error("%s:list:> get volumes list err: %v", logVolumePrefix, err)
 		return list, err
 	}
 
-	log.V(logLevel).Debugf("%s:list:> get volumes list result: %d", logVolumePrefix, len(list.Items))
+	log.Debugf("%s:list:> get volumes list result: %d", logVolumePrefix, len(list.Items))
 
 	return list, nil
 }
 
 func (v *Volume) Create(namespace *models.Namespace, vol *models.Volume) (*models.Volume, error) {
-	log.V(logLevel).Debugf("%s:crete:> create volume %s", logVolumePrefix, vol.SelfLink())
+	log.Debugf("%s:crete:> create volume %s", logVolumePrefix, vol.SelfLink())
 
 	vol.Meta.SetDefault()
 	vol.Meta.Namespace = namespace.Meta.Name
@@ -96,7 +96,7 @@ func (v *Volume) Create(namespace *models.Namespace, vol *models.Volume) (*model
 
 	if err := v.storage.Put(v.context, v.storage.Collection().Volume(),
 		vol.SelfLink().String(), vol, nil); err != nil {
-		log.V(logLevel).Errorf("%s:crete:> insert volume err: %v", logVolumePrefix, err)
+		log.Errorf("%s:crete:> insert volume err: %v", logVolumePrefix, err)
 		return nil, err
 	}
 
@@ -104,11 +104,11 @@ func (v *Volume) Create(namespace *models.Namespace, vol *models.Volume) (*model
 }
 
 func (v *Volume) Update(volume *models.Volume) error {
-	log.V(logLevel).Debugf("%s:update:> update volume %s", logVolumePrefix, volume.Meta.Name)
+	log.Debugf("%s:update:> update volume %s", logVolumePrefix, volume.Meta.Name)
 
 	if err := v.storage.Set(v.context, v.storage.Collection().Volume(),
 		volume.SelfLink().String(), volume, nil); err != nil {
-		log.V(logLevel).Errorf("%s:update:> update volume err: %v", logVolumePrefix, err)
+		log.Errorf("%s:update:> update volume err: %v", logVolumePrefix, err)
 		return err
 	}
 
@@ -118,11 +118,11 @@ func (v *Volume) Update(volume *models.Volume) error {
 func (v *Volume) Destroy(volume *models.Volume) error {
 
 	if volume == nil {
-		log.V(logLevel).Warnf("%s:destroy:> invalid argument %v", logVolumePrefix, volume)
+		log.Warnf("%s:destroy:> invalid argument %v", logVolumePrefix, volume)
 		return nil
 	}
 
-	log.V(logLevel).Debugf("%s:destroy:> volume %s", logVolumePrefix, volume.Meta.Name)
+	log.Debugf("%s:destroy:> volume %s", logVolumePrefix, volume.Meta.Name)
 
 	volume.Status.State = models.StateDestroy
 	volume.Spec.State.Destroy = true
@@ -137,11 +137,11 @@ func (v *Volume) Destroy(volume *models.Volume) error {
 }
 
 func (v *Volume) Remove(volume *models.Volume) error {
-	log.V(logLevel).Debugf("%s:remove:> remove volume %#v", logVolumePrefix, volume)
+	log.Debugf("%s:remove:> remove volume %#v", logVolumePrefix, volume)
 
 	if err := v.storage.Del(v.context, v.storage.Collection().Volume(),
 		volume.SelfLink().String()); err != nil {
-		log.V(logLevel).Errorf("%s:remove:> remove volume  err: %v", logVolumePrefix, err)
+		log.Errorf("%s:remove:> remove volume  err: %v", logVolumePrefix, err)
 		return err
 	}
 
@@ -151,7 +151,7 @@ func (v *Volume) Remove(volume *models.Volume) error {
 // Watch service changes
 func (v *Volume) Watch(ch chan models.VolumeEvent, rev *int64) error {
 
-	log.V(logLevel).Debugf("%s:watch:> watch volume by spec changes", logVolumePrefix)
+	log.Debugf("%s:watch:> watch volume by spec changes", logVolumePrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()
@@ -195,7 +195,7 @@ func (v *Volume) Watch(ch chan models.VolumeEvent, rev *int64) error {
 }
 
 func (v *Volume) ManifestMap(node string) (*models.VolumeManifestMap, error) {
-	log.V(logLevel).Debugf("%s:VolumeManifestMap:> ", logVolumePrefix)
+	log.Debugf("%s:VolumeManifestMap:> ", logVolumePrefix)
 
 	var (
 		mf = models.NewVolumeManifestMap()
@@ -209,7 +209,7 @@ func (v *Volume) ManifestMap(node string) (*models.VolumeManifestMap, error) {
 }
 
 func (v *Volume) ManifestGet(node, volume string) (*models.VolumeManifest, error) {
-	log.V(logLevel).Debugf("%s:VolumeManifestGet:> ", logVolumePrefix)
+	log.Debugf("%s:VolumeManifestGet:> ", logVolumePrefix)
 
 	var (
 		mf = new(models.VolumeManifest)
@@ -228,7 +228,7 @@ func (v *Volume) ManifestGet(node, volume string) (*models.VolumeManifest, error
 }
 
 func (v *Volume) ManifestAdd(node, volume string, manifest *models.VolumeManifest) error {
-	log.V(logLevel).Debugf("%s:VolumeManifestAdd:> ", logVolumePrefix)
+	log.Debugf("%s:VolumeManifestAdd:> ", logVolumePrefix)
 
 	if err := v.storage.Put(v.context, v.storage.Collection().Manifest().Volume(node), volume, manifest, nil); err != nil {
 		log.Errorf("%s:VolumeManifestAdd:> err :%s", logVolumePrefix, err.Error())
@@ -239,7 +239,7 @@ func (v *Volume) ManifestAdd(node, volume string, manifest *models.VolumeManifes
 }
 
 func (v *Volume) ManifestSet(node, volume string, manifest *models.VolumeManifest) error {
-	log.V(logLevel).Debugf("%s:VolumeManifestSet:> ", logVolumePrefix)
+	log.Debugf("%s:VolumeManifestSet:> ", logVolumePrefix)
 
 	if err := v.storage.Set(v.context, v.storage.Collection().Manifest().Volume(node), volume, manifest, nil); err != nil {
 		log.Errorf("%s:VolumeManifestSet:> err :%s", logVolumePrefix, err.Error())
@@ -250,7 +250,7 @@ func (v *Volume) ManifestSet(node, volume string, manifest *models.VolumeManifes
 }
 
 func (v *Volume) ManifestDel(node, volume string) error {
-	log.V(logLevel).Debugf("%s:DelVolumeManifest:> ", logVolumePrefix)
+	log.Debugf("%s:DelVolumeManifest:> ", logVolumePrefix)
 
 	if err := v.storage.Del(v.context, v.storage.Collection().Manifest().Volume(node), volume); err != nil {
 		log.Errorf("%s:VolumeManifestDel:> err :%s", logVolumePrefix, err.Error())
@@ -262,7 +262,7 @@ func (v *Volume) ManifestDel(node, volume string) error {
 
 func (v *Volume) ManifestWatch(node string, ch chan models.VolumeManifestEvent, rev *int64) error {
 
-	log.V(logLevel).Debugf("%s:watch:> watch volume manifest ", logVolumePrefix)
+	log.Debugf("%s:watch:> watch volume manifest ", logVolumePrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

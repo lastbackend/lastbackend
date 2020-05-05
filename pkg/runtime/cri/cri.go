@@ -21,17 +21,15 @@ package cri
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cri/docker"
-	"github.com/lastbackend/lastbackend/tools/log"
-	"github.com/spf13/viper"
 	"io"
 	"time"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cri/containerd"
 )
 
 const (
-	logLevel     = 5
-	dockerDriver = "docker"
+	ContainerdDriver = "containerd"
 )
 
 // CRI - Container System Interface
@@ -49,26 +47,22 @@ type CRI interface {
 	Copy(ctx context.Context, ID, path string, content io.Reader) error
 	Wait(ctx context.Context, ID string) error
 	Subscribe(ctx context.Context, container chan *models.Container) error
+	Close() error
 }
 
-func New(v *viper.Viper) (CRI, error) {
-	switch v.GetString("container.cri.type") {
-	case dockerDriver:
-		log.V(logLevel).Debugf("Use docker runtime interface for cri")
+type ContainerdConfig containerd.Config
 
-		cfg := docker.Config{}
-		cfg.Host = v.GetString("container.cri.docker.host")
-		cfg.Version = v.GetString("container.cri.docker.version")
+func New(driver string, opts interface{}) (CRI, error) {
 
-		if v.IsSet("container.cri.docker.tls.verify") && v.GetBool("container.cri.docker.tls.verify") {
-			cfg.TLS = new(docker.TLSConfig)
-			cfg.TLS.CAPath = v.GetString("container.cri.docker.tls.ca_file")
-			cfg.TLS.CertPath = v.GetString("container.cri.docker.tls.cert_file")
-			cfg.TLS.KeyPath = v.GetString("container.cri.docker.tls.key_file")
-		}
+	if opts == nil {
+		return nil, fmt.Errorf("options can not be is nil")
+	}
 
-		return docker.New(cfg)
+	switch driver {
+	case ContainerdDriver:
+		o := opts.(ContainerdConfig)
+		return containerd.New(containerd.Config(o))
 	default:
-		return nil, fmt.Errorf("container runtime <%s> interface not supported", v.GetString("container.cri.type"))
+		return nil, fmt.Errorf("container runtime <%s> interface not supported", driver)
 	}
 }

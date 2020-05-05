@@ -19,10 +19,15 @@
 package storage
 
 import (
+	"fmt"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/bbolt"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/mock"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/types"
-	"github.com/spf13/viper"
+)
+
+const (
+	MockDriver  = "mock"
+	BboltDriver = "bbolt"
 )
 
 const (
@@ -58,16 +63,22 @@ type IStorage interface {
 	Close() error
 }
 
-func Get(v *viper.Viper) (IStorage, error) {
+type BboltConfig bbolt.Options
 
-	switch v.GetString("storage.driver") {
-	case "mock":
+func Get(driver string, opts interface{}) (IStorage, error) {
+
+	if driver != MockDriver && opts == nil {
+		return nil, fmt.Errorf("options can not be is nil")
+	}
+
+	switch driver {
+	case MockDriver:
 		return mock.New()
+	case BboltDriver:
+		fallthrough
 	default:
-		opts := bbolt.Options{
-			Path: v.GetString("storage.bbolt.path"),
-		}
-		return bbolt.New(opts)
+		o := opts.(BboltConfig)
+		return bbolt.New(bbolt.Options(o))
 	}
 }
 

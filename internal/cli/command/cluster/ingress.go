@@ -21,9 +21,8 @@ package cluster
 import (
 	"context"
 	"fmt"
-
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"github.com/lastbackend/lastbackend/internal/cli/views"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"github.com/spf13/cobra"
 )
 
@@ -38,6 +37,7 @@ const ingressListExample = `
 `
 
 func (c *command) NewIngressCmd() *cobra.Command {
+	log := logger.WithContext(context.Background())
 	cmd := &cobra.Command{
 		Use:   "ingress",
 		Short: "Manage cluster ingress servers",

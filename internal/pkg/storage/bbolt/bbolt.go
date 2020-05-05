@@ -20,7 +20,11 @@ package bbolt
 
 import (
 	"errors"
+	"fmt"
+	"os"
+	"path"
 	"reflect"
+	"time"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/storage/types"
 	"github.com/lastbackend/lastbackend/internal/util/converter"
@@ -29,15 +33,23 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+const (
+	defaultDbName  = "lb.db"
+	defafultDbPath = "/var/lib/lastbackend/"
+)
+
 type Storage struct {
 	db    *bolt.DB
 	codec serializer.Codec
 }
 
 type Options struct {
-	// Path of the DB file.
+	// DB file name.
 	// Optional ("lb.db" by default).
-	Path string
+	DbName string
+	// Path of the DB file.
+	// Optional ("/var/lib/lastbackend/" by default).
+	DbDir string
 	// Encoding format.
 	// Optional (encoding.JSON by default).
 	Codec serializer.Codec
@@ -46,20 +58,28 @@ type Options struct {
 // DefaultOptions is an Options object with default values.
 // BucketName: "default", Path: "lb.db", Codec: encoding.JSON
 var DefaultOptions = Options{
-	Path:  "lb.db",
-	Codec: serializer.NewSerializer(json.Encoder{}, json.Decoder{}),
+	DbName: defaultDbName,
+	DbDir:  defafultDbPath,
+	Codec:  serializer.NewSerializer(json.Encoder{}, json.Decoder{}),
 }
 
 func New(options Options) (*Storage, error) {
 
-	if options.Path == "" {
-		options.Path = DefaultOptions.Path
+	if options.DbName == "" {
+		options.DbName = DefaultOptions.DbName
+	}
+	if options.DbDir == "" {
+		options.DbDir = DefaultOptions.DbDir
 	}
 	if options.Codec == nil {
 		options.Codec = DefaultOptions.Codec
 	}
 
-	db, err := bolt.Open(options.Path, 0600, nil)
+	if ok, _ := checkDirExists(options.DbDir); !ok {
+		return nil, fmt.Errorf("directory `%s` does not exists", options.DbDir)
+	}
+
+	db, err := bolt.Open(path.Join(options.DbDir, options.DbName), 0755, &bolt.Options{Timeout: 5 * time.Second})
 	if err != nil {
 		return nil, err
 	}
@@ -206,6 +226,17 @@ func checkValue(v interface{}) error {
 		return errors.New(types.ErrValueIsNil)
 	}
 	return nil
+}
+
+func checkDirExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return true, err
 }
 
 func checkCollection(k string) error {

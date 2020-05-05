@@ -53,7 +53,7 @@ func (r *Runtime) Auth(ctx context.Context, secret *models.SecretAuthData) (stri
 
 func (r *Runtime) Pull(ctx context.Context, spec *models.ImageManifest, out io.Writer) (*models.Image, error) {
 
-	log.V(logLevel).Debugf("Docker: Name pull: %s", spec.Name)
+	log.Debugf("Docker: Name pull: %s", spec.Name)
 
 	options := docker.ImagePullOptions{
 		PrivilegeFunc: func() (string, error) {
@@ -127,7 +127,7 @@ func (r *Runtime) Pull(ctx context.Context, spec *models.ImageManifest, out io.W
 
 func (r *Runtime) Push(ctx context.Context, spec *models.ImageManifest, out io.Writer) (*models.Image, error) {
 
-	log.V(logLevel).Debugf("Docker: Name push: %s", spec.Name)
+	log.Debugf("Docker: Name push: %s", spec.Name)
 
 	options := docker.ImagePushOptions{
 		RegistryAuth: spec.Auth,
@@ -276,7 +276,7 @@ func (r *Runtime) Build(ctx context.Context, stream io.Reader, spec *models.Spec
 }
 
 func (r *Runtime) Remove(ctx context.Context, ID string) error {
-	log.V(logLevel).Debugf("Docker: Name remove: %s", ID)
+	log.Debugf("Docker: Name remove: %s", ID)
 	var options docker.ImageRemoveOptions
 
 	options = docker.ImageRemoveOptions{
@@ -338,4 +338,8 @@ func (r *Runtime) Inspect(ctx context.Context, id string) (*models.Image, error)
 	}
 
 	return image, err
+}
+
+func (r *Runtime) Close() error {
+	return r.client.Close()
 }

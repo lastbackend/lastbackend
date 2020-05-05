@@ -19,11 +19,11 @@
 package utils
 
 import (
+	"context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"net"
 	"syscall"
-
-	"github.com/lastbackend/lastbackend/tools/log"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/vishvananda/netlink"
@@ -40,7 +40,7 @@ func GetIfaceByName(name string) (*net.Interface, net.IP, error) {
 		if iface.Name == name {
 			ifaceAddr, err := GetIfaceIP4Addr(&iface)
 			if err != nil {
-				return nil, nil, errors.New(fmt.Sprintf("failed to find IPv4 address for interface %s", iface.Name))
+				return nil, nil, fmt.Errorf("failed to find IPv4 address for interface %s", iface.Name)
 			}
 			return &iface, ifaceAddr, nil
 		}
@@ -51,23 +51,24 @@ func GetIfaceByName(name string) (*net.Interface, net.IP, error) {
 }
 
 func GetDefaultInterface() (*net.Interface, net.IP, error) {
+	log := logger.WithContext(context.Background())
 	var iface *net.Interface
 	var ifaceAddr net.IP
 	var err error
 
 	log.Info("Determining IP address of default interface")
 	if iface, err = GetDefaultGatewayIface(); err != nil {
-		return nil, nil, errors.New(fmt.Sprintf("failed to get default interface: %s", err))
+		return nil, nil, fmt.Errorf("failed to get default interface: %s", err)
 	}
 
 	if iface == nil {
-		return nil, nil, errors.New(fmt.Sprintf("failed to get default interface"))
+		return nil, nil, fmt.Errorf("failed to get default interface")
 	}
 
 	if ifaceAddr == nil {
 		ifaceAddr, err = GetIfaceIP4Addr(iface)
 		if err != nil {
-			return nil, nil, errors.New(fmt.Sprintf("failed to find IPv4 address for interface %s", iface.Name))
+			return nil, nil, fmt.Errorf("failed to find IPv4 address for interface %s", iface.Name)
 		}
 	}
 

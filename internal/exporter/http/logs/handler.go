@@ -80,7 +80,7 @@ func LogsH(w http.ResponseWriter, r *http.Request) {
 	follow := util.QueryBool(r, "follow")
 	lines := util.QueryInt(r, "lines")
 
-	log.V(logLevel).Debugf("%s:logs:> get by selflink `%s`", logPrefix, selflink)
+	log.Debugf("%s:logs:> get by selflink `%s`", logPrefix, selflink)
 
 	var (
 		l = envs.Get().GetLogger()

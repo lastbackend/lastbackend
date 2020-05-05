@@ -24,13 +24,11 @@ import (
 	"io"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cii/docker"
-	"github.com/spf13/viper"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cii/containerd"
 )
 
 const (
-	logLevel     = 5
-	dockerDriver = "docker"
+	ContainerdDriver = "containerd"
 )
 
 // IMI - Image System Interface
@@ -40,27 +38,25 @@ type CII interface {
 	Remove(ctx context.Context, image string) error
 	Push(ctx context.Context, spec *models.ImageManifest, out io.Writer) (*models.Image, error)
 	Build(ctx context.Context, stream io.Reader, spec *models.SpecBuildImage, out io.Writer) (*models.Image, error)
-	List(ctx context.Context) ([]*models.Image, error)
+	List(ctx context.Context, filters ...string) ([]*models.Image, error)
 	Inspect(ctx context.Context, id string) (*models.Image, error)
 	Subscribe(ctx context.Context) (chan *models.Image, error)
+	Close() error
 }
 
-func New(v *viper.Viper) (CII, error) {
-	switch v.GetString("container.iri.type") {
-	case dockerDriver:
-		cfg := docker.Config{}
-		cfg.Host = v.GetString("container.iri.docker.host")
-		cfg.Version = v.GetString("container.iri.docker.version")
+type ContainerdConfig containerd.Config
 
-		if v.IsSet("container.iri.docker.tls.verify") && v.GetBool("container.iri.docker.tls.verify") {
-			cfg.TLS = new(docker.TLSConfig)
-			cfg.TLS.CAPath = v.GetString("container.iri.docker.tls.ca_file")
-			cfg.TLS.CertPath = v.GetString("container.iri.docker.tls.cert_file")
-			cfg.TLS.KeyPath = v.GetString("container.iri.docker.tls.key_file")
-		}
+func New(driver string, opts interface{}) (CII, error) {
 
-		return docker.New(cfg)
+	if opts == nil {
+		return nil, fmt.Errorf("options can not be is nil")
+	}
+
+	switch driver {
+	case ContainerdDriver:
+		o := opts.(ContainerdConfig)
+		return containerd.New(containerd.Config(o))
 	default:
-		return nil, fmt.Errorf("image runtime <%s> interface not supported", v.GetString("container.iri.type"))
+		return nil, fmt.Errorf("container image runtime <%s> interface not supported", driver)
 	}
 }

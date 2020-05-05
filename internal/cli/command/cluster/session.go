@@ -26,7 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/internal/cli/models"
 	"github.com/lastbackend/lastbackend/internal/cli/service"
 	"github.com/lastbackend/lastbackend/pkg/client/genesis/http/v1/request"
-	"github.com/lastbackend/lastbackend/tools/log"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -43,6 +43,8 @@ const logOutExample = `
 `
 
 func (c *command) NewSessionLogInCmd(sessionService *service.SessionService) *cobra.Command {
+	log := logger.WithContext(context.Background())
+
 	return &cobra.Command{
 		Use:     "login",
 		Short:   "Log in to a Last.Backend",

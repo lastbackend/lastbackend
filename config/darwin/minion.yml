@@ -1,0 +1,31 @@
+---
+
+# Security settings
+security:
+  token: lstbknd
+
+workdir: /${HOME}/.lastbackend/
+rootless: false
+
+# Cluster info
+name: "lastbackend"
+description: "lastbackend cluster"
+
+manifestdir: ""
+disable-selinux: false
+
+api:
+  uri: "127.0.0.1:2967"
+  tls:
+    verify: false
+    ca: ""
+    cert: ""
+    key: ""
+
+registry:
+  config: ""
+
+# Last.Backend vault service settings
+vault:
+  endpoint: ""
+  token: ""

@@ -41,10 +41,10 @@ type Pod struct {
 
 func (p *Pod) Runtime() (*models.System, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get pod runtime info", logPodPrefix)
+	log.Debugf("%s:get:> get pod runtime info", logPodPrefix)
 	runtime, err := p.storage.Info(p.context, p.storage.Collection().Pod(), "")
 	if err != nil {
-		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logPodPrefix, err)
+		log.Errorf("%s:get:> get runtime info error: %s", logPodPrefix, err)
 		return &runtime.System, err
 	}
 	return &runtime.System, nil
@@ -52,7 +52,7 @@ func (p *Pod) Runtime() (*models.System, error) {
 
 // Get pod info from storage
 func (p *Pod) Get(selflink string) (*models.Pod, error) {
-	log.V(logLevel).Debugf("%s:get:> get by name %s", logPodPrefix, selflink)
+	log.Debugf("%s:get:> get by name %s", logPodPrefix, selflink)
 
 	pod := new(models.Pod)
 
@@ -61,11 +61,11 @@ func (p *Pod) Get(selflink string) (*models.Pod, error) {
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> `%s` not found", logPodPrefix, selflink)
+			log.Warnf("%s:get:> `%s` not found", logPodPrefix, selflink)
 			return nil, nil
 		}
 
-		log.V(logLevel).Debugf("%s:get:> get Pod `%s` err: %v", logPodPrefix, selflink, err)
+		log.Debugf("%s:get:> get Pod `%s` err: %v", logPodPrefix, selflink, err)
 		return nil, err
 	}
 
@@ -86,14 +86,14 @@ func (p *Pod) Put(pod *models.Pod) (*models.Pod, error) {
 
 // ListByNamespace returns pod list in selected namespace
 func (p *Pod) ListByNamespace(namespace string) (*models.PodList, error) {
-	log.V(logLevel).Debugf("%s:listbynamespace:> get pod list by namespace %s", logPodPrefix, namespace)
+	log.Debugf("%s:listbynamespace:> get pod list by namespace %s", logPodPrefix, namespace)
 
 	list := models.NewPodList()
 	filter := p.storage.Filter().Pod().ByNamespace(namespace)
 
 	err := p.storage.List(p.context, p.storage.Collection().Pod(), filter, list, nil)
 	if err != nil {
-		log.V(logLevel).Debugf("%s:listbynamespace:> get pod list by deployment id `%s` err: %v", logPodPrefix, namespace, err)
+		log.Debugf("%s:listbynamespace:> get pod list by deployment id `%s` err: %v", logPodPrefix, namespace, err)
 		return nil, err
 	}
 
@@ -102,14 +102,14 @@ func (p *Pod) ListByNamespace(namespace string) (*models.PodList, error) {
 
 // ListByService returns pod list in selected service
 func (p *Pod) ListByService(namespace, service string) (*models.PodList, error) {
-	log.V(logLevel).Debugf("%s:listbyservice:> get pod list by service id %s/%s", logPodPrefix, namespace, service)
+	log.Debugf("%s:listbyservice:> get pod list by service id %s/%s", logPodPrefix, namespace, service)
 
 	list := models.NewPodList()
 	filter := p.storage.Filter().Pod().ByService(namespace, service)
 
 	err := p.storage.List(p.context, p.storage.Collection().Pod(), filter, list, nil)
 	if err != nil {
-		log.V(logLevel).Debugf("%s:listbyservice:> get pod list by service id `%s` err: %v", logPodPrefix, namespace, service, err)
+		log.Debugf("%s:listbyservice:> get pod list by service id `%s` err: %v", logPodPrefix, namespace, service, err)
 		return nil, err
 	}
 
@@ -118,14 +118,14 @@ func (p *Pod) ListByService(namespace, service string) (*models.PodList, error) 
 
 // ListByDeployment returns pod list in selected deployment
 func (p *Pod) ListByDeployment(namespace, service, deployment string) (*models.PodList, error) {
-	log.V(logLevel).Debugf("%s:listbydeployment:> get pod list by id %s/%s/%s", logPodPrefix, namespace, service, deployment)
+	log.Debugf("%s:listbydeployment:> get pod list by id %s/%s/%s", logPodPrefix, namespace, service, deployment)
 
 	list := models.NewPodList()
 	filter := p.storage.Filter().Pod().ByDeployment(namespace, service, deployment)
 
 	err := p.storage.List(p.context, p.storage.Collection().Pod(), filter, list, nil)
 	if err != nil {
-		log.V(logLevel).Debugf("%s:listbydeployment:> get pod list by deployment id `%s/%s/%s` err: %v",
+		log.Debugf("%s:listbydeployment:> get pod list by deployment id `%s/%s/%s` err: %v",
 			logPodPrefix, namespace, service, deployment, err)
 		return nil, err
 	}
@@ -135,14 +135,14 @@ func (p *Pod) ListByDeployment(namespace, service, deployment string) (*models.P
 
 // ListByJob returns pod list in selected job
 func (p *Pod) ListByJob(namespace, job string) (*models.PodList, error) {
-	log.V(logLevel).Debugf("%s:listbyjob:> get pod list by id %s/%s", logPodPrefix, namespace, job)
+	log.Debugf("%s:listbyjob:> get pod list by id %s/%s", logPodPrefix, namespace, job)
 
 	list := models.NewPodList()
 	filter := p.storage.Filter().Pod().ByJob(namespace, job)
 
 	err := p.storage.List(p.context, p.storage.Collection().Pod(), filter, list, nil)
 	if err != nil {
-		log.V(logLevel).Debugf("%s:listbyjob:> get pod list by deployment id `%s/%s` err: %v",
+		log.Debugf("%s:listbyjob:> get pod list by deployment id `%s/%s` err: %v",
 			logPodPrefix, namespace, job, err)
 		return nil, err
 	}
@@ -152,14 +152,14 @@ func (p *Pod) ListByJob(namespace, job string) (*models.PodList, error) {
 
 // ListByTask returns pod list in selected task
 func (p *Pod) ListByTask(namespace, job, task string) (*models.PodList, error) {
-	log.V(logLevel).Debugf("%s:listbytask:> get pod list by id %s/%s/%s", logPodPrefix, namespace, job, task)
+	log.Debugf("%s:listbytask:> get pod list by id %s/%s/%s", logPodPrefix, namespace, job, task)
 
 	list := models.NewPodList()
 	filter := p.storage.Filter().Pod().ByTask(namespace, job, task)
 
 	err := p.storage.List(p.context, p.storage.Collection().Pod(), filter, list, nil)
 	if err != nil {
-		log.V(logLevel).Debugf("%s:listbytask:> get pod list by deployment id `%s/%s/%s` err: %v",
+		log.Debugf("%s:listbytask:> get pod list by deployment id `%s/%s/%s` err: %v",
 			logPodPrefix, namespace, job, task, err)
 		return nil, err
 	}
@@ -169,7 +169,7 @@ func (p *Pod) ListByTask(namespace, job, task string) (*models.PodList, error) {
 
 // SetNode - set node info to pod
 func (p *Pod) SetNode(pod *models.Pod, node *models.Node) error {
-	log.V(logLevel).Debugf("%s:setnode:> set node for pod: %s", logPodPrefix, pod.Meta.Name)
+	log.Debugf("%s:setnode:> set node for pod: %s", logPodPrefix, pod.Meta.Name)
 
 	pod.Meta.Node = node.Meta.Name
 
@@ -185,7 +185,7 @@ func (p *Pod) SetNode(pod *models.Pod, node *models.Node) error {
 // SetStatus - set state for pod
 func (p *Pod) Update(pod *models.Pod) error {
 
-	log.V(logLevel).Debugf("%s:update:> update pod: %s", logPodPrefix, pod.Meta.Name)
+	log.Debugf("%s:update:> update pod: %s", logPodPrefix, pod.Meta.Name)
 
 	if err := p.storage.Set(p.context, p.storage.Collection().Pod(),
 		pod.SelfLink().String(),
@@ -221,7 +221,7 @@ func (p *Pod) Remove(pod *models.Pod) error {
 }
 
 func (p *Pod) Watch(ch chan models.PodEvent, rev *int64) error {
-	log.V(logLevel).Debugf("%s:watch:> watch pod, from revision %d", logPodPrefix, *rev)
+	log.Debugf("%s:watch:> watch pod, from revision %d", logPodPrefix, *rev)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()
@@ -265,7 +265,7 @@ func (p *Pod) Watch(ch chan models.PodEvent, rev *int64) error {
 }
 
 func (p *Pod) ManifestMap(node string) (*models.PodManifestMap, error) {
-	log.V(logLevel).Debugf("%s:PodManifestMap:> ", logPodPrefix)
+	log.Debugf("%s:PodManifestMap:> ", logPodPrefix)
 
 	var (
 		mf = models.NewPodManifestMap()
@@ -284,7 +284,7 @@ func (p *Pod) ManifestMap(node string) (*models.PodManifestMap, error) {
 }
 
 func (p *Pod) ManifestGet(node, pod string) (*models.PodManifest, error) {
-	log.V(logLevel).Debugf("%s:PodManifestGet:> ", logPodPrefix)
+	log.Debugf("%s:PodManifestGet:> ", logPodPrefix)
 
 	var (
 		mf = new(models.PodManifest)
@@ -303,7 +303,7 @@ func (p *Pod) ManifestGet(node, pod string) (*models.PodManifest, error) {
 }
 
 func (p *Pod) ManifestAdd(node, pod string, manifest *models.PodManifest) error {
-	log.V(logLevel).Debugf("%s:PodManifestAdd:> ", logPodPrefix)
+	log.Debugf("%s:PodManifestAdd:> ", logPodPrefix)
 
 	if err := p.storage.Put(p.context, p.storage.Collection().Manifest().Pod(node), pod, manifest, nil); err != nil {
 		log.Errorf("%s:PodManifestAdd:> err :%s", logPodPrefix, err.Error())
@@ -314,7 +314,7 @@ func (p *Pod) ManifestAdd(node, pod string, manifest *models.PodManifest) error 
 }
 
 func (p *Pod) ManifestSet(node, pod string, manifest *models.PodManifest) error {
-	log.V(logLevel).Debugf("%s:PodManifestSet:> ", logPodPrefix)
+	log.Debugf("%s:PodManifestSet:> ", logPodPrefix)
 
 	if err := p.storage.Set(p.context, p.storage.Collection().Manifest().Pod(node), pod, manifest, nil); err != nil {
 		log.Errorf("%s:PodManifestSet:> err :%s", logPodPrefix, err.Error())
@@ -325,7 +325,7 @@ func (p *Pod) ManifestSet(node, pod string, manifest *models.PodManifest) error 
 }
 
 func (p *Pod) ManifestDel(node, pod string) error {
-	log.V(logLevel).Debugf("%s:PodManifestDel:> %s on node %s", logPodPrefix, pod, node)
+	log.Debugf("%s:PodManifestDel:> %s on node %s", logPodPrefix, pod, node)
 
 	if err := p.storage.Del(p.context, p.storage.Collection().Manifest().Pod(node), pod); err != nil {
 		log.Errorf("%s:PodManifestDel:> err :%s", logPodPrefix, err.Error())
@@ -337,7 +337,7 @@ func (p *Pod) ManifestDel(node, pod string) error {
 
 func (p *Pod) ManifestWatch(node string, ch chan models.PodManifestEvent, rev *int64) error {
 
-	log.V(logLevel).Debugf("%s:watch:> watch pod manifest ", logPodPrefix)
+	log.Debugf("%s:watch:> watch pod manifest ", logPodPrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

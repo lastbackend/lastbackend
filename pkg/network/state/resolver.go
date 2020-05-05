@@ -19,10 +19,11 @@
 package state
 
 import (
+	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"sync"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const logResolversPrefix = "state:resolvers:>"
@@ -37,12 +38,14 @@ func (n *ResolverState) GetResolvers() map[string]*models.ResolverManifest {
 }
 
 func (n *ResolverState) AddResolver(cidr string, sn *models.ResolverManifest) {
-	log.V(logLevel).Debugf("%s add resolver: %s", logResolversPrefix, cidr)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s add resolver: %s", logResolversPrefix, cidr)
 	n.SetResolver(cidr, sn)
 }
 
 func (n *ResolverState) SetResolver(cidr string, sn *models.ResolverManifest) {
-	log.V(logLevel).Debugf("%s set resolver: %s", logResolversPrefix, cidr)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s set resolver: %s", logResolversPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 
@@ -54,7 +57,8 @@ func (n *ResolverState) SetResolver(cidr string, sn *models.ResolverManifest) {
 }
 
 func (n *ResolverState) GetResolver(cidr string) *models.ResolverManifest {
-	log.V(logLevel).Debugf("%s get resolver: %s", logResolversPrefix, cidr)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get resolver: %s", logResolversPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	s, ok := n.resolvers[cidr]
@@ -65,7 +69,8 @@ func (n *ResolverState) GetResolver(cidr string) *models.ResolverManifest {
 }
 
 func (n *ResolverState) DelResolver(cidr string) {
-	log.V(logLevel).Debugf("%s del resolver: %s", logResolversPrefix, cidr)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s del resolver: %s", logResolversPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	if _, ok := n.resolvers[cidr]; ok {

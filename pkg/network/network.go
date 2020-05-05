@@ -19,12 +19,10 @@
 package network
 
 import (
-	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/network/state"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
-	"github.com/lastbackend/lastbackend/tools/log"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -41,39 +39,39 @@ type Network struct {
 	}
 }
 
-func New(v *viper.Viper) (*Network, error) {
-
-	var err error
-
+func New(cfg config.Config) (*Network, error) {
+	//log := logger.WithContext(context.Background())
+	//var err error
+	//
 	net := new(Network)
-
-	if v.GetString("network.cni.type") == models.EmptyString &&
-		v.GetString("network.cpi.type") == models.EmptyString {
-		log.Debug("run without network management")
-		return nil, nil
-	}
-
-	net.state = state.New()
-	if net.cni, err = cni.New(v); err != nil {
-		log.Errorf("Cannot initialize cni: %v", err)
-		return nil, err
-	}
-
-	if net.cpi, err = cpi.New(v); err != nil {
-		log.Errorf("Cannot initialize cni: %v", err)
-		return nil, err
-	}
-
-	rip := v.GetString("network.resolver.ip")
-	if rip == models.EmptyString {
-		rip = DefaultResolverIP
-	}
-
-	net.resolver.ip = rip
-	net.resolver.external = v.GetStringSlice("network.resolver.servers")
-	if len(net.resolver.external) == 0 {
-		net.resolver.external = []string{"8.8.8.8", "8.8.4.4"}
-	}
+	//
+	//if v.GetString("network.cni.type") == models.EmptyString &&
+	//	v.GetString("network.cpi.type") == models.EmptyString {
+	//	log.Debug("run without network management")
+	//	return nil, nil
+	//}
+	//
+	//net.state = state.New()
+	//if net.cni, err = cni.New(v); err != nil {
+	//	log.Errorf("Cannot initialize cni: %v", err)
+	//	return nil, err
+	//}
+	//
+	//if net.cpi, err = cpi.New(v); err != nil {
+	//	log.Errorf("Cannot initialize cni: %v", err)
+	//	return nil, err
+	//}
+	//
+	//rip := v.GetString("network.resolver.ip")
+	//if rip == models.EmptyString {
+	//	rip = DefaultResolverIP
+	//}
+	//
+	//net.resolver.ip = rip
+	//net.resolver.external = v.GetStringSlice("network.resolver.servers")
+	//if len(net.resolver.external) == 0 {
+	//	net.resolver.external = []string{"8.8.8.8", "8.8.4.4"}
+	//}
 
 	return net, nil
 }

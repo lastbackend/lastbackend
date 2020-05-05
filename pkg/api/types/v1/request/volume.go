@@ -20,7 +20,7 @@ package request
 
 import (
 	"encoding/json"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"time"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"

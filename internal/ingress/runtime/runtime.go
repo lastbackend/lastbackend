@@ -50,7 +50,7 @@ func New(iface string, cfg *conf) *Runtime {
 
 // Restore node runtime state
 func (r *Runtime) Restore() {
-	log.V(logLevel).Debugf("%s:restore:> restore init", logRuntimePrefix)
+	log.Debugf("%s:restore:> restore init", logRuntimePrefix)
 	var network = envs.Get().GetNet()
 
 	if network != nil {
@@ -80,7 +80,7 @@ func (r *Runtime) Restore() {
 
 // Sync node runtime with new spec
 func (r *Runtime) Sync(spec *models.IngressManifest) error {
-	log.V(logLevel).Debugf("%s:sync:> sync runtime state", logRuntimePrefix)
+	log.Debugf("%s:sync:> sync runtime state", logRuntimePrefix)
 	r.spec <- spec
 	return nil
 }
@@ -89,18 +89,18 @@ func (r *Runtime) Loop() {
 
 	var network = envs.Get().GetNet()
 
-	log.V(logLevel).Debugf("%s:loop:> start runtime loop", logRuntimePrefix)
+	log.Debugf("%s:loop:> start runtime loop", logRuntimePrefix)
 
 	go func(ctx context.Context) {
 		for {
 			select {
 			case spec := <-r.spec:
 
-				log.V(logLevel).Debugf("%s:loop:> provision new spec", logRuntimePrefix)
+				log.Debugf("%s:loop:> provision new spec", logRuntimePrefix)
 
 				if spec.Meta.Initial && network != nil {
 
-					log.V(logLevel).Debugf("%s> clean up endpoints", logRuntimePrefix)
+					log.Debugf("%s> clean up endpoints", logRuntimePrefix)
 					endpoints := envs.Get().GetNet().Endpoints().GetEndpoints()
 					for e := range endpoints {
 
@@ -115,7 +115,7 @@ func (r *Runtime) Loop() {
 						}
 					}
 
-					log.V(logLevel).Debugf("%s> clean up networks", logRuntimePrefix)
+					log.Debugf("%s> clean up networks", logRuntimePrefix)
 					nets := network.Subnets().GetSubnets()
 
 					for cidr := range nets {
@@ -127,7 +127,7 @@ func (r *Runtime) Loop() {
 				}
 
 				if len(spec.Resolvers) != 0 {
-					log.V(logLevel).Debugf("%s>set cluster dns ips: %#v", logRuntimePrefix, spec.Resolvers)
+					log.Debugf("%s>set cluster dns ips: %#v", logRuntimePrefix, spec.Resolvers)
 
 					resolvers := make(map[string]uint16, 0)
 					for key, res := range spec.Resolvers {
@@ -142,27 +142,27 @@ func (r *Runtime) Loop() {
 					}
 				}
 
-				log.V(logLevel).Debugf("%s> provision init", logRuntimePrefix)
+				log.Debugf("%s> provision init", logRuntimePrefix)
 
 				if network != nil {
-					log.V(logLevel).Debugf("%s> provision endpoints", logRuntimePrefix)
+					log.Debugf("%s> provision endpoints", logRuntimePrefix)
 					for e, spec := range spec.Endpoints {
-						log.V(logLevel).Debugf("endpoint: %v", e)
+						log.Debugf("endpoint: %v", e)
 						if err := network.EndpointManage(ctx, e, spec); err != nil {
 							log.Errorf("Upstream [%s] manage err: %s", e, err.Error())
 						}
 					}
 
-					log.V(logLevel).Debugf("%s> provision networks", logRuntimePrefix)
+					log.Debugf("%s> provision networks", logRuntimePrefix)
 					for cidr, n := range spec.Network {
-						log.V(logLevel).Debugf("network: %v", n)
+						log.Debugf("network: %v", n)
 						if err := network.SubnetManage(ctx, cidr, n); err != nil {
 							log.Errorf("Subnet [%s] create err: %s", n.CIDR, err.Error())
 						}
 					}
 				}
 
-				log.V(logLevel).Debugf("%s> provision routes", logRuntimePrefix)
+				log.Debugf("%s> provision routes", logRuntimePrefix)
 				var upd = make(map[string]bool, 0)
 				for e, spec := range spec.Routes {
 					if err := r.RouteManage(e, spec); err != nil {

@@ -23,7 +23,6 @@ import (
 
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 	"io"
 	"io/ioutil"
 )
@@ -129,17 +128,13 @@ func (s *RequestDeploymentScaleOptions) DecodeAndValidate(reader io.Reader) (mod
 
 	opts := models.DeploymentOptions{}
 
-	log.V(logLevel).Debug("Request: Deployment: decode and validate data for creating")
-
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		log.V(logLevel).Errorf("Request: Deployment: decode and validate data for creating err: %s", err)
 		return opts, err
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
-		log.V(logLevel).Errorf("Request: Deployment: convert struct from json err: %s", err)
 		return opts, err
 	}
 
