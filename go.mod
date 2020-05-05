@@ -7,6 +7,7 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/ararog/timeago v0.0.0-20160328174124-e9969cf18b8d
 	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496
+	github.com/containerd/cgroups v0.0.0-20200407151229-7fc7a507c04c // indirect
 	github.com/containerd/containerd v1.3.1-0.20200420153518-126e497e63e3
 	github.com/containerd/continuity v0.0.0-20200413184840-d3ef23f19fbb // indirect
 	github.com/containerd/fifo v0.0.0-20200410184934-f15a3290365b // indirect
@@ -14,6 +15,7 @@ require (
 	github.com/containerd/typeurl v1.0.0 // indirect
 	github.com/coreos/go-iptables v0.4.5
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
+	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/gogo/googleapis v1.3.2 // indirect
 	github.com/gogo/protobuf v1.3.1
@@ -21,11 +23,13 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/websocket v1.4.0
 	github.com/howeyc/gopass v0.0.0-20190910152052-7cb4b85ec19c
+	github.com/imdario/mergo v0.3.9 // indirect
 	github.com/mattn/go-runewidth v0.0.9
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/opencontainers/runc v0.1.1
 	github.com/opencontainers/runtime-spec v1.0.2 // indirect
 	github.com/opencontainers/selinux v1.5.1
+	github.com/prometheus/common v0.6.0
 	github.com/rootless-containers/rootlesskit v0.9.3
 	github.com/satori/go.uuid v1.2.0
 	github.com/shirou/gopsutil v2.20.3+incompatible
