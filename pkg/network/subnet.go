@@ -26,8 +26,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/network/state"
 	)
 
-const logLevel = 3
-
 func (n *Network) Subnets() *state.SubnetState {
 	return n.state.Subnets()
 }

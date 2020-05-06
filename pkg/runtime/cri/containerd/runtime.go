@@ -18,7 +18,9 @@
 
 package containerd
 
-import "github.com/containerd/containerd"
+import (
+	"github.com/containerd/containerd"
+)
 
 const defaultNamespace = "lstbknd"
 const containerdDefaultAddress = "/run/containerd/containerd.sock"
@@ -46,7 +48,10 @@ func New(cfg Config) (*Runtime, error) {
 		address = containerdDefaultAddress
 	}
 
-	client, err := containerd.New(address, containerd.WithDefaultNamespace(defaultNamespace))
+	client, err := containerd.New(address,
+		containerd.WithDefaultNamespace(defaultNamespace),
+		containerd.WithDefaultRuntime("io.containerd.runc.v2"),
+		)
 	if err != nil {
 		return nil, err
 	}

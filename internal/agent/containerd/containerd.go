@@ -2,28 +2,45 @@ package containerd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/containerd/containerd/cmd/containerd/command"
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/namespaces"
+	"github.com/containerd/containerd/services/server"
+	srvconfig "github.com/containerd/containerd/services/server/config"
+	"github.com/containerd/containerd/sys"
 	"github.com/lastbackend/lastbackend/internal/agent/containerd/templates"
 	"github.com/lastbackend/lastbackend/internal/util/filesystem"
 	"github.com/lastbackend/lastbackend/tools/logger"
 	"github.com/opencontainers/runc/libcontainer/system"
 	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 	"gopkg.in/yaml.v3"
-	"github.com/containerd/containerd/services/server"
-	srvconfig "github.com/containerd/containerd/services/server/config"
 )
 
 const (
 	defaultNamespace = "lstbknd.net"
+	// DefaultRootDir is the default location used by containerd to store
+	// persistent data
+	DefaultRootDir = "/var/lib/containerd"
+	// DefaultStateDir is the default location used by containerd to store
+	// transient data
+	DefaultStateDir = "/run/containerd"
+	// DefaultAddress is the default unix socket address
+	DefaultAddress = "/run/containerd/containerd.sock"
+	// DefaultDebugAddress is the default unix socket address for pprof data
+	DefaultDebugAddress = "/run/containerd/debug.sock"
+	// DefaultFIFODir is the default location used by client-side cio library
+	// to store FIFOs.
+	DefaultFIFODir = "/run/containerd/fifo"
+	// DefaultRuntime is the default linux runtime
+	DefaultRuntime = "io.containerd.runc.v2"
 )
 
 type Containerd struct {
@@ -55,6 +72,23 @@ type Config struct {
 	DisableSELinux bool
 	Images         string
 	Log            string
+}
+
+func defaultConfig() *srvconfig.Config {
+	return &srvconfig.Config{
+		Version: 1,
+		Root:    DefaultRootDir,
+		State:   DefaultStateDir,
+		GRPC: srvconfig.GRPCConfig{
+			Address: DefaultAddress,
+		},
+		Debug: srvconfig.Debug{
+			Level:   "info",
+			Address: DefaultDebugAddress,
+		},
+		DisabledPlugins: []string{},
+		RequiredPlugins: []string{},
+	}
 }
 
 func New(cfg Config) (*Containerd, error) {
@@ -243,30 +277,142 @@ func (c *Containerd) setLoggerProvider(ctx context.Context, fileeName string) io
 	}
 }
 
-func (c *Containerd) runServer() {
+func (c *Containerd) runServer() error {
+	log := logger.WithContext(c.ctx)
 
-	args := []string{
-		"-c", c.config,
-		"-a", c.address,
-		"--state", c.state,
-		"--root", c.root,
+	var (
+		start   = time.Now()
+		serverC = make(chan *server.Server, 1)
+		done    = handleSignals(c.ctx, serverC)
+	)
+
+	config := defaultConfig()
+
+	if err := srvconfig.LoadConfig(c.config, config); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	
+	if c.root != "" {
+		config.Root = c.root
+	}
+	
+	if c.state != "" {
+		config.State = c.state
+	}
+	
+	if c.address != "" {
+		config.GRPC.Address = c.address
+	}
+	
+	// Make sure top-level directories are created early.
+	if err := server.CreateTopLevelDirectories(config); err != nil {
+		return err
+	}
+	
+	if config.GRPC.Address == "" {
+		return errors.New("grpc address cannot be empty")
+	}
+	if config.TTRPC.Address == "" {
+		// If TTRPC was not explicitly configured, use defaults based on GRPC.
+		config.TTRPC.Address = fmt.Sprintf("%s.ttrpc", config.GRPC.Address)
+		config.TTRPC.UID = config.GRPC.UID
+		config.TTRPC.GID = config.GRPC.GID
+	}
+	
+	log.Info("starting containerd")
+
+	server, err := server.New(c.ctx, config)
+	if err != nil {
+		return err
+	}
+	
+	serverC <- server
+	
+	if config.Debug.Address != "" {
+		var l net.Listener
+		if filepath.IsAbs(config.Debug.Address) {
+			if l, err = sys.GetLocalListener(config.Debug.Address, config.Debug.UID, config.Debug.GID); err != nil {
+				return fmt.Errorf("err %v: failed to get listener for debug endpoint", err)
+			}
+		} else {
+			if l, err = net.Listen("tcp", config.Debug.Address); err != nil {
+				return fmt.Errorf("err %v: failed to get listener for debug endpoint", err)
+			}
+		}
+		serve(c.ctx, l, server.ServeDebug)
 	}
 
-	app:= command.App()
-	if err := app.Run(args); err != nil {
-		fmt.Println(fmt.Sprintf("containerd err: %v", err))
-		os.Exit(1)
+	if config.Metrics.Address != "" {
+		l, err := net.Listen("tcp", config.Metrics.Address)
+		if err != nil {
+			return fmt.Errorf("err %v: failed to get listener for metrics endpoint", err)
+		}
+		serve(c.ctx, l, server.ServeMetrics)
 	}
 
-	//
-	//cfg := new(srvconfig.Config)
-	//cfg.Root = c.root
-	//cfg.State = c.state
-	//
-	//scd, err :=server.New(c.ctx, cfg)
-	//if err != nil {
-	//	os.Exit(1)
-	//}
+	// setup the ttrpc endpoint
+	tl, err := sys.GetLocalListener(config.TTRPC.Address, config.TTRPC.UID, config.TTRPC.GID)
+	if err != nil {
+		return fmt.Errorf("err %v: failed to get listener for main ttrpc endpoint", err)
+	}
+	serve(c.ctx, tl, server.ServeTTRPC)
 
-	os.Exit(1)
+	if config.GRPC.TCPAddress != "" {
+		l, err := net.Listen("tcp", config.GRPC.TCPAddress)
+		if err != nil {
+			return fmt.Errorf("err %v: failed to get listener for TCP grpc endpoint", err)
+		}
+		serve(c.ctx, l, server.ServeTCP)
+	}
+
+	// setup the main grpc endpoint
+	l, err := sys.GetLocalListener(config.GRPC.Address, config.GRPC.UID, config.GRPC.GID)
+	if err != nil {
+		return fmt.Errorf("err %v: failed to get listener for main endpoint", err)
+	}
+	
+	serve(c.ctx, l, server.ServeGRPC)
+
+	log.Infof("containerd successfully booted in %fs", time.Since(start).Seconds())
+
+
+	<-done
+
+	return nil
+}
+
+func serve(ctx context.Context, l net.Listener, serveFunc func(net.Listener) error) {
+	log := logger.WithContext(ctx)
+
+	path := l.Addr().String()
+	log.WithFields(logger.Fields{"address": path}).Info("serving...")
+
+	go func() {
+		defer l.Close()
+		if err := serveFunc(l); err != nil {
+			log.WithFields(logger.Fields{"address": path}).Fatalf("err %v:serve failure")
+		}
+	}()
+}
+
+func handleSignals(ctx context.Context, serverC chan *server.Server) chan struct{} {
+	done := make(chan struct{}, 1)
+	go func() {
+		var server *server.Server
+		for {
+			select {
+			case s := <-serverC:
+				server = s
+			case <-ctx.Done():
+				if server == nil {
+					close(done)
+					return
+				}
+				server.Stop()
+				close(done)
+				return
+			}
+		}
+	}()
+	return done
 }
