@@ -20,6 +20,8 @@ package state
 
 import (
 	"context"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 )
 
@@ -33,13 +35,17 @@ type State struct {
 	storage storage.IStorage
 
 	Namespace *NamespaceController
-	Service   *ServiceController
+	Resources map[string]ResourceController
 }
 
 // Resource wrapper for namespace
-func (s *State) Resource() *ResourceController {
-	rc := new(ResourceController)
-	return rc
+func (s *State) Resource(kind string) ResourceController {
+
+	if c, ok := s.Resources[kind]; ok {
+		return c
+	}
+
+	return nil
 }
 
 // NewState function returns new instance of state
@@ -50,7 +56,9 @@ func NewState(ctx context.Context, stg storage.IStorage) *State {
 	state.storage = stg
 
 	state.Namespace = NewNamespaceController(ctx)
-	state.Service = NewServiceController(ctx)
+	state.Resources = make(map[string]ResourceController, 0)
+
+	state.Resources[models.KindService] = NewServiceController(ctx)
 
 	return state
 }

@@ -36,15 +36,15 @@ image-develop:
 
 run:
 	@echo "== Run lastbackend container platform"
-	@go run ./cmd/lastbackend/lastbackend.go -v=3
+	@go run ./cmd/lastbackend/lastbackend.go daemon -c config/linux/master.yml -v=3
 
 run-master:
 	@echo "== Run lastbackend container platform master"
-	@go run ./cmd/lastbackend/lastbackend.go master -v=3
+	@go run ./cmd/lastbackend/lastbackend.go daemon -c config/linux/master.yml  --no-schedule -v=3
 
 run-minion:
 	@echo "== Run lastbackend container platform minion"
-	@go run ./cmd/lastbackend/lastbackend.go minion -v=3
+	@go run ./cmd/lastbackend/lastbackend.go minion -c config/linux/minion.yml -v=3
 
 swagger-spec:
 	@echo "== Generating Swagger spec for Last.Backend API"

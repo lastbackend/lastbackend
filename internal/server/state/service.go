@@ -29,42 +29,36 @@ import (
 // ServiceController structure
 type ServiceController struct {
 	lock  sync.Mutex
-	items map[*models.ServiceSelfLink]*models.Service
+	items map[models.SelfLink]*models.Service
 }
 
-// ServiceControllerOpts struct for filtering queries to state
-type ServiceControllerOpts struct {
-	namespace *models.NamespaceSelfLink
+// Run controller state
+func (sc *ServiceController) Run(ctx context.Context) error {
+	return nil
 }
 
-func (sco *ServiceControllerOpts) WithNamespace(ns string) {
-
-}
-
-func (sco *ServiceControllerOpts) WithNamespaceSelfLink(ns models.ServiceSelfLink) {
-
-}
-
-func (sc *ServiceController) loop() {
-
+// Restore controller state
+func (sc *ServiceController) Restore(ctx context.Context) error {
+	return nil
 }
 
 // List all namespaces in state
-func (sc *ServiceController) List(ctx context.Context, filter *ServiceControllerOpts) []*models.Service {
+func (sc *ServiceController) List(ctx context.Context, filter *ResourceFilter) (models.NamespaceResourceList, error) {
 
 	log := logger.WithContext(ctx)
 	log.Debugf("%s:list:> get service list", logPrefix)
 
-	items := make([]*models.Service, len(sc.items))
+	list := models.NewServiceList()
+
 	for _, item := range sc.items {
-		items = append(items, item)
+		list.Items = append(list.Items, item)
 	}
 
-	return items
+	return list, nil
 }
 
 // Map all service in state
-func (sc *ServiceController) Map(ctx context.Context, filter *ServiceControllerOpts) map[*models.ServiceSelfLink]*models.Service {
+func (sc *ServiceController) Map(ctx context.Context, filter *ResourceFilter) map[models.SelfLink]*models.Service {
 
 	log := logger.WithContext(ctx)
 	log.Debugf("%s:service:> get service map", logPrefix)
@@ -73,7 +67,17 @@ func (sc *ServiceController) Map(ctx context.Context, filter *ServiceControllerO
 }
 
 // Set service to state
-func (sc *ServiceController) Set(ctx context.Context, mf models.ServiceManifest) (*models.Service, error) {
+func (sc *ServiceController) Put(ctx context.Context, mf models.NamespaceResourceManifest) (models.NamespaceResource, error) {
+	log := logger.WithContext(ctx)
+	log.Debugf("%s:set:> set service", logPrefix)
+
+	// TODO: fill service manifest set logic
+
+	return nil, nil
+}
+
+// Set service to state
+func (sc *ServiceController) Set(ctx context.Context, mf models.NamespaceResourceManifest) (models.NamespaceResource, error) {
 	log := logger.WithContext(ctx)
 	log.Debugf("%s:set:> set service", logPrefix)
 
@@ -83,7 +87,7 @@ func (sc *ServiceController) Set(ctx context.Context, mf models.ServiceManifest)
 }
 
 // Get particular service from state
-func (sc *ServiceController) Get(ctx context.Context, selflink *models.ServiceSelfLink) (*models.Service, error) {
+func (sc *ServiceController) Get(ctx context.Context, selflink models.SelfLink) (models.NamespaceResource, error) {
 	log := logger.WithContext(ctx)
 	log.Debugf("%s:list:> get service from state", logPrefix)
 
@@ -99,7 +103,7 @@ func (sc *ServiceController) Get(ctx context.Context, selflink *models.ServiceSe
 }
 
 // Del service from state
-func (sc *ServiceController) Del(ctx context.Context, selflink *models.ServiceSelfLink) error {
+func (sc *ServiceController) Del(ctx context.Context, selflink models.SelfLink) (models.NamespaceResource, error) {
 	log := logger.WithContext(ctx)
 	log.Debugf("%s:list:> delete service from state", logPrefix)
 
@@ -108,12 +112,29 @@ func (sc *ServiceController) Del(ctx context.Context, selflink *models.ServiceSe
 	sc.lock.Unlock()
 
 	if !ok {
-		return errors.NewResourceNotFound()
+		return nil, errors.NewResourceNotFound()
 	}
 
 	// TODO: implement service delete logic
 
-	return nil
+	return nil, nil
+}
+
+func (sc *ServiceController) loop() {
+
+}
+
+// ServiceControllerOpts struct for filtering queries to state
+type ServiceControllerOpts struct {
+	namespace *models.NamespaceSelfLink
+}
+
+func (sco *ServiceControllerOpts) WithNamespace(ns string) {
+
+}
+
+func (sco *ServiceControllerOpts) WithNamespaceSelfLink(ns models.ServiceSelfLink) {
+
 }
 
 // NewServiceController return new instance of ServiceController struct

@@ -104,6 +104,14 @@ func (s *ServiceSpec) SetDefault() {
 	s.Template.Containers = make(SpecTemplateContainers, 0)
 }
 
+func (s *Service) Kind() string {
+	return KindService
+}
+
+func (s *Service) Namespace() *NamespaceSelfLink {
+	return s.Meta.SelfLink.Namespace()
+}
+
 func (s *Service) SelfLink() *ServiceSelfLink {
 	return &s.Meta.SelfLink
 }
@@ -182,14 +190,6 @@ func (s *ServiceSpec) GetResourceRequest() ResourceRequest {
 	}
 
 	return rr
-}
-
-func (s *Service) Kind() string {
-	return KindService
-}
-
-func (s *Service) Namespace() *NamespaceSelfLink {
-	return s.Meta.SelfLink.Namespace()
 }
 
 func (s *ServiceList) Kind() string {
