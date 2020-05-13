@@ -7,13 +7,8 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/ararog/timeago v0.0.0-20160328174124-e9969cf18b8d
 	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496
+	github.com/containerd/console v1.0.0
 	github.com/checkpoint-restore/go-criu v0.0.0-20191125063657-fcdcd07065c5 // indirect
-	github.com/containerd/cgroups v0.0.0-20200407151229-7fc7a507c04c // indirect
-	github.com/containerd/containerd v1.3.1-0.20200503115351-c668d7660d0c
-	github.com/containerd/continuity v0.0.0-20200413184840-d3ef23f19fbb // indirect
-	github.com/containerd/fifo v0.0.0-20200410184934-f15a3290365b // indirect
-	github.com/containerd/ttrpc v1.0.1-0.20200422111338-72bb1b21c5b0 // indirect
-	github.com/containerd/typeurl v1.0.1-0.20200413180623-cd3ce7159eae // indirect
 	github.com/coreos/go-iptables v0.4.5
 	github.com/cyphar/filepath-securejoin v0.2.2 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect

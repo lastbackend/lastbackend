@@ -22,15 +22,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"path/filepath"
-
 	"github.com/lastbackend/lastbackend/internal/agent/config"
-	"github.com/lastbackend/lastbackend/internal/agent/containerd"
 	"github.com/lastbackend/lastbackend/internal/agent/controller"
 	"github.com/lastbackend/lastbackend/internal/agent/rootless"
 	"github.com/lastbackend/lastbackend/internal/agent/runtime"
 	"github.com/lastbackend/lastbackend/internal/agent/server"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/internal/util/filesystem"
 	"github.com/lastbackend/lastbackend/tools/logger"
 )
@@ -43,7 +40,6 @@ type App struct {
 
 	HttpServer *server.HttpServer
 	Runtime    *runtime.Runtime
-	Containerd *containerd.Containerd
 	Controller *controller.Controller
 }
 
@@ -74,11 +70,6 @@ func (app *App) Run() error {
 	log := logger.WithContext(context.Background())
 	log.Infof("Run minion service")
 
-	if err := app.Containerd.Run(); err != nil {
-		log.Errorf("Run containerd server err: %v", err)
-		return err
-	}
-
 	if err := app.Runtime.Run(); err != nil {
 		log.Errorf("Run runtime err: %v", err)
 		return err
@@ -105,7 +96,6 @@ func (app *App) Run() error {
 
 func (app *App) Stop() {
 	app.Runtime.Stop()
-	app.Containerd.Stop()
 	app.cancel()
 }
 
@@ -136,24 +126,7 @@ func (app *App) init() error {
 		}
 	}
 
-	cdConfig := containerd.Config{}
-	cdConfig.Registry = app.config.Registry.Config
-	cdConfig.ConfigPath = filepath.Join(workdir, "etc/containerd/config.toml")
-	cdConfig.Root = filepath.Join(workdir, "containerd")
-	cdConfig.Opt = filepath.Join(workdir, "containerd")
-	cdConfig.State = "/run/lastbackend/containerd"
-	cdConfig.Address = filepath.Join(cdConfig.State, "containerd.sock")
-	cdConfig.Template = filepath.Join(workdir, "etc/containerd/config.toml.tmpl")
-	if !app.config.Debug {
-		cdConfig.Log = filepath.Join(workdir, "containerd/containerd.log")
-	}
-
-	app.Containerd, err = containerd.New(cdConfig)
-	if err != nil {
-		return fmt.Errorf("Cannot initialize containerd: %v", err)
-	}
-
-	app.Runtime, err = runtime.New(app.config, cdConfig)
+	app.Runtime, err = runtime.New(app.config)
 	if err != nil {
 		return fmt.Errorf("Can not initialize runtime: %v", err)
 	}

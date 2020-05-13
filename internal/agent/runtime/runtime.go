@@ -26,7 +26,6 @@ import (
 	"strings"
 
 	"github.com/lastbackend/lastbackend/internal/agent/config"
-	"github.com/lastbackend/lastbackend/internal/agent/containerd"
 	"github.com/lastbackend/lastbackend/internal/agent/exporter"
 	"github.com/lastbackend/lastbackend/internal/agent/state"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
@@ -59,14 +58,13 @@ type Runtime struct {
 	exporter  *exporter.Exporter
 	retClient cluster.IClient
 
-	config   config.Config
-	cdConfig containerd.Config
+	config config.Config
 
 	spec chan *models.NodeManifest
 }
 
 // NewRuntime method return new runtime pointer
-func New(cfg config.Config, cdConfig containerd.Config) (*Runtime, error) {
+func New(cfg config.Config) (*Runtime, error) {
 
 	_net, err := network.New(cfg)
 	if err != nil {
@@ -76,7 +74,6 @@ func New(cfg config.Config, cdConfig containerd.Config) (*Runtime, error) {
 	r := new(Runtime)
 	r.ctx, r.cancel = context.WithCancel(context.Background())
 	r.config = cfg
-	r.cdConfig = cdConfig
 	r.network = _net
 	r.state = state.New()
 
@@ -87,12 +84,12 @@ func New(cfg config.Config, cdConfig containerd.Config) (*Runtime, error) {
 // NewRuntime run daemon
 func (r *Runtime) Run() error {
 
-	_cii, err := cii.New(cii.ContainerdDriver, cii.ContainerdConfig{Address: r.cdConfig.Address})
-	if err != nil {
-		return fmt.Errorf("Cannot initialize iri: %v", err)
-	}
+	//_cii, err := cii.New(cii.ContainerdDriver, cii.ContainerdConfig{Address: r.cdConfig.Address})
+	//if err != nil {
+	//	return fmt.Errorf("Cannot initialize iri: %v", err)
+	//}
 
-	_cri, err := cri.New(cri.ContainerdDriver, cri.ContainerdConfig{Address: r.cdConfig.Address})
+	_cri, err := cri.New(cri.OCIDriver, cri.OciConfig{})
 	if err != nil {
 		return fmt.Errorf("Cannot initialize cri: %v", err)
 	}

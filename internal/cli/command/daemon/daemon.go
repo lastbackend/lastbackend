@@ -194,7 +194,7 @@ func NewCommand() *cobra.Command {
 	cmd.Flags().StringP("api-tls-private-key-file", "", "", "Set path to key file rest client")
 	cmd.Flags().StringP("manifestdir", "", "", "Set directory path to manifest")
 	cmd.Flags().StringP("registry-config-path", "", "", "Registry configuration file path")
-	cmd.Flags().BoolP("disable-selinux", "", false, "Disable SELinux in containerd if currently enabled")
+	cmd.Flags().BoolP("disable-selinux", "", false, "Disable SELinux if currently enabled")
 
 	return cmd
 }

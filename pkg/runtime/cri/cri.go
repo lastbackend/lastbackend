@@ -25,13 +25,11 @@ import (
 	"time"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cri/containerd"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri/oci"
 )
 
 const (
-	ContainerdDriver = "containerd"
-	OCIDriver        = "oci"
+	OCIDriver = "oci"
 )
 
 // CRI - Container System Interface
@@ -52,7 +50,6 @@ type CRI interface {
 	Close() error
 }
 
-type ContainerdConfig containerd.Config
 type OciConfig oci.Config
 
 func New(driver string, opts interface{}) (CRI, error) {
@@ -62,9 +59,6 @@ func New(driver string, opts interface{}) (CRI, error) {
 	}
 
 	switch driver {
-	case ContainerdDriver:
-		o := opts.(ContainerdConfig)
-		return containerd.New(containerd.Config(o))
 	case OCIDriver:
 		o := opts.(OciConfig)
 		return oci.New(oci.Config(o))

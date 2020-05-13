@@ -24,11 +24,6 @@ import (
 	"io"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cii/containerd"
-)
-
-const (
-	ContainerdDriver = "containerd"
 )
 
 // IMI - Image System Interface
@@ -44,8 +39,6 @@ type CII interface {
 	Close() error
 }
 
-type ContainerdConfig containerd.Config
-
 func New(driver string, opts interface{}) (CII, error) {
 
 	if opts == nil {
@@ -53,9 +46,6 @@ func New(driver string, opts interface{}) (CII, error) {
 	}
 
 	switch driver {
-	case ContainerdDriver:
-		o := opts.(ContainerdConfig)
-		return containerd.New(containerd.Config(o))
 	default:
 		return nil, fmt.Errorf("container image runtime <%s> interface not supported", driver)
 	}
