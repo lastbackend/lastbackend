@@ -36,7 +36,7 @@ const (
 	StatusInternalServerError = "Internal Server Error"
 	StatusForbidden           = "Forbidden"
 	StatusNotAllowed          = "Not Allowed"
-	ArgumentIsEmpty           = "ArgumentIsEmpty"
+	ArgumentIsEmpty           = "Argument Is Empty"
 )
 
 type Err struct {
