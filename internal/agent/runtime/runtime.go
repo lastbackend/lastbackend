@@ -84,12 +84,16 @@ func New(cfg config.Config) (*Runtime, error) {
 // NewRuntime run daemon
 func (r *Runtime) Run() error {
 
-	//_cii, err := cii.New(cii.ContainerdDriver, cii.ContainerdConfig{Address: r.cdConfig.Address})
-	//if err != nil {
-	//	return fmt.Errorf("Cannot initialize iri: %v", err)
-	//}
+	_cii, err := cii.New(cii.DockerDriver, cii.DockerConfig{
+		Root:    "/var/lib/lastbackend/storage",
+		RunRoot: "/var/run/lastbackend/storage",
+		StorageDriver: "overlay",
+	})
+	if err != nil {
+		return fmt.Errorf("Cannot initialize iri: %v", err)
+	}
 
-	_cri, err := cri.New(cri.OCIDriver, cri.OciConfig{})
+	_cri, err := cri.New(cri.RuncDriver, cri.RuncConfig{})
 	if err != nil {
 		return fmt.Errorf("Cannot initialize cri: %v", err)
 	}

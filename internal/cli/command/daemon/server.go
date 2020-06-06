@@ -106,7 +106,7 @@ func SetServerConfigFromEnvs(cfg *config.Config) error {
 	return nil
 }
 
-func SetServerConfigFromFlagsAndEnvs(flags *pflag.FlagSet, cfg *config.Config) error {
+func SetServerConfigFromFlags(flags *pflag.FlagSet, cfg *config.Config) error {
 
 	token, err := flags.GetString("access-token")
 	if err != nil {

@@ -1,4 +1,3 @@
-// +build linux
 //
 // Last.Backend LLC CONFIDENTIAL
 // __________________
@@ -17,35 +16,42 @@
 // from Last.Backend LLC.
 //
 
-package cli
+package docker
 
 import (
-	"fmt"
-	"os"
+	"context"
+	"crypto/tls"
+	"testing"
 
-	"github.com/lastbackend/lastbackend/internal/cli/command"
-	"github.com/lastbackend/lastbackend/internal/cli/command/cluster"
-	"github.com/lastbackend/lastbackend/internal/cli/command/daemon"
-	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 )
 
-type CLI struct {
-	rootCmd *cobra.Command
-}
+func TestResolver(t *testing.T) {
 
-func New() *CLI {
-	c := new(CLI)
-	rootCmd := command.New()
-	rootCmd.AddCommand(command.VersionCmd)
-	rootCmd.AddCommand(daemon.NewCommand())
-	rootCmd.AddCommand(cluster.NewCommands()...)
-	c.rootCmd = rootCmd
-	return c
-}
+	ctx := context.Background()
 
-func (c *CLI) Execute() {
-	if err := c.rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	cfg := Config{}
+	cfg.Debug = true
+
+	hostOptions := HostOptions{}
+	hostOptions.DefaultScheme = "http"
+	//hostOptions.HostDir = HostDirFromRoot(hostDir)
+	hostOptions.DefaultTLS = &tls.Config{
+		InsecureSkipVerify: true,
+	}
+
+	cfg.Hosts = ConfigureHosts(ctx, hostOptions)
+
+	r, err := New(cfg)
+	if assert.NotNil(t, err, "create resolver error") {
+		return
+	}
+	if !assert.NotNil(t, r, "resolver can not be nil") {
+		return
+	}
+
+	reader, err := r.Pull(ctx, "localhost:5000/redis")
+	if assert.NotNil(t, err, "pull image failed") {
+		return
 	}
 }

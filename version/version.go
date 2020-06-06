@@ -1,4 +1,3 @@
-// +build linux
 //
 // Last.Backend LLC CONFIDENTIAL
 // __________________
@@ -17,35 +16,17 @@
 // from Last.Backend LLC.
 //
 
-package cli
+package version
 
-import (
-	"fmt"
-	"os"
+var (
+	// Package is filled at linking time
+	Package = "github.com/lastbackend/lastbackend"
 
-	"github.com/lastbackend/lastbackend/internal/cli/command"
-	"github.com/lastbackend/lastbackend/internal/cli/command/cluster"
-	"github.com/lastbackend/lastbackend/internal/cli/command/daemon"
-	"github.com/spf13/cobra"
+	// Version holds the complete version number. Filled in at linking time.
+	Version = "1.0.0"
+
+	// Revision is filled with the VCS (e.g. git) revision being used to build
+	// the program at linking time.
+	Revision = ""
 )
 
-type CLI struct {
-	rootCmd *cobra.Command
-}
-
-func New() *CLI {
-	c := new(CLI)
-	rootCmd := command.New()
-	rootCmd.AddCommand(command.VersionCmd)
-	rootCmd.AddCommand(daemon.NewCommand())
-	rootCmd.AddCommand(cluster.NewCommands()...)
-	c.rootCmd = rootCmd
-	return c
-}
-
-func (c *CLI) Execute() {
-	if err := c.rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}

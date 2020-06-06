@@ -22,9 +22,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/lastbackend/lastbackend/internal/agent/config"
 	"github.com/lastbackend/lastbackend/internal/agent/controller"
-	"github.com/lastbackend/lastbackend/internal/agent/rootless"
 	"github.com/lastbackend/lastbackend/internal/agent/runtime"
 	"github.com/lastbackend/lastbackend/internal/agent/server"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
@@ -114,16 +114,10 @@ func (app *App) init() error {
 	if err := filesystem.MkDir(workdir, 0755); err != nil {
 		return err
 	}
-
+	fmt.Println("workdir >>>", workdir)
 	stg, err := storage.Get(storage.BboltDriver, storage.BboltConfig{DbDir: workdir, DbName: ".agent-db"})
 	if err != nil {
 		return fmt.Errorf("cannot initialize storage: %v", err)
-	}
-
-	if app.config.Rootless {
-		if err := rootless.Rootless(workdir); err != nil {
-			return err
-		}
 	}
 
 	app.Runtime, err = runtime.New(app.config)

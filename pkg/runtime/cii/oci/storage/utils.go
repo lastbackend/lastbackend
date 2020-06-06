@@ -1,4 +1,3 @@
-// +build linux
 //
 // Last.Backend LLC CONFIDENTIAL
 // __________________
@@ -17,35 +16,11 @@
 // from Last.Backend LLC.
 //
 
-package cli
+package storage
 
-import (
-	"fmt"
-	"os"
-
-	"github.com/lastbackend/lastbackend/internal/cli/command"
-	"github.com/lastbackend/lastbackend/internal/cli/command/cluster"
-	"github.com/lastbackend/lastbackend/internal/cli/command/daemon"
-	"github.com/spf13/cobra"
-)
-
-type CLI struct {
-	rootCmd *cobra.Command
-}
-
-func New() *CLI {
-	c := new(CLI)
-	rootCmd := command.New()
-	rootCmd.AddCommand(command.VersionCmd)
-	rootCmd.AddCommand(daemon.NewCommand())
-	rootCmd.AddCommand(cluster.NewCommands()...)
-	c.rootCmd = rootCmd
-	return c
-}
-
-func (c *CLI) Execute() {
-	if err := c.rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+// IsCrioContainer returns whether a container coming from storage was created
+// by CRI-O CRI-O sandboxes and containers differ from libpod container and
+// pods because they require a PodName and PodID annotation
+func IsCrioContainer(md *RuntimeContainerMetadata) bool {
+	return md.PodName != "" && md.PodID != ""
 }

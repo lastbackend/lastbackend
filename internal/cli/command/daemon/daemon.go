@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/containers/storage/pkg/reexec"
 	"github.com/lastbackend/lastbackend/internal/agent"
 	agent_config "github.com/lastbackend/lastbackend/internal/agent/config"
 	"github.com/lastbackend/lastbackend/internal/server"
@@ -29,6 +30,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
+
+func init() {
+	if reexec.Init() {
+		fmt.Println("containers storage init failed")
+		os.Exit(1)
+	}
+}
 
 // NewDaemonCmd entrypoint for CLI launcher
 func NewCommand() *cobra.Command {
@@ -86,18 +94,20 @@ func NewCommand() *cobra.Command {
 
 				var cfg = server_config.Config{}
 
-				if err := SetServerConfigFromFile(cfgFile, &cfg); err != nil {
-					fmt.Println(err)
-					return
+				if cfgFile != "" {
+					if err := SetServerConfigFromFile(cfgFile, &cfg); err != nil {
+						fmt.Println("set server config from file err: ", err)
+						return
+					}
 				}
 
 				if err := SetServerConfigFromEnvs(&cfg); err != nil {
-					fmt.Println(err)
+					fmt.Println("set server config from envs err: ", err)
 					return
 				}
 
-				if err := SetServerConfigFromFlagsAndEnvs(cmd.Flags(), &cfg); err != nil {
-					fmt.Println(err)
+				if err := SetServerConfigFromFlags(cmd.Flags(), &cfg); err != nil {
+					fmt.Println("set server config from flags err: ", err)
 					return
 				}
 
@@ -117,18 +127,20 @@ func NewCommand() *cobra.Command {
 
 				var cfg = agent_config.Config{}
 
-				if err := SetAgentConfigFromFile(cfgFile, &cfg); err != nil {
-					fmt.Println(err)
-					return
+				if cfgFile != "" {
+					if err := SetAgentConfigFromFile(cfgFile, &cfg); err != nil {
+						fmt.Println("set agent config from file err: ", err)
+						return
+					}
 				}
 
 				if err := SetAgentConfigFromEnvs(&cfg); err != nil {
-					fmt.Println(err)
+					fmt.Println("set agent config from envs err: ", err)
 					return
 				}
 
 				if err := SetAgentConfigFromFlags(cmd.Flags(), &cfg); err != nil {
-					fmt.Println(err)
+					fmt.Println("set agent config from flags err: ", err)
 					return
 				}
 

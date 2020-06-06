@@ -24,6 +24,11 @@ import (
 	"io"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cii/oci"
+)
+
+const (
+	DockerDriver = "docker"
 )
 
 // IMI - Image System Interface
@@ -39,6 +44,8 @@ type CII interface {
 	Close() error
 }
 
+type DockerConfig oci.ConfigDocker
+
 func New(driver string, opts interface{}) (CII, error) {
 
 	if opts == nil {
@@ -46,6 +53,9 @@ func New(driver string, opts interface{}) (CII, error) {
 	}
 
 	switch driver {
+	case DockerDriver:
+		o := opts.(DockerConfig)
+		return oci.NewDocker(oci.ConfigDocker(o))
 	default:
 		return nil, fmt.Errorf("container image runtime <%s> interface not supported", driver)
 	}

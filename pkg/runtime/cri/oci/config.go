@@ -18,5 +18,8 @@
 
 package oci
 
-type Config struct {
+type ConfigRunc struct {
+}
+
+type ConfigFirecracker struct {
 }

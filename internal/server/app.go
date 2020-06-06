@@ -68,7 +68,7 @@ func New(config config.Config) (*App, error) {
 func (app App) Run() error {
 	log := logger.WithContext(context.Background())
 
-	log.Infof("Run master service")
+	log.Infof("Run server")
 
 	go func() {
 		if err := app.HttpServer.Run(); err != nil {
