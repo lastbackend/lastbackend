@@ -18,7 +18,7 @@
 
 package oci
 
-type ConfigDocker struct {
+type ConfigOci struct {
 	// Root is a path to the "root directory" where data not
 	// explicitly handled by other options will be stored.
 	Root string `toml:"root"`

@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/pkg/errors"
+
 	"github.com/containers/storage/pkg/reexec"
 	"github.com/lastbackend/lastbackend/internal/agent"
 	agent_config "github.com/lastbackend/lastbackend/internal/agent/config"
@@ -45,36 +47,31 @@ func NewCommand() *cobra.Command {
 		Use:   "daemon",
 		Short: "Last.Backend Open-source PaaS",
 		Long:  `Open-source system for automating deployment, scaling, and management of containerized applications.`,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// short-circuit on help
 			help, err := cmd.Flags().GetBool("help")
 			if err != nil {
-				fmt.Println(`"help" flag is non-bool, programmer error, please correct`)
-				return
+				return errors.Wrapf(err, "\"help\" flag is non-bool, programmer error, please correct")
 			}
 			if help {
-				cmd.Help()
-				return
+				return cmd.Help()
 			}
 
 			disableMaster, err := cmd.Flags().GetBool("agent")
 			if err != nil {
-				fmt.Println(`"agent" flag is non-bool, programmer error, please correct`)
-				return
+				return errors.Wrapf(err, "\"agent\" flag is non-bool, programmer error, please correct")
 			}
 			noSchedule, err := cmd.Flags().GetBool("no-schedule")
 			if err != nil {
-				fmt.Println(`"no-schedule" flag is non-bool, programmer error, please correct`)
-				return
+				return errors.Wrapf(err, "\"no-schedule\" flag is non-bool, programmer error, please correct")
 			}
 			cfgFile, err := cmd.Flags().GetString("config")
 			if err != nil {
-				fmt.Println(`"config" flag is non-string, programmer error, please correct`)
-				return
+				return errors.Wrapf(err, "\"config\" flag is non-string, programmer error, please correct")
 			}
 
-			PrintFlags(cmd.Flags())
+			printFlags(cmd.Flags())
 
 			var (
 				sigs = make(chan os.Signal)
@@ -84,7 +81,7 @@ func NewCommand() *cobra.Command {
 				fmt.Println("\n#################################")
 				fmt.Println("### All services was disable ###")
 				fmt.Println("#################################\n")
-				return
+				return nil
 			}
 
 			var masterApp *server.App
@@ -96,30 +93,25 @@ func NewCommand() *cobra.Command {
 
 				if cfgFile != "" {
 					if err := SetServerConfigFromFile(cfgFile, &cfg); err != nil {
-						fmt.Println("set server config from file err: ", err)
-						return
+						return errors.Wrapf(err, "can not be set server config from file")
 					}
 				}
 
 				if err := SetServerConfigFromEnvs(&cfg); err != nil {
-					fmt.Println("set server config from envs err: ", err)
-					return
+					return errors.Wrapf(err, "can not be set server config from envs")
 				}
 
 				if err := SetServerConfigFromFlags(cmd.Flags(), &cfg); err != nil {
-					fmt.Println("set server config from flags err: ", err)
-					return
+					return errors.Wrapf(err, "can not be set server config from flags")
 				}
 
 				masterApp, err = server.New(cfg)
 				if err != nil {
-					fmt.Println("Create master application err: ", err)
-					return
+					return errors.Wrapf(err, "can not be server initialize")
 				}
 
 				if err := masterApp.Run(); err != nil {
-					fmt.Println("Run master application err: ", err)
-					return
+					return errors.Wrapf(err, "can not be run server")
 				}
 			}
 
@@ -129,30 +121,25 @@ func NewCommand() *cobra.Command {
 
 				if cfgFile != "" {
 					if err := SetAgentConfigFromFile(cfgFile, &cfg); err != nil {
-						fmt.Println("set agent config from file err: ", err)
-						return
+						return errors.Wrapf(err, "can not be set agent config from file")
 					}
 				}
 
 				if err := SetAgentConfigFromEnvs(&cfg); err != nil {
-					fmt.Println("set agent config from envs err: ", err)
-					return
+					return errors.Wrapf(err, "can not be set agent config from envs")
 				}
 
 				if err := SetAgentConfigFromFlags(cmd.Flags(), &cfg); err != nil {
-					fmt.Println("set agent config from flags err: ", err)
-					return
+					return errors.Wrapf(err, "can not be set agent config from flags")
 				}
 
 				minionApp, err = agent.New(cfg)
 				if err != nil {
-					fmt.Println("Create minion application err: ", err)
-					return
+					return errors.Wrapf(err, "can not be agent initialize")
 				}
 
 				if err := minionApp.Run(); err != nil {
-					fmt.Println("Run minion application err: ", err)
-					return
+					return errors.Wrapf(err, "can not be run minion server")
 				}
 			}
 
@@ -165,7 +152,7 @@ func NewCommand() *cobra.Command {
 					if !disableMaster {
 						minionApp.Stop()
 					}
-					return
+					return nil
 				}
 			}
 
@@ -191,8 +178,8 @@ func NewCommand() *cobra.Command {
 	cmd.Flags().StringP("domain-internal", "", server_config.DefaultInternalDomain, "Default external domain for cluster")
 	cmd.Flags().StringP("domain-external", "", "", "Internal domain name for cluster")
 	cmd.Flags().StringP("services-cidr", "", agent_config.DefaultCIDR, "Services IP CIDR for internal IPAM service")
-	cmd.Flags().BoolP("rootless", "", false, "Run rootless")
-	cmd.Flags().StringP("workdir", "", agent_config.DefaultWorkDir, "Set directory path to hold state")
+	cmd.Flags().StringP("root-dir", "", "", "Set root directory (Default: /var/lib/lastbackend/)")
+	cmd.Flags().StringP("storage-driver", "", "", "Set storage driver (Default: overlay)")
 	cmd.Flags().StringP("node-bind-address", "", agent_config.DefaultBindServerAddress, "Set bind address for API server")
 	cmd.Flags().UintP("node-bind-port", "", agent_config.DefaultBindServerPort, "Set listening port binding for API server")
 	cmd.Flags().BoolP("node-tls-verify", "", false, "Enable check tls for API server")
@@ -204,15 +191,13 @@ func NewCommand() *cobra.Command {
 	cmd.Flags().StringP("api-tls-ca-file", "", "", "Set path to ca file for rest client")
 	cmd.Flags().StringP("api-tls-cert-file", "", "", "Set path to cert file for rest client")
 	cmd.Flags().StringP("api-tls-private-key-file", "", "", "Set path to key file rest client")
-	cmd.Flags().StringP("manifestdir", "", "", "Set directory path to manifest")
-	cmd.Flags().StringP("registry-config-path", "", "", "Registry configuration file path")
-	cmd.Flags().BoolP("disable-selinux", "", false, "Disable SELinux if currently enabled")
+	cmd.Flags().StringP("manifest-dir", "", "", "Set directory path to manifest")
 
 	return cmd
 }
 
-// PrintFlags logs the flags in the flagset
-func PrintFlags(flags *pflag.FlagSet) {
+// printFlags logs the flags in the flagset
+func printFlags(flags *pflag.FlagSet) {
 	flags.VisitAll(func(flag *pflag.Flag) {
 		fmt.Println(fmt.Sprintf("FLAG: --%s=%q", flag.Name, flag.Value))
 	})

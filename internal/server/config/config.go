@@ -22,7 +22,7 @@ const (
 	DefaultBindServerAddress = "0.0.0.0"
 	DefaultBindServerPort    = 2967
 	DefaultInternalDomain    = "lb.local"
-	DefaultWorkDir           = "/${HOME}/.lastbackend/"
+	DefaultRootDir           = "/var/lib/lastbackend/"
 )
 
 type Config struct {
@@ -32,10 +32,9 @@ type Config struct {
 		Token string `yaml:"token,omitempty"`
 	} `yaml:"security,omitempty"`
 
-	WorkDir            string `yaml:"workdir"`
+	RootDir            string `yaml:"root-dirr"`
 	ClusterName        string `yaml:"name"`
 	ClusterDescription string `yaml:"description"`
-	Rootless           bool   `yaml:"rootless"`
 
 	Server ServerConfig `yaml:"server,omitempty"`
 	Vault  VaultConfig  `yaml:"vault"`

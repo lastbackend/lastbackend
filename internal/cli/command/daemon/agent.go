@@ -75,41 +75,33 @@ func SetAgentConfigFromEnvs(cfg *config.Config) error {
 	if apiAddress != "" {
 		cfg.API.Address = apiAddress
 	}
-	apiTlsVerify := os.Getenv("LB_API_TLS_VERIFY")
-	if apiTlsVerify != "" {
-		cfg.API.TLS.Verify = converter.StringToBool(apiTlsVerify)
+	apiTLSVerify := os.Getenv("LB_API_TLS_VERIFY")
+	if apiTLSVerify != "" {
+		cfg.API.TLS.Verify = converter.StringToBool(apiTLSVerify)
 	}
-	apiTlsCa := os.Getenv("LB_API_TLS_CA_FILE")
-	if apiTlsCa != "" {
-		cfg.API.TLS.FileCA = apiTlsCa
+	apiTLSCa := os.Getenv("LB_API_TLS_CA_FILE")
+	if apiTLSCa != "" {
+		cfg.API.TLS.FileCA = apiTLSCa
 	}
-	apiTlsCert := os.Getenv("LB_API_TLS_CERT_FILE")
-	if apiTlsCa != "" {
-		cfg.API.TLS.FileCert = apiTlsCert
+	apiTLSCert := os.Getenv("LB_API_TLS_CERT_FILE")
+	if apiTLSCa != "" {
+		cfg.API.TLS.FileCert = apiTLSCert
 	}
-	apiTlsKey := os.Getenv("LB_API_TLS_PRIVATE_KEY_FILE")
-	if apiTlsCa != "" {
-		cfg.API.TLS.FileKey = apiTlsKey
+	apiTLSKey := os.Getenv("LB_API_TLS_PRIVATE_KEY_FILE")
+	if apiTLSCa != "" {
+		cfg.API.TLS.FileKey = apiTLSKey
 	}
-	workdir := os.Getenv("LB_WORKDIR")
-	if workdir != "" {
-		cfg.WorkDir = workdir
+	rootDir := os.Getenv("LB_ROOT_DIR")
+	if rootDir != "" {
+		cfg.RootDir = rootDir
 	}
-	manifefstdir := os.Getenv("LB_MANIFESTDIR")
-	if manifefstdir != "" {
-		cfg.ManifestDir = manifefstdir
+	storageDriver := os.Getenv("LB_STORAGE_DRIVER")
+	if rootDir != "" {
+		cfg.StorageDriver = storageDriver
 	}
-	registryConfig := os.Getenv("LB_REGISTRY_CONFIG")
-	if registryConfig != "" {
-		cfg.Registry.Config = registryConfig
-	}
-	rootless := os.Getenv("LB_ROOTLESS")
-	if rootless != "" {
-		cfg.Rootless = converter.StringToBool(rootless)
-	}
-	disableSeLinux := os.Getenv("LB_DISABLE_SELINUX")
-	if disableSeLinux != "" {
-		cfg.DisableSeLinux = converter.StringToBool(disableSeLinux)
+	manifefstDir := os.Getenv("LB_MANIFEST_DIR")
+	if manifefstDir != "" {
+		cfg.ManifestDir = manifefstDir
 	}
 	cidr := os.Getenv("LB_SERVICES_CIDR")
 	if cidr != "" {
@@ -160,49 +152,39 @@ func SetAgentConfigFromFlags(flags *pflag.FlagSet, cfg *config.Config) error {
 		return fmt.Errorf(`"api-address" flag is non-string, programmer error, please correct`)
 	}
 
-	apiTlsVerify, err := flags.GetBool("api-tls-verify")
+	apiTLSVerify, err := flags.GetBool("api-tls-verify")
 	if err != nil {
 		return fmt.Errorf(`"api-tls-verify" flag is non-bool, programmer error, please correct`)
 	}
 
-	apiTlsCaFile, err := flags.GetString("api-tls-ca-file")
+	apiTLSCaFile, err := flags.GetString("api-tls-ca-file")
 	if err != nil {
 		return fmt.Errorf(`"api-tls-ca-file" flag is non-string, programmer error, please correct`)
 	}
 
-	apiTlsCertFile, err := flags.GetString("api-tls-cert-file")
+	apiTLSCertFile, err := flags.GetString("api-tls-cert-file")
 	if err != nil {
 		return fmt.Errorf(`"api-tls-cert-file" flag is non-string, programmer error, please correct`)
 	}
 
-	apiTlsKeyFile, err := flags.GetString("api-tls-private-key-file")
+	apiTLSKeyFile, err := flags.GetString("api-tls-private-key-file")
 	if err != nil {
 		return fmt.Errorf(`"api-tls-private-key-file" flag is non-string, programmer error, please correct`)
 	}
 
-	workdir, err := flags.GetString("workdir")
+	rootDir, err := flags.GetString("root-dir")
 	if err != nil {
-		return fmt.Errorf(`"workdir" flag is non-string, programmer error, please correct`)
+		return fmt.Errorf(`"root-dir" flag is non-string, programmer error, please correct`)
 	}
 
-	manifestdir, err := flags.GetString("manifestdir")
+	storageDriver, err := flags.GetString("storage-driver")
 	if err != nil {
-		return fmt.Errorf(`"manifestdir" flag is non-string, programmer error, please correct`)
+		return fmt.Errorf(`"storage-driver" flag is non-string, programmer error, please correct`)
 	}
 
-	registryConfig, err := flags.GetString("registry-config-path")
+	manifestDir, err := flags.GetString("manifest-dir")
 	if err != nil {
-		return fmt.Errorf(`"registry-config-path" flag is non-string, programmer error, please correct`)
-	}
-
-	rootless, err := flags.GetBool("rootless")
-	if err != nil {
-		return fmt.Errorf(`"rootless" flag is non-bool, programmer error, please correct`)
-	}
-
-	disableSeLinux, err := flags.GetBool("disable-selinux")
-	if err != nil {
-		return fmt.Errorf(`"disable-selinux" flag is non-bool, programmer error, please correct`)
+		return fmt.Errorf(`"manifest-dir" flag is non-string, programmer error, please correct`)
 	}
 
 	cidr, err := flags.GetString("services-cidr")
@@ -234,32 +216,26 @@ func SetAgentConfigFromFlags(flags *pflag.FlagSet, cfg *config.Config) error {
 	if apiAddress != "" {
 		cfg.API.Address = apiAddress
 	}
-	if apiTlsVerify {
-		cfg.API.TLS.Verify = apiTlsVerify
+	if apiTLSVerify {
+		cfg.API.TLS.Verify = apiTLSVerify
 	}
-	if apiTlsCaFile != "" {
-		cfg.API.TLS.FileCA = apiTlsCaFile
+	if apiTLSCaFile != "" {
+		cfg.API.TLS.FileCA = apiTLSCaFile
 	}
-	if apiTlsCertFile != "" {
-		cfg.API.TLS.FileCert = apiTlsCertFile
+	if apiTLSCertFile != "" {
+		cfg.API.TLS.FileCert = apiTLSCertFile
 	}
-	if apiTlsKeyFile != "" {
-		cfg.API.TLS.FileKey = apiTlsKeyFile
+	if apiTLSKeyFile != "" {
+		cfg.API.TLS.FileKey = apiTLSKeyFile
 	}
-	if workdir != "" && (cfg.WorkDir != "" && workdir != config.DefaultWorkDir || cfg.WorkDir == "") {
-		cfg.WorkDir = workdir
+	if rootDir != "" {
+		cfg.RootDir = rootDir
 	}
-	if manifestdir != "" {
-		cfg.ManifestDir = manifestdir
+	if storageDriver != "" {
+		cfg.StorageDriver = storageDriver
 	}
-	if registryConfig != "" {
-		cfg.Registry.Config = registryConfig
-	}
-	if rootless {
-		cfg.Rootless = rootless
-	}
-	if disableSeLinux {
-		cfg.DisableSeLinux = disableSeLinux
+	if manifestDir != "" {
+		cfg.ManifestDir = manifestDir
 	}
 	if cidr != "" && (cfg.CIDR != "" && cidr != config.DefaultCIDR || cfg.CIDR == "") {
 		cfg.CIDR = cidr

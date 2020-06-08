@@ -117,7 +117,7 @@ func (s *Storage) FilesPut(ctx context.Context, state *models.VolumeState, files
 		f.Close()
 
 		if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
-			log.Errorf("can not write data to file: %s", err.Error())
+			log.Errorf("can not be write data to file: %s", err.Error())
 		}
 
 	}

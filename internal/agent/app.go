@@ -20,7 +20,6 @@ package agent
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/lastbackend/lastbackend/internal/agent/config"
@@ -30,6 +29,7 @@ import (
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/internal/util/filesystem"
 	"github.com/lastbackend/lastbackend/tools/logger"
+	"github.com/pkg/errors"
 )
 
 type App struct {
@@ -52,7 +52,7 @@ func New(config config.Config) (*App, error) {
 		loggerOpts.ConsoleLevel = logger.Debug
 	}
 	if err := logger.NewLogger(loggerOpts); err != nil {
-		return nil, errors.New("logger initialize failed")
+		return nil, errors.Wrapf(err, "cat not logger initialize")
 	}
 
 	app := new(App)
@@ -60,7 +60,7 @@ func New(config config.Config) (*App, error) {
 	app.config = config
 
 	if err := app.init(); err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "can not be init application")
 	}
 
 	return app, nil
@@ -71,22 +71,20 @@ func (app *App) Run() error {
 	log.Infof("Run minion service")
 
 	if err := app.Runtime.Run(); err != nil {
-		log.Errorf("Run runtime err: %v", err)
-		return err
+		return errors.Wrapf(err, "can not be run runtime")
 	}
 
 	if app.Controller != nil {
 		if err := app.Controller.Connect(app.config); err != nil {
-			return fmt.Errorf("Connect controller err: %v", err)
+			return errors.Wrapf(err, "can not be connect controller")
 		}
-
 		go app.Controller.Subscribe()
 		go app.Controller.Sync()
 	}
 
 	go func() {
 		if err := app.HttpServer.Run(); err != nil {
-			log.Fatalf("Run http rest server err: %v", err)
+			log.Fatal(errors.Wrapf(err, "can not be run http rest server"))
 			return
 		}
 	}()
@@ -104,30 +102,30 @@ func (app *App) init() error {
 	var err error
 
 	log := logger.WithContext(context.Background())
-	log.Infof("Init minion service")
+	log.Infof("Init agent service")
 
-	workdir, err := filesystem.DetermineHomePath(app.config.WorkDir, app.config.Rootless)
+	app.config.RootDir, err = filesystem.DetermineHomePath(app.config.RootDir, false)
 	if err != nil {
 		return err
 	}
 
-	if err := filesystem.MkDir(workdir, 0755); err != nil {
+	if err := filesystem.MkDir(app.config.RootDir, 0755); err != nil {
 		return err
 	}
-	fmt.Println("workdir >>>", workdir)
-	stg, err := storage.Get(storage.BboltDriver, storage.BboltConfig{DbDir: workdir, DbName: ".agent-db"})
+
+	stg, err := storage.Get(storage.BboltDriver, storage.BboltConfig{DbDir: app.config.RootDir, DbName: fmt.Sprintf(".%s", "store")})
 	if err != nil {
-		return fmt.Errorf("cannot initialize storage: %v", err)
+		return errors.Wrapf(err, "can not be storage initialize")
 	}
 
-	app.Runtime, err = runtime.New(app.config)
+	app.Runtime, err = runtime.New(stg, app.config)
 	if err != nil {
-		return fmt.Errorf("Can not initialize runtime: %v", err)
+		return errors.Wrapf(err, "can not be runtime initialize")
 	}
 
 	app.Controller, err = controller.New(app.Runtime)
 	if err != nil {
-		return fmt.Errorf("Can not initialize controller: %v", err)
+		return errors.Wrapf(err, "can not be controller initialize")
 	}
 
 	app.HttpServer = server.NewServer(app.Runtime.GetState(), stg, app.config)

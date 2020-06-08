@@ -44,16 +44,16 @@ func (r Runtime) ImagePull(ctx context.Context, namespace string, image *models.
 
 		secret, err := r.SecretGet(ctx, namespace, image.Secret.Name)
 		if err != nil {
-			log.Errorf("can not get secret for image. err: %s", err.Error())
+			log.Errorf("can not be get secret for image. err: %s", err.Error())
 			if strings.Contains(err.Error(), "Internal Server Error") {
-				return errors.New("can not get secret data")
+				return errors.New("can not be get secret data")
 			}
 			return err
 		}
 
 		token, err := secret.DecodeSecretTextData(image.Secret.Key)
 		if err != nil {
-			log.Errorf("can not get parse secret text data. err: %s", err.Error())
+			log.Errorf("can not be get parse secret text data. err: %s", err.Error())
 			return err
 		}
 
@@ -61,7 +61,7 @@ func (r Runtime) ImagePull(ctx context.Context, namespace string, image *models.
 		pair := strings.SplitN(string(payload), ":", 2)
 
 		if len(pair) != 2 {
-			log.Error("can not parse docker auth secret: invalid format")
+			log.Error("can not be parse docker auth secret: invalid format")
 			return errors.New("docker auth secret format is invalid")
 		}
 
@@ -72,7 +72,7 @@ func (r Runtime) ImagePull(ctx context.Context, namespace string, image *models.
 
 		auth, err := r.cii.Auth(ctx, &data)
 		if err != nil {
-			log.Errorf("can not create secret string. err: %s", err.Error())
+			log.Errorf("can not be create secret string. err: %s", err.Error())
 			return err
 		}
 
@@ -81,7 +81,7 @@ func (r Runtime) ImagePull(ctx context.Context, namespace string, image *models.
 
 	img, err := r.cii.Pull(ctx, mf, nil)
 	if err != nil {
-		log.Errorf("can not pull image: %s", err.Error())
+		log.Errorf("can not be pull image: %s", err.Error())
 		return err
 	}
 

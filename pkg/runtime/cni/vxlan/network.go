@@ -62,7 +62,7 @@ func New(iface string) (*Network, error) {
 	if iface == models.EmptyString {
 		log.Debug("Add network to default interface")
 		if nt.ExtIface.Iface, nt.ExtIface.IfaceAddr, err = utils.GetDefaultInterface(); err != nil {
-			log.Errorf("Can not get default interface: %s", err.Error())
+			log.Errorf("can not be get default interface: %s", err.Error())
 			return nt, err
 		}
 	} else {

@@ -58,7 +58,7 @@ func (n *Network) SubnetManage(ctx context.Context, cidr string, sn *models.Subn
 
 			log.Debugf("destroy subnet: %s", cidr)
 			if err := n.cni.Destroy(ctx, &state); err != nil {
-				log.Errorf("can not destroy subnet: %s", err.Error())
+				log.Errorf("can not be destroy subnet: %s", err.Error())
 				return err
 			}
 			n.state.Subnets().DelSubnet(cidr)
@@ -78,7 +78,7 @@ func (n *Network) SubnetManage(ctx context.Context, cidr string, sn *models.Subn
 	log.Debugf("create subnet: %s", cidr)
 	state, err := n.cni.Create(ctx, sn)
 	if err != nil {
-		log.Errorf("Can not create network subnet: %s", err.Error())
+		log.Errorf("can not be create network subnet: %s", err.Error())
 		return err
 	}
 
@@ -91,7 +91,7 @@ func (n *Network) SubnetDestroy(ctx context.Context, cidr string) error {
 	sn := n.state.Subnets().GetSubnet(cidr)
 
 	if err := n.cni.Destroy(ctx, sn); err != nil {
-		log.Errorf("Can not destroy network subnet: %s", err.Error())
+		log.Errorf("can not be destroy network subnet: %s", err.Error())
 		return err
 	}
 

@@ -86,7 +86,7 @@ func (app *App) Stop() {
 
 func (app *App) init() error {
 
-	workdir, err := filesystem.DetermineHomePath(app.config.WorkDir, app.config.Rootless)
+	workdir, err := filesystem.DetermineHomePath(app.config.RootDir, false)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (app *App) init() error {
 		return err
 	}
 
-	stg, err := storage.Get(storage.BboltDriver, storage.BboltConfig{DbDir: workdir, DbName: ".server-db"})
+	stg, err := storage.Get(storage.BboltDriver, storage.BboltConfig{DbDir: workdir, DbName: ".cache"})
 	if err != nil {
 		return fmt.Errorf("cannot initialize storage: %v", err)
 	}

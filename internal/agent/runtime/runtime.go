@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -29,6 +30,7 @@ import (
 	"github.com/lastbackend/lastbackend/internal/agent/exporter"
 	"github.com/lastbackend/lastbackend/internal/agent/state"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/internal/util/decoder"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/client/cluster"
@@ -37,12 +39,15 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
 	"github.com/lastbackend/lastbackend/tools/logger"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 )
 
 const (
-	logNodeRuntimePrefix = "node:runtime"
-	logLevel             = 3
+	logNodeRuntimePrefix = "agent:runtime"
+	defaultRootPath      = "/var/lib/lastbackend/storage/"
+	defaultRunRootPath   = "/var/lib/lastbackend/run/"
+	defaultStorageDriver = "overlay"
 )
 
 // System main node process
@@ -58,47 +63,51 @@ type Runtime struct {
 	exporter  *exporter.Exporter
 	retClient cluster.IClient
 
-	config config.Config
+	config  config.Config
+	storage storage.IStorage
 
 	spec chan *models.NodeManifest
 }
 
-// NewRuntime method return new runtime pointer
-func New(cfg config.Config) (*Runtime, error) {
+// This method return new runtime pointer and error then can not be initialize
+func New(stg storage.IStorage, cfg config.Config) (r *Runtime, err error) {
 
-	_net, err := network.New(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("Can not initialize network: %v", err)
-	}
-
-	r := new(Runtime)
+	r = new(Runtime)
 	r.ctx, r.cancel = context.WithCancel(context.Background())
 	r.config = cfg
-	r.network = _net
+	r.storage = stg
 	r.state = state.New()
-
 	r.spec = make(chan *models.NodeManifest, 0)
-	return r, nil
-}
+	r.network, err = network.New(cfg)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not be network initialize")
+	}
 
-// NewRuntime run daemon
-func (r *Runtime) Run() error {
+	rootPath := defaultRootPath
+	runRootPath := defaultRunRootPath
+	if cfg.RootDir != "" {
+		rootPath = path.Join(cfg.RootDir, "storage")
+		runRootPath = path.Join(cfg.RootDir, "state")
+	}
 
-	_cii, err := cii.New(cii.DockerDriver, cii.DockerConfig{
-		Root:    "/var/lib/lastbackend/storage",
-		RunRoot: "/var/run/lastbackend/storage",
-		StorageDriver: "overlay",
+	storageDriver := defaultStorageDriver
+	if cfg.StorageDriver != "" {
+		storageDriver = cfg.StorageDriver
+	}
+
+	r.cii, err = cii.New(cii.OciDriver, cii.OciConfig{
+		Root:          rootPath,
+		RunRoot:       runRootPath,
+		StorageDriver: storageDriver,
 	})
 	if err != nil {
-		return fmt.Errorf("Cannot initialize iri: %v", err)
+		return nil, errors.Wrapf(err, "can not be image runtime interface initialize")
 	}
 
-	_cri, err := cri.New(cri.RuncDriver, cri.RuncConfig{})
+	r.cri, err = cri.New(cri.RuncDriver, cri.RuncConfig{})
 	if err != nil {
-		return fmt.Errorf("Cannot initialize cri: %v", err)
+		return nil, errors.Wrapf(err, "can not be container runtime interface initialize")
 	}
-
-	_csi := make(map[string]csi.CSI, 0)
 
 	// TODO: Implement csi initialization logic
 	//csis := app.config.GetStringMap("container.csi")
@@ -106,8 +115,7 @@ func (r *Runtime) Run() error {
 	//	for kind := range csis {
 	//		si, err := csi.New(kind, dir.Config{RootDir: filepath.Join(app.config.WorkDir, "csi")})
 	//		if err != nil {
-	//			log.Errorf("Cannot initialize [%s] csi: %v", kind, err)
-	//			return err
+	//			return nil, errors.Wrapf(err, "can not be initialize [%s] csi", kind)
 	//		}
 	//		csi[kind] = si
 	//	}
@@ -116,16 +124,18 @@ func (r *Runtime) Run() error {
 	// TODO: Implement cluster state logic
 	//_state.Node().Info = runtime.NodeInfo()
 	//_state.Node().Status = runtime.NodeStatus()
+	r.csi = make(map[string]csi.CSI, 0)
 
-	exp, err := exporter.NewExporter(r.state.Node().Info.Hostname, models.EmptyString)
+	r.exporter, err = exporter.NewExporter(r.state.Node().Info.Hostname, models.EmptyString)
 	if err != nil {
-		return fmt.Errorf("Can not initialize collector: %v", err)
+		return nil, errors.Wrapf(err, "can not be collector initialize")
 	}
 
-	r.csi = _csi
-	r.cri = _cri
-	r.cii = _cii
-	r.exporter = exp
+	return r, nil
+}
+
+// NewRuntime run daemon
+func (r *Runtime) Run() error {
 
 	if err := r.Restore(); err != nil {
 		return err
@@ -149,33 +159,28 @@ func (r *Runtime) Restore() error {
 
 	if r.network != nil {
 		if err := r.network.SubnetRestore(r.ctx); err != nil {
-			log.Errorf("can not restore subnets: %s", err.Error())
-			return err
+			return errors.Wrapf(err, "can not be restore subnets")
 		}
 
 		if err := r.network.EndpointRestore(r.ctx); err != nil {
-			log.Errorf("can not restore endpoint: %s", err.Error())
-			return err
+			return errors.Wrapf(err, "can not be restore endpoint")
 		}
 
 		if err := r.network.ResolverManage(r.ctx); err != nil {
-			log.Errorf("%s:> can not manage resolver:%s", logNodeRuntimePrefix, err.Error())
+			return errors.Wrapf(err, "can not be manage resolver")
 		}
 	}
 
 	if err := r.VolumeRestore(r.ctx); err != nil {
-		log.Errorf("can not restore volumes: %s", err.Error())
-		return err
+		return errors.Wrapf(err, "can not be restore volumes")
 	}
 
 	if err := r.ImageRestore(r.ctx); err != nil {
-		log.Errorf("Can not restore images: %s", err.Error())
-		return err
+		return errors.Wrapf(err, "can not be restore images")
 	}
 
 	if err := r.PodRestore(r.ctx); err != nil {
-		log.Errorf("Can not restore pods: %s", err.Error())
-		return err
+		return errors.Wrapf(err, "can not be restore pods")
 	}
 
 	return nil
@@ -186,18 +191,17 @@ func (r *Runtime) Restore() error {
 func (r *Runtime) Provision(dir string) error {
 	log := logger.WithContext(context.Background())
 	log.Debugf("%s:provision:> local init", logNodeRuntimePrefix)
-
 	log.Debugf("%s:provision:> read manifests from dir: %s", logNodeRuntimePrefix, dir)
 
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		log.Fatal(err)
-		return err
+		return errors.Wrapf(err, "can not be read dir %s", dir)
 	}
 
 	var (
 		mf = new(models.NodeManifest)
 	)
+
 	mf.Configs = make(map[string]*models.ConfigManifest)
 	mf.Pods = make(map[string]*models.PodManifest)
 	mf.Volumes = make(map[string]*models.VolumeManifest)
@@ -220,7 +224,7 @@ func (r *Runtime) Provision(dir string) error {
 
 			var m = new(request.Runtime)
 
-			if err := yaml.Unmarshal([]byte(i), m); err != nil {
+			if err := yaml.Unmarshal(i, m); err != nil {
 				log.Errorf("can not parse manifest: %s: %s", f.Name(), err.Error())
 				continue
 			}
@@ -230,8 +234,7 @@ func (r *Runtime) Provision(dir string) error {
 				m := new(request.ConfigManifest)
 				err := m.FromYaml(i)
 				if err != nil {
-					log.Errorf("invalid specification: %s", err.Error())
-					return err
+					return errors.Wrapf(err, "invalid specification")
 				}
 				if m.Meta.Name == nil {
 					break
@@ -244,8 +247,7 @@ func (r *Runtime) Provision(dir string) error {
 				m := new(request.PodManifest)
 				err := m.FromYaml(i)
 				if err != nil {
-					log.Errorf("invalid specification: %s", err.Error())
-					return err
+					return errors.Wrapf(err, "invalid specification")
 				}
 				if m.Meta.Name == nil {
 					break
@@ -259,8 +261,7 @@ func (r *Runtime) Provision(dir string) error {
 				m := new(request.VolumeManifest)
 				err := m.FromYaml(i)
 				if err != nil {
-					log.Errorf("invalid specification: %s", err.Error())
-					return err
+					return errors.Wrapf(err, "invalid specification")
 				}
 				if m.Meta.Name == nil {
 					break
@@ -444,4 +445,8 @@ func (r *Runtime) GetState() *state.State {
 
 func (r *Runtime) GetNetwork() *network.Network {
 	return r.network
+}
+
+func (r *Runtime) GetStorage() storage.IStorage {
+	return r.storage
 }

@@ -52,7 +52,7 @@ type Docker struct {
 	// pullOperationsLock is used to synchronize pull operations.
 	pullOperationsLock sync.Mutex
 
-	config ConfigDocker
+	config ConfigOci
 	// pullOperationsInProgress is used to avoid pulling the same image in parallel. Goroutines
 	// will block on the pullResult.
 	pullOperationsInProgress map[pullArguments]*pullOperation
@@ -63,7 +63,7 @@ type Docker struct {
 	DecryptionKeysPath string `toml:"decryption_keys_path"`
 }
 
-func NewDocker(config ConfigDocker) (*Docker, error) {
+func NewOci(config ConfigOci) (*Docker, error) {
 
 	ctx := context.Background()
 

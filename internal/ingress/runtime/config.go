@@ -185,7 +185,7 @@ func (c conf) Sync() error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		log.Debugf("config directory does not exists: %s", path)
 		if err := os.MkdirAll(path, 0644); err != nil {
-			log.Errorf("can not create config dir: %s", err.Error())
+			log.Errorf("can not be create config dir: %s", err.Error())
 			return err
 		}
 	}
@@ -198,7 +198,7 @@ func (c conf) Sync() error {
 		log.Debugf("config file not exists: %s", testPath)
 		f, err = os.Create(testPath)
 		if err != nil {
-			log.Errorf("can not create config file: %s", err.Error())
+			log.Errorf("can not be create config file: %s", err.Error())
 		}
 	}
 	f.Close()
@@ -218,7 +218,7 @@ func (c conf) Sync() error {
 		log.Debugf("config file not exists: %s", cfgPath)
 		f, err = os.Create(cfgPath)
 		if err != nil {
-			log.Errorf("can not create config file: %s", err.Error())
+			log.Errorf("can not be create config file: %s", err.Error())
 		}
 	}
 	f.Close()
@@ -236,7 +236,7 @@ func (conf) Validate(path string) error {
 	err := cmd.Start()
 
 	if err != nil {
-		log.Errorf("can not check config: %s", err.Error())
+		log.Errorf("can not be check config: %s", err.Error())
 		return err
 	}
 
