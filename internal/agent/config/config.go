@@ -21,7 +21,7 @@ package config
 const (
 	DefaultBindServerAddress = "0.0.0.0"
 	DefaultBindServerPort    = 2992
-	DefaultWorkDir           = "/${HOME}/.lastbackend/"
+	DefaultRootDir           = "/var/lib/lastbackend/"
 	DefaultCIDR              = "172.0.0.0/24"
 )
 
@@ -53,13 +53,8 @@ type Config struct {
 		} `yaml:"tls,omitempty"`
 	} `yaml:"api,omitempty"`
 
-	Registry struct {
-		Config string `yaml:"config,omitempty"`
-	} `yaml:"registry,omitempty"`
-
-	WorkDir        string `yaml:"workdir,omitempty"`
-	ManifestDir    string `yaml:"manifestdir,omitempty"`
-	CIDR           string `yaml:"cidr,omitempty"`
-	DisableSeLinux bool   `yaml:"disable-selinux,omitempty"`
-	Rootless       bool   `yaml:"rootless,omitempty"`
+	RootDir       string `yaml:"root-dir,omitempty"`
+	StorageDriver string `yaml:"storage-driver"`
+	ManifestDir   string `yaml:"manifestdir,omitempty"`
+	CIDR          string `yaml:"cidr,omitempty"`
 }

@@ -318,7 +318,7 @@ func (c *command) namespaceApplyCmd() *cobra.Command {
 					var m = new(request.Runtime)
 
 					if err := yaml.Unmarshal(i, m); err != nil {
-						_ = fmt.Errorf("can not parse manifest: %s: %s", f, err.Error())
+						_ = fmt.Errorf("can not be parse manifest: %s: %s", f, err.Error())
 						continue
 					}
 

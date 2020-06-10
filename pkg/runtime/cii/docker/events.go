@@ -31,7 +31,7 @@ func (r *Runtime) Subscribe(ctx context.Context) (chan *models.Image, error) {
 	//go func() {
 	//
 	//	if _, err := r.client.Ping(ctx); err != nil {
-	//		log.Errorf("Can not ping docker client")
+	//		log.Errorf("can not be ping docker client")
 	//		return
 	//	}
 	//

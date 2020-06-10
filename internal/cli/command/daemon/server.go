@@ -94,19 +94,14 @@ func SetServerConfigFromEnvs(cfg *config.Config) error {
 	if domainExternal != "" {
 		cfg.Domain.External = domainExternal
 	}
-	workdir := os.Getenv("LB_WORKDIR")
-	if workdir != "" {
-		cfg.WorkDir = workdir
+	rootDir := os.Getenv("LB_ROOT_DIR")
+	if rootDir != "" {
+		cfg.RootDir = rootDir
 	}
-	rootless := os.Getenv("LB_ROOTLESS")
-	if rootless != "" {
-		cfg.Rootless = converter.StringToBool(rootless)
-	}
-
 	return nil
 }
 
-func SetServerConfigFromFlagsAndEnvs(flags *pflag.FlagSet, cfg *config.Config) error {
+func SetServerConfigFromFlags(flags *pflag.FlagSet, cfg *config.Config) error {
 
 	token, err := flags.GetString("access-token")
 	if err != nil {
@@ -173,14 +168,9 @@ func SetServerConfigFromFlagsAndEnvs(flags *pflag.FlagSet, cfg *config.Config) e
 		return fmt.Errorf(`"domain-external" flag is non-string, programmer error, please correct`)
 	}
 
-	workdir, err := flags.GetString("workdir")
+	rootDir, err := flags.GetString("root-dir")
 	if err != nil {
-		return fmt.Errorf(`"workdir" flag is non-string, programmer error, please correct`)
-	}
-
-	rootless, err := flags.GetBool("rootless")
-	if err != nil {
-		return fmt.Errorf(`"rootless" flag is non-bool, programmer error, please correct`)
+		return fmt.Errorf(`"root-dir" flag is non-string, programmer error, please correct`)
 	}
 
 	if token != "" {
@@ -222,11 +212,8 @@ func SetServerConfigFromFlagsAndEnvs(flags *pflag.FlagSet, cfg *config.Config) e
 	if externalDomain != "" {
 		cfg.Domain.External = externalDomain
 	}
-	if workdir != "" && (cfg.WorkDir != "" && workdir != config.DefaultWorkDir || cfg.WorkDir == "") {
-		cfg.WorkDir = workdir
-	}
-	if rootless {
-		cfg.Rootless = rootless
+	if rootDir != "" {
+		cfg.RootDir = rootDir
 	}
 
 	return nil

@@ -25,11 +25,12 @@ import (
 	"time"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cri/containerd"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cri/oci"
 )
 
 const (
-	ContainerdDriver = "containerd"
+	RuncDriver        = "runc"
+	FirecrackerDriver = "firecracker"
 )
 
 // CRI - Container System Interface
@@ -50,7 +51,8 @@ type CRI interface {
 	Close() error
 }
 
-type ContainerdConfig containerd.Config
+type RuncConfig oci.ConfigRunc
+type FirecrackerConfig oci.ConfigFirecracker
 
 func New(driver string, opts interface{}) (CRI, error) {
 
@@ -59,9 +61,12 @@ func New(driver string, opts interface{}) (CRI, error) {
 	}
 
 	switch driver {
-	case ContainerdDriver:
-		o := opts.(ContainerdConfig)
-		return containerd.New(containerd.Config(o))
+	case FirecrackerDriver:
+		o := opts.(FirecrackerConfig)
+		return oci.NewFirecracker(oci.ConfigFirecracker(o))
+	case RuncDriver:
+		o := opts.(RuncConfig)
+		return oci.NewRunc(oci.ConfigRunc(o))
 	default:
 		return nil, fmt.Errorf("container runtime <%s> interface not supported", driver)
 	}

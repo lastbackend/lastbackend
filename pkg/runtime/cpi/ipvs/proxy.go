@@ -80,7 +80,7 @@ func (p *Proxy) Create(ctx context.Context, manifest *models.EndpointManifest) (
 
 	svcs, err := specToServices(manifest)
 	if err != nil {
-		log.Errorf("%s can not get services from manifest: %s", logIPVSPrefix, err.Error())
+		log.Errorf("%s can not be get services from manifest: %s", logIPVSPrefix, err.Error())
 		return nil, err
 	}
 
@@ -162,11 +162,11 @@ func (p *Proxy) Destroy(ctx context.Context, state *models.EndpointState) error 
 
 	for _, svc := range svcs {
 		if err = p.ipvs.DelService(svc.srvc); err != nil {
-			log.Errorf("%s can not delete service: %s", logIPVSPrefix, err.Error())
+			log.Errorf("%s can not be delete service: %s", logIPVSPrefix, err.Error())
 		}
 
 		if err := p.delIpBindToLink(svc.srvc.Address.String()); err != nil {
-			log.Errorf("%s can not unbind ip from link: %s", logIPVSPrefix, err.Error())
+			log.Errorf("%s can not be unbind ip from link: %s", logIPVSPrefix, err.Error())
 		}
 	}
 
@@ -178,7 +178,7 @@ func (p *Proxy) Update(ctx context.Context, state *models.EndpointState, spec *m
 
 	psvc, err := specToServices(spec)
 	if err != nil {
-		log.Errorf("%s can not convert spec to services: %s", logIPVSPrefix, err.Error())
+		log.Errorf("%s can not be convert spec to services: %s", logIPVSPrefix, err.Error())
 		return state, err
 	}
 
@@ -188,7 +188,7 @@ func (p *Proxy) Update(ctx context.Context, state *models.EndpointState, spec *m
 
 	csvc, err := specToServices(&mf)
 	if err != nil {
-		log.Errorf("%s can not convert state to services: %s", logIPVSPrefix, err.Error())
+		log.Errorf("%s can not be convert state to services: %s", logIPVSPrefix, err.Error())
 		return state, err
 	}
 
@@ -199,7 +199,7 @@ func (p *Proxy) Update(ctx context.Context, state *models.EndpointState, spec *m
 		if _, ok := psvc[id]; !ok {
 			log.Debugf("%s delete service: %s", logIPVSPrefix, id)
 			if err := p.ipvs.DelService(svc.srvc); err != nil {
-				log.Errorf("%s can not remove service: %s", logIPVSPrefix, err.Error())
+				log.Errorf("%s can not be remove service: %s", logIPVSPrefix, err.Error())
 			}
 			continue
 		}
@@ -211,7 +211,7 @@ func (p *Proxy) Update(ctx context.Context, state *models.EndpointState, spec *m
 		if _, ok := csvc[id]; !ok {
 			log.Debugf("%s create service: %s", logIPVSPrefix, id)
 			if err := p.ipvs.NewService(svc.srvc); err != nil {
-				log.Errorf("%s can not create service: %s", logIPVSPrefix, err.Error())
+				log.Errorf("%s can not be create service: %s", logIPVSPrefix, err.Error())
 			}
 		} else {
 			// check service upstreams for removing
@@ -220,7 +220,7 @@ func (p *Proxy) Update(ctx context.Context, state *models.EndpointState, spec *m
 				if _, ok := svc.dest[did]; !ok {
 					log.Debugf("%s service %s backend delete %s", logIPVSPrefix, id, did)
 					if err := p.ipvs.DelDestination(svc.srvc, dest); err != nil {
-						log.Errorf("%s can not remove backend: %s", logIPVSPrefix, err.Error())
+						log.Errorf("%s can not be remove backend: %s", logIPVSPrefix, err.Error())
 					}
 				}
 			}
@@ -232,13 +232,13 @@ func (p *Proxy) Update(ctx context.Context, state *models.EndpointState, spec *m
 
 			if _, ok := csvc[id]; !ok {
 				if err := p.ipvs.NewDestination(svc.srvc, dest); err != nil {
-					log.Errorf("%s can not add backend: %s", logIPVSPrefix, err.Error())
+					log.Errorf("%s can not be add backend: %s", logIPVSPrefix, err.Error())
 				}
 			} else {
 				if _, ok := csvc[id].dest[did]; !ok {
 					log.Debugf("%s service %s backend create %s", logIPVSPrefix, id, did)
 					if err := p.ipvs.NewDestination(svc.srvc, dest); err != nil {
-						log.Errorf("%s can not add backend: %s", logIPVSPrefix, err.Error())
+						log.Errorf("%s can not be add backend: %s", logIPVSPrefix, err.Error())
 					}
 				}
 			}
@@ -379,13 +379,13 @@ func (p *Proxy) addIpBindToLink(ip string, dest net.IP) error {
 	ipn := net.ParseIP(ip)
 	addr, err := netlink.ParseAddr(fmt.Sprintf("%s/32", ipn.String()))
 	if err != nil {
-		log.Errorf("%s can not parse IP %s; %s", logIPVSPrefix, ip, err.Error())
+		log.Errorf("%s can not be parse IP %s; %s", logIPVSPrefix, ip, err.Error())
 		return err
 	}
 
 	addrs, err := netlink.AddrList(p.link, netlink.FAMILY_V4)
 	if err != nil {
-		log.Errorf("%s can not fetch IPs: %s", logIPVSPrefix, err.Error())
+		log.Errorf("%s can not be fetch IPs: %s", logIPVSPrefix, err.Error())
 		return err
 	}
 
@@ -402,7 +402,7 @@ func (p *Proxy) addIpBindToLink(ip string, dest net.IP) error {
 
 	routes, err := netlink.RouteGet(ipn)
 	if err != nil {
-		log.Errorf("%s can not get routes for ip", logIPVSPrefix)
+		log.Errorf("%s can not be get routes for ip", logIPVSPrefix)
 		return err
 	}
 
@@ -417,7 +417,7 @@ func (p *Proxy) addIpBindToLink(ip string, dest net.IP) error {
 		}
 
 		if err := netlink.RouteReplace(&route); err != nil {
-			log.Errorf("%s can not replace route: %s", logIPVSPrefix, err.Error())
+			log.Errorf("%s can not be replace route: %s", logIPVSPrefix, err.Error())
 			return err
 		}
 	}
@@ -430,13 +430,13 @@ func (p *Proxy) delIpBindToLink(ip string) error {
 	ipn := net.ParseIP(ip)
 	addr, err := netlink.ParseAddr(fmt.Sprintf("%s/32", ipn.String()))
 	if err != nil {
-		log.Errorf("%s can not parse IP %s; %s", logIPVSPrefix, ip, err.Error())
+		log.Errorf("%s can not be parse IP %s; %s", logIPVSPrefix, ip, err.Error())
 		return err
 	}
 
 	addrs, err := netlink.AddrList(p.link, netlink.FAMILY_V4)
 	if err != nil {
-		log.Errorf("%s can not fetch IPs:%s", logIPVSPrefix, err.Error())
+		log.Errorf("%s can not be fetch IPs:%s", logIPVSPrefix, err.Error())
 		return err
 	}
 
@@ -450,7 +450,7 @@ func (p *Proxy) delIpBindToLink(ip string) error {
 	}
 	if exists {
 		if err := netlink.AddrDel(p.link, addr); err != nil {
-			log.Errorf("%s can not remove link: %s", logIPVSPrefix, err.Error())
+			log.Errorf("%s can not be remove link: %s", logIPVSPrefix, err.Error())
 		}
 	}
 
@@ -462,7 +462,7 @@ func New(v *viper.Viper) (*Proxy, error) {
 	prx := new(Proxy)
 	handler, err := libipvs.New("")
 	if err != nil {
-		log.Errorf("%s can not initialize ipvs: %s", logIPVSPrefix, err.Error())
+		log.Errorf("%s can not be initialize ipvs: %s", logIPVSPrefix, err.Error())
 		return nil, err
 	}
 
@@ -502,7 +502,7 @@ func New(v *viper.Viper) (*Proxy, error) {
 
 				prx.link = l.(*netlink.Vxlan)
 			} else {
-				log.Errorf("%s can not create ipvs dummy interface: %s", logIPVSPrefix, err.Error())
+				log.Errorf("%s can not be create ipvs dummy interface: %s", logIPVSPrefix, err.Error())
 				return nil, err
 			}
 		}

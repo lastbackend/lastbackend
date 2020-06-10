@@ -131,7 +131,7 @@ func (d *Device) SetIP(nt net.IPNet) error {
 
 	existingAddrs, err := netlink.AddrList(d.link, netlink.FAMILY_V4)
 	if err != nil {
-		_ = fmt.Errorf("can not get addr list: %s", err.Error())
+		_ = fmt.Errorf("can not be get addr list: %s", err.Error())
 		return err
 	}
 
@@ -176,7 +176,7 @@ func (d *Device) AddFDB(MAC net.HardwareAddr, IP net.IP) error {
 
 	rules, err := utils.BridgeFDBList()
 	if err != nil {
-		log.Errorf("Can not FDB rules: %s", err.Error())
+		log.Errorf("can not be FDB rules: %s", err.Error())
 		return err
 	}
 

@@ -41,9 +41,12 @@ type Network struct {
 
 func New(cfg config.Config) (*Network, error) {
 	//log := logger.WithContext(context.Background())
-	//var err error
-	//
-	net := new(Network)
+
+	//var err errors
+
+	return nil, nil
+
+	//net := new(Network)
 	//
 	//if v.GetString("network.cni.type") == models.EmptyString &&
 	//	v.GetString("network.cpi.type") == models.EmptyString {
@@ -72,6 +75,6 @@ func New(cfg config.Config) (*Network, error) {
 	//if len(net.resolver.external) == 0 {
 	//	net.resolver.external = []string{"8.8.8.8", "8.8.4.4"}
 	//}
-
-	return net, nil
+	//
+	//return net, nil
 }

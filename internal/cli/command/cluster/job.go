@@ -125,7 +125,7 @@ func (c *command) jobInspectCmd() *cobra.Command {
 
 			t, err := cmd.Flags().GetString("task")
 			if err != nil {
-				_ = fmt.Errorf("can not parse task option: %s", t)
+				_ = fmt.Errorf("can not be parse task option: %s", t)
 				return
 			}
 

@@ -356,7 +356,7 @@ func volumeManifestSet(stg storage.IStorage, vol *models.Volume) error {
 	}
 
 	if err := im.ManifestSet(vol.Meta.Node, vol.SelfLink().String(), m); err != nil {
-		log.Errorf("can not update volume manifest: %s", err.Error())
+		log.Errorf("can not be update volume manifest: %s", err.Error())
 	}
 
 	return nil

@@ -442,8 +442,8 @@ func (r Runtime) PodCreate(ctx context.Context, key string, manifest *models.Pod
 			script := fmt.Sprintf(logScript, escaped, buf.String())
 
 			rootPath := defaultRootLocalStorgePath
-			if len(r.config.WorkDir) != 0 {
-				rootPath = r.config.WorkDir
+			if len(r.config.RootDir) != 0 {
+				rootPath = path.Join(r.config.RootDir, "runtime")
 			}
 
 			filepath := path.Join(rootPath, strings.Replace(key, ":", "-", -1), "init")
@@ -577,8 +577,8 @@ func (r Runtime) PodDestroy(ctx context.Context, pod string, status *models.PodS
 	}
 
 	rootPath := defaultRootLocalStorgePath
-	if len(r.config.WorkDir) != 0 {
-		rootPath = r.config.WorkDir
+	if len(r.config.RootDir) != 0 {
+		rootPath = path.Join(r.config.RootDir, "runtime")
 	}
 
 	dirPath := path.Join(rootPath, strings.Replace(pod, ":", "-", -1), "init")

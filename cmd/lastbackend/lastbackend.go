@@ -59,7 +59,9 @@
 // swagger:meta
 package main
 
-import "github.com/lastbackend/lastbackend/internal/cli"
+import (
+	"github.com/lastbackend/lastbackend/internal/cli"
+)
 
 func main() {
 	cli.New().Execute()

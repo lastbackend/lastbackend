@@ -44,7 +44,7 @@ func New(opts *RuntimeOpts) (r *Runtime, err error) {
 	if opts.Logger != nil {
 		lg, err := logger.New(opts.Logger)
 		if err != nil {
-			log.Errorf("can not init logger: %s", err.Error())
+			log.Errorf("can not be init logger: %s", err.Error())
 			os.Exit(1)
 			return nil, err
 		}
@@ -57,7 +57,7 @@ func New(opts *RuntimeOpts) (r *Runtime, err error) {
 func (r Runtime) Start() error {
 	if r.logger != nil {
 		if err := r.logger.Listen(); err != nil {
-			log.Errorf("can not start logger listener: %s", err.Error())
+			log.Errorf("can not be start logger listener: %s", err.Error())
 			return err
 		}
 	}

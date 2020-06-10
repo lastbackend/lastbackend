@@ -75,13 +75,13 @@ func (n *Network) ResolverManage(ctx context.Context) error {
 			}
 		}
 		if port == 0 {
-			return errors.New("can not create endpoint: reason: resolver port can not be 0")
+			return errors.New("can not be create endpoint: reason: resolver port can not be 0")
 		}
 		manifest.PortMap[53] = fmt.Sprintf("%d/udp", port)
 	}
 
 	if err := n.EndpointManage(ctx, resolverEndpointKey, manifest); err != nil {
-		log.Errorf("%s:> can not create endpoint", logResolverPrefix)
+		log.Errorf("%s:> can not be create endpoint", logResolverPrefix)
 		return err
 	}
 

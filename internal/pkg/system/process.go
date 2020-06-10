@@ -28,13 +28,11 @@ import (
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/internal/util/system"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 // HeartBeat Interval
 const heartBeatInterval = 5 // in seconds
 const systemLeadTTL = 15
-const logLevel = 7
 
 type Process struct {
 	// Process storage
@@ -53,12 +51,10 @@ func (c *Process) Register(ctx context.Context, kind string, stg storage.IStorag
 		item = new(models.Process)
 	)
 
-	log.Debugf("System: Process: Register: %s", kind)
 	item.Meta.SetDefault()
 	item.Meta.Kind = kind
 
 	if item.Meta.Hostname, err = system.GetHostname(); err != nil {
-		log.Errorf("System: Process: Register: get hostname: %s", err.Error())
 		return item, err
 	}
 
@@ -76,7 +72,6 @@ func (c *Process) Register(ctx context.Context, kind string, stg storage.IStorag
 
 	if err := c.storage.Set(ctx, c.storage.Collection().System(), sl, c.process, opts); err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
-			log.Errorf("System: Process: Register: %s", err.Error())
 			return item, err
 		}
 	}
@@ -88,7 +83,6 @@ func (c *Process) Register(ctx context.Context, kind string, stg storage.IStorag
 // and master election ttl option
 func (c *Process) HeartBeat(ctx context.Context, lead chan bool) {
 
-	log.Debugf("System: Process: Start HeartBeat for: %s", c.process.Meta.Kind)
 	ticker := time.NewTicker(heartBeatInterval * time.Second)
 
 	opts := storage.GetOpts()
@@ -97,7 +91,6 @@ func (c *Process) HeartBeat(ctx context.Context, lead chan bool) {
 
 	for range ticker.C {
 		// Update process state
-		log.Debug("System: Process: Beat")
 
 		l := false
 		opts := storage.GetOpts()
@@ -113,14 +106,12 @@ func (c *Process) HeartBeat(ctx context.Context, lead chan bool) {
 
 				err = c.storage.Put(ctx, c.storage.Collection().System(), leadKey, c.process, opts)
 				if err != nil && !errors.Storage().IsErrEntityExists(err) {
-					log.Errorf("System: Process: create process ttl err: %s", err.Error())
 					return
 				}
 
 				l = true
 
 			} else {
-				log.Errorf("System: Process: get lead process: %s", err.Error())
 				return
 			}
 
@@ -138,16 +129,13 @@ func (c *Process) HeartBeat(ctx context.Context, lead chan bool) {
 
 		sl := models.NewProcessSelfLink(c.process.Meta.Kind, c.process.Meta.Hostname, c.process.Meta.PID).String()
 		if err := c.storage.Set(ctx, c.storage.Collection().System(), sl, c.process, opts); err != nil {
-			log.Errorf("System: Process: Register: %s", err.Error())
 			return
 		}
 
 		// Check election
 		if c.process.Meta.Lead {
-			log.Debug("System: Process: Beat: Lead TTL update")
 
 			if err := c.storage.Set(ctx, c.storage.Collection().System(), fmt.Sprintf("%s/lead", c.process.Meta.Kind), c.process, opts); err != nil {
-				log.Errorf("System: Process: update process: %s", err.Error())
 				return
 			}
 

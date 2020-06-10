@@ -24,14 +24,14 @@ import (
 	"io"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cii/containerd"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cii/oci"
 )
 
 const (
-	ContainerdDriver = "containerd"
+	OciDriver = "oci"
 )
 
-// IMI - Image System Interface
+// CII - Container image interface
 type CII interface {
 	Auth(ctx context.Context, secret *models.SecretAuthData) (string, error)
 	Pull(ctx context.Context, spec *models.ImageManifest, out io.Writer) (*models.Image, error)
@@ -44,7 +44,7 @@ type CII interface {
 	Close() error
 }
 
-type ContainerdConfig containerd.Config
+type OciConfig oci.ConfigOci
 
 func New(driver string, opts interface{}) (CII, error) {
 
@@ -53,9 +53,9 @@ func New(driver string, opts interface{}) (CII, error) {
 	}
 
 	switch driver {
-	case ContainerdDriver:
-		o := opts.(ContainerdConfig)
-		return containerd.New(containerd.Config(o))
+	case OciDriver:
+		o := opts.(OciConfig)
+		return oci.NewOci(oci.ConfigOci(o))
 	default:
 		return nil, fmt.Errorf("container image runtime <%s> interface not supported", driver)
 	}

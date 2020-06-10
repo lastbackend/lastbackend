@@ -71,7 +71,7 @@ func New(r *runtime.Runtime) (*Controller, error) {
 
 	rest, err := client.New(client.ClientHTTP, endpoint, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("Can not initialize http client: %v", err)
+		return nil, fmt.Errorf("can not be initialize http client: %v", err)
 	}
 
 	var c = new(Controller)

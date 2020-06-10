@@ -48,7 +48,7 @@ func Daemon(v *viper.Viper) bool {
 	if v.IsSet("network") {
 		net, err := network.New(v)
 		if err != nil {
-			log.Errorf("can not initialize network: %s", err.Error())
+			log.Errorf("can not be initialize network: %s", err.Error())
 			os.Exit(1)
 		}
 		envs.Get().SetNet(net)
