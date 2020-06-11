@@ -79,7 +79,7 @@ func NewServer(state *state.State, stg storage.IStorage, cfg config.Config) *Htt
 
 	mw := middleware.New(stg, cfg.Security.Token)
 
-	cluster.NewClusterHandler(r, mw, cluster.Config{ClusterName: cfg.ClusterName, ClusterDescription: cfg.ClusterDescription})
+	cluster.NewClusterHandler(r, mw)
 	//config.NewConfigHandler(r, mw)
 	//deployment.NewDeploymentHandler(r, mw)
 	discovery.NewDiscoveryHandler(r, mw)

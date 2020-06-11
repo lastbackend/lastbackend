@@ -22,13 +22,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pkg/errors"
-
 	"github.com/containers/storage/pkg/reexec"
-	"github.com/lastbackend/lastbackend/internal/agent"
 	agent_config "github.com/lastbackend/lastbackend/internal/agent/config"
-	"github.com/lastbackend/lastbackend/internal/server"
+	"github.com/lastbackend/lastbackend/internal/daemon"
+	"github.com/lastbackend/lastbackend/internal/daemon/config"
 	server_config "github.com/lastbackend/lastbackend/internal/server/config"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -47,7 +46,9 @@ func NewCommand() *cobra.Command {
 		Use:   "daemon",
 		Short: "Last.Backend Open-source PaaS",
 		Long:  `Open-source system for automating deployment, scaling, and management of containerized applications.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+
+			var cfg = config.Config{}
 
 			// short-circuit on help
 			help, err := cmd.Flags().GetBool("help")
@@ -58,14 +59,6 @@ func NewCommand() *cobra.Command {
 				return cmd.Help()
 			}
 
-			disableMaster, err := cmd.Flags().GetBool("agent")
-			if err != nil {
-				return errors.Wrapf(err, "\"agent\" flag is non-bool, programmer error, please correct")
-			}
-			noSchedule, err := cmd.Flags().GetBool("no-schedule")
-			if err != nil {
-				return errors.Wrapf(err, "\"no-schedule\" flag is non-bool, programmer error, please correct")
-			}
 			cfgFile, err := cmd.Flags().GetString("config")
 			if err != nil {
 				return errors.Wrapf(err, "\"config\" flag is non-string, programmer error, please correct")
@@ -77,81 +70,32 @@ func NewCommand() *cobra.Command {
 				sigs = make(chan os.Signal)
 			)
 
-			if noSchedule && disableMaster {
-				fmt.Println("\n#################################")
-				fmt.Println("### All services was disable ###")
-				fmt.Println("#################################\n")
-				return nil
-			}
-
-			var masterApp *server.App
-			var minionApp *agent.App
-
-			if !disableMaster {
-
-				var cfg = server_config.Config{}
-
-				if cfgFile != "" {
-					if err := SetServerConfigFromFile(cfgFile, &cfg); err != nil {
-						return errors.Wrapf(err, "can not be set server config from file")
-					}
-				}
-
-				if err := SetServerConfigFromEnvs(&cfg); err != nil {
-					return errors.Wrapf(err, "can not be set server config from envs")
-				}
-
-				if err := SetServerConfigFromFlags(cmd.Flags(), &cfg); err != nil {
-					return errors.Wrapf(err, "can not be set server config from flags")
-				}
-
-				masterApp, err = server.New(cfg)
-				if err != nil {
-					return errors.Wrapf(err, "can not be server initialize")
-				}
-
-				if err := masterApp.Run(); err != nil {
-					return errors.Wrapf(err, "can not be run server")
+			if cfgFile != "" {
+				if err := SetConfigFromFile(cfgFile, &cfg); err != nil {
+					return errors.Wrapf(err, "can not be set server config from file")
 				}
 			}
 
-			if !noSchedule {
+			if err := SetConfigFromEnvs(&cfg); err != nil {
+				return errors.Wrapf(err, "can not be set server config from envs")
+			}
 
-				var cfg = agent_config.Config{}
+			if err := SetConfigFromFlags(cmd.Flags(), &cfg); err != nil {
+				return errors.Wrapf(err, "can not be set server config from flags")
+			}
 
-				if cfgFile != "" {
-					if err := SetAgentConfigFromFile(cfgFile, &cfg); err != nil {
-						return errors.Wrapf(err, "can not be set agent config from file")
-					}
-				}
-
-				if err := SetAgentConfigFromEnvs(&cfg); err != nil {
-					return errors.Wrapf(err, "can not be set agent config from envs")
-				}
-
-				if err := SetAgentConfigFromFlags(cmd.Flags(), &cfg); err != nil {
-					return errors.Wrapf(err, "can not be set agent config from flags")
-				}
-
-				minionApp, err = agent.New(cfg)
-				if err != nil {
-					return errors.Wrapf(err, "can not be agent initialize")
-				}
-
-				if err := minionApp.Run(); err != nil {
-					return errors.Wrapf(err, "can not be run minion server")
-				}
+			app, err := daemon.New(cfg)
+			if err != nil {
+				return errors.Wrapf(err, "can not init daemon process")
+			}
+			if err := app.Run(); err != nil {
+				return errors.Wrapf(err, "can not run daemon process")
 			}
 
 			for {
 				select {
 				case <-sigs:
-					if !disableMaster {
-						masterApp.Stop()
-					}
-					if !disableMaster {
-						minionApp.Stop()
-					}
+					app.Stop()
 					return nil
 				}
 			}
@@ -159,17 +103,17 @@ func NewCommand() *cobra.Command {
 		},
 	}
 
-	cmd.PersistentFlags().StringP("config", "c", "", "set config path")
-	cmd.PersistentFlags().Bool("agent", false, "Only agent mode")
-	cmd.PersistentFlags().Bool("no-schedule", false, "Disable schedule mode")
 	cmd.PersistentFlags().BoolP("help", "h", false, fmt.Sprintf("Help for %s", cmd.Name()))
 
-	cmd.Flags().StringP("access-token", "", "", "Access token to API server")
+	cmd.Flags().StringP("config", "c", "", "set config path")
+	cmd.Flags().Bool("agent", false, "Only agent mode")
+	cmd.Flags().Bool("no-schedule", false, "Disable schedule mode")
+	cmd.Flags().StringP("access-token", "", "", "Access token to NodeClient server")
 	cmd.Flags().StringP("cluster-name", "", "", "Cluster name info")
 	cmd.Flags().StringP("cluster-desc", "", "", "Cluster description")
 	cmd.Flags().StringP("bind-address", "", server_config.DefaultBindServerAddress, "Bind address for listening")
 	cmd.Flags().UintP("bind-port", "", server_config.DefaultBindServerPort, "Bind address for listening")
-	cmd.Flags().BoolP("tls-verify", "", false, "Enable check tls for API server")
+	cmd.Flags().BoolP("tls-verify", "", false, "Enable check tls for NodeClient server")
 	cmd.Flags().StringP("tls-cert-file", "", "", "TLS cert file path")
 	cmd.Flags().StringP("tls-private-key-file", "", "", "TLS private key file path")
 	cmd.Flags().StringP("tls-ca-file", "", "", "TLS certificate authority file path")
@@ -180,12 +124,12 @@ func NewCommand() *cobra.Command {
 	cmd.Flags().StringP("services-cidr", "", agent_config.DefaultCIDR, "Services IP CIDR for internal IPAM service")
 	cmd.Flags().StringP("root-dir", "", "", "Set root directory (Default: /var/lib/lastbackend/)")
 	cmd.Flags().StringP("storage-driver", "", "", "Set storage driver (Default: overlay)")
-	cmd.Flags().StringP("node-bind-address", "", agent_config.DefaultBindServerAddress, "Set bind address for API server")
-	cmd.Flags().UintP("node-bind-port", "", agent_config.DefaultBindServerPort, "Set listening port binding for API server")
-	cmd.Flags().BoolP("node-tls-verify", "", false, "Enable check tls for API server")
-	cmd.Flags().StringP("node-tls-ca-file", "", "", "Set path to ca file for API server")
-	cmd.Flags().StringP("node-tls-cert-file", "", "", "Set path to cert file for API server")
-	cmd.Flags().StringP("node-tls-private-key-file", "", "", "Set path to key file for API server")
+	cmd.Flags().StringP("node-bind-address", "", agent_config.DefaultBindServerAddress, "Set bind address for NodeClient server")
+	cmd.Flags().UintP("node-bind-port", "", agent_config.DefaultBindServerPort, "Set listening port binding for NodeClient server")
+	cmd.Flags().BoolP("node-tls-verify", "", false, "Enable check tls for NodeClient server")
+	cmd.Flags().StringP("node-tls-ca-file", "", "", "Set path to ca file for NodeClient server")
+	cmd.Flags().StringP("node-tls-cert-file", "", "", "Set path to cert file for NodeClient server")
+	cmd.Flags().StringP("node-tls-private-key-file", "", "", "Set path to key file for NodeClient server")
 	cmd.Flags().StringP("api-address", "", "", "Set endpoint for rest client")
 	cmd.Flags().BoolP("api-tls-verify", "", false, "Enable check tls for rest client")
 	cmd.Flags().StringP("api-tls-ca-file", "", "", "Set path to ca file for rest client")

@@ -61,7 +61,7 @@ var (
 		Value:   "UNKNOWN",
 		Message: "unknown error",
 		Description: `Generic error returned when the error does not have an
-			                                            API classification.`,
+			                                            NodeClient classification.`,
 		HTTPStatusCode: http.StatusInternalServerError,
 	})
 
@@ -382,7 +382,7 @@ type ErrorDescriptor struct {
 	Value string
 
 	// Message is a short, human readable decription of the error condition
-	// included in API responses.
+	// included in NodeClient responses.
 	Message string
 
 	// Description provides a complete account of the errors purpose, suitable

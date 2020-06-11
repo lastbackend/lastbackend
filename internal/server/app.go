@@ -21,13 +21,11 @@ package server
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/internal/server/config"
 	"github.com/lastbackend/lastbackend/internal/server/server"
 	"github.com/lastbackend/lastbackend/internal/server/state"
-	"github.com/lastbackend/lastbackend/internal/util/filesystem"
 	"github.com/lastbackend/lastbackend/tools/logger"
 )
 
@@ -35,13 +33,14 @@ type App struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	config config.Config
+	config  config.Config
+	storage storage.IStorage
 
 	HttpServer *server.HttpServer
 	State      *state.State
 }
 
-func New(config config.Config) (*App, error) {
+func New(stg storage.IStorage, config config.Config) (*App, error) {
 
 	loggerOpts := logger.Configuration{}
 	loggerOpts.EnableConsole = true
@@ -57,6 +56,7 @@ func New(config config.Config) (*App, error) {
 	app := new(App)
 	app.ctx, app.cancel = context.WithCancel(context.Background())
 	app.config = config
+	app.storage = stg
 
 	if err := app.init(); err != nil {
 		return nil, err
@@ -85,23 +85,7 @@ func (app *App) Stop() {
 }
 
 func (app *App) init() error {
-
-	workdir, err := filesystem.DetermineHomePath(app.config.RootDir, false)
-	if err != nil {
-		return err
-	}
-
-	if err := filesystem.MkDir(workdir, 0755); err != nil {
-		return err
-	}
-
-	stg, err := storage.Get(storage.BboltDriver, storage.BboltConfig{DbDir: workdir, DbName: ".cache"})
-	if err != nil {
-		return fmt.Errorf("cannot initialize storage: %v", err)
-	}
-
-	app.State = state.NewState(context.Background(), stg)
-	app.HttpServer = server.NewServer(app.State, stg, app.config)
-
+	app.State = state.NewState(context.Background(), app.storage)
+	app.HttpServer = server.NewServer(app.State, app.storage, app.config)
 	return nil
 }

@@ -18,7 +18,7 @@
 
 package views
 
-// API - default node structure
+// NodeClient - default node structure
 // swagger:model views_ingress
 type API struct {
 	Meta   APIMeta   `json:"meta"`
