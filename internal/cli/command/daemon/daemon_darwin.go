@@ -106,8 +106,6 @@ func NewCommand() *cobra.Command {
 
 	cmd.Flags().StringP("config", "c", "", "set config path")
 	cmd.Flags().StringP("access-token", "", "", "Access token to NodeClient server")
-	cmd.Flags().StringP("cluster-name", "", "", "Cluster name info")
-	cmd.Flags().StringP("cluster-desc", "", "", "Cluster description")
 	cmd.Flags().StringP("bind-address", "", config.DefaultBindServerAddress, "Bind address for listening")
 	cmd.Flags().UintP("bind-port", "", config.DefaultBindServerPort, "Bind address for listening")
 	cmd.Flags().BoolP("tls-verify", "", false, "Enable check tls for NodeClient server")
