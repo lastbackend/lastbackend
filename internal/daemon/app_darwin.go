@@ -1,3 +1,4 @@
+// +build darwin
 //
 // Last.Backend LLC CONFIDENTIAL
 // __________________
@@ -23,7 +24,6 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/lastbackend/lastbackend/internal/agent"
 	"github.com/lastbackend/lastbackend/internal/daemon/config"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/internal/server"
@@ -37,6 +37,8 @@ type App struct {
 	cancel context.CancelFunc
 
 	config config.Config
+
+	server *server.App
 }
 
 func New(config config.Config) (*App, error) {
@@ -86,24 +88,12 @@ func (app App) Run() error {
 		return fmt.Errorf("cannot initialize storage: %v", err)
 	}
 
-	if !app.config.DisableSchedule {
-		a, err := agent.New(stg, app.config.GetAgentConfig())
-		if err != nil {
-			return err
-		}
-		if err := a.Run(); err != nil {
-			return err
-		}
+	app.server, err = server.New(stg, app.config.GetServerConfig())
+	if err != nil {
+		return err
 	}
-
-	if !app.config.DisableServer {
-		s, err := server.New(stg, app.config.GetServerConfig())
-		if err != nil {
-			return err
-		}
-		if err := s.Run(); err != nil {
-			return err
-		}
+	if err := app.server.Run(); err != nil {
+		return err
 	}
 
 	return nil
@@ -112,13 +102,6 @@ func (app App) Run() error {
 func (app *App) Stop() {
 	log := logger.WithContext(context.Background())
 	log.Infof("Stop daemon process")
-
-	if !app.config.DisableSchedule {
-		app.Stop()
-	}
-	if !app.config.DisableServer {
-		app.Stop()
-	}
-
+	app.server.Stop()
 	app.cancel()
 }

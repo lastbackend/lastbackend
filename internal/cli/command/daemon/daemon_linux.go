@@ -1,3 +1,4 @@
+// +build linux
 //
 // Last.Backend LLC CONFIDENTIAL
 // __________________
@@ -23,10 +24,8 @@ import (
 	"os"
 
 	"github.com/containers/storage/pkg/reexec"
-	agent_config "github.com/lastbackend/lastbackend/internal/agent/config"
 	"github.com/lastbackend/lastbackend/internal/daemon"
 	"github.com/lastbackend/lastbackend/internal/daemon/config"
-	server_config "github.com/lastbackend/lastbackend/internal/server/config"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -111,21 +110,21 @@ func NewCommand() *cobra.Command {
 	cmd.Flags().StringP("access-token", "", "", "Access token to NodeClient server")
 	cmd.Flags().StringP("cluster-name", "", "", "Cluster name info")
 	cmd.Flags().StringP("cluster-desc", "", "", "Cluster description")
-	cmd.Flags().StringP("bind-address", "", server_config.DefaultBindServerAddress, "Bind address for listening")
-	cmd.Flags().UintP("bind-port", "", server_config.DefaultBindServerPort, "Bind address for listening")
+	cmd.Flags().StringP("bind-address", "", config.DefaultBindServerAddress, "Bind address for listening")
+	cmd.Flags().UintP("bind-port", "", config.DefaultBindServerPort, "Bind address for listening")
 	cmd.Flags().BoolP("tls-verify", "", false, "Enable check tls for NodeClient server")
 	cmd.Flags().StringP("tls-cert-file", "", "", "TLS cert file path")
 	cmd.Flags().StringP("tls-private-key-file", "", "", "TLS private key file path")
 	cmd.Flags().StringP("tls-ca-file", "", "", "TLS certificate authority file path")
 	cmd.Flags().StringP("vault-token", "", "", "Vault access token")
 	cmd.Flags().StringP("vault-endpoint", "", "", "Vault access endpoint")
-	cmd.Flags().StringP("domain-internal", "", server_config.DefaultInternalDomain, "Default external domain for cluster")
+	cmd.Flags().StringP("domain-internal", "", config.DefaultInternalDomain, "Default external domain for cluster")
 	cmd.Flags().StringP("domain-external", "", "", "Internal domain name for cluster")
-	cmd.Flags().StringP("services-cidr", "", agent_config.DefaultCIDR, "Services IP CIDR for internal IPAM service")
+	cmd.Flags().StringP("services-cidr", "", config.DefaultCIDR, "Services IP CIDR for internal IPAM service")
 	cmd.Flags().StringP("root-dir", "", "", "Set root directory (Default: /var/lib/lastbackend/)")
 	cmd.Flags().StringP("storage-driver", "", "", "Set storage driver (Default: overlay)")
-	cmd.Flags().StringP("node-bind-address", "", agent_config.DefaultBindServerAddress, "Set bind address for NodeClient server")
-	cmd.Flags().UintP("node-bind-port", "", agent_config.DefaultBindServerPort, "Set listening port binding for NodeClient server")
+	cmd.Flags().StringP("node-bind-address", "", config.DefaultBindServerAddress, "Set bind address for NodeClient server")
+	cmd.Flags().UintP("node-bind-port", "", config.DefaultBindServerPort, "Set listening port binding for NodeClient server")
 	cmd.Flags().BoolP("node-tls-verify", "", false, "Enable check tls for NodeClient server")
 	cmd.Flags().StringP("node-tls-ca-file", "", "", "Set path to ca file for NodeClient server")
 	cmd.Flags().StringP("node-tls-cert-file", "", "", "Set path to cert file for NodeClient server")
