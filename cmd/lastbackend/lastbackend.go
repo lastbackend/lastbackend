@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-// Last.Backend Open-source API
+// Last.Backend Open-source NodeClient
 //
 // Open-source system for automating deployment, scaling, and management of containerized applications.
 //

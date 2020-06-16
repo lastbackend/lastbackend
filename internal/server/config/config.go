@@ -22,34 +22,30 @@ const (
 	DefaultBindServerAddress = "0.0.0.0"
 	DefaultBindServerPort    = 2967
 	DefaultInternalDomain    = "lb.local"
-	DefaultRootDir           = "/var/lib/lastbackend/"
 )
 
 type Config struct {
-	Debug bool `yaml:"debug,omitempty"`
-
-	Security struct {
-		Token string `yaml:"token,omitempty"`
-	} `yaml:"security,omitempty"`
-
-	RootDir            string `yaml:"root-dirr"`
-	ClusterName        string `yaml:"name"`
-	ClusterDescription string `yaml:"description"`
-
-	Server ServerConfig `yaml:"server,omitempty"`
-	Vault  VaultConfig  `yaml:"vault"`
-	Domain DomainConfig `yaml:"domain"`
+	Debug    bool           `yaml:"debug"`
+	RootDir  string         `yaml:"root-dirr"`
+	Security SecurityConfig `yaml:"security"`
+	Server   ServerConfig   `yaml:"server"`
+	Vault    VaultConfig    `yaml:"vault"`
+	Domain   DomainConfig   `yaml:"domain"`
 }
 
 type ServerConfig struct {
-	Host string `yaml:"host,omitempty"`
-	Port uint   `yaml:"port,omitempty"`
+	Host string `yaml:"host"`
+	Port uint   `yaml:"port"`
 	TLS  struct {
-		Verify   bool   `yaml:"verify,omitempty"`
-		FileCA   string `yaml:"ca,omitempty"`
-		FileCert string `yaml:"cert,omitempty"`
-		FileKey  string `yaml:"key,omitempty"`
-	} `yaml:"tls,omitempty"`
+		Verify   bool   `yaml:"verify"`
+		FileCA   string `yaml:"ca"`
+		FileCert string `yaml:"cert"`
+		FileKey  string `yaml:"key"`
+	} `yaml:"tls"`
+}
+
+type SecurityConfig struct {
+	Token string `yaml:"token"`
 }
 
 type VaultConfig struct {
