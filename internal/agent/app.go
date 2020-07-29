@@ -20,14 +20,12 @@ package agent
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/lastbackend/lastbackend/internal/agent/config"
 	"github.com/lastbackend/lastbackend/internal/agent/controller"
 	"github.com/lastbackend/lastbackend/internal/agent/runtime"
 	"github.com/lastbackend/lastbackend/internal/agent/server"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/internal/util/filesystem"
 	"github.com/lastbackend/lastbackend/tools/logger"
 	"github.com/pkg/errors"
 )
@@ -36,14 +34,15 @@ type App struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	config config.Config
+	config  config.Config
+	storage storage.IStorage
 
 	HttpServer *server.HttpServer
 	Runtime    *runtime.Runtime
 	Controller *controller.Controller
 }
 
-func New(config config.Config) (*App, error) {
+func New(stg storage.IStorage, config config.Config) (*App, error) {
 
 	loggerOpts := logger.Configuration{}
 	loggerOpts.EnableConsole = true
@@ -58,6 +57,7 @@ func New(config config.Config) (*App, error) {
 	app := new(App)
 	app.ctx, app.cancel = context.WithCancel(context.Background())
 	app.config = config
+	app.storage = stg
 
 	if err := app.init(); err != nil {
 		return nil, errors.Wrapf(err, "can not init application")
@@ -104,21 +104,7 @@ func (app *App) init() error {
 	log := logger.WithContext(context.Background())
 	log.Infof("Init agent service")
 
-	app.config.RootDir, err = filesystem.DetermineHomePath(app.config.RootDir, false)
-	if err != nil {
-		return err
-	}
-
-	if err := filesystem.MkDir(app.config.RootDir, 0755); err != nil {
-		return err
-	}
-
-	stg, err := storage.Get(storage.BboltDriver, storage.BboltConfig{DbDir: app.config.RootDir, DbName: fmt.Sprintf(".%s", "store")})
-	if err != nil {
-		return errors.Wrapf(err, "can not storage initialize")
-	}
-
-	app.Runtime, err = runtime.New(stg, app.config)
+	app.Runtime, err = runtime.New(app.storage, app.config)
 	if err != nil {
 		return errors.Wrapf(err, "can not runtime initialize")
 	}
@@ -128,7 +114,7 @@ func (app *App) init() error {
 		return errors.Wrapf(err, "can not controller initialize")
 	}
 
-	app.HttpServer = server.NewServer(app.Runtime.GetState(), stg, app.config)
+	app.HttpServer = server.NewServer(app.Runtime.GetState(), app.storage, app.config)
 
 	return nil
 }

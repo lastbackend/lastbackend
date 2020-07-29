@@ -26,35 +26,37 @@ const (
 )
 
 type Config struct {
-	Debug bool `yaml:"debug,omitempty"`
+	Debug         bool           `yaml:"debug"`
+	RootDir       string         `yaml:"root-dir"`
+	StorageDriver string         `yaml:"storage-driver"`
+	ManifestDir   string         `yaml:"manifest-dir"`
+	CIDR          string         `yaml:"cidr"`
+	Security      SecurityConfig `yaml:"security"`
+	Server        ServerConfig   `yaml:"server"`
+	API           NodeClient     `yaml:"api"`
+}
 
-	Security struct {
-		Token string `yaml:"token,omitempty"`
-	} `yaml:"security,omitempty"`
+type SecurityConfig struct {
+	Token string `yaml:"token"`
+}
 
-	Server struct {
-		Host string `yaml:"host,omitempty"`
-		Port uint   `yaml:"port,omitempty"`
-		TLS  struct {
-			Verify   bool   `yaml:"verify,omitempty"`
-			FileCA   string `yaml:"ca,omitempty"`
-			FileCert string `yaml:"cert,omitempty"`
-			FileKey  string `yaml:"key,omitempty"`
-		} `yaml:"tls,omitempty"`
-	} `yaml:"server,omitempty"`
+type ServerConfig struct {
+	Host string `yaml:"host"`
+	Port uint   `yaml:"port"`
+	TLS  struct {
+		Verify   bool   `yaml:"verify"`
+		FileCA   string `yaml:"ca"`
+		FileCert string `yaml:"cert"`
+		FileKey  string `yaml:"key"`
+	} `yaml:"tls"`
+}
 
-	API struct {
-		Address string `yaml:"uri,omitempty"`
-		TLS     struct {
-			Verify   bool   `yaml:"verify,omitempty"`
-			FileCA   string `yaml:"ca,omitempty"`
-			FileCert string `yaml:"cert,omitempty"`
-			FileKey  string `yaml:"key,omitempty"`
-		} `yaml:"tls,omitempty"`
-	} `yaml:"api,omitempty"`
-
-	RootDir       string `yaml:"root-dir,omitempty"`
-	StorageDriver string `yaml:"storage-driver"`
-	ManifestDir   string `yaml:"manifestdir,omitempty"`
-	CIDR          string `yaml:"cidr,omitempty"`
+type NodeClient struct {
+	Address string `yaml:"uri"`
+	TLS     struct {
+		Verify   bool   `yaml:"verify"`
+		FileCA   string `yaml:"ca"`
+		FileCert string `yaml:"cert"`
+		FileKey  string `yaml:"key"`
+	} `yaml:"tls"`
 }

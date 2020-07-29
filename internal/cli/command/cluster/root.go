@@ -42,8 +42,12 @@ type command struct {
 func NewCommands() []*cobra.Command {
 	cmd := new(command)
 
-	// TODO: create default home dir
-	stg, err := storage.Get(storage.BboltDriver, storage.BboltConfig{DbDir: path.Join(filesystem.HomeDir(), ".lastbackend"), DbName: "data"})
+	if err := filesystem.MkDir(path.Join(filesystem.HomeDir(), "lastbackend"), 0755); err != nil {
+		fmt.Printf("cannot create workdir: %v", err)
+		os.Exit(1)
+	}
+
+	stg, err := storage.Get(storage.BboltDriver, storage.BboltConfig{DbDir: path.Join(filesystem.HomeDir(), "lastbackend"), DbName: ".lastbackend"})
 	if err != nil {
 		fmt.Printf("cannot initialize storage: %v", err)
 		os.Exit(1)

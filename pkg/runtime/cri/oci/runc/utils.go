@@ -134,7 +134,7 @@ func newProcess(p specs.Process, init bool, logLevel string) (*libcontainer.Proc
 	lp := &libcontainer.Process{
 		Args: p.Args,
 		Env:  p.Env,
-		// TODO: fix libcontainer's API to better support uid/gid in a typesafe way.
+		// TODO: fix libcontainer's NodeClient to better support uid/gid in a typesafe way.
 		User:            fmt.Sprintf("%d:%d", p.User.UID, p.User.GID),
 		Cwd:             p.Cwd,
 		Label:           p.SelinuxLabel,
