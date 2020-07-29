@@ -60,7 +60,7 @@ func New(config config.Config) (*App, error) {
 	app.config = config
 
 	if err := app.init(); err != nil {
-		return nil, errors.Wrapf(err, "can not be init application")
+		return nil, errors.Wrapf(err, "can not init application")
 	}
 
 	return app, nil
@@ -76,7 +76,7 @@ func (app *App) Run() error {
 
 	if app.Controller != nil {
 		if err := app.Controller.Connect(app.config); err != nil {
-			return errors.Wrapf(err, "can not be connect controller")
+			return errors.Wrapf(err, "can not connect controller")
 		}
 		go app.Controller.Subscribe()
 		go app.Controller.Sync()
@@ -84,7 +84,7 @@ func (app *App) Run() error {
 
 	go func() {
 		if err := app.HttpServer.Run(); err != nil {
-			log.Fatal(errors.Wrapf(err, "can not be run http rest server"))
+			log.Fatal(errors.Wrapf(err, "can not run http rest server"))
 			return
 		}
 	}()
@@ -115,17 +115,17 @@ func (app *App) init() error {
 
 	stg, err := storage.Get(storage.BboltDriver, storage.BboltConfig{DbDir: app.config.RootDir, DbName: fmt.Sprintf(".%s", "store")})
 	if err != nil {
-		return errors.Wrapf(err, "can not be storage initialize")
+		return errors.Wrapf(err, "can not storage initialize")
 	}
 
 	app.Runtime, err = runtime.New(stg, app.config)
 	if err != nil {
-		return errors.Wrapf(err, "can not be runtime initialize")
+		return errors.Wrapf(err, "can not runtime initialize")
 	}
 
 	app.Controller, err = controller.New(app.Runtime)
 	if err != nil {
-		return errors.Wrapf(err, "can not be controller initialize")
+		return errors.Wrapf(err, "can not controller initialize")
 	}
 
 	app.HttpServer = server.NewServer(app.Runtime.GetState(), stg, app.config)

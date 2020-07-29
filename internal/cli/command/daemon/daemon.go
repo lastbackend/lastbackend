@@ -79,7 +79,7 @@ func NewCommand() *cobra.Command {
 
 			if noSchedule && disableMaster {
 				fmt.Println("\n#################################")
-				fmt.Println("### All services was disable ###")
+				fmt.Println("### All services were disabled ###")
 				fmt.Println("#################################\n")
 				return nil
 			}
@@ -93,25 +93,25 @@ func NewCommand() *cobra.Command {
 
 				if cfgFile != "" {
 					if err := SetServerConfigFromFile(cfgFile, &cfg); err != nil {
-						return errors.Wrapf(err, "can not be set server config from file")
+						return errors.Wrapf(err, "can not set server config from file")
 					}
 				}
 
 				if err := SetServerConfigFromEnvs(&cfg); err != nil {
-					return errors.Wrapf(err, "can not be set server config from envs")
+					return errors.Wrapf(err, "can not set server config from envs")
 				}
 
 				if err := SetServerConfigFromFlags(cmd.Flags(), &cfg); err != nil {
-					return errors.Wrapf(err, "can not be set server config from flags")
+					return errors.Wrapf(err, "can not set server config from flags")
 				}
 
 				masterApp, err = server.New(cfg)
 				if err != nil {
-					return errors.Wrapf(err, "can not be server initialize")
+					return errors.Wrapf(err, "can not server initialize")
 				}
 
 				if err := masterApp.Run(); err != nil {
-					return errors.Wrapf(err, "can not be run server")
+					return errors.Wrapf(err, "can not run server")
 				}
 			}
 
@@ -121,25 +121,25 @@ func NewCommand() *cobra.Command {
 
 				if cfgFile != "" {
 					if err := SetAgentConfigFromFile(cfgFile, &cfg); err != nil {
-						return errors.Wrapf(err, "can not be set agent config from file")
+						return errors.Wrapf(err, "can not set agent config from file")
 					}
 				}
 
 				if err := SetAgentConfigFromEnvs(&cfg); err != nil {
-					return errors.Wrapf(err, "can not be set agent config from envs")
+					return errors.Wrapf(err, "can not set agent config from envs")
 				}
 
 				if err := SetAgentConfigFromFlags(cmd.Flags(), &cfg); err != nil {
-					return errors.Wrapf(err, "can not be set agent config from flags")
+					return errors.Wrapf(err, "can not set agent config from flags")
 				}
 
 				minionApp, err = agent.New(cfg)
 				if err != nil {
-					return errors.Wrapf(err, "can not be agent initialize")
+					return errors.Wrapf(err, "can not initialize agent")
 				}
 
 				if err := minionApp.Run(); err != nil {
-					return errors.Wrapf(err, "can not be run minion server")
+					return errors.Wrapf(err, "can not run minion server")
 				}
 			}
 
