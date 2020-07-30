@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package cluster
+package client
 
 import (
 	"context"
@@ -57,7 +57,7 @@ func (c *command) NewDiscoveryCmd() *cobra.Command {
 }
 
 func (c *command) discoveryInspectCmd() *cobra.Command {
-	cmd:= &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "inspect [NAME]",
 		Short:   "Discovery info by name",
 		Example: discoveryInspectExample,
@@ -81,7 +81,7 @@ func (c *command) discoveryInspectCmd() *cobra.Command {
 }
 
 func (c *command) discoveryListCmd() *cobra.Command {
-	cmd:= &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "ls",
 		Short:   "Display the discoveries list",
 		Example: discoveryListExample,

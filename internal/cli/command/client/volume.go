@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package cluster
+package client
 
 import (
 	"context"

@@ -23,7 +23,7 @@ import (
 	"os"
 
 	"github.com/lastbackend/lastbackend/internal/cli/command"
-	"github.com/lastbackend/lastbackend/internal/cli/command/cluster"
+	"github.com/lastbackend/lastbackend/internal/cli/command/client"
 	"github.com/lastbackend/lastbackend/internal/cli/command/daemon"
 	"github.com/spf13/cobra"
 )
@@ -37,7 +37,7 @@ func New() *CLI {
 	rootCmd := command.New()
 	rootCmd.AddCommand(command.VersionCmd)
 	rootCmd.AddCommand(daemon.NewCommand())
-	rootCmd.AddCommand(cluster.NewCommands()...)
+	rootCmd.AddCommand(client.NewCommands()...)
 	c.rootCmd = rootCmd
 	return c
 }

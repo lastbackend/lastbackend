@@ -16,31 +16,32 @@
 // from Last.Backend LLC.
 //
 
-package cluster
+package client
 
 import (
 	"context"
 	"fmt"
 	"github.com/lastbackend/lastbackend/tools/logger"
+
 	"github.com/lastbackend/lastbackend/internal/cli/views"
 	"github.com/spf13/cobra"
 )
 
-const ingressInspectExample = `
-  # Get information 'wef34fg' for ingress
-  lb ingress inspect wef34fg"
+const nodeListExample = `
+  # Get all nodes for 'ns-demo' namespace  
+  lb node ls
 `
 
-const ingressListExample = `
-  # Get all ingresses in cluster 
-  lb ingress ls
+const nodeInspectExample = `
+  # Get information 'wef34fg' for node in 'ns-demo' namespace
+  lb node inspect ns-demo wef34fg"
 `
 
-func (c *command) NewIngressCmd() *cobra.Command {
+func (c *command) NewNodeCmd() *cobra.Command {
 	log := logger.WithContext(context.Background())
 	cmd := &cobra.Command{
-		Use:   "ingress",
-		Short: "Manage cluster ingress servers",
+		Use:   "node",
+		Short: "Manage cluster nodes",
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
 				log.Error(err.Error())
@@ -49,57 +50,57 @@ func (c *command) NewIngressCmd() *cobra.Command {
 		},
 	}
 
-	cmd.AddCommand(c.ingressInspectCmd())
-	cmd.AddCommand(c.ingressListCmd())
+	cmd.AddCommand(c.nodeListCmd())
+	cmd.AddCommand(c.nodeInspectCmd())
 
 	return cmd
 }
 
-func (c *command) ingressInspectCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "inspect [NAME]",
-		Short:   "Ingress info by name",
-		Example: ingressInspectExample,
-		Args:    cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-
-			name := args[0]
-
-			response, err := c.client.cluster.V1().Cluster().Ingress(name).Get(context.Background())
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-
-			ss := views.FromApiIngressView(response)
-			ss.Print()
-		},
-	}
-
-	return cmd
-}
-
-func (c *command) ingressListCmd() *cobra.Command {
+func (c *command) nodeListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "ls",
-		Short:   "Display the ingress list",
-		Example: ingressListExample,
+		Short:   "Display the nodes list",
+		Example: nodeListExample,
 		Args:    cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 
-			response, err := c.client.cluster.V1().Cluster().Ingress().List(context.Background())
+			response, err := c.client.cluster.V1().Cluster().Node().List(context.Background())
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
 
 			if response == nil || len(*response) == 0 {
-				fmt.Println("no ingress available")
+				fmt.Println("no nodes available")
 				return
 			}
 
-			list := views.FromApiIngressListView(response)
+			list := views.FromApiNodeListView(response)
 			list.Print()
+		},
+	}
+
+	return cmd
+}
+
+func (c *command) nodeInspectCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "inspect [NAME]",
+		Short:   "Node info by name",
+		Example: nodeInspectExample,
+		Args:    cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+
+			name := args[0]
+
+			response, err := c.client.cluster.V1().Cluster().Node(name).Get(context.Background())
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			ss := views.FromApiNodeView(response)
+			ss.Print()
 		},
 	}
 

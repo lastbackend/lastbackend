@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package cluster
+package client
 
 import (
 	"context"
@@ -25,10 +25,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/lastbackend/lastbackend/tools/logger"
 	"github.com/lastbackend/lastbackend/internal/cli/views"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"github.com/spf13/cobra"
 )
 

@@ -16,16 +16,16 @@
 // from Last.Backend LLC.
 //
 
-package cluster
+package client
 
 import (
 	"context"
 	"errors"
 	"fmt"
 
-	"github.com/lastbackend/lastbackend/tools/logger"
 	"github.com/lastbackend/lastbackend/internal/cli/service"
 	"github.com/lastbackend/lastbackend/internal/cli/views"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"github.com/spf13/cobra"
 )
 
