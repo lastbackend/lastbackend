@@ -17,31 +17,31 @@
 //
 
 package service
-
-import (
-	"context"
-
-	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/tools/log"
-)
-
-const (
-	logEventPrefix = "distribution:events"
-)
-
-type Event struct {
-	context context.Context
-	storage storage.IStorage
-}
-
-func (e *Event) Runtime() (*models.System, error) {
-
-	log.Debugf("%s:get:> get events runtime info", logEventPrefix)
-	runtime, err := e.storage.Info(e.context, e.storage.Collection().Root(), "")
-	if err != nil {
-		log.Errorf("%s:get:> get runtime info error: %s", logEventPrefix, err)
-		return &runtime.System, err
-	}
-	return &runtime.System, nil
-}
+//
+//import (
+//	"context"
+//
+//	"github.com/lastbackend/lastbackend/internal/pkg/models"
+//	"github.com/lastbackend/lastbackend/internal/pkg/storage"
+//	"github.com/lastbackend/lastbackend/tools/log"
+//)
+//
+//const (
+//	logEventPrefix = "distribution:events"
+//)
+//
+//type Event struct {
+//	context context.Context
+//	storage storage.IStorage
+//}
+//
+//func (e *Event) Runtime() (*models.System, error) {
+//
+//	log.Debugf("%s:get:> get events runtime info", logEventPrefix)
+//	runtime, err := e.storage.Info(e.context, e.storage.Collection().Root(), "")
+//	if err != nil {
+//		log.Errorf("%s:get:> get runtime info error: %s", logEventPrefix, err)
+//		return &runtime.System, err
+//	}
+//	return &runtime.System, nil
+//}

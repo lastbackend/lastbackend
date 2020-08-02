@@ -17,43 +17,43 @@
 //
 
 package state
-
-import (
-	"github.com/lastbackend/lastbackend/internal/pkg/models"
-)
-
-const logLevel = 3
-
-type State struct {
-	ingress *IngressState
-	routes  *RouteState
-}
-
-type IngressState struct {
-	Info   models.IngressInfo
-	Status models.IngressStatus
-}
-
-func (s *State) Ingress() *IngressState {
-	return s.ingress
-}
-
-func (s *State) Routes() *RouteState {
-	return s.routes
-}
-
-func New() *State {
-
-	state := State{
-		ingress: new(IngressState),
-		routes: &RouteState{
-			routes: make(map[string]struct {
-				status   *models.RouteStatus
-				manifest *models.RouteManifest
-			}, 0),
-			watchers: make(map[chan string]bool, 0),
-		},
-	}
-
-	return &state
-}
+//
+//import (
+//	"github.com/lastbackend/lastbackend/internal/pkg/models"
+//)
+//
+//const logLevel = 3
+//
+//type State struct {
+//	ingress *IngressState
+//	routes  *RouteState
+//}
+//
+//type IngressState struct {
+//	Info   models.IngressInfo
+//	Status models.IngressStatus
+//}
+//
+//func (s *State) Ingress() *IngressState {
+//	return s.ingress
+//}
+//
+//func (s *State) Routes() *RouteState {
+//	return s.routes
+//}
+//
+//func New() *State {
+//
+//	state := State{
+//		ingress: new(IngressState),
+//		routes: &RouteState{
+//			routes: make(map[string]struct {
+//				status   *models.RouteStatus
+//				manifest *models.RouteManifest
+//			}, 0),
+//			watchers: make(map[chan string]bool, 0),
+//		},
+//	}
+//
+//	return &state
+//}

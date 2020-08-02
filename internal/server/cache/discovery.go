@@ -22,7 +22,6 @@ import (
 	"sync"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 type CacheDiscoveryManifest struct {
@@ -63,7 +62,6 @@ func (c *CacheDiscoveryManifest) Flush(discovery string) {
 func (c *CacheDiscoveryManifest) Clear(discovery string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	log.Debugf("clear cache for discovery: %s", discovery)
 	delete(c.manifests, discovery)
 }
 

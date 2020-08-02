@@ -17,34 +17,34 @@
 //
 
 package runtime
-
-import (
-	"context"
-)
-
-const (
-	logRuntimePrefix = "discovery:runtime"
-	logLevel         = 3
-)
-
-type Runtime struct {
-	ctx context.Context
-
-	opts *RuntimeOpts
-}
-
-type RuntimeOpts struct {
-	Iface string
-	Port  uint16
-}
-
-func New(opts *RuntimeOpts) *Runtime {
-	return &Runtime{
-		ctx:  context.Background(),
-		opts: opts,
-	}
-}
-
-func (r *Runtime) GetOpts() *RuntimeOpts {
-	return r.opts
-}
+//
+//import (
+//	"context"
+//)
+//
+//const (
+//	logRuntimePrefix = "discovery:runtime"
+//	logLevel         = 3
+//)
+//
+//type Runtime struct {
+//	ctx context.Context
+//
+//	opts *RuntimeOpts
+//}
+//
+//type RuntimeOpts struct {
+//	Iface string
+//	Port  uint16
+//}
+//
+//func New(opts *RuntimeOpts) *Runtime {
+//	return &Runtime{
+//		ctx:  context.Background(),
+//		opts: opts,
+//	}
+//}
+//
+//func (r *Runtime) GetOpts() *RuntimeOpts {
+//	return r.opts
+//}

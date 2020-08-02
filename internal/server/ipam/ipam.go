@@ -22,7 +22,7 @@ import (
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"net"
 
-	"github.com/lastbackend/lastbackend/internal/master/ipam/local"
+	"github.com/lastbackend/lastbackend/internal/server/ipam/local"
 )
 
 type IPAM interface {

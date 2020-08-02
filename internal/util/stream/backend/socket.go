@@ -19,8 +19,9 @@
 package backend
 
 import (
+	"context"
 	"github.com/gorilla/websocket"
-	"github.com/lastbackend/lastbackend/tools/log"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"net/http"
 	"sync"
 	"time"
@@ -58,6 +59,10 @@ type Socket struct {
 }
 
 func (s *Socket) manage() {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
 	for {
 		select {
 		case t := <-s.dial:
@@ -90,17 +95,20 @@ func (s *Socket) connect() error {
 		resp *http.Response
 	)
 
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
 	s.conn, resp, err = websocket.DefaultDialer.Dial(s.endpoint, nil)
 	if err != nil {
 		if err == websocket.ErrBadHandshake {
-			log.V(6).Errorf("handshake failed with status %d", resp.StatusCode)
+			log.Errorf("handshake failed with status %d", resp.StatusCode)
 		} else {
-			log.V(6).Errorf("Socket: stream dial error: %s", err)
+			log.Errorf("Socket: stream dial error: %s", err)
 		}
 
 		if resp != nil {
 			if resp.StatusCode == http.StatusNotFound {
-				log.V(6).Error("Socket: error: stream not found")
+				log.Error("Socket: error: stream not found")
 				return err
 			}
 		}
@@ -128,6 +136,10 @@ func (s *Socket) listen() {
 
 	// Create listener to pipe message to hub
 	pipe := make(chan msg)
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
 	go func() {
 		for {
 			select {
@@ -140,7 +152,7 @@ func (s *Socket) listen() {
 				s.Unlock()
 
 				if err != nil {
-					log.V(6).Errorf("Socket: stream: write message error: %s", err)
+					log.Errorf("Socket: stream: write message error: %s", err)
 					s.reconnect()
 					return
 				}
@@ -164,11 +176,11 @@ func (s *Socket) listen() {
 				pipe <- msg{websocket.PongMessage, p}
 
 			case <-s.read:
-				log.V(6).Debug("Socket: Incoming messaging system not implemented yet")
+				log.Debug("Socket: Incoming messaging system not implemented yet")
 
 			case err := <-s.close:
 				pipe <- msg{websocket.CloseMessage, []byte{}}
-				log.V(6).Errorf("Socket: send: %v", err)
+				log.Errorf("Socket: send: %v", err)
 				s.disconnect()
 				return
 			}
@@ -226,6 +238,10 @@ func (s *Socket) Disconnect() {
 }
 
 func (s *Socket) End() error {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
 	select {
 	case e := <-s.end:
 		log.Debug("Socket ended")

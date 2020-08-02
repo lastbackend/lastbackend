@@ -76,7 +76,9 @@ func New(config config.Config) (*App, error) {
 }
 
 func (app App) Run() error {
-	log := logger.WithContext(context.Background())
+
+	ctx := context.Background()
+	log := logger.WithContext(ctx)
 	log.Infof("Run daemon process")
 
 	if err := filesystem.MkDir(path.Join(app.config.RootDir, "data"), 0755); err != nil {
@@ -92,7 +94,7 @@ func (app App) Run() error {
 	if err != nil {
 		return err
 	}
-	if err := app.server.Run(); err != nil {
+	if err := app.server.Run(ctx); err != nil {
 		return err
 	}
 

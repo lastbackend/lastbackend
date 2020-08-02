@@ -17,49 +17,49 @@
 //
 
 package runtime
-
-import (
-	"github.com/lastbackend/lastbackend/internal/ingress/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
-)
-
-func (r Runtime) RouteManage(name string, route *models.RouteManifest) (err error) {
-
-	log.Debugf("route manage: %s", name)
-
-	var status = new(models.RouteStatus)
-
-	defer func() {
-		if err = r.config.Sync(); err != nil {
-			status.State = models.StateError
-			status.Message = err.Error()
-			envs.Get().GetState().Routes().SetRouteStatus(name, status)
-			return
-		}
-
-		if status.State == models.StateDestroy {
-			envs.Get().GetState().Routes().DelRoute(name)
-			return
-		}
-
-		envs.Get().GetState().Routes().SetRouteStatus(name, status)
-	}()
-
-	if route.State == models.StateDestroyed {
-		status.State = models.StateDestroyed
-		envs.Get().GetState().Routes().DelRoute(name)
-		return nil
-	}
-
-	if route.State == models.StateDestroy {
-		status.State = models.StateDestroyed
-		envs.Get().GetState().Routes().DelRouteManifests(name)
-		return nil
-	}
-
-	envs.Get().GetState().Routes().SetRouteManifest(name, route)
-	status.State = models.StateProvision
-
-	return nil
-}
+//
+//import (
+//	"github.com/lastbackend/lastbackend/internal/ingress/envs"
+//	"github.com/lastbackend/lastbackend/internal/pkg/models"
+//	"github.com/lastbackend/lastbackend/tools/log"
+//)
+//
+//func (r Runtime) RouteManage(name string, route *models.RouteManifest) (err error) {
+//
+//	log.Debugf("route manage: %s", name)
+//
+//	var status = new(models.RouteStatus)
+//
+//	defer func() {
+//		if err = r.config.Sync(); err != nil {
+//			status.State = models.StateError
+//			status.Message = err.Error()
+//			envs.Get().GetState().Routes().SetRouteStatus(name, status)
+//			return
+//		}
+//
+//		if status.State == models.StateDestroy {
+//			envs.Get().GetState().Routes().DelRoute(name)
+//			return
+//		}
+//
+//		envs.Get().GetState().Routes().SetRouteStatus(name, status)
+//	}()
+//
+//	if route.State == models.StateDestroyed {
+//		status.State = models.StateDestroyed
+//		envs.Get().GetState().Routes().DelRoute(name)
+//		return nil
+//	}
+//
+//	if route.State == models.StateDestroy {
+//		status.State = models.StateDestroyed
+//		envs.Get().GetState().Routes().DelRouteManifests(name)
+//		return nil
+//	}
+//
+//	envs.Get().GetState().Routes().SetRouteManifest(name, route)
+//	status.State = models.StateProvision
+//
+//	return nil
+//}

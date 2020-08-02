@@ -22,7 +22,6 @@ import (
 	"sync"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const logCacheIngress = "api:cache:ingress"
@@ -52,7 +51,6 @@ func (c *CacheIngressManifest) SetSubnetManifest(cidr string, s *models.SubnetMa
 func (c *CacheIngressManifest) SetRouteManifest(ingress, name string, s *models.RouteManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	log.Debugf("set route manifest %s", name)
 
 	if s.State == models.StateDestroyed {
 		delete(c.routes, name)
@@ -72,7 +70,6 @@ func (c *CacheIngressManifest) SetRouteManifest(ingress, name string, s *models.
 func (c *CacheIngressManifest) DelRouteManifest(ingress, name string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	log.Debugf("del route manifest %s", name)
 	delete(c.routes, name)
 	if _, ok := c.manifests[ingress]; ok {
 		delete(c.manifests[ingress].Routes, name)
@@ -83,7 +80,6 @@ func (c *CacheIngressManifest) SetEndpointManifest(addr string, s *models.Endpoi
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	log.Debugf("%s set endpoint manifest: %s > %s", logCacheIngress, addr, s.IP)
 
 	for _, n := range c.manifests {
 		if n.Endpoints == nil {

@@ -1,0 +1,58 @@
+syntax = "proto3";
+package v1;
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+
+import "api/proto/v1/namespace.proto";
+import "api/proto/v1/resource.proto";
+
+option go_package = "server/api/v1";
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  info: {
+    title: "Last.Backend"
+    version: "0.1.0"
+    contact: {
+      name: "Last.Backend Team"
+      url: "https://github.com/lastbackend/lastbackend"
+      email: "team@lastbackend.com"
+    };
+  };
+  schemes: [HTTP,HTTPS]
+  consumes: "application/json"
+  produces: "application/json"
+  responses: {
+    key: "404"
+    value: {
+      description: "Returned when the resource does not exist."
+      schema: {
+        json_schema: {
+          type: STRING
+        };
+      };
+    };
+  };
+};
+
+// Here is the overall service where we define all our endpoints.
+service V1 {
+
+  rpc NamespaceCreate (NamespaceRequest) returns (NamespaceResponse) {
+    option (google.api.http) = {
+      get: "/v1/namespace"
+    };
+  };
+
+  rpc ResourceCreate (ResourceRequest) returns (ResourceResponse) {
+    option (google.api.http) = {
+      post: "/v1/resource"
+      body: "*"
+    };
+  };
+
+  rpc Events (EventRequest) returns (stream NamespaceResponse) {
+    option (google.api.http) = {
+      get: "/v1/events"
+    };
+  }
+}

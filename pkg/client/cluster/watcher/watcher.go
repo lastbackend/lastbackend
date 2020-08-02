@@ -19,8 +19,9 @@
 package watcher
 
 import (
+	"context"
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/tools/log"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"io"
 	"sync"
 )
@@ -81,6 +82,10 @@ func (w *Watcher) stopping() bool {
 }
 
 func (w *Watcher) receive() {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
 	defer close(w.result)
 	defer w.Stop()
 	for {

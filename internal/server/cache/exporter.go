@@ -22,7 +22,6 @@ import (
 	"sync"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const logCacheExporter = "api:cache:exporter"
@@ -56,7 +55,6 @@ func (c *CacheExporterManifest) Flush(exporter string) {
 func (c *CacheExporterManifest) Clear(exporter string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	log.Debugf("clear cache for exporter: %s", exporter)
 	delete(c.manifests, exporter)
 }
 

@@ -20,10 +20,10 @@ package exporter
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"sync"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const (
@@ -53,6 +53,8 @@ func New() *Exporter {
 }
 
 func (c *Exporter) Connect(ctx context.Context) error {
+	log := logger.WithContext(ctx)
+
 	log.Debugf("%s:connect:> connect init", logPrefix)
 
 	return nil

@@ -17,67 +17,67 @@
 //
 
 package runtime
-
-import (
-	"fmt"
-	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/internal/util/proxy"
-	"github.com/lastbackend/lastbackend/internal/util/system"
-	"os"
-)
-
-func (r *Runtime) ExporterInfo() models.ExporterInfo {
-
-	var (
-		info = models.ExporterInfo{}
-	)
-
-	osInfo := system.GetOsInfo()
-	hostname, err := os.Hostname()
-	if err != nil {
-		_ = fmt.Errorf("get hostname err: %s", err)
-	}
-
-	ip, err := system.GetHostIP(r.iface)
-	if err != nil {
-		_ = fmt.Errorf("get ip err: %s", err)
-	}
-
-	info.Hostname = hostname
-	info.InternalIP = ip
-	info.OSType = osInfo.GoOS
-	info.OSName = fmt.Sprintf("%s %s", osInfo.OS, osInfo.Core)
-	info.Architecture = osInfo.Platform
-
-	return info
-}
-
-func (r *Runtime) ExporterStatus() models.ExporterStatus {
-
-	var state = models.ExporterStatus{}
-
-	ip, err := system.GetHostIP(r.iface)
-	if err != nil {
-		_ = fmt.Errorf("get ip err: %s", err)
-	}
-
-	hp := r.port
-	if hp == 0 {
-		hp = proxy.DefaultPort
-	}
-
-	state.Ready = true
-	state.Listener.IP = ip
-	state.Http.IP = ip
-	state.Http.Port = hp
-
-	if r.logger != nil {
-		lp := r.logger.GetPort()
-		if lp == 0 {
-			lp = proxy.DefaultPort
-		}
-		state.Listener.Port = lp
-	}
-
-	return state
-}
+//
+//import (
+//	"fmt"
+//	"github.com/lastbackend/lastbackend/internal/pkg/models"
+//	"github.com/lastbackend/lastbackend/internal/util/proxy"
+//	"github.com/lastbackend/lastbackend/internal/util/system"
+//	"os"
+//)
+//
+//func (r *Runtime) ExporterInfo() models.ExporterInfo {
+//
+//	var (
+//		info = models.ExporterInfo{}
+//	)
+//
+//	osInfo := system.GetOsInfo()
+//	hostname, err := os.Hostname()
+//	if err != nil {
+//		_ = fmt.Errorf("get hostname err: %s", err)
+//	}
+//
+//	ip, err := system.GetHostIP(r.iface)
+//	if err != nil {
+//		_ = fmt.Errorf("get ip err: %s", err)
+//	}
+//
+//	info.Hostname = hostname
+//	info.InternalIP = ip
+//	info.OSType = osInfo.GoOS
+//	info.OSName = fmt.Sprintf("%s %s", osInfo.OS, osInfo.Core)
+//	info.Architecture = osInfo.Platform
+//
+//	return info
+//}
+//
+//func (r *Runtime) ExporterStatus() models.ExporterStatus {
+//
+//	var state = models.ExporterStatus{}
+//
+//	ip, err := system.GetHostIP(r.iface)
+//	if err != nil {
+//		_ = fmt.Errorf("get ip err: %s", err)
+//	}
+//
+//	hp := r.port
+//	if hp == 0 {
+//		hp = proxy.DefaultPort
+//	}
+//
+//	state.Ready = true
+//	state.Listener.IP = ip
+//	state.Http.IP = ip
+//	state.Http.Port = hp
+//
+//	if r.logger != nil {
+//		lp := r.logger.GetPort()
+//		if lp == 0 {
+//			lp = proxy.DefaultPort
+//		}
+//		state.Listener.Port = lp
+//	}
+//
+//	return state
+//}

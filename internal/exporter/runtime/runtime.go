@@ -17,49 +17,49 @@
 //
 
 package runtime
-
-import (
-	"github.com/lastbackend/lastbackend/internal/exporter/envs"
-	"github.com/lastbackend/lastbackend/internal/exporter/logger"
-	"github.com/lastbackend/lastbackend/tools/log"
-	"os"
-)
-
-type Runtime struct {
-	logger *logger.Logger
-	port   uint16
-	iface  string
-}
-
-type RuntimeOpts struct {
-	Port   uint16
-	Iface  string
-	Logger *logger.LoggerOpts
-}
-
-func New(opts *RuntimeOpts) (r *Runtime, err error) {
-	r = new(Runtime)
-	r.port = opts.Port
-
-	if opts.Logger != nil {
-		lg, err := logger.New(opts.Logger)
-		if err != nil {
-			log.Errorf("can not be init logger: %s", err.Error())
-			os.Exit(1)
-			return nil, err
-		}
-		r.logger = lg
-		envs.Get().SetLogger(lg)
-	}
-	return r, nil
-}
-
-func (r Runtime) Start() error {
-	if r.logger != nil {
-		if err := r.logger.Listen(); err != nil {
-			log.Errorf("can not be start logger listener: %s", err.Error())
-			return err
-		}
-	}
-	return nil
-}
+//
+//import (
+//	"github.com/lastbackend/lastbackend/internal/exporter/envs"
+//	"github.com/lastbackend/lastbackend/internal/exporter/logger"
+//	"github.com/lastbackend/lastbackend/tools/log"
+//	"os"
+//)
+//
+//type Runtime struct {
+//	logger *logger.Logger
+//	port   uint16
+//	iface  string
+//}
+//
+//type RuntimeOpts struct {
+//	Port   uint16
+//	Iface  string
+//	Logger *logger.LoggerOpts
+//}
+//
+//func New(opts *RuntimeOpts) (r *Runtime, err error) {
+//	r = new(Runtime)
+//	r.port = opts.Port
+//
+//	if opts.Logger != nil {
+//		lg, err := logger.New(opts.Logger)
+//		if err != nil {
+//			log.Errorf("can not be init logger: %s", err.Error())
+//			os.Exit(1)
+//			return nil, err
+//		}
+//		r.logger = lg
+//		envs.Get().SetLogger(lg)
+//	}
+//	return r, nil
+//}
+//
+//func (r Runtime) Start() error {
+//	if r.logger != nil {
+//		if err := r.logger.Listen(); err != nil {
+//			log.Errorf("can not be start logger listener: %s", err.Error())
+//			return err
+//		}
+//	}
+//	return nil
+//}

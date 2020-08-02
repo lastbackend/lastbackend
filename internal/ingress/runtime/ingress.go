@@ -17,42 +17,42 @@
 //
 
 package runtime
-
-import (
-	"fmt"
-	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/internal/util/system"
-	"os"
-)
-
-func (r Runtime) IngressInfo() models.IngressInfo {
-
-	var (
-		info = models.IngressInfo{}
-	)
-
-	osInfo := system.GetOsInfo()
-	hostname, err := os.Hostname()
-	if err != nil {
-		_ = fmt.Errorf("get hostname err: %s", err)
-	}
-
-	ip, err := system.GetHostIP(r.iface)
-	if err != nil {
-		_ = fmt.Errorf("get ip err: %s", err)
-	}
-
-	info.Hostname = hostname
-	info.InternalIP = ip
-	info.OSType = osInfo.GoOS
-	info.OSName = fmt.Sprintf("%s %s", osInfo.OS, osInfo.Core)
-	info.Architecture = osInfo.Platform
-
-	return info
-}
-
-func (r Runtime) IngressStatus() models.IngressStatus {
-
-	var state = models.IngressStatus{}
-	return state
-}
+//
+//import (
+//	"fmt"
+//	"github.com/lastbackend/lastbackend/internal/pkg/models"
+//	"github.com/lastbackend/lastbackend/internal/util/system"
+//	"os"
+//)
+//
+//func (r Runtime) IngressInfo() models.IngressInfo {
+//
+//	var (
+//		info = models.IngressInfo{}
+//	)
+//
+//	osInfo := system.GetOsInfo()
+//	hostname, err := os.Hostname()
+//	if err != nil {
+//		_ = fmt.Errorf("get hostname err: %s", err)
+//	}
+//
+//	ip, err := system.GetHostIP(r.iface)
+//	if err != nil {
+//		_ = fmt.Errorf("get ip err: %s", err)
+//	}
+//
+//	info.Hostname = hostname
+//	info.InternalIP = ip
+//	info.OSType = osInfo.GoOS
+//	info.OSName = fmt.Sprintf("%s %s", osInfo.OS, osInfo.Core)
+//	info.Architecture = osInfo.Platform
+//
+//	return info
+//}
+//
+//func (r Runtime) IngressStatus() models.IngressStatus {
+//
+//	var state = models.IngressStatus{}
+//	return state
+//}

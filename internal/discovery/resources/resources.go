@@ -17,16 +17,16 @@
 //
 
 package resources
-
-import (
-	"github.com/miekg/dns"
-)
-
-const (
-	logLevel  = 3
-	logPrefix = "dns:resources"
-)
-
-var Map = map[string]dns.HandlerFunc{
-	"lb.local.": lbLocal,
-}
+//
+//import (
+//	"github.com/miekg/dns"
+//)
+//
+//const (
+//	logLevel  = 3
+//	logPrefix = "dns:resources"
+//)
+//
+//var Map = map[string]dns.HandlerFunc{
+//	"lb.local.": lbLocal,
+//}

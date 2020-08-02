@@ -36,8 +36,8 @@ type App struct {
 	config  config.Config
 	storage storage.IStorage
 
-	HttpServer *server.HttpServer
-	State      *state.State
+	Server *server.Server
+	State  *state.State
 }
 
 func New(stg storage.IStorage, config config.Config) (*App, error) {
@@ -65,13 +65,13 @@ func New(stg storage.IStorage, config config.Config) (*App, error) {
 	return app, nil
 }
 
-func (app App) Run() error {
-	log := logger.WithContext(context.Background())
+func (app App) Run(ctx context.Context) error {
+	log := logger.WithContext(ctx)
 
 	log.Infof("Run server")
 
 	go func() {
-		if err := app.HttpServer.Run(); err != nil {
+		if err := app.Server.Run(ctx); err != nil {
 			log.Fatalf("http rest server start err: %v", err)
 			return
 		}
@@ -85,7 +85,8 @@ func (app *App) Stop() {
 }
 
 func (app *App) init() error {
-	app.State = state.NewState(context.Background(), app.storage)
-	app.HttpServer = server.NewServer(app.State, app.storage, app.config)
+	var ctx = context.Background()
+	app.State = state.NewState(ctx, app.storage)
+	app.Server =server.NewServer(app.config)
 	return nil
 }

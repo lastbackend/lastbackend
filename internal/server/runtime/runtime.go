@@ -20,13 +20,13 @@ package runtime
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 
-	"github.com/lastbackend/lastbackend/internal/master/cache"
-	"github.com/lastbackend/lastbackend/internal/master/ipam"
+	"github.com/lastbackend/lastbackend/internal/server/cache"
+	"github.com/lastbackend/lastbackend/internal/server/ipam"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	"github.com/lastbackend/lastbackend/internal/pkg/system"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const logLevel = 7
@@ -43,6 +43,8 @@ type Runtime struct {
 
 func NewRuntime(ctx context.Context, stg storage.IStorage, ipam ipam.IPAM, cache *cache.Cache) *Runtime {
 	r := new(Runtime)
+
+	log := logger.WithContext(ctx)
 
 	r.ctx = ctx
 	r.process = new(system.Process)
@@ -62,6 +64,9 @@ func NewRuntime(ctx context.Context, stg storage.IStorage, ipam ipam.IPAM, cache
 
 // Loop - runtime main loop watch
 func (r *Runtime) Loop() {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
 
 	var (
 		lead = make(chan bool)

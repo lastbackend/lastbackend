@@ -20,6 +20,7 @@ package docker
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"io"
 	"strconv"
 	"strings"
@@ -28,11 +29,11 @@ import (
 	docker "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 func (r *Runtime) List(ctx context.Context, all bool) ([]*models.Container, error) {
 	var cl = make([]*models.Container, 0)
+	log := logger.WithContext(ctx)
 
 	items, err := r.client.ContainerList(ctx, docker.ContainerListOptions{
 		All: all,
@@ -114,6 +115,7 @@ func (r *Runtime) Logs(ctx context.Context, ID string, stdout, stderr, follow bo
 
 func (r *Runtime) Inspect(ctx context.Context, ID string) (*models.Container, error) {
 
+	log := logger.WithContext(ctx)
 	log.Debug("Docker: Container Inspect")
 
 	info, err := r.client.ContainerInspect(ctx, ID)

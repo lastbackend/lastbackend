@@ -19,9 +19,10 @@
 package http
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/tools/log"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"net/http"
 	"strings"
 	"time"
@@ -43,6 +44,9 @@ func (h *JobHttpProvider) Fetch() (*models.TaskManifest, error) {
 		err      error
 		manifest = new(request.TaskManifest)
 	)
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
 
 	client := http.Client{}
 
@@ -81,6 +85,9 @@ func (h *JobHttpProvider) Fetch() (*models.TaskManifest, error) {
 }
 
 func New(cfg *models.JobSpecProviderHTTP) (*JobHttpProvider, error) {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
 
 	log.Debug("Use http task watcher")
 

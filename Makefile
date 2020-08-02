@@ -26,6 +26,16 @@ install:
 	@echo "== Install binaries"
 	@bash ./hack/install-cross.sh ${APP}
 
+generate:
+	@mkdir -p "api_pb"
+    protoc -I/usr/local/Cellar/protobuf/3.12.4/include  -I. \
+		-I${GOPATH}/src \
+		-I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+		-I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway \
+		--grpc-gateway_out=logtostderr=true:./api/proto \
+		--swagger_out=allow_merge=true,merge_file_name=api:. \
+		--go_out=plugins=grpc:./api_pb ./api/proto/*.proto
+
 image:
 	@echo "== Pre-building configuration"
 	@sh ./hack/build-images.sh $(app)
