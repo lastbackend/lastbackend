@@ -20,10 +20,11 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	"github.com/lastbackend/lastbackend/tools/log"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"net/http"
 	"strings"
 	"time"
@@ -39,6 +40,9 @@ type JobHttpHook struct {
 }
 
 func (h *JobHttpHook) Execute(task *models.Task) (err error) {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
 
 	response, err := v1.View().Task().New(task).ToJson()
 
@@ -71,6 +75,10 @@ func (h *JobHttpHook) Execute(task *models.Task) (err error) {
 }
 
 func New(cfg *models.JobSpecHookHTTP) (hook *JobHttpHook, err error) {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
 	log.Debug("Use http hook")
 	hook = new(JobHttpHook)
 	hook.config = cfg

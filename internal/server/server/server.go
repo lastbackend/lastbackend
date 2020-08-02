@@ -19,25 +19,31 @@
 package server
 
 import (
+	"context"
+	"crypto/tls"
+	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	gw "github.com/lastbackend/lastbackend/internal/server/api/v1"
 	"github.com/lastbackend/lastbackend/internal/server/config"
-	"github.com/lastbackend/lastbackend/internal/server/server/cluster"
-	"github.com/lastbackend/lastbackend/internal/server/server/discovery"
-	"github.com/lastbackend/lastbackend/internal/server/server/events"
-	"github.com/lastbackend/lastbackend/internal/server/server/exporter"
-	"github.com/lastbackend/lastbackend/internal/server/server/ingress"
-	"github.com/lastbackend/lastbackend/internal/server/server/middleware"
-	"github.com/lastbackend/lastbackend/internal/server/server/namespace"
-	"github.com/lastbackend/lastbackend/internal/server/server/node"
-	"github.com/lastbackend/lastbackend/internal/server/state"
-	"github.com/lastbackend/lastbackend/internal/util/http"
-	"github.com/lastbackend/lastbackend/internal/util/http/cors"
+	v1 "github.com/lastbackend/lastbackend/internal/server/server/v1"
+	"github.com/lastbackend/lastbackend/tools/logger"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/tmc/grpc-websocket-proxy/wsproxy"
+	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"io"
+	"mime"
+	"net"
+	"net/http"
+	"strings"
 )
 
 const defaultPort = 2967
 
-type HttpServer struct {
+type Server struct {
 	host string
 	port uint
 
@@ -50,9 +56,9 @@ type HttpServer struct {
 	router *mux.Router
 }
 
-func NewServer(state *state.State, stg storage.IStorage, cfg config.Config) *HttpServer {
+func NewServer(cfg config.Config) *Server {
 
-	hs := new(HttpServer)
+	hs := new(Server)
 
 	if cfg.Server.TLS.Verify {
 		hs.CertFile = cfg.Server.TLS.FileCert
@@ -68,48 +74,160 @@ func NewServer(state *state.State, stg storage.IStorage, cfg config.Config) *Htt
 		hs.port = defaultPort
 	}
 
-	r := mux.NewRouter()
-	r.Methods("OPTIONS").HandlerFunc(cors.Headers)
-
-	var notFound http.MethodNotAllowedHandler
-	r.NotFoundHandler = notFound
-
-	var notAllowed http.MethodNotAllowedHandler
-	r.MethodNotAllowedHandler = notAllowed
-
-	mw := middleware.New(stg, cfg.Security.Token)
-
-	cluster.NewClusterHandler(r, mw)
-	//config.NewConfigHandler(r, mw)
-	//deployment.NewDeploymentHandler(r, mw)
-	discovery.NewDiscoveryHandler(r, mw)
-	events.NewEventHandler(r, mw)
-	exporter.NewExporterHandler(r, mw)
-	ingress.NewIngressHandler(r, mw)
-	//job.NewJobHandler(r, mw, job.Config{SecretToken: v.GetString("security.token")})
-	namespace.NewNamespaceHandler(r, mw, state)
-	node.NewNodeHandler(r, mw)
-
-	//pod.NewPodHandler(r, mw)
-	//route.NewRouteHandler(r, mw)
-	//secret.NewSecretHandler(r, mw, secret.Config{Vault: &types.Vault{
-	//	Endpoint: v.GetString("vault.endpoint"),
-	//	Token:    v.GetString("vault.token"),
-	//}})
-	//service.NewServiceHandler(r, mw, service.Config{SecretToken: v.GetString("security.token")})
-	//task.NewTaskHandler(r, mw)
-	//volume.NewVolumeHandler(r, mw)
-
-	hs.router = r
-
 	return hs
+
 }
 
-func (hs HttpServer) Run() error {
+func (hs Server) Run(ctx context.Context) error {
 
-	if hs.Insecure {
-		return http.Listen(hs.host, hs.port, hs.router)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	group, ctx := errgroup.WithContext(ctx)
+	log := logger.WithContext(ctx)
+
+	sock, err := net.Listen("tcp", ":8842")
+	if err != nil {
+		return err
 	}
 
-	return http.ListenWithTLS(hs.host, hs.port, hs.CaFile, hs.CertFile, hs.KeyFile, hs.router)
+	grpcServer := grpc.NewServer(
+		grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
+		grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
+	)
+
+	gw.RegisterV1Server(grpcServer, v1.NewV1Server())
+	grpc_prometheus.Register(grpcServer)
+
+	log.Info("test")
+
+	group.Go(func() error {
+		log.Info("grpc")
+		return grpcServer.Serve(sock)
+	})
+
+
+	mux := runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{OrigName: true, EmitDefaults: true}))
+	runtime.SetHTTPBodyMarshaler(mux)
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(50000000)),
+	}
+
+	group.Go(func() error {
+		log.Info("handler")
+		return gw.RegisterV1HandlerFromEndpoint(ctx, mux, fmt.Sprintf("%s:%d", "", 8842), opts)
+	})
+
+	group.Go(func() error {
+		log.Info("websocket")
+		return http.ListenAndServe(":8843", wsproxy.WebsocketProxy(mux))
+	})
+
+	group.Go(func() error {
+		log.Info("http")
+		return http.ListenAndServe(fmt.Sprintf("%s:%d", "", defaultPort), grpcHandlerFunc)
+	})
+
+	group.Go(func() error {
+		log.Info("listen")
+		return http.ListenAndServe(":2662", promhttp.Handler())
+	})
+
+	return group.Wait()
+}
+
+// grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
+// connections or otherHandler otherwise. Copied from cockroachdb.
+func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// TODO(tamird): point to merged gRPC code rather than a PR.
+		// This is a partial recreation of gRPC's internal checks https://github.com/grpc/grpc-go/pull/514/files#diff-95e9a25b738459a2d3030e1e6fa2a718R61
+		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
+			grpcServer.ServeHTTP(w, r)
+		} else {
+			otherHandler.ServeHTTP(w, r)
+		}
+	})
+}
+
+
+// grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
+// connections or otherHandler otherwise. Copied from cockroachdb.
+func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// TODO(tamird): point to merged gRPC code rather than a PR.
+		// This is a partial recreation of gRPC's internal checks https://github.com/grpc/grpc-go/pull/514/files#diff-95e9a25b738459a2d3030e1e6fa2a718R61
+		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
+			grpcServer.ServeHTTP(w, r)
+		} else {
+			otherHandler.ServeHTTP(w, r)
+		}
+	})
+}
+
+func serveSwagger(mux *http.ServeMux) {
+	mime.AddExtensionType(".svg", "image/svg+xml")
+
+	// Expose files in third_party/swagger-ui/ on <host>/swagger-ui
+	fileServer := http.FileServer(&assetfs.AssetFS{
+		Asset:    swagger.Asset,
+		AssetDir: swagger.AssetDir,
+		Prefix:   "third_party/swagger-ui",
+	})
+	prefix := "/swagger-ui/"
+	mux.Handle(prefix, http.StripPrefix(prefix, fileServer))
+}
+
+func serve() {
+	opts := []grpc.ServerOption{
+		grpc.Creds(credentials.NewClientTLSFromCert(demoCertPool, "localhost:10000"))}
+
+	grpcServer := grpc.NewServer(opts...)
+	pb.RegisterEchoServiceServer(grpcServer, newServer())
+	ctx := context.Background()
+
+	dcreds := credentials.NewTLS(&tls.Config{
+		ServerName: demoAddr,
+		RootCAs:    demoCertPool,
+	})
+	dopts := []grpc.DialOption{grpc.WithTransportCredentials(dcreds)}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/swagger.json", func(w http.ResponseWriter, req *http.Request) {
+		io.Copy(w, strings.NewReader(pb.Swagger))
+	})
+
+	gwmux := runtime.NewServeMux()
+	err := pb.RegisterEchoServiceHandlerFromEndpoint(ctx, gwmux, demoAddr, dopts)
+	if err != nil {
+		fmt.Printf("serve: %v\n", err)
+		return
+	}
+
+	mux.Handle("/", gwmux)
+	serveSwagger(mux)
+
+	conn, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		panic(err)
+	}
+
+	srv := &http.Server{
+		Addr:    demoAddr,
+		Handler: grpcHandlerFunc(grpcServer, mux),
+		TLSConfig: &tls.Config{
+			Certificates: []tls.Certificate{*demoKeyPair},
+			NextProtos:   []string{"h2"},
+		},
+	}
+
+	fmt.Printf("grpc on port: %d\n", port)
+	err = srv.Serve(tls.NewListener(conn, srv.TLSConfig))
+
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
+
+	return
 }

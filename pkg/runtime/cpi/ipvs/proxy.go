@@ -23,6 +23,7 @@ package ipvs
 import (
 	"context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"net"
 	"os/exec"
 	"strings"
@@ -33,11 +34,10 @@ import (
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
 
-	libipvs "github.com/docker/libnetwork/ipvs"
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/internal/util/network"
-	"github.com/lastbackend/lastbackend/tools/log"
+	libipvs "github.com/moby/ipvs"
 	"github.com/vishvananda/netlink/nl"
 )
 
@@ -71,6 +71,7 @@ func (p *Proxy) Info(ctx context.Context) (map[string]*models.EndpointState, err
 // Create new proxy rules
 func (p *Proxy) Create(ctx context.Context, manifest *models.EndpointManifest) (*models.EndpointState, error) {
 
+	log := logger.WithContext(ctx)
 	log.Debugf("%s create ipvs virtual server with ip %s: and upstreams %v", logIPVSPrefix, manifest.IP, manifest.Upstreams)
 
 	var (
@@ -145,6 +146,7 @@ func (p *Proxy) Destroy(ctx context.Context, state *models.EndpointState) error 
 
 	var (
 		err error
+		log = logger.WithContext(ctx)
 	)
 
 	if state == nil {
@@ -175,6 +177,8 @@ func (p *Proxy) Destroy(ctx context.Context, state *models.EndpointState) error 
 
 // Update proxy rules
 func (p *Proxy) Update(ctx context.Context, state *models.EndpointState, spec *models.EndpointManifest) (*models.EndpointState, error) {
+
+	log := logger.WithContext(ctx)
 
 	psvc, err := specToServices(spec)
 	if err != nil {
@@ -271,6 +275,8 @@ func (p *Proxy) Update(ctx context.Context, state *models.EndpointState, spec *m
 // getStateByIp returns current proxy state filtered by endpoint ip
 func (p *Proxy) getStateByIP(ctx context.Context, ip string) (*models.EndpointState, error) {
 
+	log := logger.WithContext(ctx)
+
 	state, err := p.getState(ctx)
 	if err != nil {
 		log.Errorf("%s get state err: %s", logIPVSPrefix, err.Error())
@@ -283,6 +289,7 @@ func (p *Proxy) getStateByIP(ctx context.Context, ip string) (*models.EndpointSt
 // getStateByIp returns current proxy state
 func (p *Proxy) getState(ctx context.Context) (map[string]*models.EndpointState, error) {
 
+	log := logger.WithContext(ctx)
 	el := make(map[string]*models.EndpointState)
 
 	if out, err := exec.Command("modprobe", "-va", "ip_vs").CombinedOutput(); err != nil {
@@ -376,6 +383,10 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*models.EndpointState,
 
 func (p *Proxy) addIpBindToLink(ip string, dest net.IP) error {
 
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
 	ipn := net.ParseIP(ip)
 	addr, err := netlink.ParseAddr(fmt.Sprintf("%s/32", ipn.String()))
 	if err != nil {
@@ -427,6 +438,9 @@ func (p *Proxy) addIpBindToLink(ip string, dest net.IP) error {
 
 func (p *Proxy) delIpBindToLink(ip string) error {
 
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
 	ipn := net.ParseIP(ip)
 	addr, err := netlink.ParseAddr(fmt.Sprintf("%s/32", ipn.String()))
 	if err != nil {
@@ -458,6 +472,9 @@ func (p *Proxy) delIpBindToLink(ip string) error {
 }
 
 func New(v *viper.Viper) (*Proxy, error) {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
 
 	prx := new(Proxy)
 	handler, err := libipvs.New("")
@@ -549,6 +566,9 @@ func New(v *viper.Viper) (*Proxy, error) {
 }
 
 func specToServices(spec *models.EndpointManifest) (map[string]*Service, error) {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
 
 	var svcs = make(map[string]*Service, 0)
 

@@ -24,12 +24,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"io"
 	"net/http"
 
 	docker "github.com/docker/docker/api/types"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const (
@@ -53,6 +53,7 @@ func (r *Runtime) Auth(ctx context.Context, secret *models.SecretAuthData) (stri
 
 func (r *Runtime) Pull(ctx context.Context, spec *models.ImageManifest, out io.Writer) (*models.Image, error) {
 
+	log := logger.WithContext(ctx)
 	log.Debugf("Docker: Name pull: %s", spec.Name)
 
 	options := docker.ImagePullOptions{
@@ -127,6 +128,7 @@ func (r *Runtime) Pull(ctx context.Context, spec *models.ImageManifest, out io.W
 
 func (r *Runtime) Push(ctx context.Context, spec *models.ImageManifest, out io.Writer) (*models.Image, error) {
 
+	log := logger.WithContext(ctx)
 	log.Debugf("Docker: Name push: %s", spec.Name)
 
 	options := docker.ImagePushOptions{
@@ -276,6 +278,9 @@ func (r *Runtime) Build(ctx context.Context, stream io.Reader, spec *models.Spec
 }
 
 func (r *Runtime) Remove(ctx context.Context, ID string) error {
+
+	log := logger.WithContext(ctx)
+
 	log.Debugf("Docker: Name remove: %s", ID)
 	var options docker.ImageRemoveOptions
 

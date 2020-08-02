@@ -17,36 +17,36 @@
 //
 
 package cache
-
-import (
-	"time"
-
-	"github.com/lastbackend/lastbackend/tools/log"
-)
-
-const (
-	logLevel          = 7
-	defaultExpireTime = 24 // 24 hours
-)
-
-type Cache struct {
-	endpoints *EndpointCache
-}
-
-func New(ttl time.Duration) *Cache {
-	log.Debug("Cache: initialization cache storage")
-
-	var duration = ttl
-	if duration == 0 {
-		duration = defaultExpireTime
-	}
-
-	return &Cache{
-		endpoints: NewEndpointCache(duration * time.Minute),
-	}
-}
-
-// Return endpoint storage
-func (s *Cache) Endpoint() *EndpointCache {
-	return s.endpoints
-}
+//
+//import (
+//	"time"
+//
+//	"github.com/lastbackend/lastbackend/tools/log"
+//)
+//
+//const (
+//	logLevel          = 7
+//	defaultExpireTime = 24 // 24 hours
+//)
+//
+//type Cache struct {
+//	endpoints *EndpointCache
+//}
+//
+//func New(ttl time.Duration) *Cache {
+//	log.Debug("Cache: initialization cache storage")
+//
+//	var duration = ttl
+//	if duration == 0 {
+//		duration = defaultExpireTime
+//	}
+//
+//	return &Cache{
+//		endpoints: NewEndpointCache(duration * time.Minute),
+//	}
+//}
+//
+//// Return endpoint storage
+//func (s *Cache) Endpoint() *EndpointCache {
+//	return s.endpoints
+//}

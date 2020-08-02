@@ -19,8 +19,8 @@
 package hook
 
 import (
-	"github.com/lastbackend/lastbackend/internal/master/state/job/hook"
-	"github.com/lastbackend/lastbackend/internal/master/state/job/hook/http"
+	"github.com/lastbackend/lastbackend/internal/server/state/job/hook"
+	"github.com/lastbackend/lastbackend/internal/server/state/job/hook/http"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 

@@ -17,31 +17,31 @@
 //
 
 package state
-
-import (
-	"github.com/lastbackend/lastbackend/internal/pkg/models"
-)
-
-const logLevel = 3
-
-type State struct {
-	exporter *ExporterState
-}
-
-type ExporterState struct {
-	Info   models.ExporterInfo
-	Status models.ExporterStatus
-}
-
-func (s *State) Exporter() *ExporterState {
-	return s.exporter
-}
-
-func New() *State {
-
-	state := State{
-		exporter: new(ExporterState),
-	}
-
-	return &state
-}
+//
+//import (
+//	"github.com/lastbackend/lastbackend/internal/pkg/models"
+//)
+//
+//const logLevel = 3
+//
+//type State struct {
+//	exporter *ExporterState
+//}
+//
+//type ExporterState struct {
+//	Info   models.ExporterInfo
+//	Status models.ExporterStatus
+//}
+//
+//func (s *State) Exporter() *ExporterState {
+//	return s.exporter
+//}
+//
+//func New() *State {
+//
+//	state := State{
+//		exporter: new(ExporterState),
+//	}
+//
+//	return &state
+//}

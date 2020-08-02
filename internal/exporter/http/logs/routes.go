@@ -17,12 +17,12 @@
 //
 
 package logs
-
-import (
-	"github.com/lastbackend/lastbackend/internal/util/http"
-	"github.com/lastbackend/lastbackend/internal/util/http/middleware"
-)
-
-var Routes = []http.Route{
-	{Path: "/logs", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: LogsH},
-}
+//
+//import (
+//	"github.com/lastbackend/lastbackend/internal/util/http"
+//	"github.com/lastbackend/lastbackend/internal/util/http/middleware"
+//)
+//
+//var Routes = []http.Route{
+//	{Path: "/logs", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: LogsH},
+//}

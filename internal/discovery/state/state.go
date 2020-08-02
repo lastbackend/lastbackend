@@ -17,29 +17,29 @@
 //
 
 package state
-
-import (
-	"github.com/lastbackend/lastbackend/internal/pkg/models"
-)
-
-type State struct {
-	discovery *DiscoveryState
-}
-
-type DiscoveryState struct {
-	Info   models.DiscoveryInfo
-	Status models.DiscoveryStatus
-}
-
-func (s *State) Discovery() *DiscoveryState {
-	return s.discovery
-}
-
-func New() *State {
-
-	state := State{
-		discovery: new(DiscoveryState),
-	}
-
-	return &state
-}
+//
+//import (
+//	"github.com/lastbackend/lastbackend/internal/pkg/models"
+//)
+//
+//type State struct {
+//	discovery *DiscoveryState
+//}
+//
+//type DiscoveryState struct {
+//	Info   models.DiscoveryInfo
+//	Status models.DiscoveryStatus
+//}
+//
+//func (s *State) Discovery() *DiscoveryState {
+//	return s.discovery
+//}
+//
+//func New() *State {
+//
+//	state := State{
+//		discovery: new(DiscoveryState),
+//	}
+//
+//	return &state
+//}

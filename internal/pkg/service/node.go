@@ -17,163 +17,163 @@
 //
 
 package service
-
-import (
-	"context"
-	"encoding/json"
-
-	"github.com/lastbackend/lastbackend/internal/pkg/errors"
-	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/tools/log"
-)
-
-const (
-	logNodePrefix = "distribution:node"
-)
-
-type Node struct {
-	context context.Context
-	storage storage.IStorage
-}
-
-func (n *Node) List() (*models.NodeList, error) {
-	log.Debugf("%s:list:> get nodes list", logNodePrefix)
-
-	nodes := models.NewNodeList()
-
-	err := n.storage.List(n.context, n.storage.Collection().Node().Info(), "", nodes, nil)
-	if err != nil {
-		log.Debugf("%s:list:> get nodes list err: %v", logNodePrefix, err)
-		return nil, err
-	}
-	return nodes, nil
-}
-
-func (n *Node) Put(opts *models.NodeCreateOptions) (*models.Node, error) {
-
-	log.Debugf("%s:create:> create node in cluster", logNodePrefix)
-
-	ni := new(models.Node)
-	ni.Meta.SetDefault()
-
-	ni.Meta.Name = opts.Meta.Name
-	ni.Meta.NodeInfo = opts.Info
-	ni.Meta.SelfLink = *models.NewNodeSelfLink(ni.Meta.Hostname)
-
-	ni.Status = opts.Status
-	ni.Status.Online = true
-
-	ni.Spec.Security.TLS = opts.Security.TLS
-
-	if opts.Security.SSL != nil {
-		ni.Spec.Security.SSL = new(models.NodeSSL)
-		ni.Spec.Security.SSL.CA = opts.Security.SSL.CA
-		ni.Spec.Security.SSL.Cert = opts.Security.SSL.Cert
-		ni.Spec.Security.SSL.Key = opts.Security.SSL.Key
-	}
-
-	if err := n.storage.Put(n.context, n.storage.Collection().Node().Info(), ni.SelfLink().String(), ni, nil); err != nil {
-		log.Debugf("%s:create:> insert node err: %v", logNodePrefix, err)
-		return nil, err
-	}
-
-	return ni, nil
-}
-
-func (n *Node) Get(hostname string) (*models.Node, error) {
-
-	log.Debugf("%s:get:> get by hostname %s", logNodePrefix, hostname)
-
-	node := new(models.Node)
-
-	sl := models.NewNodeSelfLink(hostname).String()
-
-	err := n.storage.Get(n.context, n.storage.Collection().Node().Info(), sl, &node, nil)
-	if err != nil {
-
-		if errors.Storage().IsErrEntityNotFound(err) {
-			log.Warnf("%s:get:> get: node %s not found", logNodePrefix, hostname)
-			return nil, nil
-		}
-
-		log.Debugf("%s:get:> get node `%s` err: %v", logNodePrefix, hostname, err)
-		return nil, err
-	}
-
-	return node, nil
-}
-
-func (n *Node) Set(node *models.Node) error {
-
-	log.Debugf("%s:setmeta:> update Node %#v", logNodePrefix, node)
-	if err := n.storage.Set(n.context, n.storage.Collection().Node().Info(), node.SelfLink().String(), node, nil); err != nil {
-		log.Errorf("%s:setmeta:> update Node meta err: %v", logNodePrefix, err)
-		return err
-	}
-
-	return nil
-}
-
-func (n *Node) Remove(node *models.Node) error {
-
-	log.Debugf("%s:remove:> remove node %s", logNodePrefix, node.Meta.Name)
-
-	if err := n.storage.Del(n.context, n.storage.Collection().Node().Info(), node.SelfLink().String()); err != nil {
-		log.Debugf("%s:remove:> remove node err: %v", logNodePrefix, err)
-		return err
-	}
-
-	return nil
-}
-
-// Watch node changes
-func (n *Node) Watch(ch chan models.NodeEvent, rev *int64) error {
-
-	log.Debugf("%s:watch:> watch node", logNodePrefix)
-
-	done := make(chan bool)
-	watcher := storage.NewWatcher()
-
-	go func() {
-		for {
-			select {
-			case <-n.context.Done():
-				done <- true
-				return
-			case e := <-watcher:
-				if e.Data == nil {
-					continue
-				}
-
-				res := models.NodeEvent{}
-				res.Action = e.Action
-				res.Name = e.Name
-
-				obj := new(models.Node)
-
-				if err := json.Unmarshal(e.Data.([]byte), &obj); err != nil {
-					log.Errorf("%s:watch:> parse json", logNodePrefix)
-					continue
-				}
-
-				res.Data = obj
-
-				ch <- res
-			}
-		}
-	}()
-
-	opts := storage.GetOpts()
-	opts.Rev = rev
-
-	if err := n.storage.Watch(n.context, n.storage.Collection().Node().Info(), watcher, opts); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func NewNodeModel(ctx context.Context, stg storage.IStorage) *Node {
-	return &Node{ctx, stg}
-}
+//
+//import (
+//	"context"
+//	"encoding/json"
+//
+//	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+//	"github.com/lastbackend/lastbackend/internal/pkg/models"
+//	"github.com/lastbackend/lastbackend/internal/pkg/storage"
+//	"github.com/lastbackend/lastbackend/tools/log"
+//)
+//
+//const (
+//	logNodePrefix = "distribution:node"
+//)
+//
+//type Node struct {
+//	context context.Context
+//	storage storage.IStorage
+//}
+//
+//func (n *Node) List() (*models.NodeList, error) {
+//	log.Debugf("%s:list:> get nodes list", logNodePrefix)
+//
+//	nodes := models.NewNodeList()
+//
+//	err := n.storage.List(n.context, n.storage.Collection().Node().Info(), "", nodes, nil)
+//	if err != nil {
+//		log.Debugf("%s:list:> get nodes list err: %v", logNodePrefix, err)
+//		return nil, err
+//	}
+//	return nodes, nil
+//}
+//
+//func (n *Node) Put(opts *models.NodeCreateOptions) (*models.Node, error) {
+//
+//	log.Debugf("%s:create:> create node in cluster", logNodePrefix)
+//
+//	ni := new(models.Node)
+//	ni.Meta.SetDefault()
+//
+//	ni.Meta.Name = opts.Meta.Name
+//	ni.Meta.NodeInfo = opts.Info
+//	ni.Meta.SelfLink = *models.NewNodeSelfLink(ni.Meta.Hostname)
+//
+//	ni.Status = opts.Status
+//	ni.Status.Online = true
+//
+//	ni.Spec.Security.TLS = opts.Security.TLS
+//
+//	if opts.Security.SSL != nil {
+//		ni.Spec.Security.SSL = new(models.NodeSSL)
+//		ni.Spec.Security.SSL.CA = opts.Security.SSL.CA
+//		ni.Spec.Security.SSL.Cert = opts.Security.SSL.Cert
+//		ni.Spec.Security.SSL.Key = opts.Security.SSL.Key
+//	}
+//
+//	if err := n.storage.Put(n.context, n.storage.Collection().Node().Info(), ni.SelfLink().String(), ni, nil); err != nil {
+//		log.Debugf("%s:create:> insert node err: %v", logNodePrefix, err)
+//		return nil, err
+//	}
+//
+//	return ni, nil
+//}
+//
+//func (n *Node) Get(hostname string) (*models.Node, error) {
+//
+//	log.Debugf("%s:get:> get by hostname %s", logNodePrefix, hostname)
+//
+//	node := new(models.Node)
+//
+//	sl := models.NewNodeSelfLink(hostname).String()
+//
+//	err := n.storage.Get(n.context, n.storage.Collection().Node().Info(), sl, &node, nil)
+//	if err != nil {
+//
+//		if errors.Storage().IsErrEntityNotFound(err) {
+//			log.Warnf("%s:get:> get: node %s not found", logNodePrefix, hostname)
+//			return nil, nil
+//		}
+//
+//		log.Debugf("%s:get:> get node `%s` err: %v", logNodePrefix, hostname, err)
+//		return nil, err
+//	}
+//
+//	return node, nil
+//}
+//
+//func (n *Node) Set(node *models.Node) error {
+//
+//	log.Debugf("%s:setmeta:> update Node %#v", logNodePrefix, node)
+//	if err := n.storage.Set(n.context, n.storage.Collection().Node().Info(), node.SelfLink().String(), node, nil); err != nil {
+//		log.Errorf("%s:setmeta:> update Node meta err: %v", logNodePrefix, err)
+//		return err
+//	}
+//
+//	return nil
+//}
+//
+//func (n *Node) Remove(node *models.Node) error {
+//
+//	log.Debugf("%s:remove:> remove node %s", logNodePrefix, node.Meta.Name)
+//
+//	if err := n.storage.Del(n.context, n.storage.Collection().Node().Info(), node.SelfLink().String()); err != nil {
+//		log.Debugf("%s:remove:> remove node err: %v", logNodePrefix, err)
+//		return err
+//	}
+//
+//	return nil
+//}
+//
+//// Watch node changes
+//func (n *Node) Watch(ch chan models.NodeEvent, rev *int64) error {
+//
+//	log.Debugf("%s:watch:> watch node", logNodePrefix)
+//
+//	done := make(chan bool)
+//	watcher := storage.NewWatcher()
+//
+//	go func() {
+//		for {
+//			select {
+//			case <-n.context.Done():
+//				done <- true
+//				return
+//			case e := <-watcher:
+//				if e.Data == nil {
+//					continue
+//				}
+//
+//				res := models.NodeEvent{}
+//				res.Action = e.Action
+//				res.Name = e.Name
+//
+//				obj := new(models.Node)
+//
+//				if err := json.Unmarshal(e.Data.([]byte), &obj); err != nil {
+//					log.Errorf("%s:watch:> parse json", logNodePrefix)
+//					continue
+//				}
+//
+//				res.Data = obj
+//
+//				ch <- res
+//			}
+//		}
+//	}()
+//
+//	opts := storage.GetOpts()
+//	opts.Rev = rev
+//
+//	if err := n.storage.Watch(n.context, n.storage.Collection().Node().Info(), watcher, opts); err != nil {
+//		return err
+//	}
+//
+//	return nil
+//}
+//
+//func NewNodeModel(ctx context.Context, stg storage.IStorage) *Node {
+//	return &Node{ctx, stg}
+//}

@@ -17,58 +17,58 @@
 //
 
 package endpoint
-
-import (
-	"context"
-
-	"github.com/lastbackend/lastbackend/internal/discovery/envs"
-	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
-)
-
-const (
-	logLevel  = 3
-	logPrefix = "runtime:endpoint"
-)
-
-func Watch(ctx context.Context) {
-
-	log.Debugf("%s:restore:> watch change endpoint start", logPrefix)
-
-	var (
-		em    = service.NewEndpointModel(ctx, envs.Get().GetStorage())
-		cache = envs.Get().GetCache().Endpoint()
-		event = make(chan models.EndpointEvent)
-	)
-
-	go func() {
-		for {
-			select {
-			case e := <-event:
-				{
-
-					if e.Data == nil {
-						continue
-					}
-
-					endpoint := e.Data
-
-					switch e.Action {
-					case models.EventActionCreate:
-						fallthrough
-					case models.EventActionUpdate:
-						cache.Del(endpoint.Spec.Domain)
-						envs.Get().GetCache().Endpoint().Set(endpoint.Spec.Domain, []string{endpoint.Spec.IP})
-						continue
-					case models.EventActionDelete:
-						cache.Del(endpoint.Spec.Domain)
-						continue
-					}
-
-				}
-			}
-		}
-	}()
-
-	go em.Watch(event, nil)
-}
+//
+//import (
+//	"context"
+//
+//	"github.com/lastbackend/lastbackend/internal/discovery/envs"
+//	"github.com/lastbackend/lastbackend/internal/pkg/models"
+//	"github.com/lastbackend/lastbackend/tools/log"
+//)
+//
+//const (
+//	logLevel  = 3
+//	logPrefix = "runtime:endpoint"
+//)
+//
+//func Watch(ctx context.Context) {
+//
+//	log.Debugf("%s:restore:> watch change endpoint start", logPrefix)
+//
+//	var (
+//		em    = service.NewEndpointModel(ctx, envs.Get().GetStorage())
+//		cache = envs.Get().GetCache().Endpoint()
+//		event = make(chan models.EndpointEvent)
+//	)
+//
+//	go func() {
+//		for {
+//			select {
+//			case e := <-event:
+//				{
+//
+//					if e.Data == nil {
+//						continue
+//					}
+//
+//					endpoint := e.Data
+//
+//					switch e.Action {
+//					case models.EventActionCreate:
+//						fallthrough
+//					case models.EventActionUpdate:
+//						cache.Del(endpoint.Spec.Domain)
+//						envs.Get().GetCache().Endpoint().Set(endpoint.Spec.Domain, []string{endpoint.Spec.IP})
+//						continue
+//					case models.EventActionDelete:
+//						cache.Del(endpoint.Spec.Domain)
+//						continue
+//					}
+//
+//				}
+//			}
+//		}
+//	}()
+//
+//	go em.Watch(event, nil)
+//}

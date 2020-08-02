@@ -20,7 +20,7 @@ package backend
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/tools/log"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"net/http"
 )
 
@@ -34,6 +34,9 @@ func (hw *HttpWriter) Disconnect() {
 }
 
 func (hw *HttpWriter) Write(data []byte) {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
 
 	var err error
 

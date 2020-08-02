@@ -17,75 +17,75 @@
 //
 
 package http
-
-import (
-	"context"
-	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/internal/exporter/http/logs"
-	"github.com/lastbackend/lastbackend/internal/util/http"
-	"github.com/lastbackend/lastbackend/internal/util/http/cors"
-	"github.com/lastbackend/lastbackend/tools/log"
-)
-
-const (
-	logLevel  = 2
-	logPrefix = "api:http"
-)
-
-// Extends routes variable
-var Routes = make([]http.Route, 0)
-
-type HttpOpts struct {
-	Insecure bool
-
-	BearerToken string
-
-	CertFile string
-	KeyFile  string
-	CaFile   string
-}
-
-func AddRoutes(r ...[]http.Route) {
-	for i := range r {
-		Routes = append(Routes, r[i]...)
-	}
-}
-
-func init() {
-	// Cluster
-	AddRoutes(logs.Routes)
-}
-
-func Listen(host string, port int, opts *HttpOpts) error {
-
-	if opts == nil {
-		opts = new(HttpOpts)
-	}
-
-	log.Debugf("%s:> listen HTTP server on %s:%d", logPrefix, host, port)
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, "access_token", opts.BearerToken)
-
-	r := mux.NewRouter()
-	r.Methods("OPTIONS").HandlerFunc(cors.Headers)
-
-	var notFound http.MethodNotAllowedHandler
-	r.NotFoundHandler = notFound
-
-	var notAllowed http.MethodNotAllowedHandler
-	r.MethodNotAllowedHandler = notAllowed
-
-	for _, route := range Routes {
-		log.Debugf("%s:> init route: %s", logPrefix, route.Path)
-		r.Handle(route.Path, http.Handle(ctx, route.Handler, route.Middleware...)).Methods(route.Method)
-	}
-
-	if len(opts.CaFile) == 0 || len(opts.CertFile) == 0 || len(opts.KeyFile) == 0 {
-		log.Debugf("%s:> run insecure http server", logPrefix)
-		return http.Listen(host, port, r)
-	}
-
-	log.Debugf("%s:> run http server with tls", logPrefix)
-	return http.ListenWithTLS(host, port, opts.CaFile, opts.CertFile, opts.KeyFile, r)
-}
+//
+//import (
+//	"context"
+//	"github.com/gorilla/mux"
+//	"github.com/lastbackend/lastbackend/internal/exporter/http/logs"
+//	"github.com/lastbackend/lastbackend/internal/util/http"
+//	"github.com/lastbackend/lastbackend/internal/util/http/cors"
+//	"github.com/lastbackend/lastbackend/tools/log"
+//)
+//
+//const (
+//	logLevel  = 2
+//	logPrefix = "api:http"
+//)
+//
+//// Extends routes variable
+//var Routes = make([]http.Route, 0)
+//
+//type HttpOpts struct {
+//	Insecure bool
+//
+//	BearerToken string
+//
+//	CertFile string
+//	KeyFile  string
+//	CaFile   string
+//}
+//
+//func AddRoutes(r ...[]http.Route) {
+//	for i := range r {
+//		Routes = append(Routes, r[i]...)
+//	}
+//}
+//
+//func init() {
+//	// Cluster
+//	AddRoutes(logs.Routes)
+//}
+//
+//func Listen(host string, port int, opts *HttpOpts) error {
+//
+//	if opts == nil {
+//		opts = new(HttpOpts)
+//	}
+//
+//	log.Debugf("%s:> listen HTTP server on %s:%d", logPrefix, host, port)
+//
+//	ctx := context.Background()
+//	ctx = context.WithValue(ctx, "access_token", opts.BearerToken)
+//
+//	r := mux.NewRouter()
+//	r.Methods("OPTIONS").HandlerFunc(cors.Headers)
+//
+//	var notFound http.MethodNotAllowedHandler
+//	r.NotFoundHandler = notFound
+//
+//	var notAllowed http.MethodNotAllowedHandler
+//	r.MethodNotAllowedHandler = notAllowed
+//
+//	for _, route := range Routes {
+//		log.Debugf("%s:> init route: %s", logPrefix, route.Path)
+//		r.Handle(route.Path, http.Handle(ctx, route.Handler, route.Middleware...)).Methods(route.Method)
+//	}
+//
+//	if len(opts.CaFile) == 0 || len(opts.CertFile) == 0 || len(opts.KeyFile) == 0 {
+//		log.Debugf("%s:> run insecure http server", logPrefix)
+//		return http.Listen(host, port, r)
+//	}
+//
+//	log.Debugf("%s:> run http server with tls", logPrefix)
+//	return http.ListenWithTLS(host, port, opts.CaFile, opts.CertFile, opts.KeyFile, r)
+//}

@@ -20,11 +20,12 @@ package stream
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/lastbackend/lastbackend/internal/util/stream/backend"
-	"github.com/lastbackend/lastbackend/tools/log"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"io"
 	"net/http"
 	"sync"
@@ -106,6 +107,9 @@ func (s *Stream) Write(p []byte) (n int, err error) {
 
 func (s *Stream) Flush() {
 
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
 	if s.buffer.Len() <= 0 {
 		return
 	}
@@ -118,7 +122,7 @@ func (s *Stream) Flush() {
 		s.mutex.Unlock()
 
 		if err != nil {
-			log.V(6).Debug("Empty buffer returns! Panic panic!!!")
+			log.Debug("Empty buffer returns! Panic panic!!!")
 			return
 		}
 
@@ -131,7 +135,7 @@ func (s *Stream) Flush() {
 
 		body, err := json.Marshal(p)
 		if err != nil {
-			log.V(6).Debugf("Builder: Log marshal error: %s", err)
+			log.Debugf("Builder: Log marshal error: %s", err)
 		}
 
 		chunk := body
@@ -141,6 +145,10 @@ func (s *Stream) Flush() {
 }
 
 func (s *Stream) Close() {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
 	log.Debug("close stream connection")
 	if !s.close {
 		log.Debug("connection needs to be closed")
@@ -161,6 +169,10 @@ func (s *Stream) AddSocketBackend(endpoint string) *Stream {
 }
 
 func (s *Stream) AddHttpWriter(writer http.ResponseWriter) *Stream {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
 	log.Debug("add http backend")
 	s.stream = backend.NewHttpWriterBackend(writer)
 	return s

@@ -19,8 +19,8 @@
 package provider
 
 import (
-	"github.com/lastbackend/lastbackend/internal/master/state/job/provider"
-	"github.com/lastbackend/lastbackend/internal/master/state/job/provider/http"
+	"github.com/lastbackend/lastbackend/internal/server/state/job/provider"
+	"github.com/lastbackend/lastbackend/internal/server/state/job/provider/http"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 

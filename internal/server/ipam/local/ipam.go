@@ -19,12 +19,10 @@
 package local
 
 import (
-	"context"
 	"net"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"github.com/lastbackend/lastbackend/internal/pkg/storage"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const (
@@ -117,7 +115,12 @@ func (i *IPAM) save() error {
 
 	opts := storage.GetOpts()
 	opts.Force = true
-	return i.storage.Set(context.Background(), i.storage.Collection().System(), "ipam", &ips, opts)
+
+	// TODO: fix this
+	//i.storage.Set(context.Background(), i.storage.Collection().System(), "ipam", &ips, opts)
+
+
+	return nil
 }
 
 // New IPAM object initializing and returning
@@ -156,13 +159,13 @@ func New(stg storage.IStorage, cidr string) (*IPAM, error) {
 	ips := make([]string, 0)
 
 	// Get IP list from database storage
-	err = stg.Get(context.Background(), stg.Collection().System(), "ipam", &ips, nil)
-	if err != nil {
-		if !errors.Storage().IsErrEntityNotFound(err) {
-			log.Errorf("%s get context error: %s", logIPAMPrefix, err.Error())
-			return nil, err
-		}
-	}
+	//err = stg.Get(context.Background(), stg.Collection().System(), "ipam", &ips, nil)
+	//if err != nil {
+	//	if !errors.Storage().IsErrEntityNotFound(err) {
+	//		log.Errorf("%s get context error: %s", logIPAMPrefix, err.Error())
+	//		return nil, err
+	//	}
+	//}
 
 	// Mark IPs as leased
 	for _, item := range ips {

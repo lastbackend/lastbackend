@@ -17,146 +17,146 @@
 //
 
 package cluster
-
-import (
-	"context"
-
-	"github.com/lastbackend/lastbackend/internal/pkg/models"
-)
-
-type NodeLease struct {
-	done     chan bool
-	sync     bool
-	Request  NodeLeaseOptions
-	Response struct {
-		Err  error
-		Node *models.Node
-	}
-}
-
-type NodeLeaseOptions struct {
-	Node     *string
-	CPU      *int64
-	RAM      *int64
-	Storage  *int64
-	Selector models.SpecSelector
-}
-
-func (nl *NodeLease) Wait() {
-	<-nl.done
-}
-
-func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
-
-	defer func() {
-		if !nl.sync {
-			nl.done <- true
-		}
-	}()
-
-	for _, n := range cs.node.list {
-
-		// check selectors first
-
-		if nl.Request.Selector.Node != models.EmptyString {
-			if n.SelfLink().Hostname() != nl.Request.Selector.Node {
-				continue
-			}
-		}
-
-		if len(nl.Request.Selector.Labels) > 0 {
-			if len(n.Meta.Labels) == 0 {
-				continue
-			}
-
-			for k, v := range nl.Request.Selector.Labels {
-				if _, ok := n.Meta.Labels[k]; !ok {
-					continue
-				}
-
-				if n.Meta.Labels[k] != v {
-					continue
-				}
-			}
-
-		}
-
-		var (
-			node      *models.Node
-			allocated = new(models.NodeResources)
-		)
-
-		if node == nil {
-			node = n
-		}
-
-		if nl.Request.RAM != nil {
-			if (n.Status.Capacity.RAM - n.Status.Allocated.RAM) > *nl.Request.RAM {
-				allocated.Pods++
-				allocated.RAM += *nl.Request.RAM
-			}
-		}
-
-		if nl.Request.CPU != nil {
-			if (n.Status.Capacity.CPU - n.Status.Allocated.CPU) > *nl.Request.CPU {
-				allocated.CPU += *nl.Request.CPU
-			}
-		}
-
-		if nl.Request.Storage != nil {
-			if (n.Status.Capacity.Storage - n.Status.Allocated.Storage) > *nl.Request.Storage {
-				allocated.Storage += *nl.Request.Storage
-			}
-		}
-
-		if node != nil {
-
-			node.Status.Allocated.Pods += allocated.Pods
-			node.Status.Allocated.RAM += allocated.RAM
-			node.Status.Allocated.CPU += allocated.CPU
-			node.Status.Allocated.Storage += allocated.Storage
-
-			nm := service.NewNodeModel(context.Background(), cs.storage)
-			if err := nm.Set(n); err != nil {
-				return err
-			}
-
-			nl.Response.Node = n
-			return nil
-		}
-
-	}
-
-	return nil
-}
-
-func handleNodeRelease(cs *ClusterState, nl *NodeLease) error {
-
-	defer func() {
-		if !nl.sync {
-			nl.done <- true
-		}
-	}()
-
-	if _, ok := cs.node.list[*nl.Request.Node]; !ok {
-		return nil
-	}
-
-	n := cs.node.list[*nl.Request.Node]
-
-	if nl.Request.RAM != nil {
-		n.Status.Allocated.Pods--
-		n.Status.Allocated.RAM -= *nl.Request.RAM
-	}
-
-	if nl.Request.CPU != nil {
-		n.Status.Allocated.CPU -= *nl.Request.CPU
-	}
-
-	if nl.Request.Storage != nil {
-		n.Status.Allocated.Storage -= *nl.Request.Storage
-	}
-
-	nm := service.NewNodeModel(context.Background(), cs.storage)
-	return nm.Set(n)
-}
+//
+//import (
+//	"context"
+//
+//	"github.com/lastbackend/lastbackend/internal/pkg/models"
+//)
+//
+//type NodeLease struct {
+//	done     chan bool
+//	sync     bool
+//	Request  NodeLeaseOptions
+//	Response struct {
+//		Err  error
+//		Node *models.Node
+//	}
+//}
+//
+//type NodeLeaseOptions struct {
+//	Node     *string
+//	CPU      *int64
+//	RAM      *int64
+//	Storage  *int64
+//	Selector models.SpecSelector
+//}
+//
+//func (nl *NodeLease) Wait() {
+//	<-nl.done
+//}
+//
+//func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
+//
+//	defer func() {
+//		if !nl.sync {
+//			nl.done <- true
+//		}
+//	}()
+//
+//	for _, n := range cs.node.list {
+//
+//		// check selectors first
+//
+//		if nl.Request.Selector.Node != models.EmptyString {
+//			if n.SelfLink().Hostname() != nl.Request.Selector.Node {
+//				continue
+//			}
+//		}
+//
+//		if len(nl.Request.Selector.Labels) > 0 {
+//			if len(n.Meta.Labels) == 0 {
+//				continue
+//			}
+//
+//			for k, v := range nl.Request.Selector.Labels {
+//				if _, ok := n.Meta.Labels[k]; !ok {
+//					continue
+//				}
+//
+//				if n.Meta.Labels[k] != v {
+//					continue
+//				}
+//			}
+//
+//		}
+//
+//		var (
+//			node      *models.Node
+//			allocated = new(models.NodeResources)
+//		)
+//
+//		if node == nil {
+//			node = n
+//		}
+//
+//		if nl.Request.RAM != nil {
+//			if (n.Status.Capacity.RAM - n.Status.Allocated.RAM) > *nl.Request.RAM {
+//				allocated.Pods++
+//				allocated.RAM += *nl.Request.RAM
+//			}
+//		}
+//
+//		if nl.Request.CPU != nil {
+//			if (n.Status.Capacity.CPU - n.Status.Allocated.CPU) > *nl.Request.CPU {
+//				allocated.CPU += *nl.Request.CPU
+//			}
+//		}
+//
+//		if nl.Request.Storage != nil {
+//			if (n.Status.Capacity.Storage - n.Status.Allocated.Storage) > *nl.Request.Storage {
+//				allocated.Storage += *nl.Request.Storage
+//			}
+//		}
+//
+//		if node != nil {
+//
+//			node.Status.Allocated.Pods += allocated.Pods
+//			node.Status.Allocated.RAM += allocated.RAM
+//			node.Status.Allocated.CPU += allocated.CPU
+//			node.Status.Allocated.Storage += allocated.Storage
+//
+//			nm := service.NewNodeModel(context.Background(), cs.storage)
+//			if err := nm.Set(n); err != nil {
+//				return err
+//			}
+//
+//			nl.Response.Node = n
+//			return nil
+//		}
+//
+//	}
+//
+//	return nil
+//}
+//
+//func handleNodeRelease(cs *ClusterState, nl *NodeLease) error {
+//
+//	defer func() {
+//		if !nl.sync {
+//			nl.done <- true
+//		}
+//	}()
+//
+//	if _, ok := cs.node.list[*nl.Request.Node]; !ok {
+//		return nil
+//	}
+//
+//	n := cs.node.list[*nl.Request.Node]
+//
+//	if nl.Request.RAM != nil {
+//		n.Status.Allocated.Pods--
+//		n.Status.Allocated.RAM -= *nl.Request.RAM
+//	}
+//
+//	if nl.Request.CPU != nil {
+//		n.Status.Allocated.CPU -= *nl.Request.CPU
+//	}
+//
+//	if nl.Request.Storage != nil {
+//		n.Status.Allocated.Storage -= *nl.Request.Storage
+//	}
+//
+//	nm := service.NewNodeModel(context.Background(), cs.storage)
+//	return nm.Set(n)
+//}

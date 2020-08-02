@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "server/api/v1";
+
+message ResourceRequest {
+  string name = 1;
+  uint64 height = 2;
+}
+
+message ResourceResponse {
+  map<string, string> balance = 1;
+  string transactions_count = 2;
+}

@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "server/api/v1";
+
+message NamespaceRequest {
+  string name = 1;
+  uint64 height = 2;
+  // Request with a nested message.
+  NestedMessage nested = 3;
+}
+
+message NamespaceResponse {
+  map<string, string> balance = 1;
+  string transactions_count = 2;
+}
+
+
+message EventRequest {
+  string query = 1;
+}
+
+
+// An example of a nested message.
+message NestedMessage {
+  // Another field.
+  string something = 1;
+}
+

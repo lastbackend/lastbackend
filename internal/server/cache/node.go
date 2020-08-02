@@ -19,11 +19,12 @@
 package cache
 
 import (
+	"context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"sync"
 
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/tools/log"
 )
 
 const logCacheNode = "api:cache:node"
@@ -45,6 +46,10 @@ func (c *CacheNodeManifest) checkNode(node string) {
 }
 
 func (c *CacheNodeManifest) SetPodManifest(node, pod string, s *models.PodManifest) {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
 	log.Infof("%s:PodManifestSet:> %s, %s, %#v", logCacheNode, node, pod, s)
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -60,6 +65,10 @@ func (c *CacheNodeManifest) SetPodManifest(node, pod string, s *models.PodManife
 }
 
 func (c *CacheNodeManifest) DelPodManifest(node, pod string) {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
 	log.Infof("%s:PodManifestDel:> %s, %s", logCacheNode, node, pod)
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -72,6 +81,9 @@ func (c *CacheNodeManifest) DelPodManifest(node, pod string) {
 }
 
 func (c *CacheNodeManifest) SetVolumeManifest(node, volume string, s *models.VolumeManifest) {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
 
 	log.Infof("%s:SetVolumeManifest:> %s, %s", logCacheNode, node, volume)
 
@@ -89,6 +101,9 @@ func (c *CacheNodeManifest) SetVolumeManifest(node, volume string, s *models.Vol
 }
 
 func (c *CacheNodeManifest) DelVolumeManifest(node, volume string) {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
 
 	log.Infof("%s:DelVolumeManifest:> %s, %s", logCacheNode, node, volume)
 
@@ -147,6 +162,9 @@ func (c *CacheNodeManifest) SetConfigManifest(name string, s *models.ConfigManif
 func (c *CacheNodeManifest) SetEndpointManifest(addr string, s *models.EndpointManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
 
 	log.Debugf("%s set endpoint manifest: %s > %s", logCacheNode, addr, s.IP)
 

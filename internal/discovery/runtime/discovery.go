@@ -17,52 +17,52 @@
 //
 
 package runtime
-
-import (
-	"fmt"
-	"os"
-
-	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/internal/util/system"
-)
-
-func (r *Runtime) DiscoveryInfo() models.DiscoveryInfo {
-
-	var (
-		info = models.DiscoveryInfo{}
-	)
-
-	osInfo := system.GetOsInfo()
-	hostname, err := os.Hostname()
-	if err != nil {
-		_ = fmt.Errorf("get hostname err: %s", err)
-	}
-
-	ip, err := system.GetHostIP(r.opts.Iface)
-	if err != nil {
-		_ = fmt.Errorf("get ip err: %s", err)
-	}
-
-	info.Hostname = hostname
-	info.InternalIP = ip
-	info.OSType = osInfo.GoOS
-	info.OSName = fmt.Sprintf("%s %s", osInfo.OS, osInfo.Core)
-	info.Architecture = osInfo.Platform
-
-	return info
-}
-
-func (r *Runtime) DiscoveryStatus() models.DiscoveryStatus {
-
-	var state = models.DiscoveryStatus{}
-
-	ip, err := system.GetHostIP(r.opts.Iface)
-	if err != nil {
-		_ = fmt.Errorf("get ip err: %s", err)
-	}
-
-	state.Port = r.opts.Port
-	state.IP = ip
-
-	return state
-}
+//
+//import (
+//	"fmt"
+//	"os"
+//
+//	"github.com/lastbackend/lastbackend/internal/pkg/models"
+//	"github.com/lastbackend/lastbackend/internal/util/system"
+//)
+//
+//func (r *Runtime) DiscoveryInfo() models.DiscoveryInfo {
+//
+//	var (
+//		info = models.DiscoveryInfo{}
+//	)
+//
+//	osInfo := system.GetOsInfo()
+//	hostname, err := os.Hostname()
+//	if err != nil {
+//		_ = fmt.Errorf("get hostname err: %s", err)
+//	}
+//
+//	ip, err := system.GetHostIP(r.opts.Iface)
+//	if err != nil {
+//		_ = fmt.Errorf("get ip err: %s", err)
+//	}
+//
+//	info.Hostname = hostname
+//	info.InternalIP = ip
+//	info.OSType = osInfo.GoOS
+//	info.OSName = fmt.Sprintf("%s %s", osInfo.OS, osInfo.Core)
+//	info.Architecture = osInfo.Platform
+//
+//	return info
+//}
+//
+//func (r *Runtime) DiscoveryStatus() models.DiscoveryStatus {
+//
+//	var state = models.DiscoveryStatus{}
+//
+//	ip, err := system.GetHostIP(r.opts.Iface)
+//	if err != nil {
+//		_ = fmt.Errorf("get ip err: %s", err)
+//	}
+//
+//	state.Port = r.opts.Port
+//	state.IP = ip
+//
+//	return state
+//}
