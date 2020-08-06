@@ -46,11 +46,11 @@ image-develop:
 
 run:
 	@echo "== Run lastbackend container platform"
-	@go run ./cmd/lastbackend/lastbackend.go daemon -c config/linux/master.yml -v=3
+	@go run ./cmd/lastbackend/lastbackend.go daemon 
 
 run-master:
 	@echo "== Run lastbackend container platform master"
-	@go run ./cmd/lastbackend/lastbackend.go daemon -c config/linux/master.yml  --no-schedule -v=3
+	@go run ./cmd/lastbackend/lastbackend.go daemon --no-schedule 
 
 run-minion:
 	@echo "== Run lastbackend container platform minion"

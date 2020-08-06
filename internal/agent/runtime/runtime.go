@@ -101,12 +101,12 @@ func New(stg storage.IStorage, cfg config.Config) (r *Runtime, err error) {
 		StorageDriver: storageDriver,
 	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "can not be image runtime interface initialize")
+		return nil, errors.Wrapf(err, "can not initialize image runtime interface")
 	}
 
 	r.cri, err = cri.New(cri.RuncDriver, cri.RuncConfig{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "can not be container runtime interface initialize")
+		return nil, errors.Wrapf(err, "can not initialize container runtime interface")
 	}
 
 	// TODO: Implement csi initialization logic

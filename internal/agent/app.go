@@ -34,7 +34,7 @@ type App struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	config config.Config
+	config  config.Config
 	storage storage.IStorage
 
 	HttpServer *server.HttpServer
@@ -60,7 +60,7 @@ func New(stg storage.IStorage, config config.Config) (*App, error) {
 	app.storage = stg
 
 	if err := app.init(); err != nil {
-		return nil, errors.Wrapf(err, "can not be init application")
+		return nil, errors.Wrapf(err, "can not init application")
 	}
 
 	return app, nil
@@ -76,7 +76,7 @@ func (app *App) Run() error {
 
 	if app.Controller != nil {
 		if err := app.Controller.Connect(app.config); err != nil {
-			return errors.Wrapf(err, "can not be connect controller")
+			return errors.Wrapf(err, "can not connect controller")
 		}
 		go app.Controller.Subscribe()
 		go app.Controller.Sync()
@@ -84,7 +84,7 @@ func (app *App) Run() error {
 
 	go func() {
 		if err := app.HttpServer.Run(); err != nil {
-			log.Fatal(errors.Wrapf(err, "can not be run http rest server"))
+			log.Fatal(errors.Wrapf(err, "can not run http rest server"))
 			return
 		}
 	}()
@@ -106,12 +106,12 @@ func (app *App) init() error {
 
 	app.Runtime, err = runtime.New(app.storage, app.config)
 	if err != nil {
-		return errors.Wrapf(err, "can not be runtime initialize")
+		return errors.Wrapf(err, "can not runtime initialize")
 	}
 
 	app.Controller, err = controller.New(app.Runtime)
 	if err != nil {
-		return errors.Wrapf(err, "can not be controller initialize")
+		return errors.Wrapf(err, "can not controller initialize")
 	}
 
 	app.HttpServer = server.NewServer(app.Runtime.GetState(), app.storage, app.config)
