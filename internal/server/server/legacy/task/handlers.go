@@ -23,7 +23,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/internal/server/server/legacy/middleware"
+	"github.com/lastbackend/lastbackend/internal/server/server/middleware"
 	h "github.com/lastbackend/lastbackend/internal/util/http"
 	"github.com/lastbackend/lastbackend/tools/logger"
 )
@@ -45,8 +45,7 @@ func NewTaskHandler(r *mux.Router, mw middleware.Middleware) {
 
 	log.Infof("%s:> init task routes", logPrefix)
 
-	handler := &Handler{
-	}
+	handler := &Handler{}
 
 	r.Handle("/namespace/{namespace}/job/{job}/task", h.Handle(mw.Authenticate(handler.TaskCreateH))).Methods(http.MethodPost)
 	r.Handle("/namespace/{namespace}/job/{job}/task", h.Handle(mw.Authenticate(handler.TaskListH))).Methods(http.MethodGet)

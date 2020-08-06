@@ -23,7 +23,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/internal/server/server/legacy/middleware"
+	"github.com/lastbackend/lastbackend/internal/server/server/middleware"
 	h "github.com/lastbackend/lastbackend/internal/util/http"
 	"github.com/lastbackend/lastbackend/tools/logger"
 )
@@ -44,8 +44,7 @@ func NewNodeHandler(r *mux.Router, mw middleware.Middleware) {
 
 	log.Infof("%s:> init node routes", logPrefix)
 
-	handler := &Handler{
-	}
+	handler := &Handler{}
 
 	r.Handle("/cluster/node", h.Handle(mw.Authenticate(handler.NodeListH))).Methods(http.MethodGet)
 	r.Handle("/cluster/node/{node}", h.Handle(mw.Authenticate(handler.NodeInfoH))).Methods(http.MethodGet)

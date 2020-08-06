@@ -2,7 +2,7 @@
 
 # Security settings
 security:
-  token: lstbknd
+  token:
 
 workdir: /${HOME}/.lastbackend/
 rootless: false

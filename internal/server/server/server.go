@@ -21,64 +21,46 @@ package server
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
-	"github.com/gorilla/mux"
-	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	grpcprometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/lastbackend/lastbackend/internal/pkg/storage"
 	gw "github.com/lastbackend/lastbackend/internal/server/api/v1"
 	"github.com/lastbackend/lastbackend/internal/server/config"
+	"github.com/lastbackend/lastbackend/internal/server/server/middleware"
 	v1 "github.com/lastbackend/lastbackend/internal/server/server/v1"
 	"github.com/lastbackend/lastbackend/tools/logger"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/tmc/grpc-websocket-proxy/wsproxy"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"io"
-	"mime"
+	"io/ioutil"
 	"net"
 	"net/http"
-	"strings"
 )
 
-const defaultPort = 2967
+const (
+	defaultHTTPPort = 2967
+	defaultGRPCPort = 2968
+	defaultPROMPort = 2662
+)
 
 type Server struct {
-	host string
-	port uint
-
-	Insecure bool
-
-	CertFile string
-	KeyFile  string
-	CaFile   string
-
-	router *mux.Router
+	config  config.Config
+	storage storage.IStorage
 }
 
-func NewServer(cfg config.Config) *Server {
+func NewServer(stg storage.IStorage, cfg config.Config) *Server {
 
 	hs := new(Server)
-
-	if cfg.Server.TLS.Verify {
-		hs.CertFile = cfg.Server.TLS.FileCert
-		hs.KeyFile = cfg.Server.TLS.FileKey
-		hs.CaFile = cfg.Server.TLS.FileCA
-	} else {
-		hs.Insecure = true
-	}
-
-	hs.host = cfg.Server.Host
-	hs.port = cfg.Server.Port
-	if hs.port == 0 {
-		hs.port = defaultPort
-	}
+	hs.storage = stg
+	hs.config = cfg
 
 	return hs
-
 }
 
-func (hs Server) Run(ctx context.Context) error {
+func (hs *Server) Run(ctx context.Context) error {
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -86,148 +68,108 @@ func (hs Server) Run(ctx context.Context) error {
 	group, ctx := errgroup.WithContext(ctx)
 	log := logger.WithContext(ctx)
 
-	sock, err := net.Listen("tcp", ":8842")
+	sock, err := net.Listen("tcp", fmt.Sprintf("%s:%d", hs.config.Server.Host, defaultGRPCPort))
 	if err != nil {
 		return err
 	}
 
 	grpcServer := grpc.NewServer(
-		grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
-		grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
+		grpc.StreamInterceptor(grpcprometheus.StreamServerInterceptor),
+		grpc.UnaryInterceptor(grpcprometheus.UnaryServerInterceptor),
 	)
 
 	gw.RegisterV1Server(grpcServer, v1.NewV1Server())
-	grpc_prometheus.Register(grpcServer)
-
-	log.Info("test")
+	grpcprometheus.Register(grpcServer)
 
 	group.Go(func() error {
 		log.Info("grpc")
 		return grpcServer.Serve(sock)
 	})
 
+	mw := middleware.New(hs.storage, hs.config.Security.Token)
+	mw.Add(mw.Logger)
+	mw.Add(mw.RequestID)
+	mw.Add(mw.Authenticate)
 
 	mux := runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{OrigName: true, EmitDefaults: true}))
 	runtime.SetHTTPBodyMarshaler(mux)
+
+	var srv *http.Server
+	if hs.config.Server.TLS.Verify {
+		srv = &http.Server{
+			Addr: fmt.Sprintf("%s:%d", hs.config.Server.Host, defaultHTTPPort),
+			// add handler with middleware
+			Handler:   mw.Apply(mux, hs.config),
+			TLSConfig: configTLS(hs.config.Server.TLS.FileCA),
+		}
+
+	} else {
+		srv = &http.Server{
+			Addr: fmt.Sprintf("%s:%d", hs.config.Server.Host, defaultHTTPPort),
+			// add handler with middleware
+			Handler: mw.Apply(mux, hs.config),
+		}
+	}
+
 	opts := []grpc.DialOption{
-		grpc.WithInsecure(),
+
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(50000000)),
+	}
+
+	if hs.config.Server.TLS.Verify {
+		// enable security options
+		creds, _ := credentials.NewServerTLSFromFile(hs.config.Server.TLS.FileCert, hs.config.Server.TLS.FileKey)
+		opts = append(opts, grpc.WithTransportCredentials(creds))
+
+	} else {
+		opts = append(opts, grpc.WithInsecure())
 	}
 
 	group.Go(func() error {
 		log.Info("handler")
-		return gw.RegisterV1HandlerFromEndpoint(ctx, mux, fmt.Sprintf("%s:%d", "", 8842), opts)
-	})
-
-	group.Go(func() error {
-		log.Info("websocket")
-		return http.ListenAndServe(":8843", wsproxy.WebsocketProxy(mux))
+		return gw.RegisterV1HandlerFromEndpoint(ctx, mux, fmt.Sprintf("%s:%d", hs.config.Server.Host, defaultGRPCPort), opts)
 	})
 
 	group.Go(func() error {
 		log.Info("http")
-		return http.ListenAndServe(fmt.Sprintf("%s:%d", "", defaultPort), grpcHandlerFunc)
+		if hs.config.Server.TLS.Verify {
+			return srv.ListenAndServeTLS(hs.config.Server.TLS.FileCert, hs.config.Server.TLS.FileKey)
+		} else {
+			return srv.ListenAndServe()
+		}
 	})
 
 	group.Go(func() error {
 		log.Info("listen")
-		return http.ListenAndServe(":2662", promhttp.Handler())
+		return http.ListenAndServe(fmt.Sprintf("%s:%d", hs.config.Server.Host, defaultPROMPort), promhttp.Handler())
 	})
 
 	return group.Wait()
 }
 
-// grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
-// connections or otherHandler otherwise. Copied from cockroachdb.
-func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO(tamird): point to merged gRPC code rather than a PR.
-		// This is a partial recreation of gRPC's internal checks https://github.com/grpc/grpc-go/pull/514/files#diff-95e9a25b738459a2d3030e1e6fa2a718R61
-		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
-			grpcServer.ServeHTTP(w, r)
-		} else {
-			otherHandler.ServeHTTP(w, r)
-		}
-	})
-}
+func configTLS(caFile string) *tls.Config {
 
-
-// grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
-// connections or otherHandler otherwise. Copied from cockroachdb.
-func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO(tamird): point to merged gRPC code rather than a PR.
-		// This is a partial recreation of gRPC's internal checks https://github.com/grpc/grpc-go/pull/514/files#diff-95e9a25b738459a2d3030e1e6fa2a718R61
-		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
-			grpcServer.ServeHTTP(w, r)
-		} else {
-			otherHandler.ServeHTTP(w, r)
-		}
-	})
-}
-
-func serveSwagger(mux *http.ServeMux) {
-	mime.AddExtensionType(".svg", "image/svg+xml")
-
-	// Expose files in third_party/swagger-ui/ on <host>/swagger-ui
-	fileServer := http.FileServer(&assetfs.AssetFS{
-		Asset:    swagger.Asset,
-		AssetDir: swagger.AssetDir,
-		Prefix:   "third_party/swagger-ui",
-	})
-	prefix := "/swagger-ui/"
-	mux.Handle(prefix, http.StripPrefix(prefix, fileServer))
-}
-
-func serve() {
-	opts := []grpc.ServerOption{
-		grpc.Creds(credentials.NewClientTLSFromCert(demoCertPool, "localhost:10000"))}
-
-	grpcServer := grpc.NewServer(opts...)
-	pb.RegisterEchoServiceServer(grpcServer, newServer())
-	ctx := context.Background()
-
-	dcreds := credentials.NewTLS(&tls.Config{
-		ServerName: demoAddr,
-		RootCAs:    demoCertPool,
-	})
-	dopts := []grpc.DialOption{grpc.WithTransportCredentials(dcreds)}
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/swagger.json", func(w http.ResponseWriter, req *http.Request) {
-		io.Copy(w, strings.NewReader(pb.Swagger))
-	})
-
-	gwmux := runtime.NewServeMux()
-	err := pb.RegisterEchoServiceHandlerFromEndpoint(ctx, gwmux, demoAddr, dopts)
+	caCert, err := ioutil.ReadFile(caFile)
 	if err != nil {
-		fmt.Printf("serve: %v\n", err)
-		return
+		return nil
 	}
 
-	mux.Handle("/", gwmux)
-	serveSwagger(mux)
-
-	conn, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if err != nil {
-		panic(err)
+	caCertPool := x509.NewCertPool()
+	ok := caCertPool.AppendCertsFromPEM(caCert)
+	if !ok {
+		panic("failed to parse root certificate")
 	}
 
-	srv := &http.Server{
-		Addr:    demoAddr,
-		Handler: grpcHandlerFunc(grpcServer, mux),
-		TLSConfig: &tls.Config{
-			Certificates: []tls.Certificate{*demoKeyPair},
-			NextProtos:   []string{"h2"},
-		},
+	TLSConfig := &tls.Config{
+		// Reject any TLS certificate that cannot be validated
+		ClientAuth: tls.RequireAndVerifyClientCert,
+		// Ensure that we only use our "CA" to validate certificates
+		ClientCAs: caCertPool,
+		// Force it server side
+		PreferServerCipherSuites: true,
+		// TLS 1.2 because we can
+		MinVersion: tls.VersionTLS12,
 	}
 
-	fmt.Printf("grpc on port: %d\n", port)
-	err = srv.Serve(tls.NewListener(conn, srv.TLSConfig))
-
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
-	}
-
-	return
+	return TLSConfig
 }

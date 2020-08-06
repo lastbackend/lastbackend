@@ -21,7 +21,7 @@ package discovery
 import (
 	"context"
 	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/internal/server/server/legacy/middleware"
+	"github.com/lastbackend/lastbackend/internal/server/server/middleware"
 	h "github.com/lastbackend/lastbackend/internal/util/http"
 	"github.com/lastbackend/lastbackend/tools/logger"
 	"net/http"
@@ -43,8 +43,7 @@ func NewDiscoveryHandler(r *mux.Router, mw middleware.Middleware) {
 
 	log.Infof("%s:> init discovery routes", logPrefix)
 
-	handler := &Handler{
-	}
+	handler := &Handler{}
 
 	r.Handle("/discovery", h.Handle(mw.Authenticate(handler.DiscoveryListH))).Methods(http.MethodGet)
 	r.Handle("/discovery/{discovery}", h.Handle(mw.Authenticate(handler.DiscoveryInfoH))).Methods(http.MethodGet)

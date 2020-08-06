@@ -23,7 +23,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/internal/server/server/legacy/middleware"
+	"github.com/lastbackend/lastbackend/internal/server/server/middleware"
 	h "github.com/lastbackend/lastbackend/internal/util/http"
 	"github.com/lastbackend/lastbackend/tools/logger"
 )
@@ -44,8 +44,7 @@ func NewVolumeHandler(r *mux.Router, mw middleware.Middleware) {
 
 	log.Infof("%s:> init volume routes", logPrefix)
 
-	handler := &Handler{
-	}
+	handler := &Handler{}
 
 	r.Handle("/namespace/{namespace}/volume", h.Handle(mw.Authenticate(handler.VolumeCreateH))).Methods(http.MethodPost)
 	r.Handle("/namespace/{namespace}/volume", h.Handle(mw.Authenticate(handler.VolumeListH))).Methods(http.MethodGet)

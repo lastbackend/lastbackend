@@ -66,8 +66,8 @@ func New(stg storage.IStorage, config config.Config) (*App, error) {
 }
 
 func (app App) Run(ctx context.Context) error {
-	log := logger.WithContext(ctx)
 
+	log := logger.WithContext(ctx)
 	log.Infof("Run server")
 
 	go func() {
@@ -87,6 +87,6 @@ func (app *App) Stop() {
 func (app *App) init() error {
 	var ctx = context.Background()
 	app.State = state.NewState(ctx, app.storage)
-	app.Server =server.NewServer(app.config)
+	app.Server = server.NewServer(app.storage, app.config)
 	return nil
 }

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"github.com/lastbackend/lastbackend/internal/server/config"
 	"net/http"
 	"strings"
 
@@ -10,9 +11,9 @@ import (
 )
 
 // Authenticate - authentication middleware
-func (m Middleware) Authenticate(h http.HandlerFunc) http.HandlerFunc {
+func (m Middleware) Authenticate(h http.Handler, cfg config.Config) http.Handler {
 
-	return func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		ctx := logger.NewContext(r.Context(), nil)
 		log := logger.WithContext(ctx)
@@ -22,6 +23,11 @@ func (m Middleware) Authenticate(h http.HandlerFunc) http.HandlerFunc {
 			params = util.Vars(r)
 			token  string
 		)
+
+		if cfg.Security.Token == "" {
+			h.ServeHTTP(w, r)
+			return
+		}
 
 		if _, ok := r.URL.Query()["x-access-token"]; ok {
 			token = r.URL.Query().Get("x-access-token")
@@ -36,6 +42,7 @@ func (m Middleware) Authenticate(h http.HandlerFunc) http.HandlerFunc {
 				errors.HTTP.Unauthorized(w)
 				return
 			}
+
 			token = auth[1]
 		} else {
 			log.Errorf("%s:session:authenticate:> token not set", logPrefix)
@@ -49,5 +56,5 @@ func (m Middleware) Authenticate(h http.HandlerFunc) http.HandlerFunc {
 		}
 
 		h.ServeHTTP(w, r)
-	}
+	})
 }

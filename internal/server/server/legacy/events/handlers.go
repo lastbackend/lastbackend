@@ -25,7 +25,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/lastbackend/lastbackend/internal/pkg/models"
-	"github.com/lastbackend/lastbackend/internal/server/server/legacy/middleware"
+	"github.com/lastbackend/lastbackend/internal/server/server/middleware"
 	h "github.com/lastbackend/lastbackend/internal/util/http"
 	"github.com/lastbackend/lastbackend/internal/util/socket"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
@@ -48,8 +48,7 @@ func NewEventHandler(r *mux.Router, mw middleware.Middleware) {
 
 	log.Infof("%s:> init event routes", logPrefix)
 
-	handler := &Handler{
-	}
+	handler := &Handler{}
 
 	r.Handle("/events", h.Handle(handler.EventSubscribeH)).Methods(http.MethodGet)
 }
