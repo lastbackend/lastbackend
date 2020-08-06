@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -29,29 +29,22 @@ type Event struct {
 }
 
 type ClusterEvent struct {
-
 }
 
 type NodeEvent struct {
-
 }
 
 type ServiceEvent struct {
-
 }
 
 type DeploymentEvent struct {
-
 }
 
 type PodEvent struct {
-
 }
 
 type RouteEvent struct {
-
 }
 
 type VolumeEvent struct {
-
 }

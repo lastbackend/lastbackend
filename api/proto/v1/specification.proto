@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "server/api/v1";
+
+message SpecResourcesOptions {
+  SpecResourcesOptionRequest request = 1;
+  SpecResourcesOptionLimit limit = 2;
+}
+
+message SpecResourcesOptionRequest {
+  string ram = 1;
+  string cpu = 2;
+  string storage = 3;
+}
+
+message SpecResourcesOptionLimit {
+  string ram = 1;
+  string cpu = 2;
+  string storage = 3;
+}

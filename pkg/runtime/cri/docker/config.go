@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,16 +20,16 @@ package docker
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/go-connections/nat"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"strconv"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
-func GetConfig(manifest *types.ContainerManifest) *container.Config {
+func GetConfig(manifest *models.ContainerManifest) *container.Config {
 
 	var (
 		volumes = make(map[string]struct{}, 0)
@@ -48,14 +48,14 @@ func GetConfig(manifest *types.ContainerManifest) *container.Config {
 		ExposedPorts: ports,
 		Volumes:      volumes,
 		Labels:       manifest.Labels,
-		Cmd:          strslice.StrSlice(manifest.Exec.Command),
-		Entrypoint:   strslice.StrSlice(manifest.Exec.Entrypoint),
+		Cmd:          manifest.Exec.Command,
+		Entrypoint:   manifest.Exec.Entrypoint,
 		Image:        manifest.Image,
 		WorkingDir:   manifest.Exec.Workdir,
 	}
 }
 
-func GetHostConfig(manifest *types.ContainerManifest) *container.HostConfig {
+func GetHostConfig(manifest *models.ContainerManifest) *container.HostConfig {
 
 	rPolicy := container.RestartPolicy{
 		Name:              manifest.RestartPolicy.Policy,
@@ -78,7 +78,7 @@ func GetHostConfig(manifest *types.ContainerManifest) *container.HostConfig {
 	}
 
 	logC := container.LogConfig{
-		Type: "lastbackend",
+		//Type: "lastbackend",
 	}
 	ports = make(nat.PortMap)
 
@@ -87,7 +87,7 @@ func GetHostConfig(manifest *types.ContainerManifest) *container.HostConfig {
 		ports[port] = make([]nat.PortBinding, 0)
 		if p.HostPort != 0 {
 
-			if p.HostIP == types.EmptyString {
+			if p.HostIP == models.EmptyString {
 				p.HostIP = "0.0.0.0"
 			}
 
@@ -117,7 +117,7 @@ func GetHostConfig(manifest *types.ContainerManifest) *container.HostConfig {
 		AutoRemove:      manifest.AutoRemove,
 	}
 
-	if cfg.NetworkMode != types.EmptyString {
+	if cfg.NetworkMode != models.EmptyString {
 		cfg.DNS = make([]string, 0)
 		cfg.DNSOptions = make([]string, 0)
 		cfg.DNSSearch = make([]string, 0)
@@ -126,7 +126,7 @@ func GetHostConfig(manifest *types.ContainerManifest) *container.HostConfig {
 	return &cfg
 }
 
-func GetNetworkConfig(manifest *types.ContainerManifest) *network.NetworkingConfig {
+func GetNetworkConfig(manifest *models.ContainerManifest) *network.NetworkingConfig {
 
 	cfg := &network.NetworkingConfig{}
 

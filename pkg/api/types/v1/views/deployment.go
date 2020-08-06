@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -22,8 +22,7 @@ import (
 	"time"
 
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"io"
 	"io/ioutil"
 )
@@ -36,6 +35,8 @@ type Deployment struct {
 	Meta   DeploymentMeta       `json:"meta"`
 	Status DeploymentStatusInfo `json:"status"`
 	Spec   DeploymentSpec       `json:"spec"`
+	// deployment pods
+	Pods map[string]Pod `json:"pods"`
 }
 
 // swagger:ignore
@@ -123,21 +124,17 @@ type RequestDeploymentScaleOptions struct {
 	Replicas *int `json:"replicas"`
 }
 
-func (s *RequestDeploymentScaleOptions) DecodeAndValidate(reader io.Reader) (types.DeploymentOptions, error) {
+func (s *RequestDeploymentScaleOptions) DecodeAndValidate(reader io.Reader) (models.DeploymentOptions, error) {
 
-	opts := types.DeploymentOptions{}
-
-	log.V(logLevel).Debug("Request: Deployment: decode and validate data for creating")
+	opts := models.DeploymentOptions{}
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		log.V(logLevel).Errorf("Request: Deployment: decode and validate data for creating err: %s", err)
 		return opts, err
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
-		log.V(logLevel).Errorf("Request: Deployment: convert struct from json err: %s", err)
 		return opts, err
 	}
 

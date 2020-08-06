@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,14 +20,14 @@ package views
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/util/resource"
+	"github.com/lastbackend/lastbackend/internal/util/resource"
 
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type ClusterView struct{}
 
-func (cv *ClusterView) New(obj *types.Cluster) *Cluster {
+func (cv *ClusterView) New(obj *models.Cluster) *Cluster {
 	c := Cluster{}
 	c.Status = cv.ToClusterStatus(obj.Status)
 	return &c
@@ -37,7 +37,7 @@ func (cl *Cluster) ToJson() ([]byte, error) {
 	return json.Marshal(cl)
 }
 
-func (cv *ClusterView) NewList(obj map[string]*types.Cluster) *ClusterList {
+func (cv *ClusterView) NewList(obj map[string]*models.Cluster) *ClusterList {
 	if obj == nil {
 		return nil
 	}
@@ -60,7 +60,7 @@ func (cv *ClusterView) ClusterStatus() *ClusterStatus {
 	return new(ClusterStatus)
 }
 
-func (cv *ClusterView) ToClusterStatus(status types.ClusterStatus) ClusterStatus {
+func (cv *ClusterView) ToClusterStatus(status models.ClusterStatus) ClusterStatus {
 	return ClusterStatus{
 		Nodes: status.Nodes,
 		Capacity: ClusterResources{

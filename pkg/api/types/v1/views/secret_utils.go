@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -21,12 +21,12 @@ package views
 import (
 	"encoding/json"
 
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type SecretView struct{}
 
-func (sv *SecretView) New(obj *types.Secret) *Secret {
+func (sv *SecretView) New(obj *models.Secret) *Secret {
 	s := Secret{}
 	s.Meta = s.ToMeta(obj.Meta)
 	s.Spec = s.ToSpec(obj.Spec)
@@ -37,7 +37,7 @@ func (s *Secret) ToJson() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s *Secret) ToMeta(obj types.SecretMeta) SecretMeta {
+func (s *Secret) ToMeta(obj models.SecretMeta) SecretMeta {
 	meta := SecretMeta{}
 	meta.Name = obj.Name
 	meta.SelfLink = obj.SelfLink.String()
@@ -47,7 +47,7 @@ func (s *Secret) ToMeta(obj types.SecretMeta) SecretMeta {
 	return meta
 }
 
-func (s *Secret) ToSpec(obj types.SecretSpec) SecretSpec {
+func (s *Secret) ToSpec(obj models.SecretSpec) SecretSpec {
 	spec := SecretSpec{}
 	spec.Type = obj.Type
 	spec.Data = make(map[string]string, 0)
@@ -57,7 +57,7 @@ func (s *Secret) ToSpec(obj types.SecretSpec) SecretSpec {
 	return spec
 }
 
-func (sv *SecretView) Parse(data []byte) (*types.Secret, error) {
+func (sv *SecretView) Parse(data []byte) (*models.Secret, error) {
 
 	v := Secret{}
 	if err := json.Unmarshal(data, &v); err != nil {
@@ -67,7 +67,7 @@ func (sv *SecretView) Parse(data []byte) (*types.Secret, error) {
 	return v.Decode(), nil
 }
 
-func (sv SecretView) NewList(obj *types.SecretList) *SecretList {
+func (sv SecretView) NewList(obj *models.SecretList) *SecretList {
 	if obj == nil {
 		return nil
 	}

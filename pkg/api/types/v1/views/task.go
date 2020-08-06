@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -25,16 +25,16 @@ import (
 
 type TaskList []*Task
 
-func (p TaskList) Len() int {
-	return len(p)
+func (tl TaskList) Len() int {
+	return len(tl)
 }
 
-func (p TaskList) Less(i, j int) bool {
-	return p[j].Meta.Created.Before(p[i].Meta.Created)
+func (tl TaskList) Less(i, j int) bool {
+	return tl[j].Meta.Created.Before(tl[i].Meta.Created)
 }
 
-func (p TaskList) Swap(i, j int) {
-	p[i], p[j] = p[j], p[i]
+func (tl TaskList) Swap(i, j int) {
+	tl[i], tl[j] = tl[j], tl[i]
 }
 
 type Task struct {

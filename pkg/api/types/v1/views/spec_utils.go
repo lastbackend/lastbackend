@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,13 +19,13 @@
 package views
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/util/resource"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/util/resource"
 )
 
 type SpecView struct{}
 
-func (sv *SpecView) NewSpecTemplateContainers(cl types.SpecTemplateContainers) SpecTemplateContainers {
+func (sv *SpecView) NewSpecTemplateContainers(cl models.SpecTemplateContainers) SpecTemplateContainers {
 
 	cs := SpecTemplateContainers{}
 	for _, c := range cl {
@@ -35,7 +35,7 @@ func (sv *SpecView) NewSpecTemplateContainers(cl types.SpecTemplateContainers) S
 	return cs
 }
 
-func (sv *SpecView) NewSpecTemplateVolumes(vl types.SpecTemplateVolumeList) SpecTemplateVolumeList {
+func (sv *SpecView) NewSpecTemplateVolumes(vl models.SpecTemplateVolumeList) SpecTemplateVolumeList {
 	vs := SpecTemplateVolumeList{}
 	for _, v := range vl {
 		vs = append(vs, sv.NewVolume(v))
@@ -44,7 +44,7 @@ func (sv *SpecView) NewSpecTemplateVolumes(vl types.SpecTemplateVolumeList) Spec
 	return vs
 }
 
-func (sv *SpecView) NewContainer(c *types.SpecTemplateContainer) *SpecTemplateContainer {
+func (sv *SpecView) NewContainer(c *models.SpecTemplateContainer) *SpecTemplateContainer {
 
 	s := new(SpecTemplateContainer)
 	s.ID = c.ID
@@ -54,7 +54,7 @@ func (sv *SpecView) NewContainer(c *types.SpecTemplateContainer) *SpecTemplateCo
 	s.Labels = c.Labels
 	s.Image = SpecTemplateContainerImage{
 		Name: c.Image.Name,
-		Sha: c.Image.Sha,
+		Sha:  c.Image.Sha,
 		Secret: SpecTemplateContainerImageSecret{
 			Name: c.Image.Secret.Name,
 			Key:  c.Image.Secret.Key,
@@ -176,7 +176,7 @@ func (sv *SpecView) NewContainer(c *types.SpecTemplateContainer) *SpecTemplateCo
 	return s
 }
 
-func (sv *SpecView) NewVolume(v *types.SpecTemplateVolume) *SpecTemplateVolume {
+func (sv *SpecView) NewVolume(v *models.SpecTemplateVolume) *SpecTemplateVolume {
 	s := new(SpecTemplateVolume)
 	s.Name = v.Name
 	s.Type = v.Type

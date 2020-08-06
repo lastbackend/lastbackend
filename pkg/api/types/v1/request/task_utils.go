@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,7 +20,7 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 	"io"
 	"io/ioutil"
 )
@@ -66,7 +66,7 @@ func (TaskRequest) CancelOptions() *TaskCancelOptions {
 	return new(TaskCancelOptions)
 }
 
-func (s *TaskCancelOptions) Validate() *errors.Err {
+func (t *TaskCancelOptions) Validate() *errors.Err {
 	return nil
 }
 

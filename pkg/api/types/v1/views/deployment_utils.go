@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,12 +20,12 @@ package views
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type DeploymentView struct{}
 
-func (dv *DeploymentView) New(obj *types.Deployment) *Deployment {
+func (dv *DeploymentView) New(obj *models.Deployment) *Deployment {
 	d := Deployment{}
 	d.SetMeta(obj.Meta)
 	d.SetStatus(obj.Status)
@@ -34,7 +34,7 @@ func (dv *DeploymentView) New(obj *types.Deployment) *Deployment {
 	return &d
 }
 
-func (d *Deployment) SetMeta(obj types.DeploymentMeta) {
+func (d *Deployment) SetMeta(obj models.DeploymentMeta) {
 	meta := DeploymentMeta{}
 
 	meta.Name = obj.Name
@@ -55,14 +55,14 @@ func (d *Deployment) SetMeta(obj types.DeploymentMeta) {
 	d.Meta = meta
 }
 
-func (d *Deployment) SetStatus(obj types.DeploymentStatus) {
+func (d *Deployment) SetStatus(obj models.DeploymentStatus) {
 	d.Status = DeploymentStatusInfo{
 		State:   obj.State,
 		Message: obj.Message,
 	}
 }
 
-func (d *Deployment) SetSpec(obj types.DeploymentSpec) {
+func (d *Deployment) SetSpec(obj models.DeploymentSpec) {
 	mv := new(ManifestView)
 	var spec = DeploymentSpec{
 		Replicas: obj.Replicas,
@@ -77,7 +77,7 @@ func (d *Deployment) ToJson() ([]byte, error) {
 	return json.Marshal(d)
 }
 
-func (dv *DeploymentView) NewList(obj *types.DeploymentList) *DeploymentList {
+func (dv *DeploymentView) NewList(obj *models.DeploymentList) *DeploymentList {
 	dl := make(DeploymentList, 0)
 	for _, d := range obj.Items {
 		dv := new(DeploymentView)

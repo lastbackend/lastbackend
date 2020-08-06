@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -22,13 +22,13 @@ package vxlan
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"net"
 	"syscall"
 
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni/utils"
 	"github.com/vishvananda/netlink"
 )
@@ -37,8 +37,6 @@ const NetworkType = "vxlan"
 const DefaultContainerDevice = "docker0"
 
 type Network struct {
-	cni.CNI
-
 	ExtIface *NetworkInterface
 	IntIface *NetworkInterface
 	Device   *Device
@@ -53,7 +51,7 @@ type NetworkInterface struct {
 }
 
 func New(iface string) (*Network, error) {
-
+	log := logger.WithContext(context.Background())
 	var (
 		nt  = new(Network)
 		err error
@@ -61,10 +59,10 @@ func New(iface string) (*Network, error) {
 
 	nt.ExtIface = new(NetworkInterface)
 
-	if iface == types.EmptyString {
+	if iface == models.EmptyString {
 		log.Debug("Add network to default interface")
 		if nt.ExtIface.Iface, nt.ExtIface.IfaceAddr, err = utils.GetDefaultInterface(); err != nil {
-			log.Errorf("Can not get default interface: %s", err.Error())
+			log.Errorf("can not be get default interface: %s", err.Error())
 			return nt, err
 		}
 	} else {
@@ -76,7 +74,7 @@ func New(iface string) (*Network, error) {
 	}
 
 	if nt.ExtIface.Iface == nil || nt.ExtIface.IfaceAddr == nil {
-		return nt, errors.New(fmt.Sprintf("can not initialize external ineterface for VxLAN: %s", iface))
+		return nt, fmt.Errorf("can not initialize external ineterface for VxLAN: %s", iface)
 	}
 
 	log.Debugf("external interface: %s:%s", nt.ExtIface.Iface.Name, nt.ExtIface.IfaceAddr.String())
@@ -98,7 +96,7 @@ func New(iface string) (*Network, error) {
 }
 
 func (n *Network) SetSubnetFromDevice(name string) error {
-
+	log := logger.WithContext(context.Background())
 	iface, _, err := utils.GetIfaceByName(name)
 	if err != nil {
 		log.Errorf("Can not find interface by name %s", name)
@@ -151,7 +149,7 @@ func (n *Network) SetSubnetFromDevice(name string) error {
 }
 
 func (n *Network) AddInterface() error {
-
+	log := logger.WithContext(context.Background())
 	var err error
 
 	if n.Device, err = NewDevice(DeviceCreateOpts{
@@ -168,12 +166,12 @@ func (n *Network) AddInterface() error {
 	return n.Device.SetIP(*n.CIDR)
 }
 
-func (n *Network) Info(ctx context.Context) *types.NetworkState {
-	state := types.NetworkState{}
+func (n *Network) Info(ctx context.Context) *models.NetworkState {
+	state := models.NetworkState{}
 
 	state.Type = NetworkType
 	state.CIDR = n.CIDR.String()
-	state.IFace = types.NetworkInterface{
+	state.IFace = models.NetworkInterface{
 		Index: n.Device.GetIndex(),
 		Name:  n.Device.GetName(),
 		HAddr: n.Device.GetHardware(),
@@ -184,17 +182,17 @@ func (n *Network) Info(ctx context.Context) *types.NetworkState {
 	return &state
 }
 
-func (n *Network) Destroy(ctx context.Context, network *types.NetworkState) error {
+func (n *Network) Destroy(ctx context.Context, network *models.NetworkState) error {
 
 	return nil
 }
 
-func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*types.NetworkState, error) {
-
-	log.V(logLevel).Debugf("Connect to node to network: %v > %v", network.CIDR, network.IFace.Addr)
+func (n *Network) Create(ctx context.Context, network *models.SubnetManifest) (*models.NetworkState, error) {
+	log := logger.WithContext(context.Background())
+	log.Debugf("Connect to node to network: %v > %v", network.CIDR, network.IFace.Addr)
 
 	if n.CIDR.String() == network.CIDR {
-		log.V(logLevel).Debug("Skip local network provision")
+		log.Debug("Skip local network provision")
 		return n.Info(ctx), nil
 	}
 
@@ -206,14 +204,14 @@ func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*t
 	}
 
 	// Add ARP record
-	log.V(logLevel).Debugf("Add new ARP record to %v :> %v", lladdr, network.Addr)
+	log.Debugf("Add new ARP record to %v :> %v", lladdr, network.Addr)
 	if err := n.Device.AddARP(lladdr, net.ParseIP(network.IFace.Addr)); err != nil {
 		log.Errorf("Can not add ARP record: %s", err.Error())
 		return nil, err
 	}
 
 	// Add FDB record
-	log.V(logLevel).Debugf("Add new FDB record to %v :> %v", network.IFace.HAddr, network.Addr)
+	log.Debugf("Add new FDB record to %v :> %v", network.IFace.HAddr, network.Addr)
 	if err := n.Device.AddFDB(lladdr, net.ParseIP(network.Addr)); err != nil {
 		log.Errorf("Can not add FDB record: %s", err.Error())
 		if err := n.Device.DelARP(lladdr, net.ParseIP(network.IFace.Addr)); err != nil {
@@ -222,7 +220,7 @@ func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*t
 	}
 
 	// Add route
-	log.V(logLevel).Debugf("Add new route record for %v :> %v", network.CIDR, network.IFace.Addr)
+	log.Debugf("Add new route record for %v :> %v", network.CIDR, network.IFace.Addr)
 
 	_, ipn, err := net.ParseCIDR(network.CIDR)
 	if err != nil {
@@ -240,7 +238,7 @@ func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*t
 
 	if err := netlink.RouteReplace(&vxlanRoute); err != nil {
 		log.Errorf("Add xvlan route err: %s", err.Error())
-		log.V(logLevel).Debug("Clean up added before records")
+		log.Debug("Clean up added before records")
 
 		if err := n.Device.DelARP(lladdr, net.ParseIP(network.IFace.Addr)); err != nil {
 			log.Errorf("Can not del ARP record: %s", err.Error())
@@ -255,11 +253,11 @@ func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*t
 		return nil, err
 	}
 
-	state := types.NetworkState{}
+	state := models.NetworkState{}
 
 	state.Type = NetworkType
 	state.CIDR = n.CIDR.String()
-	state.IFace = types.NetworkInterface{
+	state.IFace = models.NetworkInterface{
 		Index: n.Device.GetIndex(),
 		Name:  n.Device.GetName(),
 		HAddr: n.Device.GetHardware(),
@@ -270,7 +268,7 @@ func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*t
 	return &state, nil
 }
 
-func (n *Network) Replace(ctx context.Context, state *types.NetworkState, manifest *types.SubnetManifest) (*types.NetworkState, error) {
+func (n *Network) Replace(ctx context.Context, state *models.NetworkState, manifest *models.SubnetManifest) (*models.NetworkState, error) {
 
 	if state != nil {
 		if err := n.Destroy(ctx, state); err != nil {
@@ -290,12 +288,12 @@ func (n *Network) Replace(ctx context.Context, state *types.NetworkState, manife
 	return state, nil
 }
 
-func (n *Network) Subnets(ctx context.Context) (map[string]*types.NetworkState, error) {
-
-	log.V(logLevel).Debug("Get current subnets list")
+func (n *Network) Subnets(ctx context.Context) (map[string]*models.NetworkState, error) {
+	log := logger.WithContext(context.Background())
+	log.Debug("Get current subnets list")
 
 	var (
-		subnets = make(map[string]*types.NetworkState)
+		subnets = make(map[string]*models.NetworkState)
 		neighs  = make(map[string]string)
 	)
 
@@ -323,10 +321,10 @@ func (n *Network) Subnets(ctx context.Context) (map[string]*types.NetworkState, 
 
 	for _, r := range routes {
 
-		sn := types.NetworkState{}
+		sn := models.NetworkState{}
 		sn.Type = n.Device.link.Type()
 		sn.CIDR = r.Dst.String()
-		sn.IFace = types.NetworkInterface{
+		sn.IFace = models.NetworkInterface{
 			Index: n.Device.link.Index,
 			Name:  n.Device.link.Name,
 			Addr:  r.Gw.String(),
@@ -343,7 +341,7 @@ func (n *Network) Subnets(ctx context.Context) (map[string]*types.NetworkState, 
 	}
 
 	for r, sn := range subnets {
-		log.V(logLevel).Debugf("SubnetSpec [%s]: %v", r, sn)
+		log.Debugf("SubnetSpec [%s]: %v", r, sn)
 	}
 
 	return subnets, nil

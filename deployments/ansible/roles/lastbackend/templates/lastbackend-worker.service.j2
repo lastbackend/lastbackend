@@ -1,0 +1,19 @@
+[Unit]
+Description=Last.Backend orchestration cluster agent
+Documentation=https://docs.lastbackend.com
+After=network-online.target
+
+[Service]
+Type=notify
+ExecStart=/usr/local/bin/lastbackend agent --server https://{{ master_node_ip }}:6443 --token "{{ master_join_token }}"
+KillMode=process
+Delegate=yes
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+TasksMax=infinity
+TimeoutStartSec=0
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

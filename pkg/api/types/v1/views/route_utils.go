@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -21,12 +21,12 @@ package views
 import (
 	"encoding/json"
 
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type RouteView struct{}
 
-func (rv *RouteView) New(obj *types.Route) *Route {
+func (rv *RouteView) New(obj *models.Route) *Route {
 	r := Route{}
 	r.Meta = r.ToMeta(obj.Meta)
 	r.Spec = r.ToSpec(obj.Spec)
@@ -34,11 +34,11 @@ func (rv *RouteView) New(obj *types.Route) *Route {
 	return &r
 }
 
-func (p *Route) ToJson() ([]byte, error) {
-	return json.Marshal(p)
+func (r *Route) ToJson() ([]byte, error) {
+	return json.Marshal(r)
 }
 
-func (r *Route) ToMeta(obj types.RouteMeta) RouteMeta {
+func (r *Route) ToMeta(obj models.RouteMeta) RouteMeta {
 	meta := RouteMeta{}
 	meta.Name = obj.Name
 	meta.Namespace = obj.Namespace
@@ -54,7 +54,7 @@ func (r *Route) ToMeta(obj types.RouteMeta) RouteMeta {
 	return meta
 }
 
-func (r *Route) ToSpec(obj types.RouteSpec) RouteSpec {
+func (r *Route) ToSpec(obj models.RouteSpec) RouteSpec {
 	spec := RouteSpec{}
 	spec.Domain = obj.Endpoint
 	spec.Port = obj.Port
@@ -69,14 +69,14 @@ func (r *Route) ToSpec(obj types.RouteSpec) RouteSpec {
 	return spec
 }
 
-func (r *Route) ToStatus(obj types.RouteStatus) RouteStatus {
+func (r *Route) ToStatus(obj models.RouteStatus) RouteStatus {
 	state := RouteStatus{}
 	state.State = obj.State
 	state.Message = obj.Message
 	return state
 }
 
-func (rv RouteView) NewList(obj *types.RouteList) *RouteList {
+func (rv RouteView) NewList(obj *models.RouteList) *RouteList {
 	if obj == nil {
 		return nil
 	}

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,13 +20,14 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/util/resource"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"time"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/util/resource"
 )
 
-type VolumeManifest struct{
+type VolumeManifest struct {
 	Meta VolumeManifestMeta `json:"meta,omitempty" yaml:"meta,omitempty"`
 	Spec VolumeManifestSpec `json:"spec,omitempty" yaml:"spec,omitempty"`
 }
@@ -66,9 +67,9 @@ func (v *VolumeManifest) ToYaml() ([]byte, error) {
 	return yaml.Marshal(v)
 }
 
-func (v *VolumeManifest) SetVolumeMeta(vol *types.Volume) {
+func (v *VolumeManifest) SetVolumeMeta(vol *models.Volume) {
 
-	if vol.Meta.Name == types.EmptyString {
+	if vol.Meta.Name == models.EmptyString {
 		vol.Meta.Name = *v.Meta.Name
 	}
 
@@ -82,12 +83,12 @@ func (v *VolumeManifest) SetVolumeMeta(vol *types.Volume) {
 
 }
 
-func (v *VolumeManifest) SetVolumeSpec(vol *types.Volume) {
+func (v *VolumeManifest) SetVolumeSpec(vol *models.Volume) {
 
 	t := vol.Spec.Updated
-	defer func () {
+	defer func() {
 		if t.Before(vol.Spec.Updated) {
-			vol.Status.State = types.StateProvision
+			vol.Status.State = models.StateProvision
 			return
 		}
 	}()
@@ -142,16 +143,15 @@ func (v *VolumeManifest) SetVolumeSpec(vol *types.Volume) {
 
 }
 
+func (v VolumeManifest) GetManifest() *models.VolumeManifest {
+	var manifest = new(models.VolumeManifest)
 
-func (m VolumeManifest) GetManifest() *types.VolumeManifest {
-	var v = new(types.VolumeManifest)
+	manifest.Selector = v.Spec.Selector.GetSpec()
+	manifest.Type = v.Spec.Type
+	manifest.Capacity.Storage, _ = resource.DecodeMemoryResource(v.Spec.Capacity.Storage)
+	manifest.AccessMode = v.Spec.AccessMode
 
-	v.Selector = m.Spec.Selector.GetSpec()
-	v.Type = m.Spec.Type
-	v.Capacity.Storage, _ = resource.DecodeMemoryResource(m.Spec.Capacity.Storage)
-	v.AccessMode = m.Spec.AccessMode
-
-	return v
+	return manifest
 }
 
 type VolumeRemoveOptions struct {

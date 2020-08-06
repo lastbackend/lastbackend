@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,29 +19,33 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"sync"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 const logResolversPrefix = "state:resolvers:>"
 
 type ResolverState struct {
 	lock      sync.RWMutex
-	resolvers map[string]*types.ResolverManifest
+	resolvers map[string]*models.ResolverManifest
 }
 
-func (n *ResolverState) GetResolvers() map[string]*types.ResolverManifest {
+func (n *ResolverState) GetResolvers() map[string]*models.ResolverManifest {
 	return n.resolvers
 }
 
-func (n *ResolverState) AddResolver(cidr string, sn *types.ResolverManifest) {
-	log.V(logLevel).Debugf("%s add resolver: %s", logResolversPrefix, cidr)
+func (n *ResolverState) AddResolver(cidr string, sn *models.ResolverManifest) {
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s add resolver: %s", logResolversPrefix, cidr)
 	n.SetResolver(cidr, sn)
 }
 
-func (n *ResolverState) SetResolver(cidr string, sn *types.ResolverManifest) {
-	log.V(logLevel).Debugf("%s set resolver: %s", logResolversPrefix, cidr)
+func (n *ResolverState) SetResolver(cidr string, sn *models.ResolverManifest) {
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s set resolver: %s", logResolversPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 
@@ -52,8 +56,9 @@ func (n *ResolverState) SetResolver(cidr string, sn *types.ResolverManifest) {
 	n.resolvers[cidr] = sn
 }
 
-func (n *ResolverState) GetResolver(cidr string) *types.ResolverManifest {
-	log.V(logLevel).Debugf("%s get resolver: %s", logResolversPrefix, cidr)
+func (n *ResolverState) GetResolver(cidr string) *models.ResolverManifest {
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get resolver: %s", logResolversPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	s, ok := n.resolvers[cidr]
@@ -64,7 +69,8 @@ func (n *ResolverState) GetResolver(cidr string) *types.ResolverManifest {
 }
 
 func (n *ResolverState) DelResolver(cidr string) {
-	log.V(logLevel).Debugf("%s del resolver: %s", logResolversPrefix, cidr)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s del resolver: %s", logResolversPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	if _, ok := n.resolvers[cidr]; ok {

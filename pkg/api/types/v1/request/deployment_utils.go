@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -21,11 +21,11 @@ package request
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/util/validator"
+	"github.com/lastbackend/lastbackend/internal/util/validator"
 	"io"
 	"io/ioutil"
 
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 )
 
 type DeploymentRequest struct{}
@@ -38,7 +38,7 @@ func (s *DeploymentManifest) Validate() *errors.Err {
 	switch true {
 	case s.Meta.Name != nil && !validator.IsServiceName(*s.Meta.Name):
 		return errors.New("deployment").BadParameter("name")
-	case s.Meta.Description != nil && len(*s.Meta.Description) > DEFAULT_DESCRIPTION_LIMIT:
+	case s.Meta.Description != nil && len(*s.Meta.Description) > DefaultDescriptionLimit:
 		return errors.New("deployment").BadParameter("description")
 	case len(s.Spec.Template.Containers) == 0:
 		return errors.New("deployment").BadParameter("spec")
@@ -113,8 +113,8 @@ func (d *DeploymentUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Er
 	return d.Validate()
 }
 
-func (s *DeploymentUpdateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(s)
+func (d *DeploymentUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(d)
 }
 
 func (DeploymentRequest) RemoveOptions() *DeploymentRemoveOptions {

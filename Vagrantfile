@@ -5,30 +5,19 @@ require 'fileutils'
 
 Vagrant.require_version ">= 1.6.0"
 
-CLOUD_CONFIG_PATH = File.join(File.dirname(__FILE__), "/contrib/vagrant/user-data.yml")
-CONFIG = File.join(File.dirname(__FILE__), "/contrib/vagrant/config.rb")
+CONFIG = File.join(File.dirname(__FILE__), "./deployments/vagrant/config/config.rb")
 
 # Defaults for config options defined in CONFIG
 $num_instances = 1
-$instance_name_prefix = "core"
-$update_channel = "alpha"
-$image_version = "current"
+$instance_name_prefix = "lastbackend"
 $enable_serial_logging = false
-$share_home = false
 $vm_gui = false
 $vm_memory = 1024
 $vm_cpus = 1
 $vb_cpuexecutioncap = 100
-$shared_folders = {
-  "./" => "/lastbackend"
-}
 $forwarded_ports = {
-  2967 => 2967,
-  2968 => 2968,
-  2379 => 2379,
-    80 => 80
+  2967 => 2967
 }
-$expose_docker_tcp=2375
 
 # Attempt to apply the deprecated environment variable NUM_INSTANCES to
 # $num_instances while allowing config.rb to override it
@@ -58,28 +47,13 @@ Vagrant.configure("2") do |config|
   config.ssh.insert_key = false
   # forward ssh agent to easily ssh into the different machines
   config.ssh.forward_agent = true
-
-  config.vm.box = "coreos-%s" % $update_channel
-  if $image_version != "current"
-      config.vm.box_version = $image_version
-  end
-  config.vm.box_url = "https://storage.googleapis.com/%s.release.core-os.net/amd64-usr/%s/coreos_production_vagrant.json" % [$update_channel, $image_version]
-
-  ["vmware_fusion", "vmware_workstation"].each do |vmware|
-    config.vm.provider vmware do |v, override|
-      override.vm.box_url = "https://storage.googleapis.com/%s.release.core-os.net/amd64-usr/%s/coreos_production_vagrant_vmware_fusion.json" % [$update_channel, $image_version]
-    end
-  end
-
+  config.vm.box = "alpine/alpine64"
+  
   config.vm.provider :virtualbox do |v|
     # On VirtualBox, we don't have guest additions or a functional vboxsf
     # in CoreOS, so tell Vagrant that so it can be smarter.
     v.check_guest_additions = false
     v.functional_vboxsf     = false
-  end
-
-  config.vm.provision "docker" do |d|
-    d.build_image "-f /lastbackend/images/lastbackend/Dockerfile -t lastbackend /lastbackend"
   end
 
   # plugin conflict
@@ -110,23 +84,12 @@ Vagrant.configure("2") do |config|
         config.vm.provider :virtualbox do |vb, override|
           vb.customize ["modifyvm", :id, "--uart1", "0x3F8", "4"]
           vb.customize ["modifyvm", :id, "--uartmode1", serialFile]
+          vb.customize ["modifyvm", :id, "--cableconnected1", "on"]
         end
-      end
-
-      if $expose_docker_tcp
-        config.vm.network "forwarded_port", guest: 2375, host: ($expose_docker_tcp + i - 1), host_ip: "127.0.0.1", auto_correct: true
       end
 
       $forwarded_ports.each do |guest, host|
         config.vm.network "forwarded_port", guest: guest, host: host, auto_correct: true
-      end
-
-      ["vmware_fusion", "vmware_workstation"].each do |vmware|
-        config.vm.provider vmware do |v|
-          v.gui = vm_gui
-          v.vmx['memsize'] = vm_memory
-          v.vmx['numvcpus'] = vm_cpus
-        end
       end
 
       config.vm.provider :virtualbox do |vb|
@@ -134,25 +97,12 @@ Vagrant.configure("2") do |config|
         vb.memory = vm_memory
         vb.cpus = vm_cpus
         vb.customize ["modifyvm", :id, "--cpuexecutioncap", "#{$vb_cpuexecutioncap}"]
+        vb.customize ["modifyvm", :id, "--cableconnected1", "on"]
       end
 
       ip = "172.17.8.#{i+100}"
       config.vm.network :private_network, ip: ip
-
-      # Uncomment below to enable NFS for sharing the host machine into the coreos-vagrant VM.
-      #config.vm.synced_folder ".", "/home/core/share", id: "core", :nfs => true, :mount_options => ['nolock,vers=3,udp']
-      $shared_folders.each_with_index do |(host_folder, guest_folder), index|
-        config.vm.synced_folder host_folder.to_s, guest_folder.to_s, id: "core-share%02d" % index, nfs: true, mount_options: ['nolock,vers=3,udp']
-      end
-
-      if $share_home
-        config.vm.synced_folder ENV['HOME'], ENV['HOME'], id: "home", :nfs => true, :mount_options => ['nolock,vers=3,udp']
-      end
-
-      if File.exist?(CLOUD_CONFIG_PATH)
-        config.vm.provision :file, :source => "#{CLOUD_CONFIG_PATH}", :destination => "/tmp/vagrantfile-user-data"
-        config.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/", :privileged => true
-      end
+      config.vm.synced_folder ".", "/lastbackend", type: "nfs", mount_options: ['nolock,vers=3,udp']
 
     end
   end

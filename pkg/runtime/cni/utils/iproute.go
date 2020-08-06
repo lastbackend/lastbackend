@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,7 +20,8 @@ package utils
 
 import (
 	"bytes"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"os/exec"
 	"strings"
 )
@@ -36,7 +37,7 @@ type FDBRule struct {
 }
 
 func BridgeFDBList() ([]FDBRule, error) {
-
+	log := logger.WithContext(context.Background())
 	var rules []FDBRule
 
 	fdblcmd := exec.Command("bridge", "fdb")

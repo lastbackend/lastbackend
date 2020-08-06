@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -18,7 +18,7 @@
 
 package views
 
-// API - default node structure
+// NodeClient - default node structure
 // swagger:model views_ingress
 type API struct {
 	Meta   APIMeta   `json:"meta"`

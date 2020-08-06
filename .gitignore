@@ -9,7 +9,7 @@ _test
 .idea
 .vscode
 .vagrant
-contrib/vagrant/ssl
+deployments/vagrant/ssl
 
 # Architecture specific extensions/prefixes
 *.[568vq]
@@ -32,7 +32,9 @@ _testmain.go
 .DS_Store
 vendor/*/
 docs/output/
-/build/
 coverage.txt
 /profile.out
-/swagger.json
+/build/darwin/
+/build/linux/
+/build/windows/
+/.run/

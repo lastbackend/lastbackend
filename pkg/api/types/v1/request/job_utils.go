@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,8 +20,8 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/util/validator"
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/util/validator"
 	"io"
 	"io/ioutil"
 )
@@ -36,7 +36,7 @@ func (j *JobManifest) Validate() *errors.Err {
 	switch true {
 	case j.Meta.Name != nil && !validator.IsJobName(*j.Meta.Name):
 		return errors.New("job").BadParameter("name")
-	case j.Meta.Description != nil && len(*j.Meta.Description) > DEFAULT_DESCRIPTION_LIMIT:
+	case j.Meta.Description != nil && len(*j.Meta.Description) > DefaultDescriptionLimit:
 		return errors.New("job").BadParameter("description")
 	case j.Spec.Task.Template != nil:
 		if len(j.Spec.Task.Template.Containers) == 0 {

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -29,6 +29,7 @@ type Job struct {
 	Meta   JobMeta   `json:"meta"`
 	Status JobStatus `json:"status"`
 	Spec   JobSpec   `json:"spec"`
+	Tasks  TaskList  `json:"tasks,omitempty"`
 }
 
 type JobMeta struct {

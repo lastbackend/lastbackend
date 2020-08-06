@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,9 +19,11 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"sync"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 const logEndpointPrefix = "state:endpoints:>"
@@ -29,7 +31,7 @@ const logEndpointPrefix = "state:endpoints:>"
 type EndpointState struct {
 	lock      sync.RWMutex
 	hash      string
-	endpoints map[string]*types.EndpointState
+	endpoints map[string]*models.EndpointState
 }
 
 func (es *EndpointState) GetHash() string {
@@ -40,23 +42,26 @@ func (es *EndpointState) SetHash(hash string) {
 	es.hash = hash
 }
 
-func (es *EndpointState) GetEndpoints() map[string]*types.EndpointState {
-	log.V(logLevel).Debugf("%s get endpoints", logEndpointPrefix)
+func (es *EndpointState) GetEndpoints() map[string]*models.EndpointState {
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get endpoints", logEndpointPrefix)
 	return es.endpoints
 }
 
-func (es *EndpointState) SetEndpoints(endpoints map[string]*types.EndpointState) {
+func (es *EndpointState) SetEndpoints(endpoints map[string]*models.EndpointState) {
+	log := logger.WithContext(context.Background())
 	es.lock.Lock()
 	defer es.lock.Unlock()
 
 	for key, endpoint := range endpoints {
-		log.V(logLevel).Debugf("%s: add endpoint %s", logEndpointPrefix, key)
+		log.Debugf("%s: add endpoint %s", logEndpointPrefix, key)
 		es.endpoints[key] = endpoint
 	}
 }
 
-func (es *EndpointState) GetEndpoint(key string) *types.EndpointState {
-	log.V(logLevel).Debugf("%s: get endpoint: %s", logEndpointPrefix, key)
+func (es *EndpointState) GetEndpoint(key string) *models.EndpointState {
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: get endpoint: %s", logEndpointPrefix, key)
 	es.lock.Lock()
 	defer es.lock.Unlock()
 
@@ -68,22 +73,25 @@ func (es *EndpointState) GetEndpoint(key string) *types.EndpointState {
 	return ep
 }
 
-func (es *EndpointState) AddEndpoint(key string, endpoint *types.EndpointState) {
-	log.V(logLevel).Debugf("%s: add endpoint %s", logEndpointPrefix, key)
+func (es *EndpointState) AddEndpoint(key string, endpoint *models.EndpointState) {
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: add endpoint %s", logEndpointPrefix, key)
 	es.lock.Lock()
 	defer es.lock.Unlock()
 	es.endpoints[key] = endpoint
 }
 
-func (es *EndpointState) SetEndpoint(key string, endpoint *types.EndpointState) {
-	log.V(logLevel).Debugf("%s: set endpoint %s", logEndpointPrefix, key)
+func (es *EndpointState) SetEndpoint(key string, endpoint *models.EndpointState) {
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: set endpoint %s", logEndpointPrefix, key)
 	es.lock.Lock()
 	defer es.lock.Unlock()
 	es.endpoints[key] = endpoint
 }
 
 func (es *EndpointState) DelEndpoint(key string) {
-	log.V(logLevel).Debugf("%s: del endpoint %s", logEndpointPrefix, key)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s: del endpoint %s", logEndpointPrefix, key)
 	es.lock.Lock()
 	defer es.lock.Unlock()
 	delete(es.endpoints, key)

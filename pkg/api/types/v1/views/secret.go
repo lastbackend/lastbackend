@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,7 +19,7 @@
 package views
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"time"
 )
 
@@ -49,12 +49,12 @@ type SecretMap map[string]*Secret
 // swagger:model views_secret_list
 type SecretList []*Secret
 
-func (s *Secret) Decode() *types.Secret {
+func (s *Secret) Decode() *models.Secret {
 
-	o := new(types.Secret)
+	o := new(models.Secret)
 	o.Meta.Name = s.Meta.Name
 
-	o.Meta.SelfLink = *types.NewSecretSelfLink(s.Meta.Namespace, s.Meta.Name)
+	o.Meta.SelfLink = *models.NewSecretSelfLink(s.Meta.Namespace, s.Meta.Name)
 	o.Meta.Updated = s.Meta.Updated
 	o.Meta.Created = s.Meta.Created
 

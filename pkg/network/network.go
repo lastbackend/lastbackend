@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,14 +19,10 @@
 package network
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/internal/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/network/state"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
-	ni "github.com/lastbackend/lastbackend/pkg/runtime/cni/cni"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
-	pi "github.com/lastbackend/lastbackend/pkg/runtime/cpi/cpi"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -43,39 +39,42 @@ type Network struct {
 	}
 }
 
-func New(v *viper.Viper) (*Network, error) {
+func New(cfg config.Config) (*Network, error) {
+	//log := logger.WithContext(context.Background())
 
-	var err error
+	//var err errors
 
-	net := new(Network)
+	return nil, nil
 
-	if v.GetString("network.cni.type") == types.EmptyString &&
-		v.GetString("network.cpi.type") == types.EmptyString {
-		log.Debug("run without network management")
-		return nil, nil
-	}
-
-	net.state = state.New()
-	if net.cni, err = ni.New(v); err != nil {
-		log.Errorf("Cannot initialize cni: %v", err)
-		return nil, err
-	}
-
-	if net.cpi, err = pi.New(v); err != nil {
-		log.Errorf("Cannot initialize cni: %v", err)
-		return nil, err
-	}
-
-	rip := v.GetString("network.resolver.ip")
-	if rip == types.EmptyString {
-		rip = DefaultResolverIP
-	}
-
-	net.resolver.ip = rip
-	net.resolver.external = v.GetStringSlice("network.resolver.servers")
-	if len(net.resolver.external) == 0 {
-		net.resolver.external = []string{"8.8.8.8", "8.8.4.4"}
-	}
-
-	return net, nil
+	//net := new(Network)
+	//
+	//if v.GetString("network.cni.type") == models.EmptyString &&
+	//	v.GetString("network.cpi.type") == models.EmptyString {
+	//	log.Debug("run without network management")
+	//	return nil, nil
+	//}
+	//
+	//net.state = state.New()
+	//if net.cni, err = cni.New(v); err != nil {
+	//	log.Errorf("Cannot initialize cni: %v", err)
+	//	return nil, err
+	//}
+	//
+	//if net.cpi, err = cpi.New(v); err != nil {
+	//	log.Errorf("Cannot initialize cni: %v", err)
+	//	return nil, err
+	//}
+	//
+	//rip := v.GetString("network.resolver.ip")
+	//if rip == models.EmptyString {
+	//	rip = DefaultResolverIP
+	//}
+	//
+	//net.resolver.ip = rip
+	//net.resolver.external = v.GetStringSlice("network.resolver.servers")
+	//if len(net.resolver.external) == 0 {
+	//	net.resolver.external = []string{"8.8.8.8", "8.8.4.4"}
+	//}
+	//
+	//return net, nil
 }

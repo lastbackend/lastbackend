@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -21,12 +21,12 @@ package views
 import (
 	"encoding/json"
 
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type ConfigView struct{}
 
-func (sv *ConfigView) New(obj *types.Config) *Config {
+func (sv *ConfigView) New(obj *models.Config) *Config {
 	s := Config{}
 	s.Meta = s.ToMeta(obj.Meta)
 	s.Spec = s.ToSpec(obj.Spec)
@@ -37,7 +37,7 @@ func (s *Config) ToJson() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s *Config) ToMeta(obj types.ConfigMeta) ConfigMeta {
+func (s *Config) ToMeta(obj models.ConfigMeta) ConfigMeta {
 	meta := ConfigMeta{}
 	meta.Name = obj.Name
 	meta.SelfLink = obj.SelfLink.String()
@@ -48,7 +48,7 @@ func (s *Config) ToMeta(obj types.ConfigMeta) ConfigMeta {
 	return meta
 }
 
-func (s *Config) ToSpec(obj types.ConfigSpec) ConfigSpec {
+func (s *Config) ToSpec(obj models.ConfigSpec) ConfigSpec {
 
 	spec := ConfigSpec{}
 	spec.Data = make(map[string]string, 0)
@@ -60,7 +60,7 @@ func (s *Config) ToSpec(obj types.ConfigSpec) ConfigSpec {
 	return spec
 }
 
-func (sv ConfigView) NewList(obj *types.ConfigList) *ConfigList {
+func (sv ConfigView) NewList(obj *models.ConfigList) *ConfigList {
 	if obj == nil {
 		return nil
 	}

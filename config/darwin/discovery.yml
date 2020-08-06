@@ -1,0 +1,21 @@
+---
+# Runtime
+verbose: 3
+security:
+  token: lstbknd
+
+api:
+  uri: "127.0.0.1:2967"
+
+# Etcd database
+storage:
+  driver: "etcd"
+  etcd:
+    prefix: lastbackend
+    endpoints:
+      "127.0.0.1:2379"
+
+dns:
+  host: 0.0.0.0
+  port: 5354
+  ttl: 24h

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -31,9 +31,10 @@ type ServiceList []*Service
 
 // swagger:model views_service
 type Service struct {
-	Meta   ServiceMeta   `json:"meta"`
-	Status ServiceStatus `json:"status"`
-	Spec   ServiceSpec   `json:"spec"`
+	Meta        ServiceMeta            `json:"meta"`
+	Status      ServiceStatus          `json:"status"`
+	Spec        ServiceSpec            `json:"spec"`
+	Deployments map[string]*Deployment `json:"deployments,omitempty"`
 }
 
 // swagger:model views_service_meta

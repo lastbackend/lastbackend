@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,12 +20,12 @@ package views
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type PodView struct{}
 
-func (pv *PodView) New(pod *types.Pod) *Pod {
+func (pv *PodView) New(pod *models.Pod) *Pod {
 	p := new(Pod)
 	p.SetMeta(pod.Meta)
 	p.SetStatus(pod.Status)
@@ -34,7 +34,7 @@ func (pv *PodView) New(pod *types.Pod) *Pod {
 	return p
 }
 
-func (p *Pod) SetMeta(pod types.PodMeta) {
+func (p *Pod) SetMeta(pod models.PodMeta) {
 	meta := PodMeta{}
 	meta.Namespace = pod.Namespace
 	meta.Name = pod.Name
@@ -50,7 +50,7 @@ func (p *Pod) SetMeta(pod types.PodMeta) {
 	p.Meta = meta
 }
 
-func (p *Pod) SetSpec(pod types.PodSpec) {
+func (p *Pod) SetSpec(pod models.PodSpec) {
 	mv := new(ManifestView)
 	p.Spec = PodSpec{
 		State: PodSpecState{
@@ -61,7 +61,7 @@ func (p *Pod) SetSpec(pod types.PodSpec) {
 	}
 }
 
-func (p *Pod) SetStatus(pod types.PodStatus) {
+func (p *Pod) SetStatus(pod models.PodStatus) {
 	var status = PodStatus{
 		State:   pod.State,
 		Message: pod.Message,
@@ -106,7 +106,7 @@ func (p *Pod) SetStatus(pod types.PodStatus) {
 	p.Status = status
 }
 
-func (pv *PodView) NewList(obj *types.PodList) *PodList {
+func (pv *PodView) NewList(obj *models.PodList) *PodList {
 	pl := make(PodList, 0)
 	for _, d := range obj.Items {
 		v := new(PodView)

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,11 +20,11 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"io"
 	"io/ioutil"
 
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
 )
 
 type VolumeRequest struct{}
@@ -35,7 +35,7 @@ func (VolumeRequest) Manifest() *VolumeManifest {
 
 func (v *VolumeManifest) Validate() *errors.Err {
 
-	if v.Spec.Type == types.EmptyString {
+	if v.Spec.Type == models.EmptyString {
 		return errors.BadParameter("spec.type")
 	}
 

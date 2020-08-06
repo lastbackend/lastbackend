@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,7 +19,7 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 const logLevel = 3
@@ -38,7 +38,7 @@ func (s *State) Endpoints() *EndpointState {
 	return s.endpoints
 }
 
-func (s *State) Resolvers () *ResolverState {
+func (s *State) Resolvers() *ResolverState {
 	return s.resolvers
 }
 
@@ -46,13 +46,13 @@ func New() *State {
 
 	state := State{
 		subnets: &SubnetState{
-			subnets: make(map[string]types.NetworkState, 0),
+			subnets: make(map[string]models.NetworkState, 0),
 		},
 		endpoints: &EndpointState{
-			endpoints: make(map[string]*types.EndpointState, 0),
+			endpoints: make(map[string]*models.EndpointState, 0),
 		},
 		resolvers: &ResolverState{
-			resolvers: make(map[string]*types.ResolverManifest, 0),
+			resolvers: make(map[string]*models.ResolverManifest, 0),
 		},
 	}
 

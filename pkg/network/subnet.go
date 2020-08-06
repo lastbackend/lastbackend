@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,23 +20,22 @@ package network
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/network/state"
-)
+	"github.com/lastbackend/lastbackend/tools/logger"
 
-const logLevel = 3
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/pkg/network/state"
+	)
 
 func (n *Network) Subnets() *state.SubnetState {
 	return n.state.Subnets()
 }
 
-func (n *Network) Info(ctx context.Context) *types.NetworkState {
+func (n *Network) Info(ctx context.Context) *models.NetworkState {
 	return n.cni.Info(ctx)
 }
 
 func (n *Network) SubnetRestore(ctx context.Context) error {
-
+	log := logger.WithContext(context.Background())
 	sn, err := n.cni.Subnets(ctx)
 	if err != nil {
 		log.Errorf("Can-not get subnet list from CNI err: %v", err)
@@ -49,17 +48,17 @@ func (n *Network) SubnetRestore(ctx context.Context) error {
 	return nil
 }
 
-func (n *Network) SubnetManage(ctx context.Context, cidr string, sn *types.SubnetManifest) error {
-
+func (n *Network) SubnetManage(ctx context.Context, cidr string, sn *models.SubnetManifest) error {
+	log := logger.WithContext(context.Background())
 	subnets := n.state.Subnets().GetSubnets()
 	if state, ok := subnets[cidr]; ok {
 
 		log.Debugf("check subnet exists: %s", cidr)
-		if sn.State == types.StateDestroy {
+		if sn.State == models.StateDestroy {
 
 			log.Debugf("destroy subnet: %s", cidr)
 			if err := n.cni.Destroy(ctx, &state); err != nil {
-				log.Errorf("can not destroy subnet: %s", err.Error())
+				log.Errorf("can not be destroy subnet: %s", err.Error())
 				return err
 			}
 			n.state.Subnets().DelSubnet(cidr)
@@ -72,14 +71,14 @@ func (n *Network) SubnetManage(ctx context.Context, cidr string, sn *types.Subne
 		return nil
 	}
 
-	if sn.State == types.StateDestroy {
+	if sn.State == models.StateDestroy {
 		return nil
 	}
 
 	log.Debugf("create subnet: %s", cidr)
 	state, err := n.cni.Create(ctx, sn)
 	if err != nil {
-		log.Errorf("Can not create network subnet: %s", err.Error())
+		log.Errorf("can not be create network subnet: %s", err.Error())
 		return err
 	}
 
@@ -88,11 +87,11 @@ func (n *Network) SubnetManage(ctx context.Context, cidr string, sn *types.Subne
 }
 
 func (n *Network) SubnetDestroy(ctx context.Context, cidr string) error {
-
+	log := logger.WithContext(context.Background())
 	sn := n.state.Subnets().GetSubnet(cidr)
 
 	if err := n.cni.Destroy(ctx, sn); err != nil {
-		log.Errorf("Can not destroy network subnet: %s", err.Error())
+		log.Errorf("can not be destroy network subnet: %s", err.Error())
 		return err
 	}
 

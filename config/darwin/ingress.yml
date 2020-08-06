@@ -1,0 +1,18 @@
+---
+# Runtime
+verbose: 3
+security:
+  token: lstbknd
+
+haproxy:
+  stats:
+    username: "lastbackend"
+    password: "password"
+  path: "/var/run/lastbackend/ingress/haproxy"
+  exec: "/usr/sbin/haproxy"
+  pid: "/var/run/lastbackend/ingress/haproxy.pid"
+
+api:
+  uri: "127.0.0.1:2967"
+  tls:
+    insecure: true

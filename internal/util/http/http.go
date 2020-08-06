@@ -1,0 +1,108 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2020] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
+package http
+
+import (
+	"crypto/tls"
+	"crypto/x509"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+
+	"github.com/lastbackend/lastbackend/internal/util/http/cors"
+)
+
+type NotFoundHandler struct {
+	http.Handler
+}
+
+func (NotFoundHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	cors.Headers(w, r)
+	w.WriteHeader(http.StatusNotFound)
+	w.Write([]byte(`{"code": 404, "status": "Not Found", "message": "Not Found"}`))
+}
+
+type MethodNotAllowedHandler struct {
+	http.Handler
+}
+
+func (MethodNotAllowedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	cors.Headers(w, r)
+	w.WriteHeader(http.StatusMethodNotAllowed)
+	w.Write([]byte(`{"code": 405, "status": "Method Not Allowed", "message": "Method Not Allowed"}`))
+}
+
+func Handle(h http.HandlerFunc, middleware ...Middleware) http.HandlerFunc {
+	headers := func(h http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			cors.Headers(http.ResponseWriter(w), r)
+			h.ServeHTTP(w, r)
+		}
+	}
+
+	h = headers(h)
+	for _, m := range middleware {
+		h = m(h)
+	}
+
+	return h
+}
+
+func Listen(host string, port uint, router http.Handler) error {
+	return http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), router)
+}
+
+func ListenWithTLS(host string, port uint, caFile, certFile, keyFile string, router http.Handler) error {
+
+	server := &http.Server{
+		Addr:    fmt.Sprintf("%s:%d", host, port),
+		Handler: router,
+	}
+
+	server.TLSConfig = configTLS(caFile)
+
+	return server.ListenAndServeTLS(certFile, keyFile)
+}
+
+func configTLS(caFile string) *tls.Config {
+
+	caCert, err := ioutil.ReadFile(caFile)
+	if err != nil {
+		return nil
+	}
+
+	caCertPool := x509.NewCertPool()
+	ok := caCertPool.AppendCertsFromPEM(caCert)
+	if !ok {
+		panic("failed to parse root certificate")
+	}
+
+	TLSConfig := &tls.Config{
+		// Reject any TLS certificate that cannot be validated
+		ClientAuth: tls.RequireAndVerifyClientCert,
+		// Ensure that we only use our "CA" to validate certificates
+		ClientCAs: caCertPool,
+		// Force it server side
+		PreferServerCipherSuites: true,
+		// TLS 1.2 because we can
+		MinVersion: tls.VersionTLS12,
+	}
+
+	return TLSConfig
+}

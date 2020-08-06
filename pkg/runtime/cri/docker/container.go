@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,6 +20,7 @@ package docker
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"io"
 	"strconv"
 	"strings"
@@ -27,12 +28,12 @@ import (
 
 	docker "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
-func (r *Runtime) List(ctx context.Context, all bool) ([]*types.Container, error) {
-	var cl = make([]*types.Container, 0)
+func (r *Runtime) List(ctx context.Context, all bool) ([]*models.Container, error) {
+	var cl = make([]*models.Container, 0)
+	log := logger.WithContext(ctx)
 
 	items, err := r.client.ContainerList(ctx, docker.ContainerListOptions{
 		All: all,
@@ -59,7 +60,7 @@ func (r *Runtime) List(ctx context.Context, all bool) ([]*types.Container, error
 	return cl, nil
 }
 
-func (r *Runtime) Create(ctx context.Context, manifest *types.ContainerManifest) (string, error) {
+func (r *Runtime) Create(ctx context.Context, manifest *models.ContainerManifest) (string, error) {
 
 	c, err := r.client.ContainerCreate(
 		ctx,
@@ -112,9 +113,10 @@ func (r *Runtime) Logs(ctx context.Context, ID string, stdout, stderr, follow bo
 	})
 }
 
-func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, error) {
+func (r *Runtime) Inspect(ctx context.Context, ID string) (*models.Container, error) {
 
-	log.V(logLevel).Debug("Docker: Container Inspect")
+	log := logger.WithContext(ctx)
+	log.Debug("Docker: Container Inspect")
 
 	info, err := r.client.ContainerInspect(ctx, ID)
 	if err != nil {
@@ -122,7 +124,7 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 		return nil, err
 	}
 
-	c := &types.Container{
+	c := &models.Container{
 		ID:       info.ID,
 		Name:     strings.Replace(info.Name, "/", "", 1),
 		Image:    info.Config.Image,
@@ -144,12 +146,12 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 	c.Network.Gateway = info.NetworkSettings.Gateway
 	c.Network.IPAddress = info.NetworkSettings.IPAddress
 
-	c.Network.Ports = make([]*types.SpecTemplateContainerPort, 0)
+	c.Network.Ports = make([]*models.SpecTemplateContainerPort, 0)
 	for key, val := range info.HostConfig.PortBindings {
 
 		for _, port := range val {
 
-			p := &types.SpecTemplateContainerPort{
+			p := &models.SpecTemplateContainerPort{
 				HostIP:        port.HostIP,
 				ContainerPort: uint16(key.Int()),
 				Protocol:      key.Proto(),
@@ -168,24 +170,24 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 	}
 
 	switch info.State.Status {
-	case types.StateCreated:
-		c.State = types.StateCreated
-	case types.StateStarted:
-		c.State = types.StateStarted
-	case types.StatusRunning:
-		c.State = types.StateStarted
-	case types.StatusStopped:
-		c.State = types.StatusStopped
-	case types.StateExited:
-		c.State = types.StatusStopped
-	case types.StateError:
-		c.State = types.StateError
+	case models.StateCreated:
+		c.State = models.StateCreated
+	case models.StateStarted:
+		c.State = models.StateStarted
+	case models.StatusRunning:
+		c.State = models.StateStarted
+	case models.StatusStopped:
+		c.State = models.StatusStopped
+	case models.StateExited:
+		c.State = models.StatusStopped
+	case models.StateError:
+		c.State = models.StateError
 	}
 
 	c.Created, _ = time.Parse(time.RFC3339Nano, info.Created)
 	c.Started, _ = time.Parse(time.RFC3339Nano, info.State.StartedAt)
 
-	meta, ok := info.Config.Labels[types.ContainerTypeLBC]
+	meta, ok := info.Config.Labels[models.ContainerTypeLBC]
 	if ok {
 		c.Pod = meta
 	}
@@ -209,4 +211,8 @@ func (r *Runtime) Copy(ctx context.Context, ID, path string, content io.Reader) 
 	return r.client.CopyToContainer(ctx, ID, path, content, docker.CopyToContainerOptions{
 		AllowOverwriteDirWithFile: true,
 	})
+}
+
+func (r *Runtime) Close() error {
+	return r.client.Close()
 }

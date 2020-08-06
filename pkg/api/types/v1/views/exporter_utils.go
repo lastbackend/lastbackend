@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -21,19 +21,19 @@ package views
 import (
 	"encoding/json"
 
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type ExporterView struct{}
 
-func (nv *ExporterView) New(obj *types.Exporter) *Exporter {
+func (nv *ExporterView) New(obj *models.Exporter) *Exporter {
 	n := Exporter{}
 	n.Meta = nv.ToExporterMeta(obj.Meta)
 	n.Status = nv.ToExporterStatus(obj.Status)
 	return &n
 }
 
-func (nv *ExporterView) ToExporterMeta(meta types.ExporterMeta) ExporterMeta {
+func (nv *ExporterView) ToExporterMeta(meta models.ExporterMeta) ExporterMeta {
 	m := ExporterMeta{}
 	m.Name = meta.Name
 	m.Description = meta.Description
@@ -42,7 +42,7 @@ func (nv *ExporterView) ToExporterMeta(meta types.ExporterMeta) ExporterMeta {
 	return m
 }
 
-func (nv *ExporterView) ToExporterStatus(status types.ExporterStatus) ExporterStatus {
+func (nv *ExporterView) ToExporterStatus(status models.ExporterStatus) ExporterStatus {
 	return ExporterStatus{
 		Ready: status.Ready,
 	}
@@ -52,7 +52,7 @@ func (obj *Exporter) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func (nv *ExporterView) NewList(obj *types.ExporterList) *ExporterList {
+func (nv *ExporterView) NewList(obj *models.ExporterList) *ExporterList {
 	if obj == nil {
 		return nil
 	}
@@ -69,7 +69,7 @@ func (obj *ExporterList) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func (nv *ExporterView) NewManifest(obj *types.ExporterManifest) *ExporterManifest {
+func (nv *ExporterView) NewManifest(obj *models.ExporterManifest) *ExporterManifest {
 
 	manifest := ExporterManifest{}
 
@@ -80,9 +80,9 @@ func (nv *ExporterView) NewManifest(obj *types.ExporterManifest) *ExporterManife
 	return &manifest
 }
 
-func (obj *ExporterManifest) Decode() *types.ExporterManifest {
+func (obj *ExporterManifest) Decode() *models.ExporterManifest {
 
-	manifest := types.ExporterManifest{}
+	manifest := models.ExporterManifest{}
 
 	return &manifest
 }

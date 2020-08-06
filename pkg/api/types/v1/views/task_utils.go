@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -18,11 +18,11 @@
 
 package views
 
-import "github.com/lastbackend/lastbackend/pkg/distribution/types"
+import "github.com/lastbackend/lastbackend/internal/pkg/models"
 
 type TaskView struct{}
 
-func (tw *TaskView) New(obj *types.Task) *Task {
+func (tw *TaskView) New(obj *models.Task) *Task {
 	t := new(Task)
 
 	t.ToMeta(obj.Meta)
@@ -32,7 +32,7 @@ func (tw *TaskView) New(obj *types.Task) *Task {
 	return t
 }
 
-func (t *Task) ToMeta(obj types.TaskMeta) {
+func (t *Task) ToMeta(obj models.TaskMeta) {
 	tm := TaskMeta{}
 
 	tm.Namespace = obj.Namespace
@@ -49,7 +49,7 @@ func (t *Task) ToMeta(obj types.TaskMeta) {
 	t.Meta = tm
 }
 
-func (t *Task) ToStatus(obj types.TaskStatus) {
+func (t *Task) ToStatus(obj models.TaskStatus) {
 	ts := TaskStatus{
 		State:    obj.State,
 		Error:    obj.Error,
@@ -93,7 +93,7 @@ func (t *Task) ToStatus(obj types.TaskStatus) {
 	t.Status = ts
 }
 
-func (t *Task) ToSpec(obj types.TaskSpec) {
+func (t *Task) ToSpec(obj models.TaskSpec) {
 	mv := new(ManifestView)
 	ts := TaskSpec{
 		Template: mv.NewManifestSpecTemplate(obj.Template),
@@ -103,7 +103,7 @@ func (t *Task) ToSpec(obj types.TaskSpec) {
 	t.Spec = ts
 }
 
-func (tw *TaskView) NewList(obj *types.TaskList) *TaskList {
+func (tw *TaskView) NewList(obj *models.TaskList) *TaskList {
 
 	if obj == nil {
 		return nil

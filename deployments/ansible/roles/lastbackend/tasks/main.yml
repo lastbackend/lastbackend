@@ -1,0 +1,9 @@
+---
+
+- include_tasks: install_deps.yml
+
+- include_tasks: install_master.yml
+  when: "'master' not in group_names"
+
+- include_tasks: install_worker.yml
+  when: "'worker' not in group_names"

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -21,66 +21,64 @@ package docker
 import (
 	"context"
 
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
-
-	d "github.com/docker/docker/api/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 const CTYPE = "container"
 
-func (r *Runtime) Subscribe(ctx context.Context, container chan *types.Container) error {
-
-	log.Debugf("%s:subscribe:> create new event listener subscribe", logPrefix)
-
-	if _, err := r.client.Ping(ctx); err != nil {
-		log.Errorf("%s:subscribe:> can not ping docker client err: %v", logPrefix, err)
-		return err
-	}
-
-	event, err := r.client.Events(ctx, d.EventsOptions{})
-
-	for {
-		select {
-		case e := <-event:
-
-			if e.Type != CTYPE {
-				continue
-			}
-
-			log.Debugf("%s:subscribe:> event type: %s action: %v", logPrefix, e.Type, e.Action)
-
-			if len(e.ID) == 0 {
-				continue
-			}
-
-			if e.Status == types.StateDestroy {
-				c := new(types.Container)
-				c.ID = e.ID
-				c.State = types.StateDestroyed
-				container <- c
-				continue
-			}
-
-			c, err := r.Inspect(ctx, e.ID)
-			if err != nil {
-				log.Errorf("%s:subscribe:> container inspect err: %v", logPrefix, err)
-				continue
-			}
-
-			if c == nil {
-				continue
-			}
-
-			container <- c
-
-		case err := <-err:
-			if err == context.Canceled {
-				log.Warnf("%s:subscribe:> context canceled err: %v", logPrefix, err)
-				return nil
-			}
-			log.Errorf("%s:subscribe:> event listening err: %v", logPrefix, err)
-			return err
-		}
-	}
+func (r *Runtime) Subscribe(ctx context.Context, container chan *models.Container) error {
+	//
+	//log.Debugf("%s:subscribe:> create new event listener subscribe", logPrefix)
+	//
+	//if _, err := r.client.Ping(ctx); err != nil {
+	//	log.Errorf("%s:subscribe:> can not ping docker client err: %v", logPrefix, err)
+	//	return err
+	//}
+	//
+	//event, err := r.client.Events(ctx, d.EventsOptions{})
+	//
+	//for {
+	//	select {
+	//	case e := <-event:
+	//
+	//		if e.Type != CTYPE {
+	//			continue
+	//		}
+	//
+	//		log.Debugf("%s:subscribe:> event type: %s action: %v", logPrefix, e.Type, e.Action)
+	//
+	//		if len(e.ID) == 0 {
+	//			continue
+	//		}
+	//
+	//		if e.Status == models.StateDestroy {
+	//			c := new(models.Container)
+	//			c.ID = e.ID
+	//			c.State = models.StateDestroyed
+	//			container <- c
+	//			continue
+	//		}
+	//
+	//		c, err := r.Inspect(ctx, e.ID)
+	//		if err != nil {
+	//			log.Errorf("%s:subscribe:> container inspect err: %v", logPrefix, err)
+	//			continue
+	//		}
+	//
+	//		if c == nil {
+	//			continue
+	//		}
+	//
+	//		container <- c
+	//
+	//	case err := <-err:
+	//		if err == context.Canceled {
+	//			log.Warnf("%s:subscribe:> context canceled err: %v", logPrefix, err)
+	//			return nil
+	//		}
+	//		log.Errorf("%s:subscribe:> event listening err: %v", logPrefix, err)
+	//		return err
+	//	}
+	//}
+	return nil
 }

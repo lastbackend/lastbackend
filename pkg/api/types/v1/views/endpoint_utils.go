@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,12 +20,12 @@ package views
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type EndpointView struct{}
 
-func (ev *EndpointView) New(obj *types.Endpoint) *Endpoint {
+func (ev *EndpointView) New(obj *models.Endpoint) *Endpoint {
 	e := Endpoint{}
 	e.Meta = ev.ToEndpointMeta(obj.Meta)
 	e.Status = ev.ToEndpointStatus(obj.Status)
@@ -33,19 +33,19 @@ func (ev *EndpointView) New(obj *types.Endpoint) *Endpoint {
 	return &e
 }
 
-func (ev *EndpointView) ToEndpointMeta(meta types.EndpointMeta) EndpointMeta {
+func (ev *EndpointView) ToEndpointMeta(meta models.EndpointMeta) EndpointMeta {
 	return EndpointMeta{}
 }
 
-func (ev *EndpointView) ToEndpointStatus(meta types.EndpointStatus) EndpointStatus {
+func (ev *EndpointView) ToEndpointStatus(meta models.EndpointStatus) EndpointStatus {
 	return EndpointStatus{}
 }
 
-func (ev *EndpointView) ToEndpointSpec(meta types.EndpointSpec) EndpointSpec {
+func (ev *EndpointView) ToEndpointSpec(meta models.EndpointSpec) EndpointSpec {
 	return EndpointSpec{}
 }
 
-func (ev *EndpointView) NewList(obj map[string]*types.Endpoint) *EndpointList {
+func (ev *EndpointView) NewList(obj map[string]*models.Endpoint) *EndpointList {
 	if obj == nil {
 		return nil
 	}

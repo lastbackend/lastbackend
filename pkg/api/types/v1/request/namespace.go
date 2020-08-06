@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,9 +20,11 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/util/resource"
-	"gopkg.in/yaml.v2"
+
+	"gopkg.in/yaml.v3"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/util/resource"
 )
 
 type NamespaceManifest struct {
@@ -55,9 +57,9 @@ func (s *NamespaceManifest) ToYaml() ([]byte, error) {
 	return yaml.Marshal(s)
 }
 
-func (s *NamespaceManifest) SetNamespaceMeta(ns *types.Namespace) {
+func (s *NamespaceManifest) SetNamespaceMeta(ns *models.NamespaceManifest) {
 
-	if ns.Meta.Name == types.EmptyString {
+	if ns.Meta.Name == models.EmptyString {
 		ns.Meta.Name = *s.Meta.Name
 	}
 
@@ -73,7 +75,7 @@ func (s *NamespaceManifest) SetNamespaceMeta(ns *types.Namespace) {
 	}
 }
 
-func (s *NamespaceManifest) SetNamespaceSpec(ns *types.Namespace) error {
+func (s *NamespaceManifest) SetNamespaceSpec(ns *models.NamespaceManifest) error {
 
 	if s.Spec.Resources != nil {
 

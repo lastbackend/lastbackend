@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -23,21 +23,21 @@ package ipvs
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cni/utils"
-	"github.com/spf13/viper"
-	"github.com/vishvananda/netlink"
-	"golang.org/x/sys/unix"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"net"
 	"os/exec"
 	"strings"
 	"syscall"
 
-	libipvs "github.com/docker/libnetwork/ipvs"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
-	"github.com/lastbackend/lastbackend/pkg/util/network"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cni/utils"
+	"github.com/spf13/viper"
+	"github.com/vishvananda/netlink"
+	"golang.org/x/sys/unix"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/util/network"
+	libipvs "github.com/moby/ipvs"
 	"github.com/vishvananda/netlink/nl"
 )
 
@@ -50,7 +50,6 @@ const (
 
 // Proxy balancer
 type Proxy struct {
-	cpi cpi.CPI
 	// IVPS cmd path
 	ipvs *libipvs.Handle
 	link netlink.Link
@@ -65,14 +64,15 @@ type Service struct {
 	dest map[string]*libipvs.Destination
 }
 
-func (p *Proxy) Info(ctx context.Context) (map[string]*types.EndpointState, error) {
+func (p *Proxy) Info(ctx context.Context) (map[string]*models.EndpointState, error) {
 	return p.getState(ctx)
 }
 
 // Create new proxy rules
-func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*types.EndpointState, error) {
+func (p *Proxy) Create(ctx context.Context, manifest *models.EndpointManifest) (*models.EndpointState, error) {
 
-	log.V(logLevel).Debugf("%s create ipvs virtual server with ip %s: and upstreams %v", logIPVSPrefix, manifest.IP, manifest.Upstreams)
+	log := logger.WithContext(ctx)
+	log.Debugf("%s create ipvs virtual server with ip %s: and upstreams %v", logIPVSPrefix, manifest.IP, manifest.Upstreams)
 
 	var (
 		err   error
@@ -81,14 +81,14 @@ func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*
 
 	svcs, err := specToServices(manifest)
 	if err != nil {
-		log.Errorf("%s can not get services from manifest: %s", logIPVSPrefix, err.Error())
+		log.Errorf("%s can not be get services from manifest: %s", logIPVSPrefix, err.Error())
 		return nil, err
 	}
 
 	defer func() {
 		if err != nil {
 			for _, svc := range csvcs {
-				log.V(logLevel).Debugf("%s delete service: %s", logIPVSPrefix, svc.srvc.Address.String())
+				log.Debugf("%s delete service: %s", logIPVSPrefix, svc.srvc.Address.String())
 				p.ipvs.DelService(svc.srvc)
 			}
 		}
@@ -97,17 +97,17 @@ func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*
 	for _, svc := range svcs {
 
 		if len(svc.dest) == 0 {
-			log.V(logLevel).Debugf("%s skip creating service, destinations not exists", logIPVSPrefix)
+			log.Debugf("%s skip creating service, destinations not exists", logIPVSPrefix)
 			return nil, nil
 		}
 
-		log.V(logLevel).Debugf("%s create new service: %s", logIPVSPrefix, svc.srvc.Address.String())
+		log.Debugf("%s create new service: %s", logIPVSPrefix, svc.srvc.Address.String())
 		if err := p.ipvs.NewService(svc.srvc); err != nil {
 			log.Errorf("%s create service err: %s", logIPVSPrefix, err.Error())
 		}
 
 		for _, dest := range svc.dest {
-			log.V(logLevel).Debugf("%s create new destination %s for service: %s", logIPVSPrefix,
+			log.Debugf("%s create new destination %s for service: %s", logIPVSPrefix,
 				dest.Address.String(), svc.srvc.Address.String())
 
 			if err := p.ipvs.NewDestination(svc.srvc, dest); err != nil {
@@ -142,17 +142,18 @@ func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*
 }
 
 // Destroy proxy rules
-func (p *Proxy) Destroy(ctx context.Context, state *types.EndpointState) error {
+func (p *Proxy) Destroy(ctx context.Context, state *models.EndpointState) error {
 
 	var (
 		err error
+		log = logger.WithContext(ctx)
 	)
 
 	if state == nil {
 		return nil
 	}
 
-	mf := types.EndpointManifest{}
+	mf := models.EndpointManifest{}
 	mf.EndpointSpec = state.EndpointSpec
 	mf.Upstreams = state.Upstreams
 
@@ -163,11 +164,11 @@ func (p *Proxy) Destroy(ctx context.Context, state *types.EndpointState) error {
 
 	for _, svc := range svcs {
 		if err = p.ipvs.DelService(svc.srvc); err != nil {
-			log.Errorf("%s can not delete service: %s", logIPVSPrefix, err.Error())
+			log.Errorf("%s can not be delete service: %s", logIPVSPrefix, err.Error())
 		}
 
 		if err := p.delIpBindToLink(svc.srvc.Address.String()); err != nil {
-			log.Errorf("%s can not unbind ip from link: %s", logIPVSPrefix, err.Error())
+			log.Errorf("%s can not be unbind ip from link: %s", logIPVSPrefix, err.Error())
 		}
 	}
 
@@ -175,21 +176,23 @@ func (p *Proxy) Destroy(ctx context.Context, state *types.EndpointState) error {
 }
 
 // Update proxy rules
-func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *types.EndpointManifest) (*types.EndpointState, error) {
+func (p *Proxy) Update(ctx context.Context, state *models.EndpointState, spec *models.EndpointManifest) (*models.EndpointState, error) {
+
+	log := logger.WithContext(ctx)
 
 	psvc, err := specToServices(spec)
 	if err != nil {
-		log.Errorf("%s can not convert spec to services: %s", logIPVSPrefix, err.Error())
+		log.Errorf("%s can not be convert spec to services: %s", logIPVSPrefix, err.Error())
 		return state, err
 	}
 
-	mf := types.EndpointManifest{}
+	mf := models.EndpointManifest{}
 	mf.EndpointSpec = state.EndpointSpec
 	mf.Upstreams = state.Upstreams
 
 	csvc, err := specToServices(&mf)
 	if err != nil {
-		log.Errorf("%s can not convert state to services: %s", logIPVSPrefix, err.Error())
+		log.Errorf("%s can not be convert state to services: %s", logIPVSPrefix, err.Error())
 		return state, err
 	}
 
@@ -200,7 +203,7 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 		if _, ok := psvc[id]; !ok {
 			log.Debugf("%s delete service: %s", logIPVSPrefix, id)
 			if err := p.ipvs.DelService(svc.srvc); err != nil {
-				log.Errorf("%s can not remove service: %s", logIPVSPrefix, err.Error())
+				log.Errorf("%s can not be remove service: %s", logIPVSPrefix, err.Error())
 			}
 			continue
 		}
@@ -212,7 +215,7 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 		if _, ok := csvc[id]; !ok {
 			log.Debugf("%s create service: %s", logIPVSPrefix, id)
 			if err := p.ipvs.NewService(svc.srvc); err != nil {
-				log.Errorf("%s can not create service: %s", logIPVSPrefix, err.Error())
+				log.Errorf("%s can not be create service: %s", logIPVSPrefix, err.Error())
 			}
 		} else {
 			// check service upstreams for removing
@@ -221,7 +224,7 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 				if _, ok := svc.dest[did]; !ok {
 					log.Debugf("%s service %s backend delete %s", logIPVSPrefix, id, did)
 					if err := p.ipvs.DelDestination(svc.srvc, dest); err != nil {
-						log.Errorf("%s can not remove backend: %s", logIPVSPrefix, err.Error())
+						log.Errorf("%s can not be remove backend: %s", logIPVSPrefix, err.Error())
 					}
 				}
 			}
@@ -233,13 +236,13 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 
 			if _, ok := csvc[id]; !ok {
 				if err := p.ipvs.NewDestination(svc.srvc, dest); err != nil {
-					log.Errorf("%s can not add backend: %s", logIPVSPrefix, err.Error())
+					log.Errorf("%s can not be add backend: %s", logIPVSPrefix, err.Error())
 				}
 			} else {
 				if _, ok := csvc[id].dest[did]; !ok {
 					log.Debugf("%s service %s backend create %s", logIPVSPrefix, id, did)
 					if err := p.ipvs.NewDestination(svc.srvc, dest); err != nil {
-						log.Errorf("%s can not add backend: %s", logIPVSPrefix, err.Error())
+						log.Errorf("%s can not be add backend: %s", logIPVSPrefix, err.Error())
 					}
 				}
 			}
@@ -270,7 +273,9 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 }
 
 // getStateByIp returns current proxy state filtered by endpoint ip
-func (p *Proxy) getStateByIP(ctx context.Context, ip string) (*types.EndpointState, error) {
+func (p *Proxy) getStateByIP(ctx context.Context, ip string) (*models.EndpointState, error) {
+
+	log := logger.WithContext(ctx)
 
 	state, err := p.getState(ctx)
 	if err != nil {
@@ -282,9 +287,10 @@ func (p *Proxy) getStateByIP(ctx context.Context, ip string) (*types.EndpointSta
 }
 
 // getStateByIp returns current proxy state
-func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, error) {
+func (p *Proxy) getState(ctx context.Context) (map[string]*models.EndpointState, error) {
 
-	el := make(map[string]*types.EndpointState)
+	log := logger.WithContext(ctx)
+	el := make(map[string]*models.EndpointState)
 
 	if out, err := exec.Command("modprobe", "-va", "ip_vs").CombinedOutput(); err != nil {
 		return nil, fmt.Errorf("%s running modprobe ip_vs failed with message: `%s`, error: %s", logIPVSPrefix, strings.TrimSpace(string(out)), err.Error())
@@ -307,7 +313,7 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 
 		endpoint := el[host]
 		if endpoint == nil {
-			endpoint = new(types.EndpointState)
+			endpoint = new(models.EndpointState)
 			endpoint.IP = host
 			endpoint.PortMap = make(map[uint16]string)
 			endpoint.Upstreams = make([]string, 0)
@@ -332,7 +338,7 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 			}
 
 			if prt != 0 && prt != dest.Port {
-				log.V(logLevel).Debugf("%s dest port mismatch %d != %d", logIPVSPrefix, prt, dest.Port)
+				log.Debugf("%s dest port mismatch %d != %d", logIPVSPrefix, prt, dest.Port)
 				break
 			}
 
@@ -377,16 +383,20 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 
 func (p *Proxy) addIpBindToLink(ip string, dest net.IP) error {
 
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
 	ipn := net.ParseIP(ip)
 	addr, err := netlink.ParseAddr(fmt.Sprintf("%s/32", ipn.String()))
 	if err != nil {
-		log.Errorf("%s can not parse IP %s; %s", logIPVSPrefix, ip, err.Error())
+		log.Errorf("%s can not be parse IP %s; %s", logIPVSPrefix, ip, err.Error())
 		return err
 	}
 
 	addrs, err := netlink.AddrList(p.link, netlink.FAMILY_V4)
 	if err != nil {
-		log.Errorf("%s can not fetch IPs: %s", logIPVSPrefix, err.Error())
+		log.Errorf("%s can not be fetch IPs: %s", logIPVSPrefix, err.Error())
 		return err
 	}
 
@@ -403,7 +413,7 @@ func (p *Proxy) addIpBindToLink(ip string, dest net.IP) error {
 
 	routes, err := netlink.RouteGet(ipn)
 	if err != nil {
-		log.Errorf("%s can not get routes for ip", logIPVSPrefix)
+		log.Errorf("%s can not be get routes for ip", logIPVSPrefix)
 		return err
 	}
 
@@ -418,7 +428,7 @@ func (p *Proxy) addIpBindToLink(ip string, dest net.IP) error {
 		}
 
 		if err := netlink.RouteReplace(&route); err != nil {
-			log.Errorf("%s can not replace route: %s", logIPVSPrefix, err.Error())
+			log.Errorf("%s can not be replace route: %s", logIPVSPrefix, err.Error())
 			return err
 		}
 	}
@@ -428,16 +438,19 @@ func (p *Proxy) addIpBindToLink(ip string, dest net.IP) error {
 
 func (p *Proxy) delIpBindToLink(ip string) error {
 
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
 	ipn := net.ParseIP(ip)
 	addr, err := netlink.ParseAddr(fmt.Sprintf("%s/32", ipn.String()))
 	if err != nil {
-		log.Errorf("%s can not parse IP %s; %s", logIPVSPrefix, ip, err.Error())
+		log.Errorf("%s can not be parse IP %s; %s", logIPVSPrefix, ip, err.Error())
 		return err
 	}
 
 	addrs, err := netlink.AddrList(p.link, netlink.FAMILY_V4)
 	if err != nil {
-		log.Errorf("%s can not fetch IPs:%s", logIPVSPrefix, err.Error())
+		log.Errorf("%s can not be fetch IPs:%s", logIPVSPrefix, err.Error())
 		return err
 	}
 
@@ -451,7 +464,7 @@ func (p *Proxy) delIpBindToLink(ip string) error {
 	}
 	if exists {
 		if err := netlink.AddrDel(p.link, addr); err != nil {
-			log.Errorf("%s can not remove link: %s", logIPVSPrefix, err.Error())
+			log.Errorf("%s can not be remove link: %s", logIPVSPrefix, err.Error())
 		}
 	}
 
@@ -460,10 +473,13 @@ func (p *Proxy) delIpBindToLink(ip string) error {
 
 func New(v *viper.Viper) (*Proxy, error) {
 
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
+
 	prx := new(Proxy)
 	handler, err := libipvs.New("")
 	if err != nil {
-		log.Errorf("%s can not initialize ipvs: %s", logIPVSPrefix, err.Error())
+		log.Errorf("%s can not be initialize ipvs: %s", logIPVSPrefix, err.Error())
 		return nil, err
 	}
 
@@ -494,7 +510,7 @@ func New(v *viper.Viper) (*Proxy, error) {
 		log.Debugf("%s ipvs interface not found: create new", logIPVSPrefix)
 		if err := netlink.LinkAdd(&link); err != nil {
 			if err == syscall.EEXIST {
-				log.V(logLevel).Debugf("%s device already exists: %s", logIPVSPrefix, link.Name)
+				log.Debugf("%s device already exists: %s", logIPVSPrefix, link.Name)
 
 				l, err := netlink.LinkByName(link.Name)
 				if err != nil {
@@ -503,7 +519,7 @@ func New(v *viper.Viper) (*Proxy, error) {
 
 				prx.link = l.(*netlink.Vxlan)
 			} else {
-				log.Errorf("%s can not create ipvs dummy interface: %s", logIPVSPrefix, err.Error())
+				log.Errorf("%s can not be create ipvs dummy interface: %s", logIPVSPrefix, err.Error())
 				return nil, err
 			}
 		}
@@ -516,7 +532,7 @@ func New(v *viper.Viper) (*Proxy, error) {
 		iiface = v.GetString("network.cpi.interface.internal")
 	)
 
-	if eiface == types.EmptyString {
+	if eiface == models.EmptyString {
 		log.Debugf("%s find default interface to traffic route by name", logIPVSPrefix)
 		_, prx.dest.external, err = utils.GetDefaultInterface()
 		if err != nil {
@@ -533,7 +549,7 @@ func New(v *viper.Viper) (*Proxy, error) {
 		log.Debugf("%s external route ip net: %s", logIPVSPrefix, prx.dest.external.String())
 	}
 
-	if iiface == types.EmptyString {
+	if iiface == models.EmptyString {
 		iiface = ifaceDocker
 	}
 
@@ -549,7 +565,10 @@ func New(v *viper.Viper) (*Proxy, error) {
 	return prx, nil
 }
 
-func specToServices(spec *types.EndpointManifest) (map[string]*Service, error) {
+func specToServices(spec *models.EndpointManifest) (map[string]*Service, error) {
+
+	ctx := logger.NewContext(context.Background(), nil)
+	log := logger.WithContext(ctx)
 
 	var svcs = make(map[string]*Service, 0)
 

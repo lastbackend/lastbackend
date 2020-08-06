@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,31 +20,29 @@ package local
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type Proxy struct {
-	cpi.CPI
-}
-
-func (p *Proxy) Info(ctx context.Context) (map[string]*types.EndpointState, error) {
-	es := make(map[string]*types.EndpointState)
-	return es, nil
-}
-
-func (p *Proxy) Create(ctx context.Context, endpoint *types.EndpointManifest) (*types.EndpointState, error) {
-	return new(types.EndpointState), nil
-}
-
-func (p *Proxy) Destroy(ctx context.Context, endpoint *types.EndpointState) error {
-	return nil
-}
-
-func (p *Proxy) Update(ctx context.Context, endpoint *types.EndpointState, spec *types.EndpointManifest) (*types.EndpointState, error) {
-	return new(types.EndpointState), nil
 }
 
 func New() (*Proxy, error) {
 	return &Proxy{}, nil
+}
+
+func (p *Proxy) Info(ctx context.Context) (map[string]*models.EndpointState, error) {
+	es := make(map[string]*models.EndpointState)
+	return es, nil
+}
+
+func (p *Proxy) Create(ctx context.Context, endpoint *models.EndpointManifest) (*models.EndpointState, error) {
+	return new(models.EndpointState), nil
+}
+
+func (p *Proxy) Destroy(ctx context.Context, endpoint *models.EndpointState) error {
+	return nil
+}
+
+func (p *Proxy) Update(ctx context.Context, endpoint *models.EndpointState, spec *models.EndpointManifest) (*models.EndpointState, error) {
+	return new(models.EndpointState), nil
 }

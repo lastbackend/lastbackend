@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,9 +20,9 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/util/resource"
-	"gopkg.in/yaml.v2"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/util/resource"
+	"gopkg.in/yaml.v3"
 )
 
 type JobManifest struct {
@@ -100,9 +100,9 @@ func (j *JobManifest) ToYaml() ([]byte, error) {
 	return yaml.Marshal(j)
 }
 
-func (j *JobManifest) SetJobMeta(job *types.Job) {
+func (j *JobManifest) SetJobMeta(job *models.Job) {
 
-	if job.Meta.Name == types.EmptyString {
+	if job.Meta.Name == models.EmptyString {
 		job.Meta.Name = *j.Meta.Name
 	}
 
@@ -116,7 +116,7 @@ func (j *JobManifest) SetJobMeta(job *types.Job) {
 
 }
 
-func (j *JobManifest) SetJobSpec(job *types.Job) (err error) {
+func (j *JobManifest) SetJobSpec(job *models.Job) (err error) {
 
 	job.Spec.Enabled = j.Spec.Enabled
 
@@ -126,7 +126,7 @@ func (j *JobManifest) SetJobSpec(job *types.Job) (err error) {
 	job.Spec.Provider.Timeout = j.Spec.Provider.Timeout
 
 	if j.Spec.Provider.Http != nil {
-		job.Spec.Provider.Http = new(types.JobSpecProviderHTTP)
+		job.Spec.Provider.Http = new(models.JobSpecProviderHTTP)
 		job.Spec.Provider.Http.Endpoint = j.Spec.Provider.Http.Endpoint
 		job.Spec.Provider.Http.Method = j.Spec.Provider.Http.Method
 		job.Spec.Provider.Http.Headers = j.Spec.Provider.Http.Headers
@@ -143,7 +143,7 @@ func (j *JobManifest) SetJobSpec(job *types.Job) (err error) {
 	}
 
 	if j.Spec.Hook.Http != nil {
-		job.Spec.Hook.Http = new(types.JobSpecHookHTTP)
+		job.Spec.Hook.Http = new(models.JobSpecHookHTTP)
 		job.Spec.Hook.Http.Endpoint = j.Spec.Hook.Http.Endpoint
 		job.Spec.Hook.Http.Method = j.Spec.Hook.Http.Method
 		job.Spec.Hook.Http.Headers = j.Spec.Hook.Http.Headers

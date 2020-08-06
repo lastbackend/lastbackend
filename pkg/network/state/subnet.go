@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,8 +19,9 @@
 package state
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"context"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"sync"
 )
 
@@ -28,20 +29,22 @@ const logSubnetPrefix = "state:subnet:>"
 
 type SubnetState struct {
 	lock    sync.RWMutex
-	subnets map[string]types.NetworkState
+	subnets map[string]models.NetworkState
 }
 
-func (n *SubnetState) GetSubnets() map[string]types.NetworkState {
+func (n *SubnetState) GetSubnets() map[string]models.NetworkState {
 	return n.subnets
 }
 
-func (n *SubnetState) AddSubnet(cidr string, sn *types.NetworkState) {
-	log.V(logLevel).Debugf("%s add subnet: %s", logSubnetPrefix, cidr)
+func (n *SubnetState) AddSubnet(cidr string, sn *models.NetworkState) {
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s add subnet: %s", logSubnetPrefix, cidr)
 	n.SetSubnet(cidr, sn)
 }
 
-func (n *SubnetState) SetSubnet(cidr string, sn *types.NetworkState) {
-	log.V(logLevel).Debugf("%s set subnet: %s", logSubnetPrefix, cidr)
+func (n *SubnetState) SetSubnet(cidr string, sn *models.NetworkState) {
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s set subnet: %s", logSubnetPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 
@@ -52,8 +55,9 @@ func (n *SubnetState) SetSubnet(cidr string, sn *types.NetworkState) {
 	n.subnets[cidr] = *sn
 }
 
-func (n *SubnetState) GetSubnet(cidr string) *types.NetworkState {
-	log.V(logLevel).Debugf("%s get subnet: %s", logSubnetPrefix, cidr)
+func (n *SubnetState) GetSubnet(cidr string) *models.NetworkState {
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s get subnet: %s", logSubnetPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	s, ok := n.subnets[cidr]
@@ -64,7 +68,8 @@ func (n *SubnetState) GetSubnet(cidr string) *types.NetworkState {
 }
 
 func (n *SubnetState) DelSubnet(cidr string) {
-	log.V(logLevel).Debugf("%s del subnet: %s", logSubnetPrefix, cidr)
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s del subnet: %s", logSubnetPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	if _, ok := n.subnets[cidr]; ok {

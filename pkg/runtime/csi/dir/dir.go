@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -23,9 +23,8 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/hex"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"io"
 	"io/ioutil"
 	"os"
@@ -34,16 +33,15 @@ import (
 )
 
 type Storage struct {
-	csi.CSI
 	root string
 }
 
-type StorageOpts struct {
-	root string
+type Config struct {
+	RootDir string
 }
 
-func (s *Storage) List(ctx context.Context) (map[string]*types.VolumeState, error) {
-	var vols = make(map[string]*types.VolumeState, 0)
+func (s *Storage) List(ctx context.Context) (map[string]*models.VolumeState, error) {
+	var vols = make(map[string]*models.VolumeState, 0)
 
 	var dirs []string
 	f, err := os.Open(s.root)
@@ -64,10 +62,10 @@ func (s *Storage) List(ctx context.Context) (map[string]*types.VolumeState, erro
 	}
 
 	for _, dir := range dirs {
-		vol := new(types.VolumeState)
+		vol := new(models.VolumeState)
 
 		vol.Path = filepath.Join(s.root, dir)
-		vol.Type = types.KindVolumeHostDir
+		vol.Type = models.KindVolumeHostDir
 		vol.Ready = true
 		vols[dir] = vol
 	}
@@ -75,10 +73,10 @@ func (s *Storage) List(ctx context.Context) (map[string]*types.VolumeState, erro
 	return vols, nil
 }
 
-func (s *Storage) Create(ctx context.Context, name string, manifest *types.VolumeManifest) (*types.VolumeState, error) {
+func (s *Storage) Create(ctx context.Context, name string, manifest *models.VolumeManifest) (*models.VolumeState, error) {
 
 	var (
-		status = new(types.VolumeState)
+		status = new(models.VolumeState)
 		path   = filepath.Join(s.root, strings.Replace(name, ":", "_", -1))
 	)
 
@@ -95,13 +93,13 @@ func (s *Storage) Create(ctx context.Context, name string, manifest *types.Volum
 	return status, nil
 }
 
-func (s *Storage) FilesList(ctx context.Context, state *types.VolumeState) ([]string, error) {
+func (s *Storage) FilesList(ctx context.Context, state *models.VolumeState) ([]string, error) {
 
 	return make([]string, 0), nil
 }
 
-func (s *Storage) FilesPut(ctx context.Context, state *types.VolumeState, files map[string]string) error {
-
+func (s *Storage) FilesPut(ctx context.Context, state *models.VolumeState, files map[string]string) error {
+	log := logger.WithContext(context.Background())
 	for file, data := range files {
 		path := filepath.Join(state.Path, file)
 		var f *os.File
@@ -119,7 +117,7 @@ func (s *Storage) FilesPut(ctx context.Context, state *types.VolumeState, files 
 		f.Close()
 
 		if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
-			log.Errorf("can not write data to file: %s", err.Error())
+			log.Errorf("can not be write data to file: %s", err.Error())
 		}
 
 	}
@@ -127,7 +125,7 @@ func (s *Storage) FilesPut(ctx context.Context, state *types.VolumeState, files 
 	return nil
 }
 
-func (s *Storage) FilesCheck(ctx context.Context, state *types.VolumeState, files map[string]string) (bool, error) {
+func (s *Storage) FilesCheck(ctx context.Context, state *models.VolumeState, files map[string]string) (bool, error) {
 
 	for file, data := range files {
 		path := filepath.Join(state.Path, file)
@@ -165,7 +163,7 @@ func (s *Storage) FilesCheck(ctx context.Context, state *types.VolumeState, file
 	return true, nil
 }
 
-func (s *Storage) FilesDel(ctx context.Context, state *types.VolumeState, files []string) error {
+func (s *Storage) FilesDel(ctx context.Context, state *models.VolumeState, files []string) error {
 
 	for _, file := range files {
 		path := filepath.Join(state.Path, file)
@@ -179,7 +177,7 @@ func (s *Storage) FilesDel(ctx context.Context, state *types.VolumeState, files 
 	return nil
 }
 
-func (s *Storage) Remove(ctx context.Context, state *types.VolumeState) error {
+func (s *Storage) Remove(ctx context.Context, state *models.VolumeState) error {
 
 	if err := os.RemoveAll(filepath.Join(state.Path)); err != nil {
 		if os.IsNotExist(err) {
@@ -191,13 +189,13 @@ func (s *Storage) Remove(ctx context.Context, state *types.VolumeState) error {
 	return nil
 }
 
-func Get(path string) (*Storage, error) {
-
+func Get(cfg Config) (*Storage, error) {
+	log := logger.WithContext(context.Background())
 	log.Debug("Initialize dir storage interface")
 	var s = new(Storage)
 
-	if path != "" {
-		s.root = path
+	if cfg.RootDir != "" {
+		s.root = cfg.RootDir
 		log.Debugf("Initialize dir storage interface root: %s", s.root)
 	}
 

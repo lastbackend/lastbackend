@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -21,7 +21,6 @@ package utils
 import (
 	"fmt"
 	"github.com/coreos/go-iptables/iptables"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"net"
 	"strings"
 	"time"
@@ -79,11 +78,12 @@ func ipTablesRulesExist(ipt IPTables, rules []IPTablesRule) (bool, error) {
 	return true, nil
 }
 
-func SetupAndEnsureIPTables(rules []IPTablesRule, resyncPeriod int) {
+func SetupAndEnsureIPTables(rules []IPTablesRule, resyncPeriod int)  {
+
 	ipt, err := iptables.New()
 	if err != nil {
 		// if we can't find iptables, give up and return
-		log.Errorf("Failed to setup IPTables. iptables binary was not found: %v", err)
+		fmt.Println("Failed to setup IPTables. iptables binary was not found: %v", err)
 		return
 	}
 
@@ -94,7 +94,7 @@ func SetupAndEnsureIPTables(rules []IPTablesRule, resyncPeriod int) {
 	for {
 		// Ensure that all the iptables rules exist every 5 seconds
 		if err := ensureIPTables(ipt, rules); err != nil {
-			log.Errorf("Failed to ensure iptables rules: %v", err)
+			fmt.Println("Failed to ensure iptables rules: %v", err)
 		}
 
 		time.Sleep(time.Duration(resyncPeriod) * time.Second)
@@ -104,7 +104,7 @@ func SetupAndEnsureIPTables(rules []IPTablesRule, resyncPeriod int) {
 func ensureIPTables(ipt IPTables, rules []IPTablesRule) error {
 	exists, err := ipTablesRulesExist(ipt, rules)
 	if err != nil {
-		return fmt.Errorf("Error checking rule existence: %v", err)
+		return fmt.Errorf("error checking rule existence: %v", err)
 	}
 	if exists {
 		// if all the rules already exist, no need to do anything
@@ -112,17 +112,17 @@ func ensureIPTables(ipt IPTables, rules []IPTablesRule) error {
 	}
 	// Otherwise, teardown all the rules and set them up again
 	// We do this because the order of the rules is important
-	log.Info("Some iptables rules are missing; deleting and recreating rules")
+	fmt.Println("Some iptables rules are missing; deleting and recreating rules")
 	teardownIPTables(ipt, rules)
 	if err = setupIPTables(ipt, rules); err != nil {
-		return fmt.Errorf("Error setting up rules: %v", err)
+		return fmt.Errorf("error setting up rules: %v", err)
 	}
 	return nil
 }
 
 func setupIPTables(ipt IPTables, rules []IPTablesRule) error {
 	for _, rule := range rules {
-		log.Info("Adding iptables rule: ", strings.Join(rule.rulespec, " "))
+		fmt.Println("Adding iptables rule: ", strings.Join(rule.rulespec, " "))
 		err := ipt.AppendUnique(rule.table, rule.chain, rule.rulespec...)
 		if err != nil {
 			return fmt.Errorf("failed to insert IPTables rule: %v", err)
@@ -134,7 +134,7 @@ func setupIPTables(ipt IPTables, rules []IPTablesRule) error {
 
 func teardownIPTables(ipt IPTables, rules []IPTablesRule) {
 	for _, rule := range rules {
-		log.Info("Deleting iptables rule: ", strings.Join(rule.rulespec, " "))
+		fmt.Println("Deleting iptables rule: ", strings.Join(rule.rulespec, " "))
 		// We ignore errors here because if there's an error it's almost certainly because the rule
 		// doesn't exist, which is fine (we don't need to delete rules that don't exist)
 		ipt.Delete(rule.table, rule.chain, rule.rulespec...)

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -21,19 +21,19 @@ package views
 import (
 	"encoding/json"
 
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type DiscoveryView struct{}
 
-func (nv *DiscoveryView) New(obj *types.Discovery) *Discovery {
+func (nv *DiscoveryView) New(obj *models.Discovery) *Discovery {
 	n := Discovery{}
 	n.Meta = nv.ToDiscoveryMeta(obj.Meta)
 	n.Status = nv.ToDiscoveryStatus(obj.Status)
 	return &n
 }
 
-func (nv *DiscoveryView) ToDiscoveryMeta(meta types.DiscoveryMeta) DiscoveryMeta {
+func (nv *DiscoveryView) ToDiscoveryMeta(meta models.DiscoveryMeta) DiscoveryMeta {
 	m := DiscoveryMeta{}
 	m.Name = meta.Name
 	m.Description = meta.Description
@@ -42,7 +42,7 @@ func (nv *DiscoveryView) ToDiscoveryMeta(meta types.DiscoveryMeta) DiscoveryMeta
 	return m
 }
 
-func (nv *DiscoveryView) ToDiscoveryStatus(status types.DiscoveryStatus) DiscoveryStatus {
+func (nv *DiscoveryView) ToDiscoveryStatus(status models.DiscoveryStatus) DiscoveryStatus {
 	return DiscoveryStatus{
 		Ready: status.Ready,
 	}
@@ -52,7 +52,7 @@ func (obj *Discovery) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func (nv *DiscoveryView) NewList(obj *types.DiscoveryList) *DiscoveryList {
+func (nv *DiscoveryView) NewList(obj *models.DiscoveryList) *DiscoveryList {
 	if obj == nil {
 		return nil
 	}
@@ -69,10 +69,10 @@ func (obj *DiscoveryList) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func (nv *DiscoveryView) NewManifest(obj *types.DiscoveryManifest) *DiscoveryManifest {
+func (nv *DiscoveryView) NewManifest(obj *models.DiscoveryManifest) *DiscoveryManifest {
 
 	manifest := DiscoveryManifest{
-		Subnets: make(map[string]*types.SubnetManifest, 0),
+		Subnets: make(map[string]*models.SubnetManifest, 0),
 	}
 
 	if obj == nil {
@@ -85,10 +85,10 @@ func (nv *DiscoveryView) NewManifest(obj *types.DiscoveryManifest) *DiscoveryMan
 	return &manifest
 }
 
-func (obj *DiscoveryManifest) Decode() *types.DiscoveryManifest {
+func (obj *DiscoveryManifest) Decode() *models.DiscoveryManifest {
 
-	manifest := types.DiscoveryManifest{
-		Network: make(map[string]*types.SubnetManifest, 0),
+	manifest := models.DiscoveryManifest{
+		Network: make(map[string]*models.SubnetManifest, 0),
 	}
 
 	manifest.Meta.Initial = obj.Meta.Initial

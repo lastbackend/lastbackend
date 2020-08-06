@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,16 +20,33 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
 	"io/ioutil"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"github.com/lastbackend/lastbackend/internal/util/validator"
 )
 
 type NamespaceRequest struct{}
 
 func (NamespaceRequest) Manifest() *NamespaceManifest {
 	return new(NamespaceManifest)
+}
+
+func (NamespaceRequest) ReadManifest(reader io.Reader) (models.NamespaceResourceManifest, *errors.Err) {
+
+	if reader == nil {
+		err := errors.New("data body can not be null")
+		return nil, errors.New("namespace").IncorrectJSON(err)
+	}
+
+	_, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, errors.New("namespace").Unknown(err)
+	}
+
+	return nil, nil
 }
 
 func (NamespaceRequest) ApplyManifest() *NamespaceApplyManifest {
@@ -49,35 +66,42 @@ func (s *NamespaceManifest) Validate() *errors.Err {
 	switch true {
 	case s.Meta.Name != nil && !validator.IsServiceName(*s.Meta.Name):
 		return errors.New("namespace").BadParameter("name")
-	case s.Meta.Description != nil && len(*s.Meta.Description) > DEFAULT_DESCRIPTION_LIMIT:
+	case s.Meta.Description != nil && len(*s.Meta.Description) > DefaultDescriptionLimit:
 		return errors.New("namespace").BadParameter("description")
 	}
 
 	return nil
 }
 
-func (s *NamespaceManifest) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (s *NamespaceManifest) DecodeAndValidate(reader io.Reader) (*models.NamespaceManifest, *errors.Err) {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
-		return errors.New("namespace").IncorrectJSON(err)
+		return nil, errors.New("namespace").IncorrectJSON(err)
 	}
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return errors.New("namespace").Unknown(err)
+		return nil, errors.New("namespace").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
-		return errors.New("namespace").IncorrectJSON(err)
+		return nil, errors.New("namespace").IncorrectJSON(err)
 	}
 
 	if err := s.Validate(); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	ns := new(models.NamespaceManifest)
+
+	s.SetNamespaceMeta(ns)
+	if err := s.SetNamespaceSpec(ns); err != nil {
+		return nil, errors.New("namespace").IncorrectJSON(err)
+	}
+
+	return ns, nil
 }
 
 func (s *NamespaceApplyManifest) Init() {

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,12 +20,13 @@
 package vxlan
 
 import (
+	"context"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni/utils"
+	"github.com/lastbackend/lastbackend/tools/logger"
 	"net"
 	"syscall"
 
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/vishvananda/netlink"
 )
 
@@ -78,16 +79,16 @@ func NewDevice(opts DeviceCreateOpts) (*Device, error) {
 }
 
 func (d *Device) Create() error {
-
-	log.V(logLevel).Debug("Create new vxlan interface")
+	log := logger.WithContext(context.Background())
+	log.Debug("Create new vxlan interface")
 
 	err := netlink.LinkAdd(d.link)
 	if err == syscall.EEXIST {
-		log.V(logLevel).Debugf("Device already exists: %s", d.link.Name)
+		log.Debugf("Device already exists: %s", d.link.Name)
 
 		l, err := netlink.LinkByName(d.link.Name)
 		if err != nil {
-			log.V(logLevel).Debugf("Link by name: %s", err.Error())
+			log.Debugf("Link by name: %s", err.Error())
 		}
 
 		d.link = l.(*netlink.Vxlan)
@@ -114,8 +115,8 @@ func (d *Device) Create() error {
 }
 
 func (d *Device) SetIP(nt net.IPNet) error {
-
-	log.V(logLevel).Debug("Set IP for device")
+	log := logger.WithContext(context.Background())
+	log.Debug("Set IP for device")
 
 	ip := make(net.IP, len(nt.IP))
 	copy(ip, nt.IP)
@@ -125,13 +126,12 @@ func (d *Device) SetIP(nt net.IPNet) error {
 		Mask: net.CIDRMask(32, 32),
 	}
 
-
 	ipn.IP[3] = byte(0)
 	addr := netlink.Addr{IPNet: &ipn, Broadcast: net.ParseIP("0.0.0.0")}
 
 	existingAddrs, err := netlink.AddrList(d.link, netlink.FAMILY_V4)
 	if err != nil {
-		_ = fmt.Errorf("can not get addr list: %s", err.Error())
+		_ = fmt.Errorf("can not be get addr list: %s", err.Error())
 		return err
 	}
 
@@ -155,13 +155,14 @@ func (d *Device) SetIP(nt net.IPNet) error {
 		}
 	}
 
-	log.V(logLevel).Debugf("Link IP for device: %s", addr.IP)
+	log.Debugf("Link IP for device: %s", addr.IP)
 	d.addr = addr.IP
 	return nil
 }
 
 func (d *Device) SetUp() error {
-	log.V(logLevel).Debug("Set vxlan interface up")
+	log := logger.WithContext(context.Background())
+	log.Debug("Set vxlan interface up")
 	if err := netlink.LinkSetUp(d.link); err != nil {
 		return fmt.Errorf("failed to set interface %s to UP state: %s", d.link.Attrs().Name, err)
 	}
@@ -170,17 +171,18 @@ func (d *Device) SetUp() error {
 }
 
 func (d *Device) AddFDB(MAC net.HardwareAddr, IP net.IP) error {
-	log.V(logLevel).Debugf("Add FDB: %v, %v", MAC, IP)
+	log := logger.WithContext(context.Background())
+	log.Debugf("Add FDB: %v, %v", MAC, IP)
 
 	rules, err := utils.BridgeFDBList()
 	if err != nil {
-		log.Errorf("Can not FDB rules: %s", err.Error())
+		log.Errorf("can not be FDB rules: %s", err.Error())
 		return err
 	}
 
 	for _, rule := range rules {
 		if rule.DST == IP.String() && rule.Device == d.link.Name {
-			mac, err :=net.ParseMAC(rule.Mac)
+			mac, err := net.ParseMAC(rule.Mac)
 			if err != nil {
 				continue
 			}
@@ -199,7 +201,8 @@ func (d *Device) AddFDB(MAC net.HardwareAddr, IP net.IP) error {
 }
 
 func (d *Device) DelFDB(MAC net.HardwareAddr, IP net.IP) error {
-	log.V(logLevel).Debugf("Del FDB: %v, %v", MAC, IP)
+	log := logger.WithContext(context.Background())
+	log.Debugf("Del FDB: %v, %v", MAC, IP)
 	return netlink.NeighDel(&netlink.Neigh{
 		LinkIndex:    d.link.Index,
 		Family:       syscall.AF_BRIDGE,
@@ -210,7 +213,8 @@ func (d *Device) DelFDB(MAC net.HardwareAddr, IP net.IP) error {
 }
 
 func (d *Device) AddARP(MAC net.HardwareAddr, IP net.IP) error {
-	log.V(logLevel).Debugf("Add ARP: %v, %v", MAC, IP)
+	log := logger.WithContext(context.Background())
+	log.Debugf("Add ARP: %v, %v", MAC, IP)
 	return netlink.NeighSet(&netlink.Neigh{
 		LinkIndex:    d.link.Index,
 		State:        netlink.NUD_PERMANENT,
@@ -221,7 +225,8 @@ func (d *Device) AddARP(MAC net.HardwareAddr, IP net.IP) error {
 }
 
 func (d *Device) DelARP(MAC net.HardwareAddr, IP net.IP) error {
-	log.V(logLevel).Debugf("Del ARP: %v, %v", MAC, IP)
+	log := logger.WithContext(context.Background())
+	log.Debugf("Del ARP: %v, %v", MAC, IP)
 	return netlink.NeighDel(&netlink.Neigh{
 		LinkIndex:    d.link.Index,
 		State:        netlink.NUD_PERMANENT,

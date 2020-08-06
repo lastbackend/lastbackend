@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,7 +19,7 @@
 package views
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 // Ingress - default node structure
@@ -48,11 +48,11 @@ type IngressStatus struct {
 
 // swagger:model views_ingress_spec
 type IngressManifest struct {
-	Meta      IngressManifestMeta                `json:"meta"`
-	Routes    map[string]*types.RouteManifest    `json:"routes"`
-	Endpoints map[string]*types.EndpointManifest `json:"endpoints"`
-	Subnets   map[string]*types.SubnetManifest   `json:"subnets"`
-	Resolvers map[string]*types.ResolverManifest `json:"resolvers"`
+	Meta      IngressManifestMeta                 `json:"meta"`
+	Routes    map[string]*models.RouteManifest    `json:"routes"`
+	Endpoints map[string]*models.EndpointManifest `json:"endpoints"`
+	Subnets   map[string]*models.SubnetManifest   `json:"subnets"`
+	Resolvers map[string]*models.ResolverManifest `json:"resolvers"`
 }
 
 type IngressManifestMeta struct {

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,8 +20,8 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"gopkg.in/yaml.v2"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
+	"gopkg.in/yaml.v3"
 )
 
 type ConfigManifest struct {
@@ -36,6 +36,7 @@ type ConfigManifestMeta struct {
 
 type ConfigManifestSpec struct {
 	// Config data
+	Type string            `json:"type,omitempty" yaml:"type,omitempty"`
 	Data map[string]string `json:"data,omitempty" yaml:"data,omitempty"`
 }
 
@@ -55,9 +56,9 @@ func (v *ConfigManifest) ToYaml() ([]byte, error) {
 	return yaml.Marshal(v)
 }
 
-func (v *ConfigManifest) SetConfigMeta(cfg *types.Config) {
+func (v *ConfigManifest) SetConfigMeta(cfg *models.Config) {
 
-	if cfg.Meta.Name == types.EmptyString {
+	if cfg.Meta.Name == models.EmptyString {
 		cfg.Meta.Name = *v.Meta.Name
 	}
 
@@ -73,7 +74,7 @@ func (v *ConfigManifest) SetConfigMeta(cfg *types.Config) {
 
 // SetConfigSpec - set config spec from manifest
 // TODO: check if config spec is updated => update Meta.Updated or skip
-func (v *ConfigManifest) SetConfigSpec(cfg *types.Config) {
+func (v *ConfigManifest) SetConfigSpec(cfg *models.Config) {
 
 	cfg.Spec.Data = make(map[string]string, 0)
 
@@ -82,8 +83,8 @@ func (v *ConfigManifest) SetConfigSpec(cfg *types.Config) {
 	}
 }
 
-func (v *ConfigManifest) GetManifest() *types.ConfigManifest {
-	cfg := new(types.ConfigManifest)
+func (v *ConfigManifest) GetManifest() *models.ConfigManifest {
+	cfg := new(models.ConfigManifest)
 	cfg.Data = make(map[string]string, 0)
 	for key, value := range v.Spec.Data {
 		cfg.Data[key] = value

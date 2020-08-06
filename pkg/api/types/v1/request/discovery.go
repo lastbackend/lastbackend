@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -18,13 +18,13 @@
 
 package request
 
-import "github.com/lastbackend/lastbackend/pkg/distribution/types"
+import "github.com/lastbackend/lastbackend/internal/pkg/models"
 
 // swagger:model request_ingress_connect
 type DiscoveryConnectOptions struct {
-	Info    types.DiscoveryInfo   `json:"info"`
-	Status  types.DiscoveryStatus `json:"status"`
-	Network types.NetworkState    `json:"network"`
+	Info    models.DiscoveryInfo   `json:"info"`
+	Status  models.DiscoveryStatus `json:"status"`
+	Network models.NetworkState    `json:"network"`
 }
 
 type DiscoveryMeta struct {
@@ -36,4 +36,4 @@ type DiscoveryRemoveOptions struct {
 	Force bool `json:"force"`
 }
 
-type DiscoveryStatusOptions types.DiscoveryStatus
+type DiscoveryStatusOptions models.DiscoveryStatus

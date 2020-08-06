@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,14 +20,14 @@ package views
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/util/resource"
 
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/util/resource"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type VolumeView struct{}
 
-func (rv *VolumeView) New(obj *types.Volume) *Volume {
+func (rv *VolumeView) New(obj *models.Volume) *Volume {
 	r := Volume{}
 	r.Meta = r.ToMeta(obj.Meta)
 	r.Spec = r.ToSpec(obj.Spec)
@@ -39,7 +39,7 @@ func (p *Volume) ToJson() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (r *Volume) ToMeta(obj types.VolumeMeta) VolumeMeta {
+func (p *Volume) ToMeta(obj models.VolumeMeta) VolumeMeta {
 	meta := VolumeMeta{}
 	meta.Name = obj.Name
 	meta.Namespace = obj.Namespace
@@ -50,7 +50,7 @@ func (r *Volume) ToMeta(obj types.VolumeMeta) VolumeMeta {
 	return meta
 }
 
-func (r *Volume) ToSpec(obj types.VolumeSpec) VolumeSpec {
+func (p *Volume) ToSpec(obj models.VolumeSpec) VolumeSpec {
 	spec := VolumeSpec{}
 	spec.State.Destroy = obj.State.Destroy
 	spec.Selector.Node = obj.Selector.Node
@@ -62,7 +62,7 @@ func (r *Volume) ToSpec(obj types.VolumeSpec) VolumeSpec {
 	return spec
 }
 
-func (r *Volume) ToStatus(obj types.VolumeStatus) VolumeStatus {
+func (p *Volume) ToStatus(obj models.VolumeStatus) VolumeStatus {
 	state := VolumeStatus{
 		State:   obj.State,
 		Message: obj.Message,
@@ -75,7 +75,7 @@ func (r *Volume) ToStatus(obj types.VolumeStatus) VolumeStatus {
 	return state
 }
 
-func (rv VolumeView) NewList(obj *types.VolumeList) *VolumeList {
+func (rv VolumeView) NewList(obj *models.VolumeList) *VolumeList {
 	if obj == nil {
 		return nil
 	}

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -21,9 +21,10 @@ package network
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/tools/logger"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/errors"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 	"github.com/lastbackend/lastbackend/pkg/network/state"
 )
 
@@ -49,10 +50,10 @@ func (n *Network) GetExternalDNS() []string {
 }
 
 func (n *Network) ResolverManage(ctx context.Context) error {
+	log := logger.WithContext(context.Background())
+	log.Debugf("%s:> create resolver", logResolverPrefix)
 
-	log.V(logLevel).Debugf("%s:> create resolver", logResolverPrefix)
-
-	manifest := new(types.EndpointManifest)
+	manifest := new(models.EndpointManifest)
 	manifest.IP = n.resolver.ip
 	manifest.PortMap = make(map[uint16]string)
 
@@ -74,13 +75,13 @@ func (n *Network) ResolverManage(ctx context.Context) error {
 			}
 		}
 		if port == 0 {
-			return errors.New("can not create endpoint: reason: resolver port can not be 0")
+			return errors.New("can not be create endpoint: reason: resolver port can not be 0")
 		}
 		manifest.PortMap[53] = fmt.Sprintf("%d/udp", port)
 	}
 
 	if err := n.EndpointManage(ctx, resolverEndpointKey, manifest); err != nil {
-		log.Errorf("%s:> can not create endpoint", logResolverPrefix)
+		log.Errorf("%s:> can not be create endpoint", logResolverPrefix)
 		return err
 	}
 

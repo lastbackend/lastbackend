@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -21,14 +21,15 @@ package views
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/util/resource"
 
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/util/resource"
+
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type NamespaceView struct{}
 
-func (nv *NamespaceView) New(obj *types.Namespace) *Namespace {
+func (nv *NamespaceView) New(obj *models.Namespace) *Namespace {
 	n := Namespace{}
 	n.Meta = n.ToMeta(obj.Meta)
 	n.Status = n.ToStatus(obj.Status)
@@ -79,7 +80,34 @@ func (nv *NamespaceView) NewApplyStatus(status struct {
 	return &n
 }
 
-func (r *Namespace) ToMeta(obj types.NamespaceMeta) NamespaceMeta {
+func (nv NamespaceView) NewList(items []*models.Namespace) *NamespaceList {
+
+	n := make(NamespaceList, 0)
+	for _, v := range items {
+		n = append(n, nv.New(v))
+	}
+	return &n
+}
+
+func (n *NamespaceView) NewResource(obj models.NamespaceResource) NamespaceResource {
+	switch obj.Kind() {
+	case models.KindService:
+		return new(ServiceView).New(obj.(*models.Service))
+	}
+	return nil
+}
+
+func (n *NamespaceView) NewResourceList(objs models.NamespaceResourceList) NamespaceResourceList {
+
+	switch objs.Kind() {
+	case models.KindService:
+		return new(ServiceView).NewList(objs.(*models.ServiceList))
+	}
+
+	return nil
+}
+
+func (r *Namespace) ToMeta(obj models.NamespaceMeta) NamespaceMeta {
 	meta := NamespaceMeta{}
 	meta.Name = obj.Name
 	meta.Description = obj.Description
@@ -96,9 +124,9 @@ func (r *Namespace) ToMeta(obj types.NamespaceMeta) NamespaceMeta {
 	return meta
 }
 
-func (r *Namespace) ToSpec(spec types.NamespaceSpec) NamespaceSpec {
+func (r *Namespace) ToSpec(spec models.NamespaceSpec) NamespaceSpec {
 	return NamespaceSpec{
-		Resources: NamespaceResources{
+		Resources: NamespaceQuotas{
 			Limits:  r.ToResources(spec.Resources.Limits),
 			Request: r.ToResources(spec.Resources.Request),
 		},
@@ -110,7 +138,7 @@ func (r *Namespace) ToSpec(spec types.NamespaceSpec) NamespaceSpec {
 	}
 }
 
-func (r *Namespace) ToStatus(status types.NamespaceStatus) NamespaceStatus {
+func (r *Namespace) ToStatus(status models.NamespaceStatus) NamespaceStatus {
 	return NamespaceStatus{
 		Resources: NamespaceStatusResources{
 			Allocated: r.ToResources(status.Resources.Allocated),
@@ -118,7 +146,7 @@ func (r *Namespace) ToStatus(status types.NamespaceStatus) NamespaceStatus {
 	}
 }
 
-func (r *Namespace) ToEnv(obj types.NamespaceEnvs) NamespaceEnvs {
+func (r *Namespace) ToEnv(obj models.NamespaceEnvs) NamespaceEnvs {
 	envs := make(NamespaceEnvs, 0)
 	for _, env := range obj {
 		envs = append(envs, fmt.Sprintf("%s=%s", env.Name, env.Value))
@@ -126,33 +154,21 @@ func (r *Namespace) ToEnv(obj types.NamespaceEnvs) NamespaceEnvs {
 	return envs
 }
 
-func (r *Namespace) ToResources(obj types.ResourceItem) *NamespaceResource {
+func (r *Namespace) ToResources(obj models.ResourceItem) *NamespaceQuota {
 
 	if obj.RAM == 0 || obj.CPU == 0 || obj.Storage == 0 {
 		return nil
 	}
 
-	return &NamespaceResource{
+	return &NamespaceQuota{
 		RAM:     resource.EncodeMemoryResource(obj.RAM),
 		CPU:     resource.EncodeCpuResource(obj.CPU),
 		Storage: resource.EncodeMemoryResource(obj.Storage),
 	}
 }
 
-func (p *Namespace) ToJson() ([]byte, error) {
-	return json.Marshal(p)
-}
-
-func (nv NamespaceView) NewList(obj *types.NamespaceList) *NamespaceList {
-	if obj == nil {
-		return nil
-	}
-
-	n := make(NamespaceList, 0)
-	for _, v := range obj.Items {
-		n = append(n, nv.New(v))
-	}
-	return &n
+func (r *Namespace) ToJson() ([]byte, error) {
+	return json.Marshal(r)
 }
 
 func (n *NamespaceList) ToJson() ([]byte, error) {

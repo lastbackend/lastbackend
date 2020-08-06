@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2020] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,13 +19,12 @@
 package request
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/util/compare"
-	"github.com/lastbackend/lastbackend/pkg/util/resource"
+	"github.com/lastbackend/lastbackend/internal/util/compare"
+	"github.com/lastbackend/lastbackend/internal/util/resource"
 	"strings"
 	"time"
 
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/internal/pkg/models"
 )
 
 type ManifestSpecSelector struct {
@@ -180,8 +179,8 @@ type ManifestSpecSecurity struct {
 	Privileged bool `json:"privileged"`
 }
 
-func (m ManifestSpecSelector) GetSpec() types.SpecSelector {
-	s := types.SpecSelector{}
+func (m ManifestSpecSelector) GetSpec() models.SpecSelector {
+	s := models.SpecSelector{}
 
 	s.Node = m.Node
 	s.Labels = m.Labels
@@ -189,8 +188,8 @@ func (m ManifestSpecSelector) GetSpec() types.SpecSelector {
 	return s
 }
 
-func (m ManifestSpecTemplate) GetSpec() types.SpecTemplate {
-	var s = types.SpecTemplate{}
+func (m ManifestSpecTemplate) GetSpec() models.SpecTemplate {
+	var s = models.SpecTemplate{}
 
 	for _, t := range m.Containers {
 		sp := t.GetSpec()
@@ -205,8 +204,8 @@ func (m ManifestSpecTemplate) GetSpec() types.SpecTemplate {
 	return s
 }
 
-func (m ManifestSpecRuntime) GetSpec() types.SpecRuntime {
-	var s = types.SpecRuntime{}
+func (m ManifestSpecRuntime) GetSpec() models.SpecRuntime {
+	var s = models.SpecRuntime{}
 
 	s.Services = m.Services
 
@@ -218,27 +217,27 @@ func (m ManifestSpecRuntime) GetSpec() types.SpecRuntime {
 	return s
 }
 
-func (m ManifestSpecRuntimeTask) GetSpec() types.SpecRuntimeTask {
-	s := types.SpecRuntimeTask{}
+func (m ManifestSpecRuntimeTask) GetSpec() models.SpecRuntimeTask {
+	s := models.SpecRuntimeTask{}
 
 	s.Name = m.Name
 	s.Container = m.Container
 
 	for _, e := range m.Env {
-		env := types.SpecTemplateContainerEnv{
+		env := models.SpecTemplateContainerEnv{
 			Name:  e.Name,
 			Value: e.Value,
 		}
 
 		if e.Secret != nil {
-			env.Secret = types.SpecTemplateContainerEnvSecret{
+			env.Secret = models.SpecTemplateContainerEnvSecret{
 				Name: e.Secret.Name,
 				Key:  e.Secret.Key,
 			}
 		}
 
 		if e.Config != nil {
-			env.Config = types.SpecTemplateContainerEnvConfig{
+			env.Config = models.SpecTemplateContainerEnvConfig{
 				Name: e.Config.Name,
 				Key:  e.Config.Key,
 			}
@@ -255,28 +254,28 @@ func (m ManifestSpecRuntimeTask) GetSpec() types.SpecRuntimeTask {
 	return s
 }
 
-func (m ManifestSpecTemplateVolume) GetSpec() types.SpecTemplateVolume {
+func (m ManifestSpecTemplateVolume) GetSpec() models.SpecTemplateVolume {
 
-	s := types.SpecTemplateVolume{
+	s := models.SpecTemplateVolume{
 		Name: m.Name,
 		Type: m.Type,
 	}
 
 	if m.Volume != nil {
-		s.Volume = types.SpecTemplateVolumeClaim{
+		s.Volume = models.SpecTemplateVolumeClaim{
 			Name:    m.Volume.Name,
 			Subpath: m.Volume.Subpath,
 		}
 	}
 
 	if m.Secret != nil {
-		s.Secret = types.SpecTemplateSecretVolume{
+		s.Secret = models.SpecTemplateSecretVolume{
 			Name:  m.Secret.Name,
-			Binds: make([]types.SpecTemplateSecretVolumeBind, 0),
+			Binds: make([]models.SpecTemplateSecretVolumeBind, 0),
 		}
 
 		for _, b := range m.Secret.Binds {
-			s.Secret.Binds = append(s.Secret.Binds, types.SpecTemplateSecretVolumeBind{
+			s.Secret.Binds = append(s.Secret.Binds, models.SpecTemplateSecretVolumeBind{
 				Key:  b.Key,
 				File: b.File,
 			})
@@ -284,13 +283,13 @@ func (m ManifestSpecTemplateVolume) GetSpec() types.SpecTemplateVolume {
 	}
 
 	if m.Config != nil {
-		s.Config = types.SpecTemplateConfigVolume{
+		s.Config = models.SpecTemplateConfigVolume{
 			Name:  m.Config.Name,
-			Binds: make([]types.SpecTemplateConfigVolumeBind, 0),
+			Binds: make([]models.SpecTemplateConfigVolumeBind, 0),
 		}
 
 		for _, b := range m.Config.Binds {
-			s.Config.Binds = append(s.Config.Binds, types.SpecTemplateConfigVolumeBind{
+			s.Config.Binds = append(s.Config.Binds, models.SpecTemplateConfigVolumeBind{
 				Key:  b.Key,
 				File: b.File,
 			})
@@ -300,8 +299,8 @@ func (m ManifestSpecTemplateVolume) GetSpec() types.SpecTemplateVolume {
 	return s
 }
 
-func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
-	s := types.SpecTemplateContainer{}
+func (m ManifestSpecTemplateContainer) GetSpec() models.SpecTemplateContainer {
+	s := models.SpecTemplateContainer{}
 	s.Name = m.Name
 
 	s.RestartPolicy.Policy = "always"
@@ -311,37 +310,37 @@ func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
 		s.RestartPolicy.Attempt = m.RestartPolicy.Attempt
 	}
 
-	if m.Command != types.EmptyString {
+	if m.Command != models.EmptyString {
 		s.Exec.Command = strings.Split(m.Command, " ")
 	}
 	s.Exec.Args = m.Args
 	s.Exec.Workdir = m.Workdir
 
-	if m.Entrypoint != types.EmptyString {
+	if m.Entrypoint != models.EmptyString {
 		s.Exec.Entrypoint = strings.Split(m.Entrypoint, " ")
 	}
 
 	for _, p := range m.Ports {
-		port := new(types.SpecTemplateContainerPort)
+		port := new(models.SpecTemplateContainerPort)
 		port.Parse(p)
 		s.Ports = append(s.Ports, port)
 	}
 
 	for _, e := range m.Env {
-		env := &types.SpecTemplateContainerEnv{
+		env := &models.SpecTemplateContainerEnv{
 			Name:  e.Name,
 			Value: e.Value,
 		}
 
 		if e.Secret != nil {
-			env.Secret = types.SpecTemplateContainerEnvSecret{
+			env.Secret = models.SpecTemplateContainerEnvSecret{
 				Name: e.Secret.Name,
 				Key:  e.Secret.Key,
 			}
 		}
 
 		if e.Config != nil {
-			env.Config = types.SpecTemplateContainerEnvConfig{
+			env.Config = models.SpecTemplateContainerEnvConfig{
 				Name: e.Config.Name,
 				Key:  e.Config.Key,
 			}
@@ -361,21 +360,21 @@ func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
 
 	if m.Resources != nil {
 		if m.Resources.Request != nil {
-			if m.Resources.Request.RAM != types.EmptyString {
+			if m.Resources.Request.RAM != models.EmptyString {
 				s.Resources.Request.RAM, _ = resource.DecodeMemoryResource(m.Resources.Request.RAM)
 			}
 
-			if m.Resources.Request.CPU != types.EmptyString {
+			if m.Resources.Request.CPU != models.EmptyString {
 				s.Resources.Request.CPU, _ = resource.DecodeCpuResource(m.Resources.Request.CPU)
 			}
 		}
 
 		if m.Resources.Limits != nil {
-			if m.Resources.Limits.RAM != types.EmptyString {
+			if m.Resources.Limits.RAM != models.EmptyString {
 				s.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(m.Resources.Limits.RAM)
 			}
 
-			if m.Resources.Limits.CPU != types.EmptyString {
+			if m.Resources.Limits.CPU != models.EmptyString {
 				s.Resources.Limits.CPU, _ = resource.DecodeCpuResource(m.Resources.Limits.CPU)
 			}
 		}
@@ -383,7 +382,7 @@ func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
 
 	for _, v := range m.Volumes {
 
-		s.Volumes = append(s.Volumes, &types.SpecTemplateContainerVolume{
+		s.Volumes = append(s.Volumes, &models.SpecTemplateContainerVolume{
 			Name:      v.Name,
 			Mode:      v.Mode,
 			MountPath: v.MountPath,
@@ -394,7 +393,7 @@ func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
 	return s
 }
 
-func (m ManifestSpecRuntime) SetSpecRuntime(sr *types.SpecRuntime) {
+func (m ManifestSpecRuntime) SetSpecRuntime(sr *models.SpecRuntime) {
 
 	// check services in runtime spec
 	if !compare.SliceOfString(m.Services, sr.Services) {
@@ -503,25 +502,25 @@ func (m ManifestSpecRuntime) SetSpecRuntime(sr *types.SpecRuntime) {
 	// apply new task manifest if not equal
 	if !te {
 
-		sr.Tasks = make([]types.SpecRuntimeTask, 0)
+		sr.Tasks = make([]models.SpecRuntimeTask, 0)
 
 		for _, t := range m.Tasks {
-			task := types.SpecRuntimeTask{
+			task := models.SpecRuntimeTask{
 				Name:      t.Name,
 				Container: t.Container,
-				EnvVars:   make(types.SpecTemplateContainerEnvs, 0),
+				EnvVars:   make(models.SpecTemplateContainerEnvs, 0),
 				Commands:  make([]string, 0),
 			}
 
 			for _, e := range t.Env {
-				env := types.SpecTemplateContainerEnv{
+				env := models.SpecTemplateContainerEnv{
 					Name:  e.Name,
 					Value: e.Value,
-					Config: types.SpecTemplateContainerEnvConfig{
+					Config: models.SpecTemplateContainerEnvConfig{
 						Name: e.Config.Name,
 						Key:  e.Config.Key,
 					},
-					Secret: types.SpecTemplateContainerEnvSecret{
+					Secret: models.SpecTemplateContainerEnvSecret{
 						Name: e.Secret.Name,
 						Key:  e.Secret.Key,
 					},
@@ -543,7 +542,7 @@ func (m ManifestSpecRuntime) SetSpecRuntime(sr *types.SpecRuntime) {
 
 }
 
-func (m ManifestSpecSelector) SetSpecSelector(ss *types.SpecSelector) {
+func (m ManifestSpecSelector) SetSpecSelector(ss *models.SpecSelector) {
 
 	if ss.Node != m.Node {
 		ss.Node = m.Node
@@ -573,14 +572,14 @@ func (m ManifestSpecSelector) SetSpecSelector(ss *types.SpecSelector) {
 	}
 }
 
-func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
+func (m ManifestSpecTemplate) SetSpecTemplate(st *models.SpecTemplate) error {
 
 	for _, c := range m.Containers {
 
 		var (
 			f    = false
 			err  error
-			spec *types.SpecTemplateContainer
+			spec *models.SpecTemplateContainer
 		)
 
 		for _, sc := range st.Containers {
@@ -591,10 +590,10 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 		}
 
 		if spec == nil {
-			spec = new(types.SpecTemplateContainer)
+			spec = new(models.SpecTemplateContainer)
 		}
 
-		if spec.Name == types.EmptyString {
+		if spec.Name == models.EmptyString {
 			spec.Name = c.Name
 			st.Updated = time.Now()
 		}
@@ -674,20 +673,20 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 			}
 
 			if !f {
-				item := &types.SpecTemplateContainerEnv{
+				item := &models.SpecTemplateContainerEnv{
 					Name:  ce.Name,
 					Value: ce.Value,
 				}
 
 				if ce.Secret != nil {
-					item.Secret = types.SpecTemplateContainerEnvSecret{
+					item.Secret = models.SpecTemplateContainerEnvSecret{
 						Name: ce.Secret.Name,
 						Key:  ce.Secret.Key,
 					}
 				}
 
 				if ce.Config != nil {
-					item.Config = types.SpecTemplateContainerEnvConfig{
+					item.Config = models.SpecTemplateContainerEnvConfig{
 						Name: ce.Config.Name,
 						Key:  ce.Config.Key,
 					}
@@ -698,7 +697,7 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 			}
 		}
 
-		var envs = make([]*types.SpecTemplateContainerEnv, 0)
+		var envs = make([]*models.SpecTemplateContainerEnv, 0)
 		for _, se := range spec.EnvVars {
 			for _, ce := range c.Env {
 				if ce.Name == se.Name {
@@ -723,13 +722,13 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 
 		// Resources check
 		if c.Resources != nil && c.Resources.Request != nil {
-			if c.Resources.Request.RAM != types.EmptyString {
+			if c.Resources.Request.RAM != models.EmptyString {
 				resourcesRequestRam, err = resource.DecodeMemoryResource(c.Resources.Request.RAM)
 				if err != nil {
 					return handleErr("request.ram", err)
 				}
 			}
-			if c.Resources.Request.CPU != types.EmptyString {
+			if c.Resources.Request.CPU != models.EmptyString {
 				resourcesRequestCPU, err = resource.DecodeCpuResource(c.Resources.Request.CPU)
 				if err != nil {
 					return handleErr("request.cpu", err)
@@ -738,13 +737,13 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 		}
 
 		if c.Resources != nil && c.Resources.Limits != nil {
-			if c.Resources.Limits.RAM != types.EmptyString {
+			if c.Resources.Limits.RAM != models.EmptyString {
 				resourcesLimitsRam, err = resource.DecodeMemoryResource(c.Resources.Limits.RAM)
 				if err != nil {
 					return handleErr("limit.ram", err)
 				}
 			}
-			if c.Resources.Limits.CPU != types.EmptyString {
+			if c.Resources.Limits.CPU != models.EmptyString {
 				resourcesLimitsCPU, err = resource.DecodeCpuResource(c.Resources.Limits.CPU)
 				if err != nil {
 					return handleErr("limit.cpu", err)
@@ -784,7 +783,7 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 				}
 			}
 			if !f {
-				spec.Volumes = append(spec.Volumes, &types.SpecTemplateContainerVolume{
+				spec.Volumes = append(spec.Volumes, &models.SpecTemplateContainerVolume{
 					Name:      v.Name,
 					Mode:      v.Mode,
 					MountPath: v.MountPath,
@@ -793,7 +792,7 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 			}
 		}
 
-		vlms := make([]*types.SpecTemplateContainerVolume, 0)
+		vlms := make([]*models.SpecTemplateContainerVolume, 0)
 		for _, sv := range spec.Volumes {
 			for _, cv := range c.Volumes {
 				if sv.Name == cv.Name {
@@ -810,9 +809,9 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 		spec.Volumes = vlms
 
 		// Ports check
-		spec.Ports = make(types.SpecTemplateContainerPorts, 0)
+		spec.Ports = make(models.SpecTemplateContainerPorts, 0)
 		for _, cp := range c.Ports {
-			port := new(types.SpecTemplateContainerPort)
+			port := new(models.SpecTemplateContainerPort)
 			port.Parse(cp)
 			spec.Ports = append(spec.Ports, port)
 		}
@@ -823,7 +822,7 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 
 	}
 
-	var spcs = make([]*types.SpecTemplateContainer, 0)
+	var spcs = make([]*models.SpecTemplateContainer, 0)
 	for _, ss := range st.Containers {
 		for _, cs := range m.Containers {
 			if ss.Name == cs.Name {
@@ -842,7 +841,7 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 
 		var (
 			f    = false
-			spec *types.SpecTemplateVolume
+			spec *models.SpecTemplateVolume
 		)
 
 		for _, sv := range st.Volumes {
@@ -853,10 +852,10 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 		}
 
 		if spec == nil {
-			spec = new(types.SpecTemplateVolume)
+			spec = new(models.SpecTemplateVolume)
 		}
 
-		if spec.Name == types.EmptyString {
+		if spec.Name == models.EmptyString {
 			spec.Name = v.Name
 			st.Updated = time.Now()
 		}
@@ -894,9 +893,9 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 		}
 
 		if !e {
-			spec.Secret.Binds = make([]types.SpecTemplateSecretVolumeBind, 0)
+			spec.Secret.Binds = make([]models.SpecTemplateSecretVolumeBind, 0)
 			for _, v := range v.Secret.Binds {
-				spec.Secret.Binds = append(spec.Secret.Binds, types.SpecTemplateSecretVolumeBind{
+				spec.Secret.Binds = append(spec.Secret.Binds, models.SpecTemplateSecretVolumeBind{
 					Key:  v.Key,
 					File: v.File,
 				})
@@ -930,9 +929,9 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 		}
 
 		if !ce {
-			spec.Config.Binds = make([]types.SpecTemplateConfigVolumeBind, 0)
+			spec.Config.Binds = make([]models.SpecTemplateConfigVolumeBind, 0)
 			for _, v := range v.Config.Binds {
-				spec.Config.Binds = append(spec.Config.Binds, types.SpecTemplateConfigVolumeBind{
+				spec.Config.Binds = append(spec.Config.Binds, models.SpecTemplateConfigVolumeBind{
 					Key:  v.Key,
 					File: v.File,
 				})
@@ -946,7 +945,7 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 
 	}
 
-	var vlms = make([]*types.SpecTemplateVolume, 0)
+	var vlms = make([]*models.SpecTemplateVolume, 0)
 	for _, ss := range st.Volumes {
 		for _, cs := range m.Volumes {
 			if ss.Name == cs.Name {
@@ -964,7 +963,7 @@ func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
 	return nil
 }
 
-func (m ManifestSpecRuntime) SetManifestSpecRuntime(sr *types.ManifestSpecRuntime) {
+func (m ManifestSpecRuntime) SetManifestSpecRuntime(sr *models.ManifestSpecRuntime) {
 
 	// check services in runtime spec
 	if !compare.SliceOfString(m.Services, sr.Services) {
@@ -1072,18 +1071,18 @@ func (m ManifestSpecRuntime) SetManifestSpecRuntime(sr *types.ManifestSpecRuntim
 	// apply new task manifest if not equal
 	if !te {
 
-		sr.Tasks = make([]types.ManifestSpecRuntimeTask, 0)
+		sr.Tasks = make([]models.ManifestSpecRuntimeTask, 0)
 
 		for _, t := range m.Tasks {
-			task := types.ManifestSpecRuntimeTask{
+			task := models.ManifestSpecRuntimeTask{
 				Name:      t.Name,
 				Container: t.Container,
-				Env:       make([]types.ManifestSpecTemplateContainerEnv, 0),
+				Env:       make([]models.ManifestSpecTemplateContainerEnv, 0),
 				Commands:  make([]string, 0),
 			}
 
 			for _, e := range t.Env {
-				env := types.ManifestSpecTemplateContainerEnv{
+				env := models.ManifestSpecTemplateContainerEnv{
 					Name:  e.Name,
 					Value: e.Value,
 				}
@@ -1113,7 +1112,7 @@ func (m ManifestSpecRuntime) SetManifestSpecRuntime(sr *types.ManifestSpecRuntim
 
 }
 
-func (m ManifestSpecSelector) SetManifestSpecSelector(ss *types.ManifestSpecSelector) {
+func (m ManifestSpecSelector) SetManifestSpecSelector(ss *models.ManifestSpecSelector) {
 
 	if ss.Node != m.Node {
 		ss.Node = m.Node
@@ -1137,13 +1136,13 @@ func (m ManifestSpecSelector) SetManifestSpecSelector(ss *types.ManifestSpecSele
 	}
 }
 
-func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemplate) error {
+func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *models.ManifestSpecTemplate) error {
 
 	for _, c := range m.Containers {
 
 		var (
 			f    = false
-			spec *types.ManifestSpecTemplateContainer
+			spec *models.ManifestSpecTemplateContainer
 		)
 
 		for _, sc := range st.Containers {
@@ -1154,10 +1153,10 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 		}
 
 		if spec == nil {
-			spec = new(types.ManifestSpecTemplateContainer)
+			spec = new(models.ManifestSpecTemplateContainer)
 		}
 
-		if spec.Name == types.EmptyString {
+		if spec.Name == models.EmptyString {
 			spec.Name = c.Name
 		}
 
@@ -1224,20 +1223,20 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 			}
 
 			if !f {
-				env := types.ManifestSpecTemplateContainerEnv{
+				env := models.ManifestSpecTemplateContainerEnv{
 					Name:  ce.Name,
 					Value: ce.Value,
 				}
 
 				if ce.Secret != nil {
-					env.Secret = types.ManifestSpecTemplateContainerEnvSecret{
+					env.Secret = models.ManifestSpecTemplateContainerEnvSecret{
 						Name: ce.Secret.Name,
 						Key:  ce.Secret.Key,
 					}
 				}
 
 				if ce.Config != nil {
-					env.Config = types.ManifestSpecTemplateContainerEnvConfig{
+					env.Config = models.ManifestSpecTemplateContainerEnvConfig{
 						Name: ce.Config.Name,
 						Key:  ce.Config.Key,
 					}
@@ -1247,7 +1246,7 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 			}
 		}
 
-		var envs = make([]types.ManifestSpecTemplateContainerEnv, 0)
+		var envs = make([]models.ManifestSpecTemplateContainerEnv, 0)
 		for _, se := range spec.Env {
 			for _, ce := range c.Env {
 				if ce.Name == se.Name {
@@ -1286,7 +1285,7 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 				}
 			}
 			if !f {
-				spec.Volumes = append(spec.Volumes, types.ManifestSpecTemplateContainerVolume{
+				spec.Volumes = append(spec.Volumes, models.ManifestSpecTemplateContainerVolume{
 					Name:      v.Name,
 					Mode:      v.Mode,
 					MountPath: v.MountPath,
@@ -1295,7 +1294,7 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 			}
 		}
 
-		vlms := make([]types.ManifestSpecTemplateContainerVolume, 0)
+		vlms := make([]models.ManifestSpecTemplateContainerVolume, 0)
 		for _, sv := range spec.Volumes {
 			for _, cv := range c.Volumes {
 				if sv.Name == cv.Name {
@@ -1314,7 +1313,7 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 
 	}
 
-	var spcs = make([]types.ManifestSpecTemplateContainer, 0)
+	var spcs = make([]models.ManifestSpecTemplateContainer, 0)
 	for _, ss := range st.Containers {
 		for _, cs := range m.Containers {
 			if ss.Name == cs.Name {
@@ -1329,7 +1328,7 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 
 		var (
 			f    = false
-			spec *types.ManifestSpecTemplateVolume
+			spec *models.ManifestSpecTemplateVolume
 		)
 
 		for _, sv := range st.Volumes {
@@ -1340,10 +1339,10 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 		}
 
 		if spec == nil {
-			spec = new(types.ManifestSpecTemplateVolume)
+			spec = new(models.ManifestSpecTemplateVolume)
 		}
 
-		if spec.Name == types.EmptyString {
+		if spec.Name == models.EmptyString {
 			spec.Name = v.Name
 		}
 
@@ -1380,9 +1379,9 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 		}
 
 		if !e {
-			spec.Secret.Binds = make([]types.ManifestSpecTemplateSecretVolumeBind, 0)
+			spec.Secret.Binds = make([]models.ManifestSpecTemplateSecretVolumeBind, 0)
 			for _, v := range v.Secret.Binds {
-				spec.Secret.Binds = append(spec.Secret.Binds, types.ManifestSpecTemplateSecretVolumeBind{
+				spec.Secret.Binds = append(spec.Secret.Binds, models.ManifestSpecTemplateSecretVolumeBind{
 					Key:  v.Key,
 					File: v.File,
 				})
@@ -1416,9 +1415,9 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 		}
 
 		if !ce {
-			spec.Config.Binds = make([]types.ManifestSpecTemplateConfigVolumeBind, 0)
+			spec.Config.Binds = make([]models.ManifestSpecTemplateConfigVolumeBind, 0)
 			for _, v := range v.Config.Binds {
-				spec.Config.Binds = append(spec.Config.Binds, types.ManifestSpecTemplateConfigVolumeBind{
+				spec.Config.Binds = append(spec.Config.Binds, models.ManifestSpecTemplateConfigVolumeBind{
 					Key:  v.Key,
 					File: v.File,
 				})
@@ -1431,7 +1430,7 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 
 	}
 
-	var vlms = make([]types.ManifestSpecTemplateVolume, 0)
+	var vlms = make([]models.ManifestSpecTemplateVolume, 0)
 	for _, ss := range st.Volumes {
 		for _, cs := range m.Volumes {
 			if ss.Name == cs.Name {
@@ -1446,6 +1445,5 @@ func (m ManifestSpecTemplate) SetManifestSpecTemplate(st *types.ManifestSpecTemp
 }
 
 func handleErr(msg string, e error) error {
-	log.Errorf("decode resource %s error: %s", msg, e.Error())
 	return e
 }
