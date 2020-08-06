@@ -30,13 +30,13 @@
               "type": "object",
               "properties": {
                 "result": {
-                  "$ref": "#/definitions/v1NamespaceResponse"
+                  "$ref": "#/definitions/v1EventResponse"
                 },
                 "error": {
                   "$ref": "#/definitions/runtimeStreamError"
                 }
               },
-              "title": "Stream result of v1NamespaceResponse"
+              "title": "Stream result of v1EventResponse"
             }
           },
           "404": {
@@ -66,9 +66,9 @@
         ]
       }
     },
-    "/v1/namespace": {
+    "/v1/namespaces": {
       "get": {
-        "operationId": "V1_NamespaceCreate",
+        "operationId": "V1_NamespaceList",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -96,19 +96,202 @@
             "in": "query",
             "required": false,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "V1"
+        ]
+      },
+      "post": {
+        "operationId": "V1_NamespaceCreate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1NamespaceResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1NamespaceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "V1"
+        ]
+      }
+    },
+    "/v1/namespaces/{metadata.name}": {
+      "put": {
+        "operationId": "V1_NamespaceReplace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1NamespaceResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "metadata.name",
+            "in": "path",
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "height",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1NamespaceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "V1"
+        ]
+      },
+      "patch": {
+        "operationId": "V1_NamespacePatch",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1NamespaceResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "metadata.name",
+            "in": "path",
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "nested.something",
-            "description": "Another field.",
-            "in": "query",
-            "required": false,
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1NamespaceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "V1"
+        ]
+      }
+    },
+    "/v1/namespaces/{name}": {
+      "get": {
+        "operationId": "V1_NamespaceStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1NamespaceResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "V1"
+        ]
+      },
+      "delete": {
+        "operationId": "V1_NamespaceDelete",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1NamespaceResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
             "type": "string"
           }
         ],
@@ -219,55 +402,149 @@
         }
       }
     },
-    "v1NamespaceResponse": {
+    "v1EventResponse": {
       "type": "object",
       "properties": {
-        "balance": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "transactions_count": {
+        "query": {
           "type": "string"
         }
       }
     },
-    "v1NestedMessage": {
-      "type": "object",
-      "properties": {
-        "something": {
-          "type": "string",
-          "description": "Another field."
-        }
-      },
-      "description": "An example of a nested message."
-    },
-    "v1ResourceRequest": {
+    "v1Meta": {
       "type": "object",
       "properties": {
         "name": {
           "type": "string"
         },
-        "height": {
-          "type": "string",
-          "format": "uint64"
-        }
-      }
-    },
-    "v1ResourceResponse": {
-      "type": "object",
-      "properties": {
-        "balance": {
+        "description": {
+          "type": "string"
+        },
+        "labels": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           }
         },
-        "transactions_count": {
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "version": {
+          "type": "string"
+        },
+        "selflink": {
+          "type": "string"
+        },
+        "uuid": {
           "type": "string"
         }
       }
+    },
+    "v1NamespaceRequest": {
+      "type": "object",
+      "properties": {
+        "api_version": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1Meta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1NamespaceSpec"
+        }
+      }
+    },
+    "v1NamespaceResponse": {
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "$ref": "#/definitions/v1Meta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1NamespaceSpec"
+        }
+      }
+    },
+    "v1NamespaceSpec": {
+      "type": "object",
+      "properties": {
+        "resources": {
+          "$ref": "#/definitions/v1SpecResourcesOptions"
+        }
+      }
+    },
+    "v1ResourceRequest": {
+      "type": "object",
+      "properties": {
+        "api_version": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1Meta"
+        },
+        "service": {
+          "$ref": "#/definitions/v1SpecService"
+        },
+        "deployment": {
+          "$ref": "#/definitions/v1SpecDeployment"
+        }
+      }
+    },
+    "v1ResourceResponse": {
+      "type": "object"
+    },
+    "v1SpecDeployment": {
+      "type": "object"
+    },
+    "v1SpecResourcesOptionLimit": {
+      "type": "object",
+      "properties": {
+        "ram": {
+          "type": "string"
+        },
+        "cpu": {
+          "type": "string"
+        },
+        "storage": {
+          "type": "string"
+        }
+      }
+    },
+    "v1SpecResourcesOptionRequest": {
+      "type": "object",
+      "properties": {
+        "ram": {
+          "type": "string"
+        },
+        "cpu": {
+          "type": "string"
+        },
+        "storage": {
+          "type": "string"
+        }
+      }
+    },
+    "v1SpecResourcesOptions": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/v1SpecResourcesOptionRequest"
+        },
+        "limit": {
+          "$ref": "#/definitions/v1SpecResourcesOptionLimit"
+        }
+      }
+    },
+    "v1SpecService": {
+      "type": "object"
     }
   }
 }

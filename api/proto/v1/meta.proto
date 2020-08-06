@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "server/api/v1";
+
+message Meta {
+  string name = 1;
+  string description = 2;
+  map<string, string> labels = 3;
+  map<string, string> annotations = 4;
+  string version = 5;
+  string selflink = 6;
+  string uuid = 7;
+}

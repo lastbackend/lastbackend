@@ -4,12 +4,28 @@ package v1;
 
 option go_package = "server/api/v1";
 
+import "api/proto/v1/meta.proto";
+
 message ResourceRequest {
-  string name = 1;
-  uint64 height = 2;
+  string api_version = 1;
+  string kind = 2;
+  Meta metadata = 3;
+  oneof spec {
+      SpecService service = 4;
+      SpecDeployment deployment = 5;
+  }
+}
+
+message SpecService {
+
+}
+
+message SpecDeployment {
+
 }
 
 message ResourceResponse {
-  map<string, string> balance = 1;
-  string transactions_count = 2;
+
 }
+
+

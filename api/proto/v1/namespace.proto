@@ -4,27 +4,38 @@ package v1;
 
 option go_package = "server/api/v1";
 
-message NamespaceRequest {
+import "api/proto/v1/meta.proto";
+import "api/proto/v1/specification.proto";
+
+
+message Namespace {
+
+}
+
+message NamespaceQuery {
   string name = 1;
-  uint64 height = 2;
-  // Request with a nested message.
-  NestedMessage nested = 3;
+}
+
+message NamespaceFilter {
+  string name = 1;
+}
+
+message NamespaceRequest {
+  string api_version = 1;
+  string kind = 2;
+  Meta metadata = 3;
+  NamespaceSpec spec = 4;
 }
 
 message NamespaceResponse {
-  map<string, string> balance = 1;
-  string transactions_count = 2;
+  Meta metadata = 1;
+  NamespaceSpec spec = 2;
 }
 
-
-message EventRequest {
-  string query = 1;
+message NamespaceSpec {
+    SpecResourcesOptions resources = 1;
 }
 
+message NamespaceStatus {
 
-// An example of a nested message.
-message NestedMessage {
-  // Another field.
-  string something = 1;
 }
-

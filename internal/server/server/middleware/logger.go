@@ -42,7 +42,7 @@ func (m Middleware) Logger(h http.Handler, cfg config.Config) http.Handler {
 		uri := strings.Join([]string{scheme, "://", r.Host, r.RequestURI}, "")
 
 		// Log HTTP request
-		log.Debug("request started",
+		log.Info("request started",
 			zap.String("request-id", id),
 			zap.String("http-scheme", scheme),
 			zap.String("http-proto", proto),
@@ -57,7 +57,7 @@ func (m Middleware) Logger(h http.Handler, cfg config.Config) http.Handler {
 		h.ServeHTTP(w, r)
 
 		// Log HTTP response
-		log.Debug("request completed",
+		log.Info("request completed",
 			zap.String("request-id", id),
 			zap.String("http-scheme", scheme),
 			zap.String("http-proto", proto),

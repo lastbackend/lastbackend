@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "server/api/v1";
+
+message EventRequest {
+  string query = 1;
+}
+
+message EventResponse {
+  string query = 1;
+}

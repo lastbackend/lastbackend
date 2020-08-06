@@ -6,6 +6,7 @@ import "protoc-gen-swagger/options/annotations.proto";
 
 import "api/proto/v1/namespace.proto";
 import "api/proto/v1/resource.proto";
+import "api/proto/v1/events.proto";
 
 option go_package = "server/api/v1";
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
@@ -39,7 +40,47 @@ service V1 {
 
   rpc NamespaceCreate (NamespaceRequest) returns (NamespaceResponse) {
     option (google.api.http) = {
-      get: "/v1/namespace"
+      post: "/v1/namespaces"
+      body: "*"
+    };
+  };
+
+  rpc NamespaceGet (NamespaceQuery) returns (NamespaceResponse) {
+    option (google.api.http) = {
+      get: "/v1/namespaces/{name}"
+    };
+  };
+
+  rpc NamespaceList (NamespaceFilter) returns (NamespaceResponse) {
+    option (google.api.http) = {
+      get: "/v1/namespaces"
+    };
+  };
+
+
+  rpc NamespaceStatus (NamespaceQuery) returns (NamespaceResponse) {
+    option (google.api.http) = {
+      get: "/v1/namespaces/{name}"
+    };
+  };
+
+  rpc NamespacePatch (NamespaceRequest) returns (NamespaceResponse) {
+    option (google.api.http) = {
+      patch: "/v1/namespaces/{metadata.name}"
+      body: "*"
+    };
+  };
+
+  rpc NamespaceReplace (NamespaceRequest) returns (NamespaceResponse) {
+    option (google.api.http) = {
+      put: "/v1/namespaces/{metadata.name}"
+      body: "*"
+    };
+  };
+
+  rpc NamespaceDelete (NamespaceQuery) returns (NamespaceResponse) {
+    option (google.api.http) = {
+      delete: "/v1/namespaces/{name}"
     };
   };
 
@@ -50,7 +91,7 @@ service V1 {
     };
   };
 
-  rpc Events (EventRequest) returns (stream NamespaceResponse) {
+  rpc Events (EventRequest) returns (stream EventResponse) {
     option (google.api.http) = {
       get: "/v1/events"
     };
