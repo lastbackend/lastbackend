@@ -32,7 +32,7 @@ docker run -d -it --restart=always \
 # run Last.Backend Cluster CTL:
 docker run -d -it --restart=always \
       --name=controller \
-      index.lstbknd.net/lastbackend/lastbackend ctl
+      index.lstbknd.net/lastbackend/lastbackend controller
 
 # run Last.Backend Cluster DNS:
 docker run -d -it --restart=always \
