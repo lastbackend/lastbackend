@@ -37,7 +37,7 @@ func (ic *ControllerClient) List(ctx context.Context) (*vv1.ControllerList, erro
 	var i *vv1.ControllerList
 	var e *errors.Http
 
-	err := ic.client.Get(fmt.Sprintf("/controller")).
+	err := ic.client.Get("/controller").
 		AddHeader("Content-Type", "application/json").
 		JSON(&i, &e)
 

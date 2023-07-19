@@ -61,7 +61,7 @@ func GetDefaultInterface() (*net.Interface, net.IP, error) {
 	}
 
 	if iface == nil {
-		return nil, nil, errors.New(fmt.Sprintf("failed to get default interface"))
+		return nil, nil, errors.New("failed to get default interface")
 	}
 
 	if ifaceAddr == nil {

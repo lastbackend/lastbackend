@@ -38,7 +38,7 @@ func (ic *ExporterClient) List(ctx context.Context) (*vv1.ExporterList, error) {
 	var i *vv1.ExporterList
 	var e *errors.Http
 
-	err := ic.client.Get(fmt.Sprintf("/exporter")).
+	err := ic.client.Get("/exporter").
 		AddHeader("Content-Type", "application/json").
 		JSON(&i, &e)
 
