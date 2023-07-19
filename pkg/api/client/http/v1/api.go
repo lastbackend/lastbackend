@@ -37,7 +37,7 @@ func (ic *ApiClient) List(ctx context.Context) (*vv1.APIList, error) {
 	var i *vv1.APIList
 	var e *errors.Http
 
-	err := ic.client.Get(fmt.Sprintf("/api")).
+	err := ic.client.Get("/api").
 		AddHeader("Content-Type", "application/json").
 		JSON(&i, &e)
 

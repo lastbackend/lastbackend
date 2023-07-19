@@ -40,7 +40,7 @@ func (nc NodeClient) List(ctx context.Context) (*vv1.NodeList, error) {
 	var s *vv1.NodeList
 	var e *errors.Http
 
-	err := nc.client.Get(fmt.Sprintf("/cluster/node")).
+	err := nc.client.Get("/cluster/node").
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 

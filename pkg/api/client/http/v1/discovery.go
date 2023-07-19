@@ -38,7 +38,7 @@ func (ic *DiscoveryClient) List(ctx context.Context) (*vv1.DiscoveryList, error)
 	var i *vv1.DiscoveryList
 	var e *errors.Http
 
-	err := ic.client.Get(fmt.Sprintf("/discovery")).
+	err := ic.client.Get("/discovery").
 		AddHeader("Content-Type", "application/json").
 		JSON(&i, &e)
 

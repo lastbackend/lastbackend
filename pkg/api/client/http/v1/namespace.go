@@ -131,7 +131,7 @@ func (nc *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error)
 	var s *vv1.NamespaceList
 	var e *errors.Http
 
-	err := nc.client.Get(fmt.Sprintf("/namespace")).
+	err := nc.client.Get("/namespace").
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 

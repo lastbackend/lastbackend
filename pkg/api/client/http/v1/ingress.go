@@ -38,7 +38,7 @@ func (ic *IngressClient) List(ctx context.Context) (*vv1.IngressList, error) {
 	var i *vv1.IngressList
 	var e *errors.Http
 
-	err := ic.client.Get(fmt.Sprintf("/ingress")).
+	err := ic.client.Get("/ingress").
 		AddHeader("Content-Type", "application/json").
 		JSON(&i, &e)
 
