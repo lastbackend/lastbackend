@@ -331,9 +331,7 @@ func (s *PodSpec) SetSpecTemplate(selflink string, template SpecTemplate) {
 		s.Template.Containers = append(s.Template.Containers, c)
 	}
 
-	for _, v := range template.Volumes {
-		s.Template.Volumes = append(s.Template.Volumes, v)
-	}
+	s.Template.Volumes = append(s.Template.Volumes, template.Volumes...)
 }
 
 func (s *PodSpec) SetSpecSelector(selector SpecSelector) {
